@@ -37,7 +37,15 @@ endif()
 
 #rtaudio
 set(RTAUDIO_BUILD_STATIC_LIBS TRUE)
+set(RTAUDIO_BUILD_TESTING OFF)
+set(RTAUDIO_TARGETNAME_UNINSTALL "rtaudiouninstall")
 add_subdirectory(rtaudio)
+
+#rtmidi
+set(RTMIDI_BUILD_STATIC_LIBS TRUE)
+set(RTMIDI_BUILD_TESTING OFF)
+set(RTMIDI_TARGETNAME_UNINSTALL "rtmidiuninstall")
+add_subdirectory(rtmidi)
 
 #esp-dsp
 set(ESP_DSP_DIR "../managed_components/espressif__esp-dsp")
@@ -143,12 +151,12 @@ target_compile_definitions(tbd-sim PRIVATE SAMPLE_ROM_FILE="${SAMPLE_ROM_FILE}")
 
 if(WIN32)
     target_link_libraries(tbd-sim -static simple-web-server)
-    target_link_libraries(tbd-sim -static rtaudio ctagsp mutable esp-dsp)
+    target_link_libraries(tbd-sim -static rtaudio rtmidi ctagsp mutable esp-dsp)
     target_link_libraries(tbd-sim -static ${Boost_LIBRARIES})
     target_link_libraries(tbd-sim -static ws2_32 wsock32)
 else()
     target_link_libraries(tbd-sim simple-web-server)
-    target_link_libraries(tbd-sim rtaudio ctagsp mutable esp-dsp)
+    target_link_libraries(tbd-sim rtaudio rtmidi ctagsp mutable esp-dsp)
     message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
     target_link_libraries(tbd-sim ${Boost_LIBRARIES})
 endif()
@@ -156,6 +164,7 @@ target_include_directories(tbd-sim PRIVATE ${Boost_INCLUDE_DIR})
 target_include_directories(tbd-sim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../components/ctagSoundProcessor)
 target_include_directories(tbd-sim PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen_include)
 target_include_directories(tbd-sim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/rtaudio)
+target_include_directories(tbd-sim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/rtmidi)
 target_include_directories(tbd-sim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../components/tinywav)
 target_include_directories(tbd-sim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../main)
 
