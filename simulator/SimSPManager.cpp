@@ -20,6 +20,7 @@ respective component folders / files if different from this license.
 ***************/
 
 #include "SimSPManager.hpp"
+#include "Midi.hpp"
 #include "tinywav/tinywav.h"
 #include <mutex>
 #include <cmath>
@@ -27,10 +28,13 @@ respective component folders / files if different from this license.
 #include "esp_spi_flash.h"
 
 using namespace CTAG::AUDIO;
+// using namespace CTAG::CTRL;
 
 std::mutex audioMutex;
 TinyWav tw;
 bool isWaveInput = false;
+bool is16BitOutput = false;
+int midiInputDeviceID = -1;
 
 // global variable, spiffs base directory
 namespace CTAG {
@@ -42,16 +46,23 @@ namespace CTAG {
 // Audio callback
 int SimSPManager::inout(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
                         double streamTime, RtAudioStreamStatus status, void *userData) {
+
     bool isStereoCH0;
     SP::ProcessData pd;
     float fbuf[32 * 2];
-    float cv[4] = {0.f, 0.f, 0.f, 0.f};
-    uint8_t trig[2] = {0, 0};
+    static float cv[5] = {0.f, 0.f, 0.f, 0.f, 0.f};
+    static uint8_t trig[5] = {0, 0, 0, 0, 0};
+
+    if (is16BitOutput) {
+        memset(fbuf, 0, 32 * 2 * 4);
+
+    } else {
 
     if (inputBuffer != NULL)
         memcpy(fbuf, inputBuffer, 32 * 2 * 4);
     else
         memset(fbuf, 0, 32 * 2 * 4);
+    }
 
     if (isWaveInput) {
         int nread = 0;
@@ -71,7 +82,16 @@ int SimSPManager::inout(void *outputBuffer, void *inputBuffer, unsigned int nBuf
     }
 
     // process stimulus
-    stimulus.Process(cv, trig);
+
+    if (midiInputDeviceID >= 0) {
+        // uint8_t buf[30];
+        // CTAG::CTRL::Midi::getDist()->d
+        CTAG::CTRL::Midi::getDist()->setCVandTriggerPointers((float *)&cv, (uint8_t*)&trig);
+        // CTAG::CTRL::Midi::getDist()->Update();
+        // printf("  %1.1f %1.1f %1.1f %1.1f  %d %d %d %d\n", cv[0], cv[1], cv[2], cv[3], trig[0], trig[1], trig[2], trig[3]);
+    } else {
+        stimulus.Process(cv, trig);
+    }
 
     // create data structure
     pd.buf = fbuf;
@@ -92,11 +112,35 @@ int SimSPManager::inout(void *outputBuffer, void *inputBuffer, unsigned int nBuf
         audioMutex.unlock();
     }
 
-    memcpy(outputBuffer, fbuf, 32 * 2 * 4);
+    if (is16BitOutput) {
+        memset(outputBuffer, 0, 32 * 2 * 4);
+    } else {
+        memcpy(outputBuffer, fbuf, 32 * 2 * 4);
+    }
+
     return 0;
 }
 
-void SimSPManager::StartSoundProcessor(int iSoundCardID, string wavFile, string sromFile, bool bOutOnly) {
+// Audio callback
+void SimSPManager::midiinput(double timeStamp, std::vector<unsigned char> *message, void *userData) {
+    std::cout << "got midi input!" << std::endl;
+
+    uint8_t buf[10] = { 0, };
+    memcpy(&buf, message->data(), 3);
+
+    uint8_t cmd = buf[0] & 0xF0;
+
+    printf("%02X %02X %02X\n", buf[0],buf[1],buf[2]);
+
+    if (cmd == CTAG::CTRL::Midi::noteOnStatus) CTAG::CTRL::Midi::getDist()->noteOn((uint8_t *)&buf);
+    if (cmd == CTAG::CTRL::Midi::noteOffStatus) CTAG::CTRL::Midi::getDist()->noteOff((uint8_t *)&buf);
+    // if (cmd === Midi::noteOnStatus) CTAG::CTRL::Midi::getDist()->noteOn((uint8_t *)message);
+    // if (cmd === Midi::noteOnStatus) CTAG::CTRL::Midi::getDist()->noteOn((uint8_t *)message);
+    // if (cmd === Midi::noteOnStatus) CTAG::CTRL::Midi::getDist()->noteOn((uint8_t *)message);
+    // if (cmd === Midi::noteOnStatus) CTAG::CTRL::Midi::getDist()->noteOn((uint8_t *)message);
+}
+
+void SimSPManager::StartSoundProcessor(int iSoundCardID, int iMidiInputDeviceID, string wavFile, string sromFile, bool bOutOnly) {
     ctagSPAllocator::AllocateInternalBuffer(112*1024); // TBDings has highest needs of 113944 bytes, this is 112k=114688 bytes
     // start fake sample rom
     cout << "Trying to open sample rom file (define own with -s command line option): " << sromFile << endl;
@@ -122,13 +166,14 @@ void SimSPManager::StartSoundProcessor(int iSoundCardID, string wavFile, string 
             bOutOnly = true;
         }
         for (const auto &v: info.sampleRates) {
-            if (v == 44100 && (info.nativeFormats & RTAUDIO_FLOAT32) != 0) {
+            std::cout << "Supported format: " << info.nativeFormats << " @ " << v << "hz" << std::endl;
+            if (v == 44100 && (info.nativeFormats & (RTAUDIO_FLOAT32)) != 0) {
                 bFormatSupported = true;
                 break;
             }
         }
         if (!bFormatSupported) {
-            std::cout << "Sample rate of 44100Hz@float32 not supported!" << std::endl;
+            std::cout << "Sample rate of 44100Hz@float32 or 44100Hz@signed16 not supported!" << std::endl;
             exit(0);
         }
     } else {
@@ -154,6 +199,11 @@ void SimSPManager::StartSoundProcessor(int iSoundCardID, string wavFile, string 
         isWaveInput = true;
     }
 
+    midiInputDeviceID = iMidiInputDeviceID;
+    if (iMidiInputDeviceID >= 0) {
+        CTAG::CTRL::Midi::Init();
+    }
+
     // main stuff
     RtAudio::StreamParameters iParams, oParams;
     iParams.deviceId = iSoundCardID;
@@ -162,6 +212,7 @@ void SimSPManager::StartSoundProcessor(int iSoundCardID, string wavFile, string 
     oParams.nChannels = 2;
     unsigned int bufferFrames = 32;
     std::cout << "Trying to open device id: " << iSoundCardID << endl;
+
     try {
         if (bOutOnly) {
             audio.openStream(&oParams, NULL, RTAUDIO_FLOAT32, 44100, &bufferFrames, &SimSPManager::inout);
@@ -182,6 +233,13 @@ void SimSPManager::StartSoundProcessor(int iSoundCardID, string wavFile, string 
     }
     catch (RtAudioError &e) {
         e.printMessage();
+    }
+
+
+    // midi input
+    if (iMidiInputDeviceID >= 0) {
+        midi.openPort(iMidiInputDeviceID);
+        midi.setCallback(&SimSPManager::midiinput, NULL);
     }
 }
 
@@ -274,6 +332,14 @@ void SimSPManager::ListSoundCards() {
     }
 }
 
+void SimSPManager::ListMidiInputDevices() {
+    unsigned int devices = midi.getPortCount();
+    for (unsigned int i = 0; i < devices; i++) {
+        std::string name = midi.getPortName(i);
+        std::cout << "midi input device = " << i << ": " << name << std::endl;
+    }
+}
+
 void SimSPManager::SetProcessParams(const string &params) {
     simModel->SetModelJSONString(params);
     int mode[6], value[6];
@@ -306,7 +372,8 @@ void SimSPManager::ActivateFavorite(const int &id) {
 }
 
 
-RtAudio  SimSPManager::audio;
+RtAudio SimSPManager::audio;
+RtMidiIn SimSPManager::midi;
 ctagSoundProcessor* SimSPManager::sp[2] {nullptr, nullptr};
 std::unique_ptr<SPManagerDataModel> SimSPManager::model;
 std::unique_ptr<CTAG::FAV::FavoritesModel> SimSPManager::favModel;

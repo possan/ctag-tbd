@@ -19,8 +19,8 @@ License and copyright details for specific submodules are included in their
 respective component folders / files if different from this license.
 ***************/
 
-#include "WebServer.hpp"
 #include "SimSPManager.hpp"
+#include "WebServer.hpp"
 #include <boost/program_options.hpp>
 
 using namespace std;
@@ -28,62 +28,77 @@ using namespace CTAG::AUDIO;
 namespace po = boost::program_options;
 
 int main(int ac, char **av) {
-    // parse command line args
-    bool bListSoundCards = false;
-    bool bOutputOnly = false;
-    int iDeviceNum = 0;
-    string wavFile, sromFile;
-    po::options_description desc(string(av[0]) + " options");
-    po::variables_map vm;
-    try {
-        desc.add_options()
-                ("help,h", "this help message")
-                ("srom,s", po::value<string>(&sromFile)->default_value("../../sample_rom/sample-rom.tbd"),
-                 "file for sample rom emulation, default ../../sample_rom/sample-rom.tbd")
-                ("list,l", po::bool_switch(&bListSoundCards)->default_value(false), "list sound cards")
-                ("device,d", po::value<int>(&iDeviceNum)->default_value(0), "sound card device id, default 0")
-                ("output,o", po::bool_switch(&bOutputOnly)->default_value(false),
-                 "use output only (if no duplex device available)")
-                ("wav,w", po::value<string>(&wavFile),
-                 "read audio in from wav file (arg), must be 2 channel stereo float32 data, will be cycled through indefinitely");
+  // parse command line args
+  bool bListSoundCards = false;
+  bool bListMidiInputDevices = false;
+  bool bOutputOnly = false;
+  int iDeviceNum = 0;
+  int iMidiInputDeviceNum = 0;
+  string wavFile, sromFile;
+  po::options_description desc(string(av[0]) + " options");
+  po::variables_map vm;
+  try {
+    desc.add_options()("help,h", "this help message")(
+        "srom,s",
+        po::value<string>(&sromFile)->default_value(
+            "../../sample_rom/sample-rom.tbd"),
+        "file for sample rom emulation, default "
+        "../../sample_rom/sample-rom.tbd")(
+        "list,l", po::bool_switch(&bListSoundCards)->default_value(false),
+        "list sound cards")(
+        "listmidi,m", po::bool_switch(&bListMidiInputDevices)->default_value(false),
+        "list midi input devices")
+        ("device,d",po::value<int>(&iDeviceNum)->default_value(0),
+          "sound card device id, default 0")
+        ("midiinput,i",po::value<int>(&iMidiInputDeviceNum)->default_value(-1),
+          "midi input device id, default off")(
+        "output,o", po::bool_switch(&bOutputOnly)->default_value(false),
+        "use output only (if no duplex device available)")(
+        "wav,w", po::value<string>(&wavFile),
+        "read audio in from wav file (arg), must be 2 channel stereo float32 "
+        "data, will be cycled through indefinitely");
 
-        po::store(po::parse_command_line(ac, av, desc), vm);
-        po::notify(vm);
+    po::store(po::parse_command_line(ac, av, desc), vm);
+    po::notify(vm);
 
-        if (vm.count("help")) {
-            cout << desc << "\n";
-            return 1;
-        }
-        if (vm.count("wav")) {
-            cout << "Trying to read from file " << wavFile << endl;
-        }
-        if (bListSoundCards) {
-            SimSPManager::ListSoundCards();
-            return 1;
-        }
-    } catch (const boost::program_options::required_option &e) {
-        if (vm.count("help")) {
-            std::cout << desc << std::endl;
-            return 1;
-        } else {
-            std::cout << "It seems some args are missing/wrong:" << std::endl;
-            std::cout << desc << std::endl;
-            throw e;
-        }
+    if (vm.count("help")) {
+      cout << desc << "\n";
+      return 1;
     }
+    if (vm.count("wav")) {
+      cout << "Trying to read from file " << wavFile << endl;
+    }
+    if (bListSoundCards) {
+      SimSPManager::ListSoundCards();
+      return 1;
+    }
+    if (bListMidiInputDevices) {
+      SimSPManager::ListMidiInputDevices();
+      return 1;
+    }
+  } catch (const boost::program_options::required_option &e) {
+    if (vm.count("help")) {
+      std::cout << desc << std::endl;
+      return 1;
+    } else {
+      std::cout << "It seems some args are missing/wrong:" << std::endl;
+      std::cout << desc << std::endl;
+      throw e;
+    }
+  }
 
-    SimSPManager::StartSoundProcessor(iDeviceNum, wavFile, sromFile, bOutputOnly);
+  SimSPManager::StartSoundProcessor(iDeviceNum, iMidiInputDeviceNum, wavFile, sromFile, bOutputOnly);
 
-    WebServer webServer;
-    webServer.Start();
+  WebServer webServer;
+  webServer.Start();
 
-    std::cout << "\nRunning ... press <enter> to quit.\n";
-    char input;
-    std::cin.get(input);
+  std::cout << "\nRunning ... press <enter> to quit.\n";
+  char input;
+  std::cin.get(input);
 
-    SimSPManager::StopSoundProcessor();
+  SimSPManager::StopSoundProcessor();
 
-    webServer.Stop();
+  webServer.Stop();
 
-    return 0;
+  return 0;
 }

@@ -30,22 +30,26 @@ respective component folders / files if different from this license.
 #include "SPManagerDataModel.hpp"
 #include "FavoritesModel.hpp"
 #include <RtAudio.h>
+#include <RtMidi.h>
 #include <atomic>
 #include "SimDataModel.hpp"
 #include "SimStimulus.hpp"
 
 using namespace CTAG::SP;
+// using namespace CTAG::CTRL;
 using namespace std;
 
 namespace CTAG {
     namespace AUDIO {
         class SimSPManager {
         public:
-            static void StartSoundProcessor(int iSoundCardID, string wavFile, string sromFile, bool bOutOnly);
+            static void StartSoundProcessor(int iSoundCardID, int iMidiInputDeviceID, string wavFile, string sromFile, bool bOutOnly);
 
             static void StopSoundProcessor();
 
             static void ListSoundCards();
+
+            static void ListMidiInputDevices();
 
             static const char *GetCStrJSONSoundProcessors() {
                 return model->GetCStrJSONSoundProcessors();
@@ -106,6 +110,9 @@ namespace CTAG {
             static std::unique_ptr<SPManagerDataModel> model;
             static std::unique_ptr<FAV::FavoritesModel> favModel;
             static RtAudio audio;
+            static RtMidiIn midi;
+
+            static void midiinput(double timeStamp, std::vector<unsigned char> *message, void *userData);
 
             static int inout(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
                              double streamTime, RtAudioStreamStatus status, void *userData);
