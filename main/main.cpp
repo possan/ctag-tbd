@@ -32,6 +32,7 @@ respective component folders / files if different from this license.
 
 #include "Calibration.hpp"
 #include "codec.hpp"
+#include "CpuDebug.hpp"
 #include <vector>
 #include "SPManager.hpp"
 #include "ctagSPAllocator.hpp"
@@ -76,6 +77,8 @@ void app_main() {
 #if defined(CONFIG_SERIAL_UI)
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 #endif
+
+    CTAG::CTRL::CPUDebug::Init();
 
     AUDIO::SoundProcessorManager::StartSoundProcessor();
 }
