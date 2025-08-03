@@ -221,7 +221,6 @@ void SimSPManager::SetSoundProcessorChannel(const int chan, const string &id) {
     if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
     if(model->IsStereo(id)) aType = ctagSPAllocator::AllocationType::STEREO;
     sp[chan] = ctagSoundProcessorFactory::Create(id, aType);
-    sp[chan] = ctagSoundProcessorFactory::Create(id, aType);
     model->SetActivePluginID(id, chan);
     sp[chan]->LoadPreset(model->GetActivePatchNum(chan));
     audioMutex.unlock();

@@ -70,13 +70,13 @@
                     );
                     // attach event listener title double click to reset to 0 or min value
                     $('#id-' + el.id).on('dblclick', {ch: ch, el: el}, // send only when interaction done
-                    /*
+                        /*
+                            event => {
+                                $('#sl-' + event.data.el.id).val(0);
+                                console.log($('#sl-' + event.data.el.id).val())
+                            }
+                        */
                         event => {
-                            $('#sl-' + event.data.el.id).val(0);
-                            console.log($('#sl-' + event.data.el.id).val())
-                        }
-                    */
-                    event => {
                             // update view input element, set to 0 or min value
                             let v = event.data.el.min;
                             if(v < 0) v = 0;
