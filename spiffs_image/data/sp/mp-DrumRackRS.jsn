@@ -1,0 +1,65 @@
+{
+  "activePatch": 0,
+  "patches": [
+    {
+      "name": "Default",
+      "params": [
+        {
+          "id": "rs_trigger",
+          "current": 0,
+          "trig": 23
+        },
+        {
+          "id": "rs_mute",
+          "current": 0,
+          "trig": -1
+        },
+        {
+          "id": "rs_lev",
+          "current": 2047,
+          "cv": -1
+        },
+        {
+          "id": "rs_pan",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "rs_fx1",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "rs_fx2",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "rs_accent",
+          "current": 2068,
+          "cv": -1
+        },
+        {
+          "id": "rs_f0",
+          "current": 2887,
+          "cv": -1
+        },
+        {
+          "id": "rs_tone",
+          "current": 3208,
+          "cv": -1
+        },
+        {
+          "id": "rs_decay",
+          "current": 420,
+          "cv": -1
+        },
+        {
+          "id": "rs_noise",
+          "current": 0,
+          "cv": -1
+        }
+      ]
+    }
+  ]
+}

@@ -47,7 +47,7 @@ void WebServer::Start() {
         response->write(SimSPManager::GetAllFavorites(), header);
     };
 
-    server.resource["^/api/v1/favorites/store/([0-9])$"]["POST"] = [&](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/favorites/store/([0-9]+)$"]["POST"] = [&](shared_ptr<HttpServer::Response> response,
                                                                        shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int fav = std::stoi(request->path_match[1].str());
@@ -56,7 +56,7 @@ void WebServer::Start() {
         response->write(SimpleWeb::StatusCode::success_ok);
     };
 
-    server.resource["^/api/v1/favorites/recall/([0-9])$"]["POST"] = [&](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/favorites/recall/([0-9]+)$"]["POST"] = [&](shared_ptr<HttpServer::Response> response,
                                                                         shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int fav = std::stoi(request->path_match[1].str());
@@ -100,21 +100,21 @@ void WebServer::Start() {
         response->write(s);
     };
 
-    server.resource["^/api/v1/getActivePlugin/([0-1])$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/getActivePlugin/([0-9]+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
                                                                      shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int ch = std::stoi(request->path_match[1].str());
         response->write("{\"id\":\"" + CTAG::AUDIO::SimSPManager::GetStringID(ch) + "\"}");
     };
 
-    server.resource["^/api/v1/getPluginParams/([0-1])$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/getPluginParams/([0-9]+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
                                                                      shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int ch = std::stoi(request->path_match[1].str());
         response->write(SimSPManager::GetCStrJSONActivePluginParams(ch));
     };
 
-    server.resource["^/api/v1/setActivePlugin/([0-1])$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/setActivePlugin/([0-9]+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
                                                                      shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int ch = std::stoi(request->path_match[1].str());
@@ -127,7 +127,7 @@ void WebServer::Start() {
         response->write(SimpleWeb::StatusCode::success_ok);
     };
 
-    server.resource["^/api/v1/setPluginParam/([0-1])$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/setPluginParam/([0-9]+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
                                                                     shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int ch = std::stoi(request->path_match[1].str());
@@ -146,7 +146,7 @@ void WebServer::Start() {
         response->write(SimpleWeb::StatusCode::success_ok);
     };
 
-    server.resource["^/api/v1/setPluginParamCV/([0-1])$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/setPluginParamCV/([0-9]+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
                                                                       shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int ch = std::stoi(request->path_match[1].str());
@@ -165,7 +165,7 @@ void WebServer::Start() {
         response->write(SimpleWeb::StatusCode::success_ok);
     };
 
-    server.resource["^/api/v1/setPluginParamTRIG/([0-1])$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/setPluginParamTRIG/([0-9]+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
                                                                         shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int ch = std::stoi(request->path_match[1].str());
@@ -184,7 +184,7 @@ void WebServer::Start() {
         response->write(SimpleWeb::StatusCode::success_ok);
     };
 
-    server.resource["^/api/v1/getPresets/([0-1])$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/getPresets/([0-9]+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
                                                                 shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int ch = std::stoi(request->path_match[1].str());
@@ -193,7 +193,7 @@ void WebServer::Start() {
         response->write(SimSPManager::GetCStrJSONGetPresets(ch), header);
     };
 
-    server.resource["^/api/v1/loadPreset/([0-1])$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/loadPreset/([0-9]+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
                                                                 shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int ch = std::stoi(request->path_match[1].str());
@@ -208,7 +208,7 @@ void WebServer::Start() {
         response->write(SimpleWeb::StatusCode::success_ok);
     };
 
-    server.resource["^/api/v1/savePreset/([0-1])$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
+    server.resource["^/api/v1/savePreset/([0-9]+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response,
                                                                 shared_ptr<HttpServer::Request> request) {
         // Retrieve string:
         int ch = std::stoi(request->path_match[1].str());

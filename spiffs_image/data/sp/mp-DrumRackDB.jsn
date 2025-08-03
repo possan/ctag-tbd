@@ -1,0 +1,75 @@
+{
+  "activePatch": 0,
+  "patches": [
+    {
+      "name": "Default",
+      "params": [
+        {
+          "id": "db_trigger",
+          "current": 0,
+          "trig": 17
+        },
+        {
+          "id": "db_mute",
+          "current": 0,
+          "trig": -1
+        },
+        {
+          "id": "db_lev",
+          "current": 2200,
+          "cv": -1
+        },
+        {
+          "id": "db_pan",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "db_fx1",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "db_fx2",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "db_accent",
+          "current": 2900,
+          "cv": -1
+        },
+        {
+          "id": "db_f0",
+          "current": 370,
+          "cv": -1
+        },
+        {
+          "id": "db_tone",
+          "current": 3719,
+          "cv": -1
+        },
+        {
+          "id": "db_decay",
+          "current": 2500,
+          "cv": -1
+        },
+        {
+          "id": "db_dirty",
+          "current": 644,
+          "cv": -1
+        },
+        {
+          "id": "db_fm_env",
+          "current": 597,
+          "cv": -1
+        },
+        {
+          "id": "db_fm_dcy",
+          "current": 82,
+          "cv": -1
+        }
+      ]
+    }
+  ]
+}

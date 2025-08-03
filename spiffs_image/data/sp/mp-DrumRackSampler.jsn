@@ -1,0 +1,120 @@
+{
+  "activePatch": 0,
+  "patches": [
+    {
+      "name": "Default",
+      "params": [
+        {
+          "id": "s1_gate",
+          "current": 0,
+          "trig": 25
+        },
+        {
+          "id": "s1_mute",
+          "current": 0,
+          "trig": -1
+        },
+        {
+          "id": "s1_lev",
+          "current": 2047,
+          "cv": -1
+        },
+        {
+          "id": "s1_pan",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_fx1",
+          "current": 3183,
+          "cv": -1
+        },
+        {
+          "id": "s1_fx2",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_speed",
+          "current": 2708,
+          "cv": -1
+        },
+        {
+          "id": "s1_pitch",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_bank",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_slice",
+          "current": 15,
+          "cv": -1
+        },
+        {
+          "id": "s1_start",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_end",
+          "current": 4095,
+          "cv": -1
+        },
+        {
+          "id": "s1_lp",
+          "current": 1,
+          "trig": -1
+        },
+        {
+          "id": "s1_lp_pp",
+          "current": 0,
+          "trig": -1
+        },
+        {
+          "id": "s1_lp_pos",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_atk",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_dcy",
+          "current": 298,
+          "cv": -1
+        },
+        {
+          "id": "s1_eg2fm",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_brr",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_ft",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "s1_fc",
+          "current": 2047,
+          "cv": -1
+        },
+        {
+          "id": "s1_fq",
+          "current": 2047,
+          "cv": -1
+        }
+      ]
+    }
+  ]
+}

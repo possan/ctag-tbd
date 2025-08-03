@@ -1,0 +1,65 @@
+{
+  "activePatch": 0,
+  "patches": [
+    {
+      "name": "Default",
+      "params": [
+        {
+          "id": "hh2_trigger",
+          "current": 0,
+          "trig": 22
+        },
+        {
+          "id": "hh2_mute",
+          "current": 0,
+          "trig": -1
+        },
+        {
+          "id": "hh2_lev",
+          "current": 2047,
+          "cv": -1
+        },
+        {
+          "id": "hh2_pan",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "hh2_fx1",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "hh2_fx2",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "hh2_accent",
+          "current": 2047,
+          "cv": -1
+        },
+        {
+          "id": "hh2_f0",
+          "current": 207,
+          "cv": -1
+        },
+        {
+          "id": "hh2_tone",
+          "current": 176,
+          "cv": -1
+        },
+        {
+          "id": "hh2_decay",
+          "current": 1056,
+          "cv": -1
+        },
+        {
+          "id": "hh2_noise",
+          "current": 1263,
+          "cv": -1
+        }
+      ]
+    }
+  ]
+}

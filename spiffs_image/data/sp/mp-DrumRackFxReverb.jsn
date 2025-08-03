@@ -1,0 +1,20 @@
+{
+  "activePatch": 0,
+  "patches": [
+    {
+      "name": "Default",
+      "params": [
+        {
+          "id": "fx2_time",
+          "current": 2047,
+          "cv": -1
+        },
+        {
+          "id": "fx2_lp",
+          "current": 2047,
+          "cv": -1
+        }
+      ]
+    }
+  ]
+}

@@ -187,19 +187,26 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         // sound processors
         if (xSemaphoreTake(processMutex, 0) == pdTRUE) {
             // apply sound processors
-            if (sp[0] != nullptr) {
-                isStereoCH0 = sp[0]->GetIsStereo();
-                sp[0]->Process(pd);
-            }
-            if (!isStereoCH0){
-                // check if ch0 -> ch1 daisy chain, i.e. use output of ch0 as input for ch1
-                if(ch01Daisy){
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2 + 1] = fbuf[i * 2];
-                    }
+            for(int k=0; k<40; k++)
+            {
+                if (sp[k] != nullptr) {
+                    // isStereoCH0 = sp[k]->GetIsStereo();
+                    sp[k]->Process(pd);
                 }
-                if (sp[1] != nullptr) sp[1]->Process(pd); // 0 is not a stereo processor
             }
+            // if (sp[0] != nullptr) {
+            //     isStereoCH0 = sp[0]->GetIsStereo();
+            //     sp[0]->Process(pd);
+            // }
+            // if (!isStereoCH0){
+            //     // check if ch0 -> ch1 daisy chain, i.e. use output of ch0 as input for ch1
+            //     if(ch01Daisy){
+            //         for (uint32_t i = 0; i < BUF_SZ; i++) {
+            //             fbuf[i * 2 + 1] = fbuf[i * 2];
+            //         }
+            //     }
+            //     if (sp[1] != nullptr) sp[1]->Process(pd); // 0 is not a stereo processor
+            // }
             xSemaphoreGive(processMutex);
         } else {
             // mute audio
@@ -207,52 +214,52 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         }
 
         // to stereo conversion
-        if (!isStereoCH0) {
-            if (toStereoCH0 || toStereoCH1) {
-                float sb[BUF_SZ * 2];
-                memcpy(sb, fbuf, BUF_SZ * 2 * sizeof(float));
-                if (toStereoCH0 == 1 && toStereoCH1 == 0) { // spread CH0 to both channels
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.5f * sb[i * 2];
-                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
-                    }
-                } else if (toStereoCH1 == 1 && toStereoCH0 == 0) { // spread CH1 to both channels
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
-                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1];
-                    }
-                } else if (toStereoCH0 == 1 && toStereoCH1 == 1) { // spread CH0 + CH1 to both channels
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = fbuf[i * 2 + 1] = 0.5f * (sb[i * 2] + sb[i * 2 + 1]);
-                    }
-                } else if (toStereoCH0 == 2 && toStereoCH1 == 2) { // swap channels
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = sb[i * 2 + 1];
-                        fbuf[i * 2 + 1] = sb[i * 2];
-                    }
-                } else if (toStereoCH0 == 2 && toStereoCH1 == 0) { // mix CH0 with CH1 on CH1
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.f;
-                        fbuf[i * 2 + 1] += sb[i * 2];
-                    }
-                } else if (toStereoCH0 == 0 && toStereoCH1 == 2) { // mix CH1 with CH0 on CH0
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] += sb[i * 2 + 1];
-                        fbuf[i * 2 + 1] = 0.f;
-                    }
-                } else if (toStereoCH0 == 2 && toStereoCH1 == 1) { // move CH0 to CH1, spread CH1 to both
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.5f * sb[i * 2 + 1];
-                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
-                    }
-                } else if (toStereoCH0 == 1 && toStereoCH1 == 2) { // move CH1 to CH0, spread CH0 to both
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
-                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2];
-                    }
-                }
-            }
-        }
+        // if (!isStereoCH0) {
+        //     if (toStereoCH0 || toStereoCH1) {
+        //         float sb[BUF_SZ * 2];
+        //         memcpy(sb, fbuf, BUF_SZ * 2 * sizeof(float));
+        //         if (toStereoCH0 == 1 && toStereoCH1 == 0) { // spread CH0 to both channels
+        //             for (uint32_t i = 0; i < BUF_SZ; i++) {
+        //                 fbuf[i * 2] = 0.5f * sb[i * 2];
+        //                 fbuf[i * 2 + 1] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
+        //             }
+        //         } else if (toStereoCH1 == 1 && toStereoCH0 == 0) { // spread CH1 to both channels
+        //             for (uint32_t i = 0; i < BUF_SZ; i++) {
+        //                 fbuf[i * 2] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
+        //                 fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1];
+        //             }
+        //         } else if (toStereoCH0 == 1 && toStereoCH1 == 1) { // spread CH0 + CH1 to both channels
+        //             for (uint32_t i = 0; i < BUF_SZ; i++) {
+        //                 fbuf[i * 2] = fbuf[i * 2 + 1] = 0.5f * (sb[i * 2] + sb[i * 2 + 1]);
+        //             }
+        //         } else if (toStereoCH0 == 2 && toStereoCH1 == 2) { // swap channels
+        //             for (uint32_t i = 0; i < BUF_SZ; i++) {
+        //                 fbuf[i * 2] = sb[i * 2 + 1];
+        //                 fbuf[i * 2 + 1] = sb[i * 2];
+        //             }
+        //         } else if (toStereoCH0 == 2 && toStereoCH1 == 0) { // mix CH0 with CH1 on CH1
+        //             for (uint32_t i = 0; i < BUF_SZ; i++) {
+        //                 fbuf[i * 2] = 0.f;
+        //                 fbuf[i * 2 + 1] += sb[i * 2];
+        //             }
+        //         } else if (toStereoCH0 == 0 && toStereoCH1 == 2) { // mix CH1 with CH0 on CH0
+        //             for (uint32_t i = 0; i < BUF_SZ; i++) {
+        //                 fbuf[i * 2] += sb[i * 2 + 1];
+        //                 fbuf[i * 2 + 1] = 0.f;
+        //             }
+        //         } else if (toStereoCH0 == 2 && toStereoCH1 == 1) { // move CH0 to CH1, spread CH1 to both
+        //             for (uint32_t i = 0; i < BUF_SZ; i++) {
+        //                 fbuf[i * 2] = 0.5f * sb[i * 2 + 1];
+        //                 fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
+        //             }
+        //         } else if (toStereoCH0 == 1 && toStereoCH1 == 2) { // move CH1 to CH0, spread CH0 to both
+        //             for (uint32_t i = 0; i < BUF_SZ; i++) {
+        //                 fbuf[i * 2] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
+        //                 fbuf[i * 2 + 1] = 0.5f * sb[i * 2];
+        //             }
+        //         }
+        //     }
+        // }
 
         // Out peak detection, red for output
         // limiting output
@@ -296,9 +303,9 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     // does the SP exist?
     if(!model->HasPluginID(id)) return;
 
-    // when trying to set chan 1 and chan 0 is a stereo plugin, return
-    if(chan == 1 && model->IsStereo(model->GetActiveProcessorID(0))) return;
-    if(chan == 1 && model->IsStereo(id)) return;
+    // // when trying to set chan 1 and chan 0 is a stereo plugin, return
+    // if(chan == 1 && model->IsStereo(model->GetActiveProcessorID(0))) return;
+    // if(chan == 1 && model->IsStereo(id)) return;
 
     ESP_LOGI("SPManager", "Switching ch%d to plugin %s", chan, id.c_str());
 
@@ -308,18 +315,29 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
         delete sp[chan]; // destruct processor
         sp[chan] = nullptr;
     }
-    if (model->IsStereo(id) && chan == 0) {
-        if(nullptr != sp[1]){
-            delete sp[1]; // destruct processor
-            sp[1] = nullptr;
-        }
-    }
+    // if (model->IsStereo(id) && chan == 0) {
+    //     if(nullptr != sp[1]){
+    //         delete sp[1]; // destruct processor
+    //         sp[1] = nullptr;
+    //     }
+    // }
 
     // create new plugin
-    ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::CH0;
-    if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
-    if(model->IsStereo(id)) aType = ctagSPAllocator::AllocationType::STEREO;
+    // ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::CH0;
+    // if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
+    // if(model->IsStereo(id)) 
+    ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::STEREO;
+
+    
     sp[chan] = ctagSoundProcessorFactory::Create(id, aType);
+    ESP_LOGI("SPManager", "sp[chan] = %lx (chan %d, id %s, aType %d)", (uint32_t)sp[chan], chan, id.c_str(), aType);
+    if (sp[chan] == nullptr) {
+        ESP_LOGE("SPManager", "Fatal: could not create sound processor %s!", id.c_str());
+        xSemaphoreGive(processMutex);
+        return;
+    }
+
+    sp[chan]->SetProcessChannel(chan);
     model->SetActivePluginID(id, chan);
     sp[chan]->LoadPreset(model->GetActivePatchNum(chan));
     xSemaphoreGive(processMutex);
@@ -335,7 +353,18 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
 
 TaskHandle_t SoundProcessorManager::audioTaskH;
 TaskHandle_t SoundProcessorManager::ledTaskH;
-DRAM_ATTR ctagSoundProcessor* SoundProcessorManager::sp[2] {nullptr, nullptr};
+DRAM_ATTR ctagSoundProcessor* SoundProcessorManager::sp[40] {
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr
+};
 std::unique_ptr<SPManagerDataModel> SoundProcessorManager::model;
 DRAM_ATTR SemaphoreHandle_t SoundProcessorManager::processMutex;
 atomic<uint32_t> SoundProcessorManager::ledBlink;
@@ -436,8 +465,10 @@ void SoundProcessorManager::StartSoundProcessor() {
     //FAV::Favorites::StartUI();
 #endif
 
-    SetSoundProcessorChannel(0, model->GetActiveProcessorID(0));
-    SetSoundProcessorChannel(1, model->GetActiveProcessorID(1));
+    for(int i = 0; i < 40; i++) {
+        SetSoundProcessorChannel(i, model->GetActiveProcessorID(i));
+    }
+    // SetSoundProcessorChannel(1, model->GetActiveProcessorID(1));
     ESP_LOGI("SPManager", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
@@ -580,10 +611,12 @@ void SoundProcessorManager::KillAudioTask() {
     // stop audio Task, delete plugins
     runAudioTask = 0;
     while (runAudioTask != 2); // wait for audio task to be dead
-    if(nullptr!=sp[0]) delete sp[0];
-    if(nullptr!=sp[1]) delete sp[1];
-    sp[0] = nullptr;
-    sp[1] = nullptr;
+    for(int k=0; k<40; k++){
+        if(nullptr != sp[k]) delete sp[k];
+        sp[k] = nullptr;
+    }
+    // if(nullptr!=sp[1]) delete sp[1];
+    // sp[1] = nullptr;
     ctagSPAllocator::ReleaseInternalBuffer();
 #ifndef CONFIG_TBD_PLATFORM_STR
     vTaskDelete(ledTaskH);

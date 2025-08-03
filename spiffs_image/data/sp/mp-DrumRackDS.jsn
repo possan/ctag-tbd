@@ -1,0 +1,65 @@
+{
+  "activePatch": 0,
+  "patches": [
+    {
+      "name": "Default",
+      "params": [
+        {
+          "id": "ds_trigger",
+          "current": 0,
+          "trig": 20
+        },
+        {
+          "id": "ds_mute",
+          "current": 0,
+          "trig": -1
+        },
+        {
+          "id": "ds_lev",
+          "current": 2047,
+          "cv": -1
+        },
+        {
+          "id": "ds_pan",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "ds_fx1",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "ds_fx2",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "ds_accent",
+          "current": 2146,
+          "cv": -1
+        },
+        {
+          "id": "ds_f0",
+          "current": 1554,
+          "cv": -1
+        },
+        {
+          "id": "ds_fm_amt",
+          "current": 3191,
+          "cv": -1
+        },
+        {
+          "id": "ds_decay",
+          "current": 428,
+          "cv": -1
+        },
+        {
+          "id": "ds_spy",
+          "current": 1393,
+          "cv": -1
+        }
+      ]
+    }
+  ]
+}

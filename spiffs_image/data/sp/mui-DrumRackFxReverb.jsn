@@ -1,0 +1,29 @@
+{
+  "id": "DrumRackFxReverb",
+  "isStereo": true,
+  "name": "DR FX Reverb",
+  "hint": "A mix of drums and samples",
+  "params": [
+    {
+      "id": "fx2_group",
+      "name": "Reverb",
+      "type": "group",
+      "params": [
+        {
+          "id": "fx2_time",
+          "type": "int",
+          "name": "Time",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "fx2_lp",
+          "type": "int",
+          "name": "Low Pass",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    }
+  ]
+}

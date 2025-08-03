@@ -151,7 +151,7 @@ esp_err_t RestServer::get_active_plugin_get_handler(httpd_req_t *req) {
     ch -= 0x30;
     ESP_LOGD(REST_TAG, "Get active plugin for channel %d", ch);
     string res;
-    if (ch == 0 || ch == 1) {
+    if (ch < 40) {
         res = "{\"id\":\"" + CTAG::AUDIO::SoundProcessorManager::GetStringID(ch) + "\"}";
     }
     httpd_resp_set_type(req, "application/json");
@@ -170,8 +170,8 @@ esp_err_t RestServer::get_params_plugin_get_handler(httpd_req_t *req) {
     char ch = req->uri[urilen - qlen - 1];
     httpd_resp_set_type(req, "application/json");
     ch -= 0x30;
-    ESP_LOGD(REST_TAG, "Get plugin params for channel %d", ch);
-    if (ch == 0 || ch == 1){
+    ESP_LOGI(REST_TAG, "Get plugin params for channel %d", ch);
+    if (ch < 40) {
         const char *res = CTAG::AUDIO::SoundProcessorManager::GetCStrJSONActivePluginParams(ch);
         if(nullptr != res) httpd_resp_sendstr(req, res);
     }
@@ -196,8 +196,8 @@ esp_err_t RestServer::set_active_plugin_get_handler(httpd_req_t *req) {
     httpd_query_key_value(s, "id", v, 128);
     std::string id(v);
     ch -= 0x30;
-    ESP_LOGD(REST_TAG, "Set active plugin for channel %d %s %s", ch, v, s);
-    if (ch == 0 || ch == 1){
+    ESP_LOGI(REST_TAG, "Set active plugin for channel %d %s %s", ch, v, s);
+    if (ch < 40) {
         CTAG::AUDIO::SoundProcessorManager::SetSoundProcessorChannel(ch, id);
         FAV::Favorites::DeactivateFavorite();
     }
@@ -237,7 +237,7 @@ esp_err_t RestServer::set_plugin_param_get_handler(httpd_req_t *req) {
     std::string sid(id);
     ch -= 0x30;
     ESP_LOGD(REST_TAG, "Setting chan %d param %s key %s value %d", ch, id, key.c_str(), val);
-    if (ch == 0 || ch == 1)
+    if (ch < 40)
         CTAG::AUDIO::SoundProcessorManager::SetChannelParamValue(ch, sid, key, val);
     httpd_resp_set_type(req, "text/html");
     httpd_resp_send(req, NULL, 0);
@@ -253,8 +253,8 @@ esp_err_t RestServer::get_presets_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "application/json");
     ch -= 0x30;
     ESP_LOGD(REST_TAG, "Querying presets for channel %d", ch);
-    if (ch == 0 || ch == 1){
-        const char* res = CTAG::AUDIO::SoundProcessorManager::GetCStrJSONGetPresets(ch);
+     if (ch < 40) {
+       const char* res = CTAG::AUDIO::SoundProcessorManager::GetCStrJSONGetPresets(ch);
         if(nullptr != res) httpd_resp_sendstr(req, res);
     }
 
@@ -279,7 +279,7 @@ esp_err_t RestServer::save_preset_get_handler(httpd_req_t *req) {
     char ch = req->uri[urilen - qlen - 2];
     ch -= 0x30;
     ESP_LOGD(REST_TAG, "Store preset for channel %s %d", req->uri, ch);
-    if (ch == 0 || ch == 1)
+    if (ch < 40) 
         CTAG::AUDIO::SoundProcessorManager::ChannelSavePreset(ch, string(name), atoi(number));
     httpd_resp_set_type(req, "text/html");
     httpd_resp_send(req, NULL, 0);
@@ -301,8 +301,8 @@ esp_err_t RestServer::load_preset_get_handler(httpd_req_t *req) {
     char ch = req->uri[urilen - qlen - 2];
     ch -= 0x30;
     ESP_LOGD("HTTPD", "Load preset for channel %s %c", req->uri, ch);
-    if (ch == 0 || ch == 1){
-        CTAG::AUDIO::SoundProcessorManager::ChannelLoadPreset(ch, atoi(number));
+     if (ch < 40) {
+       CTAG::AUDIO::SoundProcessorManager::ChannelLoadPreset(ch, atoi(number));
         FAV::Favorites::DeactivateFavorite();
     }
     httpd_resp_set_type(req, "text/html");

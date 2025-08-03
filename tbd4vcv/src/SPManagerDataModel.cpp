@@ -95,7 +95,7 @@ const char *SPManagerDataModel::GetCStrJSONSoundProcessors() {
 }
 
 string SPManagerDataModel::GetActiveProcessorID(const int chan) {
-    if (chan > 1 || chan < 0) return string("");
+    if (chan > 40 || chan < 0) return string("");
     if (!m.HasMember("activeProcessors")) return string();
     if (!m["activeProcessors"].IsArray()) return string();
     if (m["activeProcessors"].GetArray().Size() == 0) return string();
@@ -103,7 +103,7 @@ string SPManagerDataModel::GetActiveProcessorID(const int chan) {
 }
 
 void SPManagerDataModel::SetActivePluginID(const string &id, const int chan) {
-    if (chan > 1 || chan < 0) return;
+    if (chan > 40 || chan < 0) return;
     if (!m.HasMember("activeProcessors")) return;
     if (!m["activeProcessors"].IsArray()) return;
     if (m["activeProcessors"].Size() == 0) return;
@@ -112,7 +112,7 @@ void SPManagerDataModel::SetActivePluginID(const string &id, const int chan) {
 }
 
 void SPManagerDataModel::SetActivePatchNum(const int patchNum, const int chan) {
-    if (chan > 1 || chan < 0) return;
+    if (chan > 40 || chan < 0) return;
     string id = GetActiveProcessorID(chan);
     if (!m.HasMember("lastPatches")) return;
     if (!m["lastPatches"].IsArray()) return;
@@ -129,7 +129,7 @@ void SPManagerDataModel::SetActivePatchNum(const int patchNum, const int chan) {
 }
 
 int SPManagerDataModel::GetActivePatchNum(const int chan) {
-    if (chan > 1 || chan < 0) return 0;
+    if (chan > 40 || chan < 0) return 0;
     string id = GetActiveProcessorID(chan);
     if (!m.HasMember("lastPatches")) return 0;
     if (!m["lastPatches"].IsArray()) return 0;

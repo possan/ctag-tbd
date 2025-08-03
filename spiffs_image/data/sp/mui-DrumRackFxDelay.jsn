@@ -1,0 +1,73 @@
+{
+  "id": "DrumRackFxDelay",
+  "isStereo": true,
+  "name": "DR FX Delay",
+  "hint": "A mix of drums and samples",
+  "params": [
+    {
+      "id": "fx1_group",
+      "name": "Delay",
+      "type": "group",
+      "params": [
+        {
+          "id": "fx1_time_ms",
+          "name": "Delay/ms",
+          "type": "int",
+          "min": 1,
+          "max": 2000,
+          "step": 1
+        },
+        {
+          "id": "fx1_sync",
+          "name": "Sync",
+          "type": "bool"
+        },
+        {
+          "id": "fx1_freeze",
+          "name": "Freeze",
+          "type": "bool"
+        },
+        {
+          "id": "fx1_tape_digital",
+          "name": "Tape/Digital",
+          "type": "bool"
+        },
+        {
+          "id": "fx1_st_width",
+          "name": "Stereo Width",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "fx1_fx_send",
+          "name": "Reverb Send",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "fx1_feedback",
+          "name": "Feedback",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "fx1_base",
+          "name": "Filter Base",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "fx1_width",
+          "name": "Filter Width",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    }
+  ]
+}

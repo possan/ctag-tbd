@@ -1,0 +1,102 @@
+{
+  "id": "DrumRackDB",
+  "isStereo": false,
+  "name": "DR Dig. Kick",
+  "hint": "A mix of drums and samples",
+  "params": [
+    {
+      "id": "db_group",
+      "name": "Digital Bass Drum",
+      "type": "group",
+      "params": [
+        {
+          "id": "db_trigger",
+          "name": "Trigger",
+          "type": "bool"
+        },
+        {
+          "id": "db_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "db_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "db_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "db_fx1",
+          "name": "Delay Send",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "db_fx2",
+          "name": "Reverb Send",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "db_accent",
+          "name": "Accent",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "db_f0",
+          "name": "Base Frequency",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "db_tone",
+          "name": "Tone",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "db_decay",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "db_dirty",
+          "name": "Dirtiness",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "db_fm_env",
+          "name": "FM Envelope",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "db_fm_dcy",
+          "name": "FM Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    }
+  ]
+}

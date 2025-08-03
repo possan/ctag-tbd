@@ -1,0 +1,161 @@
+{
+  "id": "DrumRackSampler",
+  "isStereo": false,
+  "name": "DR Sampler",
+  "hint": "A mix of drums and samples",
+  "params": [
+    {
+      "id": "s1_group",
+      "name": "Sample 1",
+      "type": "group",
+      "params": [
+        {
+          "id": "s1_gate",
+          "name": "Gate",
+          "type": "bool"
+        },
+        {
+          "id": "s1_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "s1_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "s1_fx1",
+          "name": "Delay Send",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_fx2",
+          "name": "Reverb Send",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_speed",
+          "name": "Speed / Tune",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "s1_pitch",
+          "name": "Pitch",
+          "type": "int",
+          "min": -12,
+          "max": 12
+        },
+        {
+          "id": "s1_bank",
+          "name": "Bank",
+          "type": "int",
+          "min": 0,
+          "max": 31
+        },
+        {
+          "id": "s1_slice",
+          "name": "Slice",
+          "type": "int",
+          "min": 0,
+          "max": 31
+        },
+        {
+          "id": "s1_start",
+          "name": "Start",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_end",
+          "name": "End",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_lp",
+          "name": "Loop",
+          "type": "bool"
+        },
+        {
+          "id": "s1_lp_pp",
+          "name": "Ping-pong",
+          "type": "bool"
+        },
+        {
+          "id": "s1_lp_pos",
+          "name": "End",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_atk",
+          "name": "Attack",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_dcy",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_eg2fm",
+          "name": "EG FM Amount",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_brr",
+          "name": "Bit Reduction",
+          "type": "int",
+          "min": 0,
+          "max": 14
+        },
+        {
+          "id": "s1_ft",
+          "name": "Filter Type",
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "id": "s1_fc",
+          "name": "Filter Cutoff",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "s1_fq",
+          "name": "Filter Q",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    }
+  ]
+}

@@ -11,9 +11,9 @@
             </ons-select>
         </ons-list-item>
         <ons-list-item>
-            <ons-button id="go-ch0" style="margin: 2px;">Edit channel 0</ons-button>
-            <ons-button id="load-ch0" style="margin: 2px">Load preset</ons-button>
-            <ons-button id="save-ch0" style="margin: 2px;">Save preset</ons-button>
+            <ons-button id="go-ch0" style="margin: 2px;" data-what="edit" data-index="0">Edit channel</ons-button>
+            <ons-button id="load-ch0" style="margin: 2px" data-what="load" data-index="0">Load preset</ons-button>
+            <ons-button id="save-ch0" style="margin: 2px;" data-what="save" data-index="0">Save preset</ons-button>
         </ons-list-item>
     </ons-list>
     <ons-list>
@@ -25,9 +25,87 @@
             </ons-select>
         </ons-list-item>
         <ons-list-item>
-            <ons-button id="go-ch1" style="margin: 2px;">Edit channel 1</ons-button>
-            <ons-button id="load-ch1" style="margin: 2px">Load preset</ons-button>
-            <ons-button id="save-ch1" style="margin: 2px;">Save preset</ons-button>
+            <ons-button id="go-ch1" style="margin: 2px;" data-what="edit" data-index="1">Edit channel</ons-button>
+            <ons-button id="load-ch1" style="margin: 2px" data-what="load" data-index="1">Load preset</ons-button>
+            <ons-button id="save-ch1" style="margin: 2px;" data-what="save" data-index="1">Save preset</ons-button>
+        </ons-list-item>
+    </ons-list>
+    <ons-list>
+        <ons-list-header>Plugin channel 2</ons-list-header>
+        <ons-list-item>
+            <ons-select>
+                <select data-what="plugin" data-index="2"></select>
+            </ons-select>
+        </ons-list-item>
+        <ons-list-item>
+            <ons-button style="margin: 2px;" data-what="edit" data-index="2">Edit channel</ons-button>
+            <ons-button style="margin: 2px" data-what="load" data-index="2">Load preset</ons-button>
+            <ons-button style="margin: 2px;" data-what="save" data-index="2">Save preset</ons-button>
+        </ons-list-item>
+    </ons-list>
+    <ons-list>
+        <ons-list-header>Plugin channel 3</ons-list-header>
+        <ons-list-item>
+            <ons-select>
+                <select data-what="plugin" data-index="3"></select>
+            </ons-select>
+        </ons-list-item>
+        <ons-list-item>
+            <ons-button style="margin: 2px;" data-what="edit" data-index="3">Edit channel</ons-button>
+            <ons-button style="margin: 2px" data-what="load" data-index="3">Load preset</ons-button>
+            <ons-button style="margin: 2px;" data-what="save" data-index="3">Save preset</ons-button>
+        </ons-list-item>
+    </ons-list>
+    <ons-list>
+        <ons-list-header>Plugin channel 4</ons-list-header>
+        <ons-list-item>
+            <ons-select>
+                <select data-what="plugin" data-index="4"></select>
+            </ons-select>
+        </ons-list-item>
+        <ons-list-item>
+            <ons-button style="margin: 2px;" data-what="edit" data-index="4">Edit channel</ons-button>
+            <ons-button style="margin: 2px" data-what="load" data-index="4">Load preset</ons-button>
+            <ons-button style="margin: 2px;" data-what="save" data-index="4">Save preset</ons-button>
+        </ons-list-item>
+    </ons-list>
+    <ons-list>
+        <ons-list-header>Plugin channel 5</ons-list-header>
+        <ons-list-item>
+            <ons-select>
+                <select data-what="plugin" data-index="5"></select>
+            </ons-select>
+        </ons-list-item>
+        <ons-list-item>
+            <ons-button style="margin: 2px;" data-what="edit" data-index="5">Edit channel</ons-button>
+            <ons-button style="margin: 2px" data-what="load" data-index="5">Load preset</ons-button>
+            <ons-button style="margin: 2px;" data-what="save" data-index="5">Save preset</ons-button>
+        </ons-list-item>
+    </ons-list>
+    <ons-list>
+        <ons-list-header>Plugin channel 6</ons-list-header>
+        <ons-list-item>
+            <ons-select>
+                <select data-what="plugin" data-index="6"></select>
+            </ons-select>
+        </ons-list-item>
+        <ons-list-item>
+            <ons-button style="margin: 2px;" data-what="edit" data-index="6">Edit channel</ons-button>
+            <ons-button style="margin: 2px" data-what="load" data-index="6">Load preset</ons-button>
+            <ons-button style="margin: 2px;" data-what="save" data-index="6">Save preset</ons-button>
+        </ons-list-item>
+    </ons-list>
+    <ons-list>
+        <ons-list-header>Plugin channel 7</ons-list-header>
+        <ons-list-item>
+            <ons-select>
+                <select data-what="plugin" data-index="7"></select>
+            </ons-select>
+        </ons-list-item>
+        <ons-list-item>
+            <ons-button style="margin: 2px;" data-what="edit" data-index="7">Edit channel</ons-button>
+            <ons-button style="margin: 2px" data-what="load" data-index="7">Load preset</ons-button>
+            <ons-button style="margin: 2px;" data-what="save" data-index="7">Save preset</ons-button>
         </ons-list-item>
     </ons-list>
     <ons-list>
@@ -82,6 +160,19 @@
                     $('#plugin-select-ch1').val(data.id);
                 }
             );
+
+            // load all other active plugins
+            for (const el of $('select[data-what="plugin"]')) {
+                console.log('load', el)
+                const idx = ~~el.dataset.index
+                $.getq('myq',
+                    '/api/v1/getActivePlugin/'+idx,
+                    data => {
+                        if (typeof data == 'string') data = JSON.parse(data);
+                        $(el).val(data.id);
+                    }
+                );
+            }
         }
 
         ons.getScriptPage().onInit = function () {
@@ -111,10 +202,68 @@
                             }
                         }
                     );
+
+                    // populate all other plugin dropdowns
+                    for (const el of $('select[data-what="plugin"]')) {
+                        console.log('populating', el)
+                        data.forEach(plug => {
+                            const t = plug.hasOwnProperty('hint') ? 'title="' + plug.hint + '" ' : '';
+                            const s = '<option ' + t + 'value="' + plug.id + '">' + plug.name + ' ' + (plug.isStereo ? '(ST)':'(M)')+'</option>';
+                            $(el).append(s);
+                        });
+                    }
+
+
+
                     // global var
                     window.plugins = data;
                 }
             );
+
+
+            // hook up all other dropdown
+            for (const el of $('select[data-what="plugin"]')) {
+                console.log('hooking up', el)
+                $(el).on('change', function(evt) {
+                    console.log('dropdown change', evt)
+                    const idx = ~~evt.target.dataset.index
+                    $.getq('myq',
+                        'api/v1/setActivePlugin/' + idx,
+                        {id: evt.target.value},
+                        d => {
+                            // modal_mn.hide();
+                        }
+                    );
+                })
+            }
+
+            // hook up all other buttons
+            for (const el of $('*[data-what="edit"]')) {
+                console.log('hooking up', el)
+                $(el).on('click', function(evt) {
+                    const idx = ~~evt.target.dataset.index
+                    console.log('edit clicked', evt, idx)
+                    document.querySelector('#myNavigator').pushPage('edit.html', {data: {ch: idx}});
+                })
+            }
+            for (const el of $('*[data-what="load"]')) {
+                console.log('hooking up', el)
+                $(el).on('click', function(evt) {
+                    const idx = ~~evt.target.dataset.index
+                    console.log('load clicked', evt, idx)
+                    document.querySelector('#myNavigator').pushPage('load.html', {data: {ch: idx}});
+                })
+            }
+            for (const el of $('*[data-what="save"]')) {
+                console.log('hooking up', el)
+                $(el).on('click', function(evt) {
+                    const idx = ~~evt.target.dataset.index
+                    console.log('save clicked', evt, idx)
+                    document.querySelector('#myNavigator').pushPage('save.html', {data: {ch: idx}});
+                })
+            }
+
+
             $.postq('myq',
                 'api/v1/favorites/getAll',
                 data => {

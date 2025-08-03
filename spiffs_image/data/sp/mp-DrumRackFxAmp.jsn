@@ -1,0 +1,30 @@
+{
+  "activePatch": 0,
+  "patches": [
+    {
+      "name": "Default",
+      "params": [
+        {
+          "id": "ab_lev",
+          "current": 2047,
+          "cv": -1
+        },
+        {
+          "id": "ab_pan",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "ab_fx1",
+          "current": 0,
+          "cv": -1
+        },
+        {
+          "id": "ab_fx2",
+          "current": 0,
+          "cv": -1
+        }
+      ]
+    }
+  ]
+}

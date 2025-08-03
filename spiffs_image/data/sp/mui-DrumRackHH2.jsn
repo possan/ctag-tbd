@@ -1,0 +1,88 @@
+{
+  "id": "DrumRackHH2",
+  "isStereo": false,
+  "name": "DR Hihat 2",
+  "hint": "A mix of drums and samples",
+  "params": [
+    {
+      "id": "hh2_group",
+      "name": "HiHat 2",
+      "type": "group",
+      "params": [
+        {
+          "id": "hh2_trigger",
+          "name": "Trigger",
+          "type": "bool"
+        },
+        {
+          "id": "hh2_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "hh2_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "hh2_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "hh2_fx1",
+          "name": "Delay Send",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "hh2_fx2",
+          "name": "Reverb Send",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "hh2_accent",
+          "name": "Accent",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "hh2_f0",
+          "name": "Base Frequency",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "hh2_tone",
+          "name": "Tone",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "hh2_decay",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "hh2_noise",
+          "name": "Noise Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    }
+  ]
+}

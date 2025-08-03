@@ -1,0 +1,55 @@
+{
+  "activePatch": 0,
+  "patches": [
+    {
+      "name": "Default",
+      "params": [
+        {
+          "id": "fx1_time_ms",
+          "current": 464,
+          "cv": -1
+        },
+        {
+          "id": "fx1_sync",
+          "current": 0,
+          "trig": -1
+        },
+        {
+          "id": "fx1_freeze",
+          "current": 0,
+          "trig": -1
+        },
+        {
+          "id": "fx1_tape_digital",
+          "current": 0,
+          "trig": -1
+        },
+        {
+          "id": "fx1_st_width",
+          "current": 4095,
+          "cv": -1
+        },
+        {
+          "id": "fx1_fx_send",
+          "current": 100,
+          "cv": -1
+        },
+        {
+          "id": "fx1_feedback",
+          "current": 1000,
+          "cv": -1
+        },
+        {
+          "id": "fx1_base",
+          "current": 2190,
+          "cv": -1
+        },
+        {
+          "id": "fx1_width",
+          "current": 3658,
+          "cv": -1
+        }
+     ]
+    }
+  ]
+}

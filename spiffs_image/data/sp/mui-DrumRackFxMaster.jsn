@@ -1,0 +1,109 @@
+{
+  "id": "DrumRackFxMaster",
+  "isStereo": true,
+  "name": "DR FX Master",
+  "hint": "A mix of drums and samples",
+  "params": [
+    {
+      "id": "c_group",
+      "name": "Compressor",
+      "type": "group",
+      "params": [
+        {
+          "id": "c_thres",
+          "name": "Threshold",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "c_ratio",
+          "name": "Ratio",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "c_atk",
+          "name": "Attack",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "c_rel",
+          "name": "Release",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "c_lpf",
+          "name": "Sidechain LPF",
+          "type": "bool"
+        },
+        {
+          "id": "c_gain",
+          "name": "Gain",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "c_mix",
+          "name": "Mix",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "c_dly_level",
+          "name": "Delay Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "c_rev_level",
+          "name": "Reverb Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+    {
+      "id": "sum",
+      "name": "Overall Mix",
+      "type": "group",
+      "params": [
+        {
+          "id": "sum_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "sum_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "fx1_amount",
+          "name": "Delay Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "fx2_amount",
+          "name": "Reverb Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    }
+  ]
+}
