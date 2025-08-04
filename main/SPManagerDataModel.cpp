@@ -126,6 +126,7 @@ int SPManagerDataModel::GetActivePatchNum(const int chan) {
     string id = GetActiveProcessorID(chan);
     if (!m.HasMember("lastPatches")) return 0;
     if (!m["lastPatches"].IsArray()) return 0;
+    if (m["lastPatches"].Size() <= chan) return 0;
     if (!m["lastPatches"][chan].IsArray()) return 0;
     for (auto &chanPatches : m["lastPatches"][chan].GetArray()) {
         if (!chanPatches.HasMember("id")) return 0;

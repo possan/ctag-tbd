@@ -147,11 +147,13 @@ esp_err_t RestServer::get_active_plugin_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
     size_t qlen = httpd_req_get_url_query_len(req);
     size_t urilen = strlen(req->uri);
-    char ch = req->uri[urilen - qlen - 1];
-    ch -= 0x30;
+    // char ch = req->uri[urilen - qlen - 1];
+    // ch -= 0x30;
+    int ch;
+    sscanf(req->uri, "/api/v1/getActivePlugin/%d", &ch);
     ESP_LOGD(REST_TAG, "Get active plugin for channel %d", ch);
     string res;
-    if (ch < 40) {
+    if (ch >= 0 && ch < 40) {
         res = "{\"id\":\"" + CTAG::AUDIO::SoundProcessorManager::GetStringID(ch) + "\"}";
     }
     httpd_resp_set_type(req, "application/json");
@@ -167,11 +169,13 @@ esp_err_t RestServer::get_params_plugin_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
     size_t qlen = httpd_req_get_url_query_len(req);
     size_t urilen = strlen(req->uri);
-    char ch = req->uri[urilen - qlen - 1];
+    int ch;
+    sscanf(req->uri, "/api/v1/getPluginParams/%d", &ch);
+    // char ch = req->uri[urilen - qlen - 1];
     httpd_resp_set_type(req, "application/json");
-    ch -= 0x30;
+    // ch -= 0x30;
     ESP_LOGI(REST_TAG, "Get plugin params for channel %d", ch);
-    if (ch < 40) {
+    if (ch >= 0 && ch < 40) {
         const char *res = CTAG::AUDIO::SoundProcessorManager::GetCStrJSONActivePluginParams(ch);
         if(nullptr != res) httpd_resp_sendstr(req, res);
     }
@@ -190,14 +194,16 @@ esp_err_t RestServer::set_active_plugin_get_handler(httpd_req_t *req) {
     char v[128];
     size_t qlen = httpd_req_get_url_query_len(req);
     size_t urilen = strlen(req->uri);
-    char ch = req->uri[urilen - qlen - 2];
+    // char ch = req->uri[urilen - qlen - 2];
+    int ch;
+    sscanf(req->uri, "/api/v1/setActivePlugin/%d", &ch);
     httpd_resp_set_type(req, "application/json");
     httpd_req_get_url_query_str(req, s, 128);
     httpd_query_key_value(s, "id", v, 128);
     std::string id(v);
-    ch -= 0x30;
+    // ch -= 0x30;
     ESP_LOGI(REST_TAG, "Set active plugin for channel %d %s %s", ch, v, s);
-    if (ch < 40) {
+    if (ch >= 0 && ch < 40) {
         CTAG::AUDIO::SoundProcessorManager::SetSoundProcessorChannel(ch, id);
         FAV::Favorites::DeactivateFavorite();
     }
@@ -222,22 +228,26 @@ esp_err_t RestServer::set_plugin_param_get_handler(httpd_req_t *req) {
     size_t urilen = strlen(req->uri);
     httpd_req_get_url_query_str(req, query, 128);
     httpd_query_key_value(query, "id", id, 128);
-    char ch = req->uri[urilen - qlen - 2];
+    int ch = -1;
+    // char ch = req->uri[urilen - qlen - 2];
     if (strstr(req->uri, "TRIG")) {
         httpd_query_key_value(query, "trig", cstrvalue, 128);
         key = "trig";
+        sscanf(req->uri, "/api/v1/setPluginParamTRIG/%d", &ch);
     } else if (strstr(req->uri, "CV")) {
         httpd_query_key_value(query, "cv", cstrvalue, 128);
         key = "cv";
+        sscanf(req->uri, "/api/v1/setPluginParamCV/%d", &ch);
     } else {
         httpd_query_key_value(query, "current", cstrvalue, 128);
         key = "current";
+        sscanf(req->uri, "/api/v1/setPluginParam/%d", &ch);
     }
     val = atoi(cstrvalue);
     std::string sid(id);
-    ch -= 0x30;
+    // ch -= 0x30;
     ESP_LOGD(REST_TAG, "Setting chan %d param %s key %s value %d", ch, id, key.c_str(), val);
-    if (ch < 40)
+    if (ch >= 0 && ch < 40)
         CTAG::AUDIO::SoundProcessorManager::SetChannelParamValue(ch, sid, key, val);
     httpd_resp_set_type(req, "text/html");
     httpd_resp_send(req, NULL, 0);
