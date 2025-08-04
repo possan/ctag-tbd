@@ -126,9 +126,10 @@ void ctagSoundProcessorDrumRackFxDelay::Process(const ProcessData& data){
     //     fS4Lev * fS4Pan
     // };
     // float buf_fx1_l[32], buf_fx1_r[32], buf_fx2[32];
-    // for (int i = 0; i < 32; i++){
-    //     float fVal_l = 0.f;
-    //     float fVal_r = 0.f;
+    for (int i = 0; i < 32; i++){
+        float fVal_l = 0.f;
+        float fVal_r = 0.f;
+
     // 	// models
     //     fVal_l += data_ptrs[0][i] * lev_l[0];
     //     fVal_l += data_ptrs[1][i] * lev_l[1];
@@ -230,85 +231,89 @@ void ctagSoundProcessorDrumRackFxDelay::Process(const ProcessData& data){
     //     fVal_r = fVal_r * fCompMUPGain * fCompMix + dry_r * (1.f - fCompMix);
     //     data.buf[i * 2] = fVal_l * fMixLevel;
     //     data.buf[i * 2 + 1] = fVal_r * fMixLevel;
-    // }
+    }
 
     // // fx buffers
-    // float dly_buf_l[32], dly_buf_r[32];
+    float dly_buf_l[32], dly_buf_r[32];
     // float rev_buf_l[32], rev_buf_r[32];
 
     // // delay
-    // CONSTRAIN(fDelayTime, 0.0001, 2000.f)
-    // float ofs = fDelayTime * 44.1f;
-    // if(fabsf(ofs - delayOffset) < 16) ofs = delayOffset;
-    // for(int i=0; i<32; i++){
-    //     // Calculate the delay offset in samples
-    //     if(delayOffset != ofs){
-    //         if(bTapeDigital){
-    //             if(ofs != delayOffset){
-    //                 duck = 1.f;
-    //             }
-    //             delayOffset = ofs;
-    //         } else {
-    //             float temp = delayOffset;
-    //             delayOffset = ONE_POLE(temp, ofs, 0.0001f);
-    //         }
-    //         readPos = static_cast<float>(writeIndex) - delayOffset;
-    //         if(readPos < 0.f) readPos += float(delayBufferSizeMax);
-    //         if(readPos >= float(delayBufferSizeMax)) readPos -= float(delayBufferSizeMax);
-    //     }
+    CONSTRAIN(fDelayTime, 0.0001, 2000.f)
+    float ofs = fDelayTime * 44.1f;
+    if(fabsf(ofs - delayOffset) < 16) ofs = delayOffset;
+    for(int i=0; i<32; i++){
+        // Calculate the delay offset in samples
+        if(delayOffset != ofs){
+            if(bTapeDigital){
+                if(ofs != delayOffset){
+                    duck = 1.f;
+                }
+                delayOffset = ofs;
+            } else {
+                float temp = delayOffset;
+                delayOffset = ONE_POLE(temp, ofs, 0.0001f);
+            }
+            readPos = static_cast<float>(writeIndex) - delayOffset;
+            if(readPos < 0.f) readPos += float(delayBufferSizeMax);
+            if(readPos >= float(delayBufferSizeMax)) readPos -= float(delayBufferSizeMax);
+        }
 
-    //     float inputSample_l = buf_fx1_l[i];
-    //     float inputSample_r = buf_fx1_r[i];
-    //     float outputSample_l, outputSample_r;
+        float inputSample_l = data.buf[i * 2 + 0];
+        float inputSample_r = data.buf[i * 2 + 1];
 
-    //     outputSample_l = HELPERS::InterpolateWaveLinearWrap(delayBuffer_l, readPos, delayBufferSizeMax);
-    //     outputSample_r = HELPERS::InterpolateWaveLinearWrap(delayBuffer_r, readPos, delayBufferSizeMax);
-    //     readPos += 1.f;
-    //     readPos > float(delayBufferSizeMax) ? readPos -= float(delayBufferSizeMax) : readPos;
+        float outputSample_l, outputSample_r;
 
-    //     float temp = duck;
-    //     duck = ONE_POLE(temp, 0.f, 0.35f)
-    //     outputSample_l = outputSample_l * (1.f - duck);
-    //     outputSample_r = outputSample_r * (1.f - duck);
-    //     // Write the input sample to the delay buffer
-    //     float out_l, out_r;
-    //     if(!bFreeze){
-    //         out_l = inputSample_l + fFeedback * ((1.f - fDelayStereoWidth) * outputSample_l + fDelayStereoWidth * outputSample_r);
-    //         out_l = lp_l.Process<stmlib::FILTER_MODE_LOW_PASS>(out_l);
-    //         out_l = hp_l.Process<stmlib::FILTER_MODE_HIGH_PASS>(out_l);
-    //         out_r = (1.f - fDelayStereoWidth) * inputSample_r + fFeedback * ((1.f - fDelayStereoWidth) * outputSample_r + fDelayStereoWidth * outputSample_l);
-    //         out_r = lp_r.Process<stmlib::FILTER_MODE_LOW_PASS>(out_r);
-    //         out_r = hp_r.Process<stmlib::FILTER_MODE_HIGH_PASS>(out_r);
-    //     }
-    //     else{
-    //         out_l = ((1.f - fDelayStereoWidth) * outputSample_l + fDelayStereoWidth * outputSample_r);
-    //         out_r = ((1.f - fDelayStereoWidth) * outputSample_r + fDelayStereoWidth * outputSample_l);
-    //     }
+        outputSample_l = HELPERS::InterpolateWaveLinearWrap(delayBuffer_l, readPos, delayBufferSizeMax);
+        outputSample_r = HELPERS::InterpolateWaveLinearWrap(delayBuffer_r, readPos, delayBufferSizeMax);
 
-    //     delayBuffer_l[writeIndex] = stmlib::SoftLimit(out_l);
-    //     delayBuffer_r[writeIndex] = stmlib::SoftLimit(out_r);
-    //     writeIndex = (writeIndex + 1) % delayBufferSizeMax;
+        readPos += 1.f;
+        readPos > float(delayBufferSizeMax) ? readPos -= float(delayBufferSizeMax) : readPos;
 
-    //     // Mix the dry (input) and wet (delayed) signal
-    //     dly_buf_l[i] = outputSample_l;
-    //     dly_buf_r[i] = outputSample_r;
-    //     rev_buf_l[i] = buf_fx2[i] + dly_buf_l[i] * fDelayReverbSend;
-    //     rev_buf_r[i] = buf_fx2[i] + dly_buf_r[i] * fDelayReverbSend;
-    // }
+        float temp = duck;
+        duck = ONE_POLE(temp, 0.f, 0.35f)
+        outputSample_l = outputSample_l * (1.f - duck);
+        outputSample_r = outputSample_r * (1.f - duck);
+
+        // Write the input sample to the delay buffer
+        float out_l, out_r;
+        if(!bFreeze){
+            out_l = inputSample_l + fFeedback * ((1.f - fDelayStereoWidth) * outputSample_l + fDelayStereoWidth * outputSample_r);
+            out_l = lp_l.Process<stmlib::FILTER_MODE_LOW_PASS>(out_l);
+            out_l = hp_l.Process<stmlib::FILTER_MODE_HIGH_PASS>(out_l);
+
+            out_r = (1.f - fDelayStereoWidth) * inputSample_r + fFeedback * ((1.f - fDelayStereoWidth) * outputSample_r + fDelayStereoWidth * outputSample_l);
+            out_r = lp_r.Process<stmlib::FILTER_MODE_LOW_PASS>(out_r);
+            out_r = hp_r.Process<stmlib::FILTER_MODE_HIGH_PASS>(out_r);
+        }
+        else{
+            out_l = ((1.f - fDelayStereoWidth) * outputSample_l + fDelayStereoWidth * outputSample_r);
+            out_r = ((1.f - fDelayStereoWidth) * outputSample_r + fDelayStereoWidth * outputSample_l);
+        }
+
+        delayBuffer_l[writeIndex] = stmlib::SoftLimit(out_l);
+        delayBuffer_r[writeIndex] = stmlib::SoftLimit(out_r);
+        writeIndex = (writeIndex + 1) % delayBufferSizeMax;
+
+        // Mix the dry (input) and wet (delayed) signal
+        dly_buf_l[i] = outputSample_l;
+        dly_buf_r[i] = outputSample_r;
+        // rev_buf_l[i] = buf_fx2[i] + dly_buf_l[i] * fDelayReverbSend;
+        // rev_buf_r[i] = buf_fx2[i] + dly_buf_r[i] * fDelayReverbSend;
+    }
 
     // // reverb
     // reverb.Process(rev_buf_l, rev_buf_r, 32);
 
-    // // add fx to sum
+    // add fx to sum
     // fRevAmount *= fRevAmount;
-    // fDelayAmount *= fDelayAmount;
-    // for (int i = 0; i < 32; i++) {
-    //     data.buf[i * 2] += rev_buf_l[i] * fRevAmount + dly_buf_l[i] * fDelayAmount;
-    //     data.buf[i * 2 + 1] += rev_buf_r[i] * fRevAmount + dly_buf_r[i] * fDelayAmount;
-    // }
+    // float fDelayAmount = 1.0f; // fDelayAmount;
+    for (int i = 0; i < 32; i++) {
+        data.buf[i * 2] = dly_buf_l[i]; //  * fDelayAmount;
+        data.buf[i * 2 + 1] = dly_buf_r[i]; // * fDelayAmount;
+    }
 }
 
-void ctagSoundProcessorDrumRackFxDelay::Init(std::size_t blockSize, void* blockPtr){
+void ctagSoundProcessorDrumRackFxDelay::Init(){
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
@@ -318,11 +323,10 @@ void ctagSoundProcessorDrumRackFxDelay::Init(std::size_t blockSize, void* blockP
     delayBuffer_l = static_cast<float*>(heap_caps_malloc(delayBufferSizeMax * sizeof(float), MALLOC_CAP_SPIRAM));
     assert(delayBuffer_l != nullptr);
     std::fill_n(delayBuffer_l, delayBufferSizeMax, 0.f);
+
     delayBuffer_r = static_cast<float*>(heap_caps_malloc(delayBufferSizeMax * sizeof(float), MALLOC_CAP_SPIRAM));
     assert(delayBuffer_r != nullptr);
     std::fill_n(delayBuffer_r, delayBufferSizeMax, 0.f);
-
-    std::fill_n(silence, 32, 0.f);
 
     // check if blockMem is large enough
     // blockMem is used just like larger blocks of heap memory

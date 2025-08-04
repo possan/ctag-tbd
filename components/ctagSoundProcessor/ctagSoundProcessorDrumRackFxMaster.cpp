@@ -225,7 +225,7 @@ void ctagSoundProcessorDrumRackFxMaster::Process(const ProcessData& data){
     // }
 }
 
-void ctagSoundProcessorDrumRackFxMaster::Init(std::size_t blockSize, void* blockPtr){
+void ctagSoundProcessorDrumRackFxMaster::Init(){
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);

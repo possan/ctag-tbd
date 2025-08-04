@@ -68,6 +68,7 @@ void ctagSoundProcessorDrumRackSampler::Process(const ProcessData& data){
         rompler[0].params.filterType = static_cast<CTAG::SYNTHESIS::RomplerVoiceMinimal::FilterType>(iS1FType);
         rompler[0].Process(s1_out, 32);
         // data_ptrs[9] = s1_out;
+        memcpy(data.buf, s1_out, 32 * sizeof(float));
     }
     else{
         // data_ptrs[9] = silence;
@@ -373,7 +374,7 @@ void ctagSoundProcessorDrumRackSampler::Process(const ProcessData& data){
     // }
 }
 
-void ctagSoundProcessorDrumRackSampler::Init(std::size_t blockSize, void* blockPtr){
+void ctagSoundProcessorDrumRackSampler::Init(){
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);

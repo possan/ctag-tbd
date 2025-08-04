@@ -5,8 +5,8 @@ using namespace CTAG::SP;
 // TODOs: fx return before compressor, stereo panning with delay -> when panned right, levels are lower, metallic sound of reverb.
 
 void ctagSoundProcessorDrumRackCL::Process(const ProcessData& data){
-    const float maxFXSendLevelDly {4.f};
-    const float maxFXSendLevelRev {2.f};
+    // const float maxFXSendLevelDly {4.f};
+    // const float maxFXSendLevelRev {2.f};
      
 
     // clap
@@ -14,133 +14,56 @@ void ctagSoundProcessorDrumRackCL::Process(const ProcessData& data){
     MK_FLT_PAR_ABS(fCLLev, cl_lev, 4095.f, 2.f)
     fCLLev *= fCLLev;
     MK_FLT_PAR_ABS_PAN(fCLPan, cl_pan, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fCLFX1Send, cl_fx1, 4095.f, maxFXSendLevelDly)
-    fCLFX1Send *= fCLFX1Send;
-    MK_FLT_PAR_ABS(fCLFX2Send, cl_fx2, 4095.f, maxFXSendLevelRev)
-    fCLFX2Send *= fCLFX2Send;
+    // MK_FLT_PAR_ABS(fCLFX1Send, cl_fx1, 4095.f, maxFXSendLevelDly)
+    // fCLFX1Send *= fCLFX1Send;
+    // MK_FLT_PAR_ABS(fCLFX2Send, cl_fx2, 4095.f, maxFXSendLevelRev)
+    // fCLFX2Send *= fCLFX2Send;
 
-    if (!bCLMute){
-        MK_FLT_PAR_ABS_MIN_MAX(cl_pitch1_, cl_f0, 4095.f, 350.f, 4000.f)
-        MK_FLT_PAR_ABS_MIN_MAX(cl_pitch2_, cl_f0, 4095.f, 300.f, 3000.f)
-        MK_FLT_PAR_ABS_MIN_MAX(cl_reso1_, cl_tone, 4095.f, 1.f, 2.5f)
-        MK_FLT_PAR_ABS_MIN_MAX(cl_reso2_, cl_tone, 4095.f, 0.75f, 6.5f)
-        MK_FLT_PAR_ABS_MIN_MAX(cl_decay1_, cl_decay, 4095.f, 0.05f, 0.3f)
-        MK_FLT_PAR_ABS_MIN_MAX(cl_decay2_, cl_decay, 4095.f, 0.05f, 2.f)
-        MK_FLT_PAR_ABS_MIN_MAX(cl_scale_attack_, cl_scale, 4095.f, 0.f, 0.1f)
-        MK_FLT_PAR_ABS_MIN_MAX(cl_scale_trans, cl_scale, 4095.f, 1.f, 3.f)
-        MK_INT_PAR_ABS(cl_trans_, cl_transient, 16)
-
-        cl.params.pitch1 = cl_pitch1_ / 44100.f;
-        cl.params.pitch2 = cl_pitch2_ / 44100.f;
-        cl.params.reso1 = cl_reso1_;
-        cl.params.reso2 = cl_reso2_;
-        cl.params.decay1 = cl_decay1_;
-        cl.params.decay2 = cl_decay2_;
-        cl.params.attack = cl_scale_attack_;
-        cl.params.scale = cl_scale_trans;
-        cl.params.transient = cl_trans_ % 16;
-
-        MK_BOOL_PAR(bCLTrig, cl_trigger)
-        if (bCLTrig != cl_trig_prev && bCLTrig){
-            cl_trig_prev = true;
-            cl.Trigger();
-        }
-        else if (!bCLTrig){
-            cl_trig_prev = false;
-        }
-
-        cl.Process(cl_out, 32);
-        // data_ptrs[7] = cl_out;
-    }
-    else{
+    if (bCLMute) {
+        memset(data.buf, 0, 32 * sizeof(float));
         // data_ptrs[7] = silence;
+        return;
     }
+
+    MK_FLT_PAR_ABS_MIN_MAX(cl_pitch1_, cl_f0, 4095.f, 350.f, 4000.f)
+    MK_FLT_PAR_ABS_MIN_MAX(cl_pitch2_, cl_f0, 4095.f, 300.f, 3000.f)
+    MK_FLT_PAR_ABS_MIN_MAX(cl_reso1_, cl_tone, 4095.f, 1.f, 2.5f)
+    MK_FLT_PAR_ABS_MIN_MAX(cl_reso2_, cl_tone, 4095.f, 0.75f, 6.5f)
+    MK_FLT_PAR_ABS_MIN_MAX(cl_decay1_, cl_decay, 4095.f, 0.05f, 0.3f)
+    MK_FLT_PAR_ABS_MIN_MAX(cl_decay2_, cl_decay, 4095.f, 0.05f, 2.f)
+    MK_FLT_PAR_ABS_MIN_MAX(cl_scale_attack_, cl_scale, 4095.f, 0.f, 0.1f)
+    MK_FLT_PAR_ABS_MIN_MAX(cl_scale_trans, cl_scale, 4095.f, 1.f, 3.f)
+    MK_INT_PAR_ABS(cl_trans_, cl_transient, 16)
+
+    cl.params.pitch1 = cl_pitch1_ / 44100.f;
+    cl.params.pitch2 = cl_pitch2_ / 44100.f;
+    cl.params.reso1 = cl_reso1_;
+    cl.params.reso2 = cl_reso2_;
+    cl.params.decay1 = cl_decay1_;
+    cl.params.decay2 = cl_decay2_;
+    cl.params.attack = cl_scale_attack_;
+    cl.params.scale = cl_scale_trans;
+    cl.params.transient = cl_trans_ % 16;
+
+    MK_BOOL_PAR(bCLTrig, cl_trigger)
+    if (bCLTrig != cl_trig_prev && bCLTrig){
+        cl_trig_prev = true;
+        cl.Trigger();
+    }
+    else if (!bCLTrig){
+        cl_trig_prev = false;
+    }
+
+    cl.Process(cl_out, 32);
+    //     // data_ptrs[7] = cl_out;
+    // }
+    // else{
+    //     // data_ptrs[7] = silence;
+    // }
+
+    memcpy(data.buf, cl_out, 32 * sizeof(float));
  
     // // delay
-    // MK_FLT_PAR_ABS(fFeedback, fx1_feedback, 4095.f, 1.5f)
-    // MK_FLT_PAR_ABS(fBase, fx1_base, 4095.f, 1.f)
-    // MK_FLT_PAR_ABS(fWidth, fx1_width, 4095.f, 1.f)
-    // MK_FLT_PAR_ABS(fDelayStereoWidth, fx1_st_width, 4095.f, 1.f)
-    // MK_FLT_PAR_ABS(fDelayReverbSend, fx1_fx_send, 4095.f, maxFXSendLevelRev)
-    // fDelayReverbSend *= fDelayReverbSend;
-    // MK_FLT_PAR_ABS(fDelayAmount, fx1_amount, 4095.f, 2.f)
-    // MK_BOOL_PAR(bTapeDigital, fx1_tape_digital)
-    // MK_BOOL_PAR(bFreeze, fx1_freeze)
-    // bool bSync = fx1_sync;
-    // bool bSyncTrig {false};
-    // if(trig_fx1_sync != -1) bSyncTrig = data.trig[trig_fx1_sync] == 1 ? false : true;
-    // if(!bSync){
-    //     fDelayTime = fx1_time_ms;
-    //     if(cv_fx1_time_ms != -1) fDelayTime = fabsf(data.cv[cv_fx1_time_ms]) * 2000.f;
-    // }
-
-    // fBase = 20.f * stmlib::SemitonesToRatio(fBase * 120.f);
-    // fWidth = 20.f * stmlib::SemitonesToRatio(fWidth * 120.f);
-    // CONSTRAIN(fBase, 20.f, 20000.f)
-    // CONSTRAIN(fWidth, 50.f, 20000.f)
-    // float hp_cut = fBase;
-    // float lp_cut = fBase + fWidth;
-    // CONSTRAIN(lp_cut, 20.f, 20000.f)
-    // CONSTRAIN(hp_cut, 20.f, 20000.f)
-    // lp_l.set_f<stmlib::FREQUENCY_ACCURATE>(lp_cut / 44100.f);
-    // hp_l.set_f<stmlib::FREQUENCY_ACCURATE>(hp_cut / 44100.f);
-    // lp_r.copy_f(lp_l);
-    // hp_r.copy_f(hp_l);
-    
-
-    // // sync mechanism
-    // if(bSyncTrig != pre_sync){
-    //     pre_sync = bSyncTrig;
-    //     if(bSyncTrig && bSync){
-    //         int delta = timer - pre_timer;
-    //         if(std::abs(delta) > 1){
-    //             fDelayTime = static_cast<float>(timer) * 32.f / 44.1f;
-    //         }
-    //         pre_timer = timer;
-    //         timer = 0;
-    //     }
-    // }
-    // timer++;
-
-    // // reverb
-    // MK_FLT_PAR_ABS(fRevTime, fx2_time, 4095.f, 1.f)
-    // MK_FLT_PAR_ABS(fRevAmount, fx2_amount, 4095.f, 2.f)
-    // MK_FLT_PAR_ABS(fReverbLPF, fx2_lp, 4095.f, 1.f)
-    // reverb.set_time(fRevTime);
-    // reverb.set_lp(fReverbLPF);
-
-    // // sum compressor
-    // MK_FLT_PAR_ABS_MIN_MAX(fCompThresdB, c_thres, 4095.f, -80.f, 0.f)
-    // sumCompressor.setThresh(fCompThresdB);
-    // MK_FLT_PAR_ABS_MIN_MAX(fCompAtk, c_atk, 4095.f, 0.3f, 30.f)
-    // sumCompressor.setAttack(fCompAtk);
-    // MK_FLT_PAR_ABS_MIN_MAX(fCompRel, c_rel, 4095.f, 40.f, 2000.f)
-    // sumCompressor.setRelease(fCompRel);
-    // MK_FLT_PAR_ABS_MIN_MAX(fCompRatio, c_ratio, 4095.f, 0.0001f, 1.25f)
-    // sumCompressor.setRatio(fCompRatio);
-    // MK_BOOL_PAR(bSideChainLPF, c_lpf)
-    // MK_FLT_PAR_ABS_PAN(fCompMix, c_mix, 4095.f, 1.f)
-    // MK_FLT_PAR_ABS_MIN_MAX(fCompMUPGain, c_gain, 4095.f, 0.f, 60.f) // in dB
-    // if (fCompMUPGain != fCompMUPGain_pre){
-    //     fCompMUPGain = chunkware_simple::dB2lin(fCompMUPGain);
-    //     fCompMUPGain_pre = fCompMUPGain;
-    // }
-    // MK_FLT_PAR_ABS(fCompDlyLevel, c_dly_level, 4095.f, 2.f)
-    // fCompDlyLevel *= fCompDlyLevel;
-    // MK_FLT_PAR_ABS(fCompRevLevel, c_rev_level, 4095.f, 2.f)
-    // fCompRevLevel *= fCompRevLevel;
-
-
-    // // overall mix
-    // MK_BOOL_PAR(bSumMute, sum_mute)
-    // MK_FLT_PAR_ABS(fMixLevel, sum_lev, 4095.f, 3.f)
-    // fMixLevel *= fMixLevel;
-
-    // if (bSumMute){
-    //     memset(data.buf, 0, 32 * 2 * sizeof(float));
-    //     return;
-    // }
-
     // // render final buffer
     // // calc volumes
     // float lev_l[13] = {
@@ -259,7 +182,6 @@ void ctagSoundProcessorDrumRackCL::Process(const ProcessData& data){
     //     buf_fx2[i] += data_ptrs[11][i] * fS3FX2Send;
     //     buf_fx2[i] += data_ptrs[12][i] * fS4FX2Send;
 
-
     //     float dry_l = fVal_l;
     //     float dry_r = fVal_r;
     //     if (bSideChainLPF){
@@ -356,7 +278,7 @@ void ctagSoundProcessorDrumRackCL::Process(const ProcessData& data){
     // }
 }
 
-void ctagSoundProcessorDrumRackCL::Init(std::size_t blockSize, void* blockPtr){
+void ctagSoundProcessorDrumRackCL::Init(){
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);

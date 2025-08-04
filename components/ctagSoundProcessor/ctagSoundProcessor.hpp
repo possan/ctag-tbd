@@ -82,9 +82,7 @@ namespace CTAG {
         class ctagSoundProcessor {
         public:
             virtual void Process(const ProcessData &) = 0; // pure virtual --> must be implemented by derived
-
-            // plugins will need to make sure not to use more than blocksize bytes of data
-            virtual void Init(std::size_t blockSize, void *blockPtr) = 0;
+            virtual void Init() = 0;
 
             virtual ~ctagSoundProcessor() {};
 
@@ -94,7 +92,9 @@ namespace CTAG {
 
             void operator delete (void *ptr) noexcept {
                 // arena allocator will just reset the arena
+                ctagSPAllocator::Release(ptr);
             }
+
             void* operator new[] (std::size_t size) = delete;
             void* operator new[] (std::size_t size, const std::nothrow_t& tag) = delete;
             void operator delete[] (void *ptr) noexcept = delete;
@@ -173,7 +173,6 @@ namespace CTAG {
             }
 
         protected:
-
             virtual void knowYourself() = 0;
 
             virtual void setParamValueInternal(const string &id, const string &key, const int val) {
@@ -229,6 +228,9 @@ namespace CTAG {
             map<string, function<void(const int)>> pMapPar;
             map<string, function<void(const int)>> pMapCv;
             map<string, function<void(const int)>> pMapTrig;
+            void *blockPtr = nullptr;
+            size_t blockSize = 0;
+            // int allocatedBlockSize = 0;
         };
     }
 }

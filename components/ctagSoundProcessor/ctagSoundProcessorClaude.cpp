@@ -113,11 +113,14 @@ void ctagSoundProcessorClaude::Process(const ProcessData &data) {
 
 }
 
-void ctagSoundProcessorClaude::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorClaude::Init() {
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    // blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    // blockPtr = ctagSPAllocator::AllocateBlockMem(65536);
 
     // memallocs
     block_mem = (uint8_t *) heap_caps_malloc(memLen, MALLOC_CAP_SPIRAM);
@@ -135,6 +138,7 @@ void ctagSoundProcessorClaude::Init(std::size_t blockSize, void *blockPtr) {
 
 ctagSoundProcessorClaude::~ctagSoundProcessorClaude() {
     heap_caps_free(block_mem);
+    // ctagSPAllocator::ReleaseBlockMem(blockMem);
 }
 
 void ctagSoundProcessorClaude::knowYourself(){

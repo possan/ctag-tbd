@@ -455,7 +455,7 @@ void ctagSoundProcessorBBeats::Process(const ProcessData &data)
   }
 }
 
-void ctagSoundProcessorBBeats::Init(std::size_t blockSize, void *blockPtr)
+void ctagSoundProcessorBBeats::Init()
 {
   // construct internal data model
   knowYourself();

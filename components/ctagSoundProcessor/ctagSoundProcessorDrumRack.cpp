@@ -961,11 +961,14 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
     }
 }
 
-void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
+void ctagSoundProcessorDrumRack::Init(){
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(32768 * 4);
 
     // delay
     delayBuffer_l = static_cast<float*>(heap_caps_malloc(delayBufferSizeMax * sizeof(float), MALLOC_CAP_SPIRAM));
@@ -1025,6 +1028,7 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
 ctagSoundProcessorDrumRack::~ctagSoundProcessorDrumRack(){
     // no explicit freeing for blockMem needed, done by ctagSPAllocator
     // explicit free is only needed when using heap_caps_malloc() with MALLOC_CAPS_SPIRAM
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorDrumRack::knowYourself(){

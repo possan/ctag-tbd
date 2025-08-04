@@ -30,13 +30,20 @@ respective component folders / files if different from this license.
 
 using namespace CTAG::SP;
 
-void ctagSoundProcessorFVerb::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorFVerb::Init() {
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
 
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(32768 * sizeof(float));
+
     // sets the block memory and initializes it, size check is in init
     freeverb.init(blockSize, blockPtr);
+}
+
+ctagSoundProcessorFVerb::~ctagSoundProcessorFVerb() {
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorFVerb::Process(const ProcessData &data) {

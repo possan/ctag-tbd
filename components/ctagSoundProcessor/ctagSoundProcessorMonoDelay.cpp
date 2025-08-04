@@ -137,7 +137,7 @@ void ctagSoundProcessorMonoDelay::Process(const ProcessData &data) {
 
 }
 
-void ctagSoundProcessorMonoDelay::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorMonoDelay::Init() {
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);

@@ -29,7 +29,7 @@ respective component folders / files if different from this license.
 
 using namespace CTAG::SP;
 
-void ctagSoundProcessorPolyPad::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorPolyPad::Init() {
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);

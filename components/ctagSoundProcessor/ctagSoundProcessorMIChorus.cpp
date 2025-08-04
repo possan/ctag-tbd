@@ -25,10 +25,13 @@ respective component folders / files if different from this license.
 
 using namespace CTAG::SP;
 
-void ctagSoundProcessorMIChorus::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorMIChorus::Init() {
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(2048 * sizeof(float));
 
     assert(blockSize >= 2048 * sizeof(float));
     fx_buffer = (float *) blockPtr;
@@ -63,6 +66,7 @@ void ctagSoundProcessorMIChorus::Process(const ProcessData &data) {
 }
 
 ctagSoundProcessorMIChorus::~ctagSoundProcessorMIChorus() {
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorMIChorus::knowYourself() {

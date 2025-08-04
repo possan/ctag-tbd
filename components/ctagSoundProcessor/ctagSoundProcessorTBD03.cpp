@@ -34,7 +34,7 @@ using namespace stmlib;
 #define kAccentDecay 0.5f
 #define kAccentVCAFactor 1.5f
 
-void ctagSoundProcessorTBD03::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorTBD03::Init() {
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);

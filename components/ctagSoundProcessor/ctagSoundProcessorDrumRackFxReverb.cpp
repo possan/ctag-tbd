@@ -308,11 +308,14 @@ void ctagSoundProcessorDrumRackFxReverb::Process(const ProcessData& data){
     // }
 }
 
-void ctagSoundProcessorDrumRackFxReverb::Init(std::size_t blockSize, void* blockPtr){
+void ctagSoundProcessorDrumRackFxReverb::Init(){
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(32768 * 4);
 
     // reverb
     assert(blockSize >= 32768 * 4);
@@ -339,6 +342,7 @@ void ctagSoundProcessorDrumRackFxReverb::Init(std::size_t blockSize, void* block
 ctagSoundProcessorDrumRackFxReverb::~ctagSoundProcessorDrumRackFxReverb(){
     // no explicit freeing for blockMem needed, done by ctagSPAllocator
     // explicit free is only needed when using heap_caps_malloc() with MALLOC_CAPS_SPIRAM
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorDrumRackFxReverb::knowYourself(){

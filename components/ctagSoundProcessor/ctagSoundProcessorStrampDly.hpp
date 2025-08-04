@@ -33,7 +33,7 @@ namespace CTAG {
 
             ~ctagSoundProcessorStrampDly();
 
-           virtual void Init(std::size_t blockSize, void *blockPtr) override;
+           virtual void Init() override;
 
         private:
             virtual void knowYourself() override;

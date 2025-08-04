@@ -29,10 +29,13 @@ using namespace CTAG::SP;
 
 
 
-void ctagSoundProcessorTBDings::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorTBDings::Init() {
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    // size_t blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    // void *blockPtr = ctagSPAllocator::AllocateBlockMem(4096 * sizeof(float));
 
     /* this doesn't fit in the available block
     assert(blockSize >= 32768 * sizeof(uint16_t));
@@ -199,7 +202,9 @@ void ctagSoundProcessorTBDings::updateParams(const ProcessData &data) {
 
 ctagSoundProcessorTBDings::~ctagSoundProcessorTBDings() {
     heap_caps_free(reverb_buffer);
+    // ctagSPAllocator::ReleaseBlockMem(blockMem);
 }
+
 
 void ctagSoundProcessorTBDings::knowYourself() {
     // sectionCpp0

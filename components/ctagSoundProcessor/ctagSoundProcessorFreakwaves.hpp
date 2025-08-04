@@ -33,7 +33,7 @@ namespace CTAG {
         class ctagSoundProcessorFreakwaves : public ctagSoundProcessor {
         public:
             virtual void Process(const ProcessData &) override;
-            virtual void Init(std::size_t blockSize, void *blockPtr) override;
+            virtual void Init() override;
             virtual ~ctagSoundProcessorFreakwaves();
 
         private:

@@ -25,10 +25,13 @@ respective component folders / files if different from this license.
 
 using namespace CTAG::SP;
 
-void ctagSoundProcessorGVerb::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorGVerb::Init() {
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(32768 * sizeof(float));
 
     maxRoomSize = 500.f;
     assert(blockSize >= sizeof(ty_gverb));
@@ -80,6 +83,7 @@ void ctagSoundProcessorGVerb::Process(const ProcessData &data) {
 
 ctagSoundProcessorGVerb::~ctagSoundProcessorGVerb() {
     gverb_free(gverb);
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorGVerb::knowYourself() {

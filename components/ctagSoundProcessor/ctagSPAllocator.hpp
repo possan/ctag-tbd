@@ -38,11 +38,11 @@ namespace CTAG::SP {
     class ctagSPAllocator final {
     public:
         // allocator can allocate memory for different type of sound processor creation
-        enum AllocationType {
-            CH0,
-            CH1,
-            STEREO
-        };
+        // enum AllocationType {
+        //     CH0,
+        //     CH1,
+        //     STEREO
+        // };
         ctagSPAllocator() = delete;
 
         // allocate large block of memory which is used by the sound processors
@@ -51,17 +51,24 @@ namespace CTAG::SP {
         static void ReleaseInternalBuffer();
         // called by new operator of sound processors
         static void *Allocate(std::size_t const &size);
+        static void Release(void *ptr);
         // called to determine remaining size after new allocation for other heap allocations of sound processor
         static std::size_t GetRemainingBufferSize();
         // called to pass heap available to sound processor
         static void *GetRemainingBuffer();
         // prepare allocation type, must be called before creating new sound processor
-        static void PrepareAllocation(AllocationType const &type);
+        // static void PrepareAllocation(AllocationType const &type);
+        static void PrepareAllocation2(int ch);
 
+        static void *AllocateBlockMem(std::size_t const &size);
+        static void ReleaseBlockMem(void *ptr);
+        static size_t GetRemainingBlockMem();
     private:
         static void *internalBuffer; // main ptr to large buffer
-        static void *buffer1, *buffer2; // ptrs pointing at memory available for sound processor
-        static std::size_t totalSize, size1, size2; // size of large buffer and size of memory available for sound processor
-        static AllocationType allocationType; // type of sound processor to create, is state variable
+        static void *buffer[40]; // ptrs pointing at memory available for sound processor
+        static void *blockmems[40]; // ptrs pointing at memory available for sound processor
+        static std::size_t totalSize, buffersizes[40], blockmemsizes[40], offsets[40]; // size of large buffer and size of memory available for sound processor
+        // static AllocationType allocationType; // type of sound processor to create, is state variable
+        static int channel;
     };
 }

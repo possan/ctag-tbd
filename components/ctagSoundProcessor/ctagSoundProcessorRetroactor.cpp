@@ -278,12 +278,15 @@ float rough_sine_B_processed = 0.f;   // Simply precalculate the sine-wave outsi
   }
 }
 
-void ctagSoundProcessorRetroactor::Init(std::size_t blockSize, void *blockPtr)
+void ctagSoundProcessorRetroactor::Init()
 {
   // construct internal data model
   knowYourself();
   model = std::make_unique<ctagSPDataModel>(id, isStereo);
   LoadPreset(0);
+
+  blockSize = ctagSPAllocator::GetRemainingBlockMem();
+  blockPtr = ctagSPAllocator::AllocateBlockMem(1024 * sizeof(float));
 
   // --- Initialize Oscillators ---
   sine_A.SetSampleRate(44100.f);
@@ -305,6 +308,7 @@ void ctagSoundProcessorRetroactor::Init(std::size_t blockSize, void *blockPtr)
 
 ctagSoundProcessorRetroactor::~ctagSoundProcessorRetroactor()
 {
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorRetroactor::knowYourself(){

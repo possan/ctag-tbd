@@ -52,14 +52,26 @@ namespace CTAG {
             }
 
             static const char *GetCStrJSONActivePluginParams(const int chan) {
+                if (sp[chan] == nullptr) {
+                    ESP_LOGE("SP", "No sound processor set for channel %d", chan);
+                    return "{\"params\": []}";
+                }
                 return sp[chan]->GetCStrJSONParamSpecs();
             }
 
             static const char *GetCStrJSONGetPresets(const int chan) { // names of all available presets
+                if (sp[chan] == nullptr) {
+                    ESP_LOGE("SP", "No sound processor set for channel %d", chan);
+                    return "{}";
+                }
                 return sp[chan]->GetCStrJSONPresets();
             }
 
             static const char *GetCStrJSONAllPresetData(const int chan) { // current preset as JSON
+                if (sp[chan] == nullptr) {
+                    ESP_LOGE("SP", "No sound processor set for channel %d", chan);
+                    return "{}";
+                }
                 return sp[chan]->GetCStrJSONAllPresetData();
             }
 
@@ -102,7 +114,7 @@ namespace CTAG {
 
             static void updateConfiguration();
 
-            static ctagSoundProcessor* sp[2];
+            static ctagSoundProcessor* sp[40];
             static std::unique_ptr<SPManagerDataModel> model;
             static std::unique_ptr<FAV::FavoritesModel> favModel;
             static RtAudio audio;
@@ -112,6 +124,13 @@ namespace CTAG {
 
             static std::unique_ptr<SimDataModel> simModel;
             static SimStimulus stimulus;
+
+            static float temp1[32 * 2];
+            static float temp2[32 * 2];
+            static float fx1sum[32 * 2];
+            static float fx2sum[32 * 2];
+            static float mainsum[32 * 2];
+            static float masteredsum[32 * 2];
         };
     }
 }

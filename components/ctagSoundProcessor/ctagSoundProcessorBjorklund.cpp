@@ -564,7 +564,7 @@ void ctagSoundProcessorBjorklund::Process(const ProcessData &data) {
 
 }
 
-void ctagSoundProcessorBjorklund::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorBjorklund::Init() {
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);

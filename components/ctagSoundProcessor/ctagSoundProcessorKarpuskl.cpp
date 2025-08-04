@@ -385,7 +385,7 @@ float lfo_val = 0.f;
   }
 }
 
-void ctagSoundProcessorKarpuskl::Init(std::size_t blockSize, void *blockPtr)
+void ctagSoundProcessorKarpuskl::Init()
 {
     // construct internal data model
     knowYourself();

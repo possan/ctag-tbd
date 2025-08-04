@@ -45,6 +45,7 @@ void ctagSoundProcessorDrumRackRS::Process(const ProcessData& data){
 
         rs.Process(rs_out, 32);
         // data_ptrs[6] = rs_out;
+        memcpy(data.buf, rs_out, 32 * sizeof(float));
     }
     else{
         // data_ptrs[6] = silence;
@@ -351,7 +352,7 @@ void ctagSoundProcessorDrumRackRS::Process(const ProcessData& data){
     // }
 }
 
-void ctagSoundProcessorDrumRackRS::Init(std::size_t blockSize, void* blockPtr){
+void ctagSoundProcessorDrumRackRS::Init(){
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);

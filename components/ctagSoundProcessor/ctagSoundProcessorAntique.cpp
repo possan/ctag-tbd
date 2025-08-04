@@ -207,11 +207,14 @@ void ctagSoundProcessorAntique::Process(const ProcessData &data) {
     }
 }
 
-void ctagSoundProcessorAntique::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorAntique::Init() {
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(4096 * sizeof(float));
 
     // multi purpose rnd
     rnd.SetBipolar(false);
@@ -230,6 +233,7 @@ void ctagSoundProcessorAntique::Init(std::size_t blockSize, void *blockPtr) {
     humm.Init();
 
     // flutter, wow
+
     assert(blockSize >= 4096 * sizeof(float));
     fx_buffer = (float *) blockPtr;
     fx.Init(fx_buffer);
@@ -265,6 +269,7 @@ void ctagSoundProcessorAntique::Init(std::size_t blockSize, void *blockPtr) {
 }
 
 ctagSoundProcessorAntique::~ctagSoundProcessorAntique() {
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorAntique::knowYourself(){

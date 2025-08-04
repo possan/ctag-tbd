@@ -78,21 +78,119 @@ int SimSPManager::inout(void *outputBuffer, void *inputBuffer, unsigned int nBuf
     pd.cv = cv;
     pd.trig = trig;
 
+    memset(fx1sum, 0, 32 * 2 * sizeof(float));
+    memset(fx2sum, 0, 32 * 2 * sizeof(float));
+    memset(mainsum, 0, 32 * 2 * sizeof(float));
+
     //if ( status ) std::cout << "Stream over/underflow detected." << std::endl;
 
     // sound processors
     if (audioMutex.try_lock()) {
-        if (SimSPManager::sp[0] != nullptr) {
-            isStereoCH0 = SimSPManager::sp[0]->GetIsStereo();
-            SimSPManager::sp[0]->Process(pd);
+
+        // process sound generators
+
+        for(int ch=0; ch<8; ch++) {
+
+            // if there is a generator for this channel...
+
+            if (sp[ch * 4 + 0] == nullptr) {
+                continue;
+            }
+
+            memcpy(temp1, fbuf, 32 * 2 * sizeof(float)); // copy input audio buffer to all generators
+            pd.buf = (float *)&temp1; // fbuf + (ch * 32 * 2);
+            sp[ch * 4 + 0]->Process(pd);
+
+            if (sp[ch * 4 + 1] != nullptr) {
+                sp[ch * 4 + 1]->Process(pd);
+                for(int i = 0; i < 32 * 2; i++) {
+                    mainsum[i] += temp1[i]; // mix both channels
+                }
+            }
+
+            if (sp[ch * 4 + 2] != nullptr) {
+                memcpy(temp2, temp1, 32 * 2 * sizeof(float)); // copy input audio buffer to all generators
+                pd.buf = (float *)&temp2; // fbuf + (ch * 32 * 2);
+                sp[ch*4+2]->Process(pd);
+                for(int i = 0; i < 32 * 2; i++) {
+                    fx1sum[i] += temp2[i]; // mix both channels
+                }
+            }
+
+            if (sp[ch * 4 + 3] != nullptr) {
+                memcpy(temp2, temp1, 32 * 2 * sizeof(float)); // copy input audio buffer to all generators
+                pd.buf = (float *)&temp2; // fbuf + (ch * 32 * 2);
+                sp[ch*4+3]->Process(pd);
+                for(int i = 0; i < 32 * 2; i++) {
+                    fx2sum[i] += temp2[i]; // mix both channels
+                }
+            }
         }
-        if (!isStereoCH0)
-            if (SimSPManager::sp[1] != nullptr)
-                SimSPManager::sp[1]->Process(pd); // 0 is not a stereo processor
+
+
+        // process fx busses
+
+        pd.buf = (float *)&fx1sum;
+        if (sp[32] != nullptr) {
+            sp[32]->Process(pd);
+        }
+        if (sp[33] != nullptr) {
+            sp[33]->Process(pd);
+        }
+        for(int i = 0; i < 32 * 2; i++) {
+            mainsum[i] += fx1sum[i]; // mix both channels
+        }
+
+        pd.buf = (float *)&fx2sum;
+        if (sp[34] != nullptr) {
+            sp[34]->Process(pd);
+        }
+        if (sp[35] != nullptr) {
+            sp[35]->Process(pd);
+        }
+        for(int i = 0; i < 32 * 2; i++) {
+            mainsum[i] += fx2sum[i]; // mix both channels
+        }
+
+        // mix down fx1 + fx2 + main
+
+        // process master bus
+
+        if (sp[36] != nullptr) {
+            // process fx1
+            pd.buf = (float *)&mainsum;
+            sp[36]->Process(pd);
+        }
+
+        if (sp[37] != nullptr) {
+            // process fx1
+            pd.buf = (float *)&mainsum;
+            sp[37]->Process(pd);
+        }
+
+
+        memcpy(fbuf, mainsum, 32 * 2 * sizeof(float)); // copy the result to fbuf
+
+        // process sound processors
+        // for(int i = 0; i < 40; i++) {
+        //     if (sp[i] != nullptr) {
+        //         sp[i]->Process(pd);
+        //     }
+        // }   
+
+        // if (SimSPManager::sp[0] != nullptr) {
+        //     isStereoCH0 = SimSPManager::sp[0]->GetIsStereo();
+        //     SimSPManager::sp[0]->Process(pd);
+        // }
+        // if (!isStereoCH0)
+        //     if (SimSPManager::sp[1] != nullptr)
+        //         SimSPManager::sp[1]->Process(pd); // 0 is not a stereo processor
+
         audioMutex.unlock();
     }
 
     memcpy(outputBuffer, fbuf, 32 * 2 * 4);
+
     return 0;
 }
 
@@ -170,8 +268,10 @@ void SimSPManager::StartSoundProcessor(int iSoundCardID, string wavFile, string 
         }
         // configure channels
         model = std::make_unique<SPManagerDataModel>();
-        SetSoundProcessorChannel(0, model->GetActiveProcessorID(0));
-        SetSoundProcessorChannel(1, model->GetActiveProcessorID(1));
+        // SetSoundProcessorChannel(0, model->GetActiveProcessorID(0));
+        for(int k=0; k<40; k++) {
+            SetSoundProcessorChannel(k, model->GetActiveProcessorID(k));
+        }
     }
     catch (RtAudioError &e) {
         e.printMessage();
@@ -217,10 +317,10 @@ void SimSPManager::SetSoundProcessorChannel(const int chan, const string &id) {
     //     }
     // }
 
-    ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::CH0;
-    if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
-    if(model->IsStereo(id)) aType = ctagSPAllocator::AllocationType::STEREO;
-    sp[chan] = ctagSoundProcessorFactory::Create(id, aType);
+    // ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::CH0;
+    // if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
+    // if(model->IsStereo(id)) aType = ctagSPAllocator::AllocationType::STEREO;
+    sp[chan] = ctagSoundProcessorFactory::Create(id, chan);
     model->SetActivePluginID(id, chan);
     sp[chan]->LoadPreset(model->GetActivePatchNum(chan));
     audioMutex.unlock();
@@ -293,7 +393,8 @@ void SimSPManager::StoreFavorite(const int &id, const string &fav) {
 }
 
 void SimSPManager::ActivateFavorite(const int &id) {
-    if(id < 0 || id > 9) return;
+    if(id < 0 || id > 39) return;
+
     // NOTE: all checks if plugins exists and if presets exists are done in SPManager
     string p0id = favModel->GetFavoritePluginID(id, 0);
     int p0pre = favModel->GetFavoritePreset(id, 0);
@@ -307,9 +408,25 @@ void SimSPManager::ActivateFavorite(const int &id) {
 
 
 RtAudio  SimSPManager::audio;
-ctagSoundProcessor* SimSPManager::sp[2] {nullptr, nullptr};
+ctagSoundProcessor* SimSPManager::sp[40] {
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr
+};
 std::unique_ptr<SPManagerDataModel> SimSPManager::model;
 std::unique_ptr<CTAG::FAV::FavoritesModel> SimSPManager::favModel;
 std::unique_ptr<SimDataModel> SimSPManager::simModel;
 SimStimulus SimSPManager::stimulus;
-
+float SimSPManager::temp1[32 * 2];
+float SimSPManager::temp2[32 * 2];
+float SimSPManager::fx1sum[32 * 2];
+float SimSPManager::fx2sum[32 * 2];
+float SimSPManager::mainsum[32 * 2];
+float SimSPManager::masteredsum[32 * 2];

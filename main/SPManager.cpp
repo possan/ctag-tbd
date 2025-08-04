@@ -186,6 +186,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
         // sound processors
         if (xSemaphoreTake(processMutex, 0) == pdTRUE) {
+
             // apply sound processors
             for(int k=0; k<40; k++)
             {
@@ -194,6 +195,9 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                     sp[k]->Process(pd);
                 }
             }
+
+
+
             // if (sp[0] != nullptr) {
             //     isStereoCH0 = sp[0]->GetIsStereo();
             //     sp[0]->Process(pd);
@@ -326,11 +330,10 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     // ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::CH0;
     // if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
     // if(model->IsStereo(id)) 
-    ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::STEREO;
-
+    // ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::STEREO;
     
-    sp[chan] = ctagSoundProcessorFactory::Create(id, aType);
-    ESP_LOGI("SPManager", "sp[chan] = %lx (chan %d, id %s, aType %d)", (uint32_t)sp[chan], chan, id.c_str(), aType);
+    sp[chan] = ctagSoundProcessorFactory::Create(id, chan);
+    ESP_LOGI("SPManager", "sp[chan] = %lx (chan %d, id %s)", (uint32_t)sp[chan], chan, id.c_str());
     if (sp[chan] == nullptr) {
         ESP_LOGE("SPManager", "Fatal: could not create sound processor %s!", id.c_str());
         xSemaphoreGive(processMutex);
@@ -377,6 +380,12 @@ atomic<uint32_t> SoundProcessorManager::toStereoCH1;
 atomic<uint32_t> SoundProcessorManager::runAudioTask;
 atomic<uint32_t> SoundProcessorManager::ch0_outputSoftClip;
 atomic<uint32_t> SoundProcessorManager::ch1_outputSoftClip;
+float SoundProcessorManager::temp1[32 * 2];
+float SoundProcessorManager::temp2[32 * 2];
+float SoundProcessorManager::fx1sum[32 * 2];
+float SoundProcessorManager::fx2sum[32 * 2];
+float SoundProcessorManager::mainsum[32 * 2];
+float SoundProcessorManager::masteredsum[32 * 2];
 
 void SoundProcessorManager::StartSoundProcessor() {
     ledBlink = 5;

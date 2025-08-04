@@ -160,11 +160,14 @@ void ctagSoundProcessorWTOsc::Process(const ProcessData &data) {
     }
 }
 
-void ctagSoundProcessorWTOsc::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorWTOsc::Init() {
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(65536);
 
     lfo.SetSampleRate( 44100.f / bufSz);
     lfo.SetFrequency(1.f);
@@ -188,6 +191,7 @@ void ctagSoundProcessorWTOsc::Init(std::size_t blockSize, void *blockPtr) {
 }
 
 ctagSoundProcessorWTOsc::~ctagSoundProcessorWTOsc() {
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorWTOsc::knowYourself(){

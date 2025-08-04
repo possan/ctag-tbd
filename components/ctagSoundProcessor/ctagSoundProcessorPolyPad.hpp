@@ -32,7 +32,7 @@ namespace CTAG {
         public:
             virtual void Process(const ProcessData &) override;
 
-           virtual void Init(std::size_t blockSize, void *blockPtr) override;
+           virtual void Init() override;
 
             void PrintParams(ChordSynth::ChordParams &params);
 

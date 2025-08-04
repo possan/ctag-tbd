@@ -26,10 +26,13 @@ respective component folders / files if different from this license.
 
 using namespace CTAG::SP;
 
-void ctagSoundProcessorMIPShft::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorMIPShft::Init() {
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(4096 * sizeof(float));
 
     assert(blockSize >= 4096 * sizeof(float));
     fx_buffer = (float *) blockPtr;
@@ -64,6 +67,7 @@ void ctagSoundProcessorMIPShft::Process(const ProcessData &data) {
 }
 
 ctagSoundProcessorMIPShft::~ctagSoundProcessorMIPShft() {
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorMIPShft::knowYourself() {

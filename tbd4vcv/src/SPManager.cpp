@@ -67,7 +67,7 @@ void SPManager::SetSoundProcessorChannel(const int chan, const string &id) {
         ESP_LOGI("SP", "Removing ch 1 plugin as ch 0 is stereo!");
         sp[1] = nullptr; // destruct smart ptr
     }
-    sp[chan] = ctagSoundProcessorFactory::Create(id);
+    sp[chan] = ctagSoundProcessorFactory::Create(id, chan);
     sp[chan]->SetProcessChannel(chan);
     model->SetActivePluginID(id, chan);
     sp[chan]->LoadPreset(model->GetActivePatchNum(chan));

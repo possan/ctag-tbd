@@ -33,14 +33,22 @@ respective component folders / files if different from this license.
 
 using namespace CTAG::SP;
 
-void ctagSoundProcessorGDVerb2::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorGDVerb2::Init() {
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
 
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(32768 * sizeof(float));
+
     prog_rev.init(blockSize, blockPtr);
     prog_rev.setSampleRate(44100.f);
     prog_rev.mute();
+}
+
+
+ctagSoundProcessorGDVerb2::~ctagSoundProcessorGDVerb2() {
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorGDVerb2::Process(const ProcessData &data) {

@@ -829,11 +829,14 @@ void ctagSoundProcessorFreakwaves::Process(const ProcessData &data) {
     }
 }
 
-void ctagSoundProcessorFreakwaves::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorFreakwaves::Init() {
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+
+    blockSize = ctagSPAllocator::GetRemainingBlockMem();
+    blockPtr = ctagSPAllocator::AllocateBlockMem(65536);
 
     // --- Init LFOs ---
     lfoPitchC.SetSampleRate(44100.f / bufSz);
@@ -894,6 +897,7 @@ void ctagSoundProcessorFreakwaves::Init(std::size_t blockSize, void *blockPtr) {
 }
 
 ctagSoundProcessorFreakwaves::~ctagSoundProcessorFreakwaves() {
+    ctagSPAllocator::ReleaseBlockMem(blockPtr);
 }
 
 void ctagSoundProcessorFreakwaves::knowYourself() {

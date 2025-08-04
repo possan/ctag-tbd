@@ -24,7 +24,7 @@ respective component folders / files if different from this license.
 
 using namespace CTAG::SP;
 
-void ctagSoundProcessorMoogFilt::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorMoogFilt::Init() {
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);

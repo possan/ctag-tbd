@@ -167,7 +167,7 @@ void ctagSoundProcessorRompler::Process(const ProcessData &data) {
 
 }
 
-void ctagSoundProcessorRompler::Init(std::size_t blockSize, void *blockPtr) {
+void ctagSoundProcessorRompler::Init() {
     // construct internal data model
     knowYourself();
     model = std::make_unique<ctagSPDataModel>(id, isStereo);

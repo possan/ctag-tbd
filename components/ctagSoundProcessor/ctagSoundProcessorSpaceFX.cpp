@@ -494,7 +494,7 @@ float f_val_saw = 0.f;                // Saw wave
 }
 
 // --- Constructor (initalize factory pattern and all DSP-related stuff) ---
-void ctagSoundProcessorSpaceFX::Init(std::size_t blockSize, void *blockPtr)
+void ctagSoundProcessorSpaceFX::Init()
 {
   // construct internal data model
   knowYourself();
