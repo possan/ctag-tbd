@@ -77,6 +77,8 @@ int SimSPManager::inout(void *outputBuffer, void *inputBuffer, unsigned int nBuf
     pd.buf = fbuf;
     pd.cv = cv;
     pd.trig = trig;
+    pd.fxbus1 = (float *)&fx1sum;
+    pd.fxbus2 = (float *)&fx2sum;
 
     memset(fx1sum, 0, 32 * 2 * sizeof(float));
     memset(fx2sum, 0, 32 * 2 * sizeof(float));
@@ -89,64 +91,37 @@ int SimSPManager::inout(void *outputBuffer, void *inputBuffer, unsigned int nBuf
 
         // process sound generators
 
-        for(int ch=0; ch<8; ch++) {
+        for(int ch=0; ch<16; ch++) {
+            if (sp[ch] != nullptr) {
+                memcpy(temp1, fbuf, 32 * 2 * sizeof(float));
+                pd.buf = (float *)&temp1;
+                sp[ch]->Process(pd);
 
-            // if there is a generator for this channel...
-
-            if (sp[ch * 4 + 0] == nullptr) {
-                continue;
-            }
-
-            memcpy(temp1, fbuf, 32 * 2 * sizeof(float)); // copy input audio buffer to all generators
-            pd.buf = (float *)&temp1; // fbuf + (ch * 32 * 2);
-            sp[ch * 4 + 0]->Process(pd);
-
-            if (sp[ch * 4 + 1] != nullptr) {
-                sp[ch * 4 + 1]->Process(pd);
                 for(int i = 0; i < 32 * 2; i++) {
                     mainsum[i] += temp1[i]; // mix both channels
                 }
             }
-
-            if (sp[ch * 4 + 2] != nullptr) {
-                memcpy(temp2, temp1, 32 * 2 * sizeof(float)); // copy input audio buffer to all generators
-                pd.buf = (float *)&temp2; // fbuf + (ch * 32 * 2);
-                sp[ch*4+2]->Process(pd);
-                for(int i = 0; i < 32 * 2; i++) {
-                    fx1sum[i] += temp2[i]; // mix both channels
-                }
-            }
-
-            if (sp[ch * 4 + 3] != nullptr) {
-                memcpy(temp2, temp1, 32 * 2 * sizeof(float)); // copy input audio buffer to all generators
-                pd.buf = (float *)&temp2; // fbuf + (ch * 32 * 2);
-                sp[ch*4+3]->Process(pd);
-                for(int i = 0; i < 32 * 2; i++) {
-                    fx2sum[i] += temp2[i]; // mix both channels
-                }
-            }
         }
-
 
         // process fx busses
 
         pd.buf = (float *)&fx1sum;
-        if (sp[32] != nullptr) {
-            sp[32]->Process(pd);
+        if (sp[16] != nullptr) {
+            sp[16]->Process(pd);
         }
-        if (sp[33] != nullptr) {
-            sp[33]->Process(pd);
+        if (sp[17] != nullptr) {
+            sp[17]->Process(pd);
         }
         for(int i = 0; i < 32 * 2; i++) {
             mainsum[i] += fx1sum[i]; // mix both channels
         }
 
         pd.buf = (float *)&fx2sum;
-        if (sp[34] != nullptr) {
-            sp[34]->Process(pd);
+        if (sp[18] != nullptr) {
+            sp[18]->Process(pd);
         }
-        if (sp[35] != nullptr) {
-            sp[35]->Process(pd);
+        if (sp[19] != nullptr) {
+            sp[19]->Process(pd);
         }
         for(int i = 0; i < 32 * 2; i++) {
             mainsum[i] += fx2sum[i]; // mix both channels
@@ -156,35 +131,20 @@ int SimSPManager::inout(void *outputBuffer, void *inputBuffer, unsigned int nBuf
 
         // process master bus
 
-        if (sp[36] != nullptr) {
+        if (sp[20] != nullptr) {
             // process fx1
             pd.buf = (float *)&mainsum;
-            sp[36]->Process(pd);
+            sp[20]->Process(pd);
         }
 
-        if (sp[37] != nullptr) {
+        if (sp[21] != nullptr) {
             // process fx1
             pd.buf = (float *)&mainsum;
-            sp[37]->Process(pd);
+            sp[21]->Process(pd);
         }
 
 
         memcpy(fbuf, mainsum, 32 * 2 * sizeof(float)); // copy the result to fbuf
-
-        // process sound processors
-        // for(int i = 0; i < 40; i++) {
-        //     if (sp[i] != nullptr) {
-        //         sp[i]->Process(pd);
-        //     }
-        // }   
-
-        // if (SimSPManager::sp[0] != nullptr) {
-        //     isStereoCH0 = SimSPManager::sp[0]->GetIsStereo();
-        //     SimSPManager::sp[0]->Process(pd);
-        // }
-        // if (!isStereoCH0)
-        //     if (SimSPManager::sp[1] != nullptr)
-        //         SimSPManager::sp[1]->Process(pd); // 0 is not a stereo processor
 
         audioMutex.unlock();
     }
@@ -269,7 +229,7 @@ void SimSPManager::StartSoundProcessor(int iSoundCardID, string wavFile, string 
         // configure channels
         model = std::make_unique<SPManagerDataModel>();
         // SetSoundProcessorChannel(0, model->GetActiveProcessorID(0));
-        for(int k=0; k<40; k++) {
+        for(int k=0; k<24; k++) {
             SetSoundProcessorChannel(k, model->GetActiveProcessorID(k));
         }
     }
@@ -393,7 +353,7 @@ void SimSPManager::StoreFavorite(const int &id, const string &fav) {
 }
 
 void SimSPManager::ActivateFavorite(const int &id) {
-    if(id < 0 || id > 39) return;
+    if(id < 0 || id > 23) return;
 
     // NOTE: all checks if plugins exists and if presets exists are done in SPManager
     string p0id = favModel->GetFavoritePluginID(id, 0);
@@ -408,17 +368,13 @@ void SimSPManager::ActivateFavorite(const int &id) {
 
 
 RtAudio  SimSPManager::audio;
-ctagSoundProcessor* SimSPManager::sp[40] {
+ctagSoundProcessor* SimSPManager::sp[22] {
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr
+    nullptr, nullptr
 };
 std::unique_ptr<SPManagerDataModel> SimSPManager::model;
 std::unique_ptr<CTAG::FAV::FavoritesModel> SimSPManager::favModel;

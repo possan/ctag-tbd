@@ -26,11 +26,7 @@ namespace CTAG {
             virtual void knowYourself() override;
 
             CTAG::SYNTHESIS::Clap cl;
-
         	float cl_out[32];
-            float temp1_[32];
-            float temp2_[32];
-        	float silence[32];
         	bool cl_trig_prev {false};
 
             // private attributes could go here

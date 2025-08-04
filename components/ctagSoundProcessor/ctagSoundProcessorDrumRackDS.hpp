@@ -27,7 +27,6 @@ namespace CTAG {
 
             plaits::SyntheticSnareDrum dsd;
             float dsd_out[32];
-        	float silence[32];
             bool dsd_trig_prev {false};
 
             // private attributes could go here

@@ -26,7 +26,6 @@ namespace CTAG {
             virtual void knowYourself() override;
 
             float fmb_out[32];
-        	float silence[32];
             CTAG::SYNTHESIS::FmKick fmb;
             bool fmb_trig_prev {false};
 

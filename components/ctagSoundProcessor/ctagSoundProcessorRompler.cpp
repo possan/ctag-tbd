@@ -23,8 +23,6 @@ respective component folders / files if different from this license.
 
 using namespace CTAG::SP;
 
-// TODO add switch to include wavetables
-
 void ctagSoundProcessorRompler::Process(const ProcessData &data) {
 
     // duo or monophonic

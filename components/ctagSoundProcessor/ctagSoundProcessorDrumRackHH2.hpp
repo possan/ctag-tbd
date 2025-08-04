@@ -29,7 +29,6 @@ namespace CTAG {
             float hh2_out[32];
             float temp1_[32];
             float temp2_[32];
-        	float silence[32];
             bool hh2_trig_prev {false};
 
             // rompler

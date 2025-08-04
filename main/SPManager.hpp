@@ -124,7 +124,7 @@ namespace CTAG {
             static void updateConfiguration();
 
             static TaskHandle_t audioTaskH, ledTaskH;
-            static ctagSoundProcessor *sp[40];
+            static ctagSoundProcessor *sp[22];
             static std::unique_ptr<SPManagerDataModel> model;
             static SemaphoreHandle_t processMutex;
             static atomic<uint32_t> ledBlink;

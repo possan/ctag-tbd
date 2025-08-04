@@ -356,17 +356,13 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
 
 TaskHandle_t SoundProcessorManager::audioTaskH;
 TaskHandle_t SoundProcessorManager::ledTaskH;
-DRAM_ATTR ctagSoundProcessor* SoundProcessorManager::sp[40] {
+DRAM_ATTR ctagSoundProcessor* SoundProcessorManager::sp[22] {
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr
+    nullptr, nullptr,
 };
 std::unique_ptr<SPManagerDataModel> SoundProcessorManager::model;
 DRAM_ATTR SemaphoreHandle_t SoundProcessorManager::processMutex;

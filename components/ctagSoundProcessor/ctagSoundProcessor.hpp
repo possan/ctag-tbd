@@ -75,6 +75,8 @@ namespace CTAG {
     namespace SP {
         struct ProcessData {
             float *buf;
+            float *fxbus1;
+            float *fxbus2;
             float *cv;
             uint8_t *trig;
         };

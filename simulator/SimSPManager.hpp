@@ -111,10 +111,9 @@ namespace CTAG {
             static void ActivateFavorite(const int &id);
 
         private:
-
             static void updateConfiguration();
 
-            static ctagSoundProcessor* sp[40];
+            static ctagSoundProcessor* sp[22];
             static std::unique_ptr<SPManagerDataModel> model;
             static std::unique_ptr<FAV::FavoritesModel> favModel;
             static RtAudio audio;

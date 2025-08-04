@@ -27,7 +27,6 @@ namespace CTAG {
 
             plaits::AnalogBassDrum abd;
             float abd_out[32];
-        	float silence[32];
             bool abd_trig_prev {false};
 
             // private attributes could go here
