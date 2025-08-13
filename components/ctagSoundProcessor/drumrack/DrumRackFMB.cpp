@@ -72,7 +72,7 @@ void DrumRackFMB::Process(const DrumRackProcessData &data) {
     MK_FLT_PAR_ABS(fFMBFX2Send, fmb_fx2, 4095.f, maxFXSendLevelRev); fFMBFX2Send *= fFMBFX2Send;
 
     if (bFMBMute || fFMBLev < minVolume) {
-        return;
+        // return;
     }
 
     MK_BOOL_PAR(bFMBUseRatioMode, fmb_use_ratio_mode)

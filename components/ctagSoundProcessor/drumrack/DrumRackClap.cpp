@@ -53,7 +53,7 @@ void DrumRackClap::Process(const DrumRackProcessData &data) {
     MK_FLT_PAR_ABS(fCLFX2Send, cl_fx2, 4095.f, maxFXSendLevelRev); fCLFX2Send *= fCLFX2Send;
 
     if (bCLMute || fCLLev < minVolume) {
-        return;
+        // return;
     }
 
     MK_FLT_PAR_ABS_MIN_MAX(cl_pitch1_, cl_f0, 4095.f, 350.f, 4000.f)

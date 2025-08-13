@@ -29,7 +29,7 @@ void DrumRackInput::Process(const DrumRackProcessData &data) {
     MK_FLT_PAR_ABS(fINFX2Send, in_fx2, 4095.f, maxFXSendLevelRev); fINFX2Send *= fINFX2Send;
 
     if (bMuteIN || fINLev < minVolume) {
-        return;
+        // return;
     }
 
     float in_out[32 * 2];

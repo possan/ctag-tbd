@@ -35,9 +35,9 @@ public:
     void Init(const DrumRackInitData *initdata) override;
 
 private:
-    atomic<int32_t> in_mute, trig_in_mute;
-	atomic<int32_t> in_lev, cv_in_lev;
-	atomic<int32_t> in_pan, cv_in_pan;
-	atomic<int32_t> in_fx1, cv_in_fx1;
-	atomic<int32_t> in_fx2, cv_in_fx2;
+    atomic<int16_t> in_mute, trig_in_mute;
+	atomic<int16_t> in_lev, cv_in_lev;
+	atomic<int16_t> in_pan, cv_in_pan;
+	atomic<int16_t> in_fx1, cv_in_fx1;
+	atomic<int16_t> in_fx2, cv_in_fx2;
 };

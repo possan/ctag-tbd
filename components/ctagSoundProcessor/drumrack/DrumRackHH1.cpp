@@ -61,7 +61,7 @@ MK_BOOL_PAR(bHH1Mute, hh1_mute)
     MK_FLT_PAR_ABS(fHH1FX2Send, hh1_fx2, 4095.f, maxFXSendLevelRev); fHH1FX2Send *= fHH1FX2Send;
 
     if (bHH1Mute || fHH1Lev < minVolume) {
-        return;
+        // return;
     }
 
     MK_FLT_PAR_ABS(fHH1Accent, hh1_accent, 4095.f, 1.f)

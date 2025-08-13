@@ -1449,10 +1449,61 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
     memset(send1_out, 0, 32 * 2 * sizeof(float));
     memset(send2_out, 0, 32 * 2 * sizeof(float));
 
+	float dummy[64];
+	
+	struct DrumRackProcessData idata;
+	idata.buf = (float *)&dummy;
+	idata.cv = data.cv;
+	idata.trig = data.trig;
+
+	dbd_1.Process(idata);
+	dbd_2.Process(idata);
+	abd_1.Process(idata);
+	abd_2.Process(idata);
+	
+	dsd_1.Process(idata);
+	dsd_2.Process(idata);
+	asd_1.Process(idata);
+	asd_2.Process(idata);
+
+	hh1_1.Process(idata);
+	hh1_2.Process(idata);
+	hh2_1.Process(idata);
+	hh2_2.Process(idata);
+
+	fmb_1.Process(idata);
+	fmb_2.Process(idata);
+
+	rs_1.Process(idata);
+	rs_2.Process(idata);
+
+	cl_1.Process(idata);
+	cl_2.Process(idata);
+
+	td3_1.Process(idata);
+	td3_2.Process(idata);
+	// td3_3.Process(idata);
+	// td3_4.Process(idata);
+
+	mo_1.Process(idata);
+	mo_2.Process(idata);
+
+	pp_1.Process(idata);
+	pp_2.Process(idata);
+
+	// ro_1.Process(idata);
+	// ro_2.Process(idata);
+	// ro_3.Process(idata);
+	// ro_4.Process(idata);
+	// ro_5.Process(idata);
+	// ro_6.Process(idata);
+	// ro_7.Process(idata);
+	// ro_8.Process(idata);
+
     // Render sound generators
     // renderIN(data); // audio input
     // renderABD(data);
-    // renderASD(data); // analog snare drum
+    // renderASD(data); // analog snare drmu
     // renderDBD(data); // digital bass drum
     // renderDSD(data); // digital snare drum
     // renderHH1(data); // hihat 1
@@ -1501,6 +1552,7 @@ void ctagSoundProcessorDrumRack::registerTrig(const char *prefix, const char *su
 void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     // construct internal data model
 
+	printf("ctagSoundProcessorDrumRack::Init(%zu, %x)\n", blockSize, (uintptr_t) blockPtr);
 
     knowYourself();
 
@@ -1583,8 +1635,8 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
 
     dri.prefix = "ro_1";
     ro_1.Init(&dri);
-    dri.prefix = "ro_2";
-    ro_2.Init(&dri);
+	dri.prefix = "ro_2";
+	ro_2.Init(&dri);
     dri.prefix = "ro_3";
     ro_3.Init(&dri);
     dri.prefix = "ro_4";
@@ -1598,14 +1650,14 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ro_8";
     ro_8.Init(&dri);
 
-    dri.prefix = "fx1_";
-    fx_delay.Init(&dri);
+    // dri.prefix = "fx1_";
+    // fx_delay.Init(&dri);
 
-    dri.prefix = "fx2_";
-    fx_reverb.Init(&dri);
+    // dri.prefix = "fx2_";
+    // fx_reverb.Init(&dri);
 
-    dri.prefix = "mmm_";
-    fx_master.Init(&dri);
+    // dri.prefix = "mmm_";
+    // fx_master.Init(&dri);
 
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);

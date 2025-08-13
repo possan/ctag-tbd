@@ -89,9 +89,9 @@ void DrumRackTD3::Init(const DrumRackInitData *initdata) {
 // }
 
 void DrumRackTD3::Process(const DrumRackProcessData &data) {
-	    float dvcf, dvca;
+    float dvcf, dvca;
     bool trg;
-    float td3_out[  32];
+    float td3_out[32];
 
     MK_FLT_PAR_ABS_PAN(fTD3Pan, td3_pan, 4095.f, 1.f)
     MK_FLT_PAR_ABS(fTD3Lev, td3_lev, 4095.f, 2.f); fTD3Lev *= fTD3Lev;

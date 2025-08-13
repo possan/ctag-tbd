@@ -60,7 +60,7 @@ void DrumRackASD::Process(const DrumRackProcessData &data) {
     MK_FLT_PAR_ABS(fASFX2Send, as_fx2, 4095.f, maxFXSendLevelRev); fASFX2Send *= fASFX2Send;
 
     if (bASMute || fASLev < minVolume) {
-        return;
+        // return;
     }
 
     MK_FLT_PAR_ABS(fASAccent, as_accent, 4095.f, 1.f)

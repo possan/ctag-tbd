@@ -68,6 +68,10 @@ if(NOT CONFIG_TBD_PLATFORM_BBA)
     list(APPEND DEL_COMMANDS
             COMMAND rm -f ${CMAKE_BINARY_DIR}/spiffs_image/dbup/sp/*DrumRack.jsn)
 endif()
+if(CONFIG_TBD_PLATFORM_BBA)
+    list(APPEND DEL_COMMANDS COMMAND rm -f ${CMAKE_BINARY_DIR}/spiffs_image/data/sp/*APCpp.jsn)
+    list(APPEND DEL_COMMANDS COMMAND rm -f ${CMAKE_BINARY_DIR}/spiffs_image/dbup/sp/*APCpp.jsn)
+endif()
 add_custom_target(copy-files ALL DEPENDS ${CMAKE_SOURCE_DIR}/spiffs_image
         # clean up
         COMMAND rm -rf ${CMAKE_BINARY_DIR}/spiffs_image

@@ -355,6 +355,25 @@ atomic<uint32_t> SoundProcessorManager::runAudioTask;
 atomic<uint32_t> SoundProcessorManager::ch0_outputSoftClip;
 atomic<uint32_t> SoundProcessorManager::ch1_outputSoftClip;
 
+static char freertosstats[2000] = {
+    0,
+};
+
+static void debug_task(void *pvParameters) {
+  while (true) {
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    printf("SPManager: Getting freeRTOS Stats...\n");
+    vTaskGetRunTimeStats((char *)&freertosstats);
+    printf("SPManager: FreeRTOS Stats:\n%s", freertosstats);
+    ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    taskYIELD();
+  }
+}
+
 void SoundProcessorManager::StartSoundProcessor() {
     ledBlink = 5;
     model = std::make_unique<SPManagerDataModel>();
@@ -436,7 +455,10 @@ void SoundProcessorManager::StartSoundProcessor() {
 #endif
     // create audio thread
     runAudioTask = 1;
-    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 8192, nullptr, 23, &audioTaskH, 1);
+    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 8192, nullptr, tskIDLE_PRIORITY + 10, &audioTaskH, 1);
+
+    xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 2,
+                            NULL, 0);
 
 #if defined(CONFIG_TBD_PLATFORM_MK2) || defined(CONFIG_TBD_PLATFORM_AEM) || defined(CONFIG_TBD_PLATFORM_BBA)
     //FAV::Favorites::StartUI();

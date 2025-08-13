@@ -61,7 +61,7 @@ void DrumRackDSD::Process(const DrumRackProcessData &data) {
     MK_FLT_PAR_ABS(fDSFX2Send, ds_fx2, 4095.f, maxFXSendLevelRev); fDSFX2Send *= fDSFX2Send;
 
     if (bDSMute || fDSLev < minVolume) {
-        return;
+        // return;
     }
 
     MK_FLT_PAR_ABS(fDSAccent, ds_accent, 4095.f, 1.f)

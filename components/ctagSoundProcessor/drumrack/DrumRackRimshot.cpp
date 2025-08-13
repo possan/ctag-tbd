@@ -53,7 +53,7 @@ void DrumRackRimshot::Process(const DrumRackProcessData &data) {
     MK_FLT_PAR_ABS(fRSFX2Send, rs_fx2, 4095.f, maxFXSendLevelRev); fRSFX2Send *= fRSFX2Send;
 
     if (bRSMute || fRSLev < minVolume) {
-        return;
+        // return;
     }
 
     MK_FLT_PAR_ABS_MIN_MAX(rs_f0_, rs_f0, 4095.f, 70.f, 350.f)

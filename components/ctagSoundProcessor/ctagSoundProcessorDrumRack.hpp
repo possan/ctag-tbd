@@ -105,9 +105,9 @@ namespace CTAG {
 			DrumRackRompler ro_7;
 			DrumRackRompler ro_8;
 
-			DrumRackFxReverb fx_reverb;
-			DrumRackFxDelay fx_delay;
-			DrumRackFxMaster fx_master;
+			// DrumRackFxReverb fx_reverb;
+			// DrumRackFxDelay fx_delay;
+			// DrumRackFxMaster fx_master;
 
             // compressor
             chunkware_simple::SimpleComp sumCompressor;
