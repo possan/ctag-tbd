@@ -29,23 +29,19 @@
 
 using namespace CTAG::SP;
 
-class DrumRackHH1 : DrumRackSynth {
+class DrumRackHH1 {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+	float hh1_out[32];
 
 private:
 	plaits::HiHat<plaits::SquareNoise, plaits::SwingVCA, true, false> hh1;
 	bool hh1_trig_prev {false};
-	float hh1_out[32];
 	float temp1_[32];
 	float temp2_[32];
 	atomic<int16_t> hh1_trigger, trig_hh1_trigger;
-	atomic<int16_t> hh1_mute, trig_hh1_mute;
-	atomic<int16_t> hh1_lev, cv_hh1_lev;
-	atomic<int16_t> hh1_pan, cv_hh1_pan;
-	atomic<int16_t> hh1_fx1, cv_hh1_fx1;
-	atomic<int16_t> hh1_fx2, cv_hh1_fx2;
 	atomic<int16_t> hh1_accent, cv_hh1_accent;
 	atomic<int16_t> hh1_f0, cv_hh1_f0;
 	atomic<int16_t> hh1_tone, cv_hh1_tone;

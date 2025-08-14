@@ -60,7 +60,11 @@ void ctagSPAllocator::ReleaseInternalBuffer() {
 void *ctagSPAllocator::Allocate(std::size_t const &size) {
     void *ptr = nullptr;
 
-    ptr = heap_caps_calloc(1, size, MALLOC_CAP_32BIT | MALLOC_CAP_SPIRAM);
+    ESP_LOGI("ctagSPAllocator", "Allocate: allocating %d bytes", size);
+    ptr = heap_caps_calloc(1, size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    ESP_LOGI("ctagSPAllocator", "Allocate: ptr=0x%x", (unsigned int)ptr);
+
+    // ptr = heap_caps_calloc(1, size, MALLOC_CAP_32BIT | MALLOC_CAP_SPIRAM);
 
 
     // if(allocationType == AllocationType::CH0){

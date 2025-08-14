@@ -29,21 +29,17 @@
 
 using namespace CTAG::SP;
 
-class DrumRackFMB : DrumRackSynth {
+class DrumRackFMB {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+	float fmb_out[32];
 
 private:
 	CTAG::SYNTHESIS::FmKick fmb;
-	float fmb_out[32];
 	bool fmb_trig_prev {false};
 	atomic<int16_t> fmb_trigger, trig_fmb_trigger;
-	atomic<int16_t> fmb_mute, trig_fmb_mute;
-	atomic<int16_t> fmb_lev, cv_fmb_lev;
-	atomic<int16_t> fmb_pan, cv_fmb_pan;
-	atomic<int16_t> fmb_fx1, cv_fmb_fx1;
-	atomic<int16_t> fmb_fx2, cv_fmb_fx2;
 	atomic<int16_t> fmb_use_ratio_mode, trig_fmb_use_ratio_mode;
 	atomic<int16_t> fmb_mod_env_sync, trig_fmb_mod_env_sync;
 	atomic<int16_t> fmb_f_b, cv_fmb_f_b;

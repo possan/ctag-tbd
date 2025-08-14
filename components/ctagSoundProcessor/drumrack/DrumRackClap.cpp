@@ -11,49 +11,25 @@ using namespace CTAG::SP;
 void DrumRackClap::Init(const DrumRackInitData *initdata) {
     cl.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "cl_trigger", [&](const int val){ cl_trigger = val;});
-	initdata->rack->registerTrig(initdata->prefix, "cl_trigger", [&](const int val){ trig_cl_trigger = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_mute", [&](const int val){ cl_mute = val;});
-	initdata->rack->registerTrig(initdata->prefix, "cl_mute", [&](const int val){ trig_cl_mute = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_lev", [&](const int val){ cl_lev = val;});
-	initdata->rack->registerCv(initdata->prefix, "cl_lev", [&](const int val){ cv_cl_lev = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_pan", [&](const int val){ cl_pan = val;});
-	initdata->rack->registerCv(initdata->prefix, "cl_pan", [&](const int val){ cv_cl_pan = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_fx1", [&](const int val){ cl_fx1 = val;});
-	initdata->rack->registerCv(initdata->prefix, "cl_fx1", [&](const int val){ cv_cl_fx1 = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_fx2", [&](const int val){ cl_fx2 = val;});
-	initdata->rack->registerCv(initdata->prefix, "cl_fx2", [&](const int val){ cv_cl_fx2 = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_f0", [&](const int val){ cl_f0 = val;});
-	initdata->rack->registerCv(initdata->prefix, "cl_f0", [&](const int val){ cv_cl_f0 = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_tone", [&](const int val){ cl_tone = val;});
-	initdata->rack->registerCv(initdata->prefix, "cl_tone", [&](const int val){ cv_cl_tone = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_decay", [&](const int val){ cl_decay = val;});
-	initdata->rack->registerCv(initdata->prefix, "cl_decay", [&](const int val){ cv_cl_decay = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_scale", [&](const int val){ cl_scale = val;});
-	initdata->rack->registerCv(initdata->prefix, "cl_scale", [&](const int val){ cv_cl_scale = val;});
-	initdata->rack->registerParam(initdata->prefix, "cl_transient", [&](const int val){ cl_transient = val;});
-	initdata->rack->registerCv(initdata->prefix, "cl_transient", [&](const int val){ cv_cl_transient = val;});
+    initdata->rack->registerParam(initdata->prefix, "trigger", [&](const int val){ cl_trigger = val;});
+	initdata->rack->registerTrig(initdata->prefix, "trigger", [&](const int val){ trig_cl_trigger = val;});
+	initdata->rack->registerParam(initdata->prefix, "f0", [&](const int val){ cl_f0 = val;});
+	initdata->rack->registerCv(initdata->prefix, "f0", [&](const int val){ cv_cl_f0 = val;});
+	initdata->rack->registerParam(initdata->prefix, "tone", [&](const int val){ cl_tone = val;});
+	initdata->rack->registerCv(initdata->prefix, "tone", [&](const int val){ cv_cl_tone = val;});
+	initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val){ cl_decay = val;});
+	initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val){ cv_cl_decay = val;});
+	initdata->rack->registerParam(initdata->prefix, "scale", [&](const int val){ cl_scale = val;});
+	initdata->rack->registerCv(initdata->prefix, "scale", [&](const int val){ cv_cl_scale = val;});
+	initdata->rack->registerParam(initdata->prefix, "transient", [&](const int val){ cl_transient = val;});
+	initdata->rack->registerCv(initdata->prefix, "transient", [&](const int val){ cv_cl_transient = val;});
 
+    this->enabled = false;
 }
 
-// void DrumRackClap::SetParamValue(const string &id, const string &key, const int val) {
-//     // Implementation of setting parameter value
-//     // This is where you would handle the parameter setting logic
-//     // For example, you might store the value in a map or update an internal state
-//     // ESP_LOGI("DrumRackClap", "Setting parameter %s with key %s to value %d", id.c_str(), key.c_str(), val);
-//     // You can add your specific logic here
-// }
-
 void DrumRackClap::Process(const DrumRackProcessData &data) {
-	  MK_BOOL_PAR(bCLMute, cl_mute)
-
-    MK_FLT_PAR_ABS_PAN(fCLPan, cl_pan, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fCLLev, cl_lev, 4095.f, 2.f); fCLLev *= fCLLev;
-    MK_FLT_PAR_ABS(fCLFX1Send, cl_fx1, 4095.f, maxFXSendLevelDly); fCLFX1Send *= fCLFX1Send;
-    MK_FLT_PAR_ABS(fCLFX2Send, cl_fx2, 4095.f, maxFXSendLevelRev); fCLFX2Send *= fCLFX2Send;
-
-    if (bCLMute || fCLLev < minVolume) {
-        // return;
+    if (!this->enabled) {
+        return;
     }
 
     MK_FLT_PAR_ABS_MIN_MAX(cl_pitch1_, cl_f0, 4095.f, 350.f, 4000.f)
@@ -86,8 +62,4 @@ void DrumRackClap::Process(const DrumRackProcessData &data) {
     }
 
     cl.Process(cl_out, 32);
-    // mixRenderOutputMono(cl_out, fCLLev, fCLPan, fCLFX1Send, fCLFX2Send);
-
-    // mixRenderOutputMono(td3_out, fTD3Lev, fTD3Pan, fTD3FX1Send, fTD3FX2Send);
-
 }

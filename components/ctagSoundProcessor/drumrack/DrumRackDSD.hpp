@@ -29,21 +29,17 @@
 
 using namespace CTAG::SP;
 
-class DrumRackDSD : DrumRackSynth {
+class DrumRackDSD {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
-
-private:
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
 	float dsd_out[32];
+	
+private:
 	bool dsd_trig_prev {false};
 	plaits::SyntheticSnareDrum dsd;
 	atomic<int16_t> ds_trigger, trig_ds_trigger;
-	atomic<int16_t> ds_mute, trig_ds_mute;
-	atomic<int16_t> ds_lev, cv_ds_lev;
-	atomic<int16_t> ds_pan, cv_ds_pan;
-	atomic<int16_t> ds_fx1, cv_ds_fx1;
-	atomic<int16_t> ds_fx2, cv_ds_fx2;
 	atomic<int16_t> ds_accent, cv_ds_accent;
 	atomic<int16_t> ds_f0, cv_ds_f0;
 	atomic<int16_t> ds_fm_amt, cv_ds_fm_amt;

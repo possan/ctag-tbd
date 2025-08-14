@@ -29,10 +29,12 @@
 
 using namespace CTAG::SP;
 
-class DrumRackInput : DrumRackSynth {
+class DrumRackInput {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+    float in_out[32 * 2];
 
 private:
     atomic<int16_t> in_mute, trig_in_mute;

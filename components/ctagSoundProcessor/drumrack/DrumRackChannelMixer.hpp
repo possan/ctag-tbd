@@ -29,22 +29,22 @@
 
 using namespace CTAG::SP;
 
-class DrumRackDBD {
+class DrumRackChannelMixer {
 public:
-    void Process(const DrumRackProcessData &data);
-    void Init(const DrumRackInitData *initdata);
+	void PreProcess(const DrumRackProcessData &data);
+	void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float dbd_out[32];
-	
+	int device;
+	float level;
+	float pan;
+	float send1;
+	float send2;
+
 private:
-	plaits::SyntheticBassDrum dbd;
-	bool dbd_trig_prev {false};
-	atomic<int16_t> db_trigger, trig_db_trigger;
-	atomic<int16_t> db_accent, cv_db_accent;
-	atomic<int16_t> db_f0, cv_db_f0;
-	atomic<int16_t> db_tone, cv_db_tone;
-	atomic<int16_t> db_decay, cv_db_decay;
-	atomic<int16_t> db_dirty, cv_db_dirty;
-	atomic<int16_t> db_fm_env, cv_db_fm_env;
-	atomic<int16_t> db_fm_dcy, cv_db_fm_dcy;
+	atomic<int16_t> mix_lev, cv_mix_lev;
+	atomic<int16_t> mix_device, cv_mix_device;
+	atomic<int16_t> mix_pan, cv_mix_pan;
+	atomic<int16_t> mix_fx1, cv_mix_fx1;
+	atomic<int16_t> mix_fx2, cv_mix_fx2;
+	atomic<int16_t> mix_mute, trig_mix_mute;
 };

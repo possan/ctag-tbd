@@ -9,54 +9,35 @@ using namespace CTAG::SP;
 #define td3_kAccentVCAFactor 1.5f
 
 void DrumRackFMB::Init(const DrumRackInitData *initdata) {
-
     fmb.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "fmb_trigger", [&](const int val){ fmb_trigger = val;});
-	initdata->rack->registerTrig(initdata->prefix, "fmb_trigger", [&](const int val){ trig_fmb_trigger = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_mute", [&](const int val){ fmb_mute = val;});
-	initdata->rack->registerTrig(initdata->prefix, "fmb_mute", [&](const int val){ trig_fmb_mute = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_lev", [&](const int val){ fmb_lev = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_lev", [&](const int val){ cv_fmb_lev = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_pan", [&](const int val){ fmb_pan = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_pan", [&](const int val){ cv_fmb_pan = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_fx1", [&](const int val){ fmb_fx1 = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_fx1", [&](const int val){ cv_fmb_fx1 = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_fx2", [&](const int val){ fmb_fx2 = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_fx2", [&](const int val){ cv_fmb_fx2 = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_use_ratio_mode", [&](const int val){ fmb_use_ratio_mode = val;});
-	initdata->rack->registerTrig(initdata->prefix, "fmb_use_ratio_mode", [&](const int val){ trig_fmb_use_ratio_mode = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_mod_env_sync", [&](const int val){ fmb_mod_env_sync = val;});
-	initdata->rack->registerTrig(initdata->prefix, "fmb_mod_env_sync", [&](const int val){ trig_fmb_mod_env_sync = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_f_b", [&](const int val){ fmb_f_b = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_f_b", [&](const int val){ cv_fmb_f_b = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_d_b", [&](const int val){ fmb_d_b = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_d_b", [&](const int val){ cv_fmb_d_b = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_f_m", [&](const int val){ fmb_f_m = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_f_m", [&](const int val){ cv_fmb_f_m = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_I", [&](const int val){ fmb_I = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_I", [&](const int val){ cv_fmb_I = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_d_m", [&](const int val){ fmb_d_m = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_d_m", [&](const int val){ cv_fmb_d_m = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_b_m", [&](const int val){ fmb_b_m = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_b_m", [&](const int val){ cv_fmb_b_m = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_A_f", [&](const int val){ fmb_A_f = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_A_f", [&](const int val){ cv_fmb_A_f = val;});
-	initdata->rack->registerParam(initdata->prefix, "fmb_d_f", [&](const int val){ fmb_d_f = val;});
-	initdata->rack->registerCv(initdata->prefix, "fmb_d_f", [&](const int val){ cv_fmb_d_f = val;});
+    initdata->rack->registerParam(initdata->prefix, "trigger", [&](const int val){ fmb_trigger = val;});
+	initdata->rack->registerTrig(initdata->prefix, "trigger", [&](const int val){ trig_fmb_trigger = val;});
+	initdata->rack->registerParam(initdata->prefix, "use_ratio_mode", [&](const int val){ fmb_use_ratio_mode = val;});
+	initdata->rack->registerTrig(initdata->prefix, "use_ratio_mode", [&](const int val){ trig_fmb_use_ratio_mode = val;});
+	initdata->rack->registerParam(initdata->prefix, "mod_env_sync", [&](const int val){ fmb_mod_env_sync = val;});
+	initdata->rack->registerTrig(initdata->prefix, "mod_env_sync", [&](const int val){ trig_fmb_mod_env_sync = val;});
+	initdata->rack->registerParam(initdata->prefix, "f_b", [&](const int val){ fmb_f_b = val;});
+	initdata->rack->registerCv(initdata->prefix, "f_b", [&](const int val){ cv_fmb_f_b = val;});
+	initdata->rack->registerParam(initdata->prefix, "d_b", [&](const int val){ fmb_d_b = val;});
+	initdata->rack->registerCv(initdata->prefix, "d_b", [&](const int val){ cv_fmb_d_b = val;});
+	initdata->rack->registerParam(initdata->prefix, "f_m", [&](const int val){ fmb_f_m = val;});
+	initdata->rack->registerCv(initdata->prefix, "f_m", [&](const int val){ cv_fmb_f_m = val;});
+	initdata->rack->registerParam(initdata->prefix, "I", [&](const int val){ fmb_I = val;});
+	initdata->rack->registerCv(initdata->prefix, "I", [&](const int val){ cv_fmb_I = val;});
+	initdata->rack->registerParam(initdata->prefix, "d_m", [&](const int val){ fmb_d_m = val;});
+	initdata->rack->registerCv(initdata->prefix, "d_m", [&](const int val){ cv_fmb_d_m = val;});
+	initdata->rack->registerParam(initdata->prefix, "b_m", [&](const int val){ fmb_b_m = val;});
+	initdata->rack->registerCv(initdata->prefix, "b_m", [&](const int val){ cv_fmb_b_m = val;});
+	initdata->rack->registerParam(initdata->prefix, "A_f", [&](const int val){ fmb_A_f = val;});
+	initdata->rack->registerCv(initdata->prefix, "A_f", [&](const int val){ cv_fmb_A_f = val;});
+	initdata->rack->registerParam(initdata->prefix, "d_f", [&](const int val){ fmb_d_f = val;});
+	initdata->rack->registerCv(initdata->prefix, "d_f", [&](const int val){ cv_fmb_d_f = val;});
 
+    this->enabled = false;
 }
 
-// void DrumRackFMB::SetParamValue(const string &id, const string &key, const int val) {
-//     // Implementation of setting parameter value
-//     // This is where you would handle the parameter setting logic
-//     // For example, you might store the value in a map or update an internal state
-//     // ESP_LOGI("DrumRackFMB", "Setting parameter %s with key %s to value %d", id.c_str(), key.c_str(), val);
-//     // You can add your specific logic here
-// }
-
 void DrumRackFMB::Process(const DrumRackProcessData &data) {
-    MK_BOOL_PAR(bFMBMute, fmb_mute)
     MK_BOOL_PAR(bFMBTrig, fmb_trigger)
     if (bFMBTrig != fmb_trig_prev && bFMBTrig){
 	    fmb_trig_prev = true;
@@ -66,13 +47,8 @@ void DrumRackFMB::Process(const DrumRackProcessData &data) {
 	    fmb_trig_prev = false;
     }
 
-    MK_FLT_PAR_ABS_PAN(fFMBPan, fmb_pan, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fFMBLev, fmb_lev, 4095.f, 2.f); fFMBLev *= fFMBLev;
-    MK_FLT_PAR_ABS(fFMBFX1Send, fmb_fx1, 4095.f, maxFXSendLevelDly); fFMBFX1Send *= fFMBFX1Send;
-    MK_FLT_PAR_ABS(fFMBFX2Send, fmb_fx2, 4095.f, maxFXSendLevelRev); fFMBFX2Send *= fFMBFX2Send;
-
-    if (bFMBMute || fFMBLev < minVolume) {
-        // return;
+    if (!this->enabled) {
+        return;
     }
 
     MK_BOOL_PAR(bFMBUseRatioMode, fmb_use_ratio_mode)
@@ -107,7 +83,4 @@ void DrumRackFMB::Process(const DrumRackProcessData &data) {
     fmb.params.d_f = fFMBDecayFreq;
 
     fmb.Process(fmb_out, 32);
-    // mixRenderOutputMono(fmb_out, fFMBLev, fFMBPan, fFMBFX1Send, fFMBFX2Send);
-    // mixRenderOutputMono(td3_out, fTD3Lev, fTD3Pan, fTD3FX1Send, fTD3FX2Send);
-
 }

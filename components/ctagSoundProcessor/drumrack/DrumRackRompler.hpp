@@ -29,20 +29,16 @@
 
 using namespace CTAG::SP;
 
-class DrumRackRompler : DrumRackSynth {
+class DrumRackRompler {
 public:
-    void Process(const DrumRackProcessData &    data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &    data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+    float s1_out[32];
 
 private:
-    float s1_out[32];
     CTAG::SYNTHESIS::RomplerVoiceMinimal rompler[1];
 	atomic<int16_t> s1_gate, trig_s1_gate;
-	atomic<int16_t> s1_mute, trig_s1_mute;
-	atomic<int16_t> s1_lev, cv_s1_lev;
-	atomic<int16_t> s1_pan, cv_s1_pan;
-	atomic<int16_t> s1_fx1, cv_s1_fx1;
-	atomic<int16_t> s1_fx2, cv_s1_fx2;
 	atomic<int16_t> s1_speed, cv_s1_speed;
 	atomic<int16_t> s1_pitch, cv_s1_pitch;
 	atomic<int16_t> s1_bank, cv_s1_bank;

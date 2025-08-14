@@ -19,61 +19,44 @@ void DrumRackMO::Init(const DrumRackInitData *initdata) {
     mo_envelope.SetModeExp();
     mo_quantizer.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "mo_shape", [&](const int val) { mo_shape = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_shape", [&](const int val) { cv_mo_shape = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_pitch", [&](const int val) { mo_pitch = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_pitch", [&](const int val) { cv_mo_pitch = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_decimation", [&](const int val) { mo_decimation = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_decimation", [&](const int val) { cv_mo_decimation = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_bit_reduction", [&](const int val) { mo_bit_reduction = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_bit_reduction", [&](const int val) { cv_mo_bit_reduction = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_q_scale", [&](const int val) { mo_q_scale = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_q_scale", [&](const int val) { cv_mo_q_scale = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_param_0", [&](const int val) { mo_param_0 = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_param_0", [&](const int val) { cv_mo_param_0 = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_param_1", [&](const int val) { mo_param_1 = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_param_1", [&](const int val) { cv_mo_param_1 = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_waveshaping", [&](const int val) { mo_waveshaping = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_waveshaping", [&](const int val) { cv_mo_waveshaping = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_fm_amt", [&](const int val) { mo_fm_amt = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_fm_amt", [&](const int val) { cv_mo_fm_amt = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_p0_amt", [&](const int val) { mo_p0_amt = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_p0_amt", [&](const int val) { cv_mo_p0_amt = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_p1_amt", [&](const int val) { mo_p1_amt = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_p1_amt", [&](const int val) { cv_mo_p1_amt = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_enableEG", [&](const int val) { mo_enableEG = val; });
-    initdata->rack->registerTrig(initdata->prefix, "mo_enableEG", [&](const int val) { trig_mo_enableEG = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_loopEG", [&](const int val) { mo_loopEG = val; });
-    initdata->rack->registerTrig(initdata->prefix, "mo_loopEG", [&](const int val) { trig_mo_loopEG = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_attack", [&](const int val) { mo_attack = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_attack", [&](const int val) { cv_mo_attack = val; });
-    initdata->rack->registerParam(initdata->prefix, "mo_decay", [&](const int val) { mo_decay = val; });
-    initdata->rack->registerCv(initdata->prefix, "mo_decay", [&](const int val) { cv_mo_decay = val; });
-	initdata->rack->registerParam(initdata->prefix, "mo_lev", [&](const int val){ mo_lev = val;});
-	initdata->rack->registerCv(initdata->prefix, "mo_lev", [&](const int val){ cv_mo_lev = val;});
-	initdata->rack->registerParam(initdata->prefix, "mo_pan", [&](const int val){ mo_pan = val;});
-	initdata->rack->registerCv(initdata->prefix, "mo_pan", [&](const int val){ cv_mo_pan = val;});
-	initdata->rack->registerParam(initdata->prefix, "mo_fx1", [&](const int val){ mo_fx1 = val;});
-	initdata->rack->registerCv(initdata->prefix, "mo_fx1", [&](const int val){ cv_mo_fx1 = val;});
-	initdata->rack->registerParam(initdata->prefix, "mo_fx2", [&](const int val){ mo_fx2 = val;});
-	initdata->rack->registerCv(initdata->prefix, "mo_fx2", [&](const int val){ cv_mo_fx2 = val;});
+    initdata->rack->registerParam(initdata->prefix, "shape", [&](const int val) { mo_shape = val; });
+    initdata->rack->registerCv(initdata->prefix, "shape", [&](const int val) { cv_mo_shape = val; });
+    initdata->rack->registerParam(initdata->prefix, "pitch", [&](const int val) { mo_pitch = val; });
+    initdata->rack->registerCv(initdata->prefix, "pitch", [&](const int val) { cv_mo_pitch = val; });
+    initdata->rack->registerParam(initdata->prefix, "decimation", [&](const int val) { mo_decimation = val; });
+    initdata->rack->registerCv(initdata->prefix, "decimation", [&](const int val) { cv_mo_decimation = val; });
+    initdata->rack->registerParam(initdata->prefix, "bit_reduction", [&](const int val) { mo_bit_reduction = val; });
+    initdata->rack->registerCv(initdata->prefix, "bit_reduction", [&](const int val) { cv_mo_bit_reduction = val; });
+    initdata->rack->registerParam(initdata->prefix, "q_scale", [&](const int val) { mo_q_scale = val; });
+    initdata->rack->registerCv(initdata->prefix, "q_scale", [&](const int val) { cv_mo_q_scale = val; });
+    initdata->rack->registerParam(initdata->prefix, "param_0", [&](const int val) { mo_param_0 = val; });
+    initdata->rack->registerCv(initdata->prefix, "param_0", [&](const int val) { cv_mo_param_0 = val; });
+    initdata->rack->registerParam(initdata->prefix, "param_1", [&](const int val) { mo_param_1 = val; });
+    initdata->rack->registerCv(initdata->prefix, "param_1", [&](const int val) { cv_mo_param_1 = val; });
+    initdata->rack->registerParam(initdata->prefix, "waveshaping", [&](const int val) { mo_waveshaping = val; });
+    initdata->rack->registerCv(initdata->prefix, "waveshaping", [&](const int val) { cv_mo_waveshaping = val; });
+    initdata->rack->registerParam(initdata->prefix, "fm_amt", [&](const int val) { mo_fm_amt = val; });
+    initdata->rack->registerCv(initdata->prefix, "fm_amt", [&](const int val) { cv_mo_fm_amt = val; });
+    initdata->rack->registerParam(initdata->prefix, "p0_amt", [&](const int val) { mo_p0_amt = val; });
+    initdata->rack->registerCv(initdata->prefix, "p0_amt", [&](const int val) { cv_mo_p0_amt = val; });
+    initdata->rack->registerParam(initdata->prefix, "p1_amt", [&](const int val) { mo_p1_amt = val; });
+    initdata->rack->registerCv(initdata->prefix, "p1_amt", [&](const int val) { cv_mo_p1_amt = val; });
+    initdata->rack->registerParam(initdata->prefix, "enableEG", [&](const int val) { mo_enableEG = val; });
+    initdata->rack->registerTrig(initdata->prefix, "enableEG", [&](const int val) { trig_mo_enableEG = val; });
+    initdata->rack->registerParam(initdata->prefix, "loopEG", [&](const int val) { mo_loopEG = val; });
+    initdata->rack->registerTrig(initdata->prefix, "loopEG", [&](const int val) { trig_mo_loopEG = val; });
+    initdata->rack->registerParam(initdata->prefix, "attack", [&](const int val) { mo_attack = val; });
+    initdata->rack->registerCv(initdata->prefix, "attack", [&](const int val) { cv_mo_attack = val; });
+    initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val) { mo_decay = val; });
+    initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val) { cv_mo_decay = val; });
+
+    this->enabled = false;
 }
 
-// void DrumRackMO::SetParamValue(const string &id, const string &key, const int val) {
-//     // Implementation of setting parameter value
-//     // This is where you would handle the parameter setting logic
-//     // For example, you might store the value in a map or update an internal state
-//     // ESP_LOGI("DrumRackMO", "Setting parameter %s with key %s to value %d", id.c_str(), key.c_str(), val);
-//     // You can add your specific logic here
-// }
-
 void DrumRackMO::Process(const DrumRackProcessData &data) {
-	  float mo_out[32];
-
-    MK_FLT_PAR_ABS_PAN(fMOPan, mo_pan, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fMOLev, mo_lev, 4095.f, 2.f); fMOLev *= fMOLev;
-    MK_FLT_PAR_ABS(fMOFX1Send, mo_fx1, 4095.f, maxFXSendLevelDly); fMOFX1Send *= fMOFX1Send;
-    MK_FLT_PAR_ABS(fMOFX2Send, mo_fx2, 4095.f, maxFXSendLevelRev); fMOFX2Send *= fMOFX2Send;
+    if (!this->enabled) {
+        return;
+    }
 
     // ad envelope and loop
     float a = mo_attack / 4095.f * 5.f;
@@ -172,7 +155,7 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
 
     // render audio data
     int16_t buffer[32];
-    mo_osc.Render(mo_sync, buffer, bufSz);
+    mo_osc.Render(mo_sync, buffer, 32);
 
     // calculate amplitude modulation
     int32_t mod_gain = 65535;
@@ -202,9 +185,4 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
         buffer[i] = buffer[i] * mod_gain / 65535;
         mo_out[i] = static_cast<float>(buffer[i]) / 32767.f;
     }
-
-    // mixRenderOutputMono(mo_out, fMOLev, fMOPan, fMOFX1Send, fMOFX2Send);
-
-    // mixRenderOutputMono(td3_out, fTD3Lev, fTD3Pan, fTD3FX1Send, fTD3FX2Send);
-
 }

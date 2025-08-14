@@ -29,21 +29,17 @@
 
 using namespace CTAG::SP;
 
-class DrumRackRimshot : DrumRackSynth {
+class DrumRackRimshot {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+	float rs_out[32];
 
 private:
 	CTAG::SYNTHESIS::Rimshot rs;
-	float rs_out[32];
 	bool rs_trig_prev {false};
 	atomic<int16_t> rs_trigger, trig_rs_trigger;
-	atomic<int16_t> rs_mute, trig_rs_mute;
-	atomic<int16_t> rs_lev, cv_rs_lev;
-	atomic<int16_t> rs_pan, cv_rs_pan;
-	atomic<int16_t> rs_fx1, cv_rs_fx1;
-	atomic<int16_t> rs_fx2, cv_rs_fx2;
 	atomic<int16_t> rs_accent, cv_rs_accent;
 	atomic<int16_t> rs_f0, cv_rs_f0;
 	atomic<int16_t> rs_tone, cv_rs_tone;

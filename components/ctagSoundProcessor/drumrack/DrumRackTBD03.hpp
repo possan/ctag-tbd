@@ -29,10 +29,12 @@
 
 using namespace CTAG::SP;
 
-class DrumRackTD3 : DrumRackSynth {
+class DrumRackTBD03 {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+    float td3_out[32];
 
 private:
     ctagDiodeLadderFilter5 td3_pirkle_zdf_boost; // Pirkle ZDF with boost
@@ -69,8 +71,4 @@ private:
 	atomic<int16_t> td3_decay_vcf, cv_td3_decay_vcf;
 	atomic<int16_t> td3_p0_amt, cv_td3_p0_amt;
 	atomic<int16_t> td3_p1_amt, cv_td3_p1_amt;
-	atomic<int16_t> td3_lev, cv_td3_lev;
-	atomic<int16_t> td3_pan, cv_td3_pan;
-	atomic<int16_t> td3_fx1, cv_td3_fx1;
-	atomic<int16_t> td3_fx2, cv_td3_fx2;
 };

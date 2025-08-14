@@ -13,74 +13,64 @@ void DrumRackPolyPad::Init(const DrumRackInitData *initdata) {
     }
     pp_quantizer.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "pp_pitch", [&](const int val) { pp_pitch = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_pitch", [&](const int val) { cv_pp_pitch = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_q_scale", [&](const int val) { pp_q_scale = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_q_scale", [&](const int val) { cv_pp_q_scale = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_chord", [&](const int val) { pp_chord = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_chord", [&](const int val) { cv_pp_chord = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_inversion", [&](const int val) { pp_inversion = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_inversion", [&](const int val) { cv_pp_inversion = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_detune", [&](const int val) { pp_detune = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_detune", [&](const int val) { cv_pp_detune = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_nnotes", [&](const int val) { pp_nnotes = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_nnotes", [&](const int val) { cv_pp_nnotes = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_ncvoices", [&](const int val) { pp_ncvoices = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_ncvoices", [&](const int val) { cv_pp_ncvoices = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_voicehold", [&](const int val) { pp_voicehold = val; });
-    initdata->rack->registerTrig(initdata->prefix, "pp_voicehold", [&](const int val) { trig_pp_voicehold = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_lfo1_freq", [&](const int val) { pp_lfo1_freq = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_lfo1_freq", [&](const int val) { cv_pp_lfo1_freq = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_lfo1_amt", [&](const int val) { pp_lfo1_amt = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_lfo1_amt", [&](const int val) { cv_pp_lfo1_amt = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_filter_type", [&](const int val) { pp_filter_type = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_filter_type", [&](const int val) { cv_pp_filter_type = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_cutoff", [&](const int val) { pp_cutoff = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_cutoff", [&](const int val) { cv_pp_cutoff = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_resonance", [&](const int val) { pp_resonance = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_resonance", [&](const int val) { cv_pp_resonance = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_lfo2_freq", [&](const int val) { pp_lfo2_freq = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_lfo2_freq", [&](const int val) { cv_pp_lfo2_freq = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_lfo2_amt", [&](const int val) { pp_lfo2_amt = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_lfo2_amt", [&](const int val) { cv_pp_lfo2_amt = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_lfo2_rphase", [&](const int val) { pp_lfo2_rphase = val; });
-    initdata->rack->registerTrig(initdata->prefix, "pp_lfo2_rphase", [&](const int val) { trig_pp_lfo2_rphase = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_eg_filt_amt", [&](const int val) { pp_eg_filt_amt = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_eg_filt_amt", [&](const int val) { cv_pp_eg_filt_amt = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_enableEG", [&](const int val) { pp_enableEG = val; });
-    initdata->rack->registerTrig(initdata->prefix, "pp_enableEG", [&](const int val) { trig_pp_enableEG = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_latchEG", [&](const int val) { pp_latchEG = val; });
-    initdata->rack->registerTrig(initdata->prefix, "pp_latchEG", [&](const int val) { trig_pp_latchEG = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_eg_slow_fast", [&](const int val) { pp_eg_slow_fast = val; });
-    initdata->rack->registerTrig(initdata->prefix, "pp_eg_slow_fast", [&](const int val) { trig_pp_eg_slow_fast = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_attack", [&](const int val) { pp_attack = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_attack", [&](const int val) { cv_pp_attack = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_decay", [&](const int val) { pp_decay = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_decay", [&](const int val) { cv_pp_decay = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_sustain", [&](const int val) { pp_sustain = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_sustain", [&](const int val) { cv_pp_sustain = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_release", [&](const int val) { pp_release = val; });
-    initdata->rack->registerCv(initdata->prefix, "pp_release", [&](const int val) { cv_pp_release = val; });
-    initdata->rack->registerParam(initdata->prefix, "pp_lev", [&](const int val){ pp_lev = val;});
-    initdata->rack->registerCv(initdata->prefix, "pp_lev", [&](const int val){ cv_pp_lev = val;});
-    initdata->rack->registerParam(initdata->prefix, "pp_pan", [&](const int val){ pp_pan = val;});
-    initdata->rack->registerCv(initdata->prefix, "pp_pan", [&](const int val){ cv_pp_pan = val;});
-    initdata->rack->registerParam(initdata->prefix, "pp_fx1", [&](const int val){ pp_fx1 = val;});
-    initdata->rack->registerCv(initdata->prefix, "pp_fx1", [&](const int val){ cv_pp_fx1 = val;});
-    initdata->rack->registerParam(initdata->prefix, "pp_fx2", [&](const int val){ pp_fx2 = val;});
-    initdata->rack->registerCv(initdata->prefix, "pp_fx2", [&](const int val){ cv_pp_fx2 = val;});
+    initdata->rack->registerParam(initdata->prefix, "pitch", [&](const int val) { pp_pitch = val; });
+    initdata->rack->registerCv(initdata->prefix, "pitch", [&](const int val) { cv_pp_pitch = val; });
+    initdata->rack->registerParam(initdata->prefix, "q_scale", [&](const int val) { pp_q_scale = val; });
+    initdata->rack->registerCv(initdata->prefix, "q_scale", [&](const int val) { cv_pp_q_scale = val; });
+    initdata->rack->registerParam(initdata->prefix, "chord", [&](const int val) { pp_chord = val; });
+    initdata->rack->registerCv(initdata->prefix, "chord", [&](const int val) { cv_pp_chord = val; });
+    initdata->rack->registerParam(initdata->prefix, "inversion", [&](const int val) { pp_inversion = val; });
+    initdata->rack->registerCv(initdata->prefix, "inversion", [&](const int val) { cv_pp_inversion = val; });
+    initdata->rack->registerParam(initdata->prefix, "detune", [&](const int val) { pp_detune = val; });
+    initdata->rack->registerCv(initdata->prefix, "detune", [&](const int val) { cv_pp_detune = val; });
+    initdata->rack->registerParam(initdata->prefix, "nnotes", [&](const int val) { pp_nnotes = val; });
+    initdata->rack->registerCv(initdata->prefix, "nnotes", [&](const int val) { cv_pp_nnotes = val; });
+    initdata->rack->registerParam(initdata->prefix, "ncvoices", [&](const int val) { pp_ncvoices = val; });
+    initdata->rack->registerCv(initdata->prefix, "ncvoices", [&](const int val) { cv_pp_ncvoices = val; });
+    initdata->rack->registerParam(initdata->prefix, "voicehold", [&](const int val) { pp_voicehold = val; });
+    initdata->rack->registerTrig(initdata->prefix, "voicehold", [&](const int val) { trig_pp_voicehold = val; });
+    initdata->rack->registerParam(initdata->prefix, "lfo1_freq", [&](const int val) { pp_lfo1_freq = val; });
+    initdata->rack->registerCv(initdata->prefix, "lfo1_freq", [&](const int val) { cv_pp_lfo1_freq = val; });
+    initdata->rack->registerParam(initdata->prefix, "lfo1_amt", [&](const int val) { pp_lfo1_amt = val; });
+    initdata->rack->registerCv(initdata->prefix, "lfo1_amt", [&](const int val) { cv_pp_lfo1_amt = val; });
+    initdata->rack->registerParam(initdata->prefix, "filter_type", [&](const int val) { pp_filter_type = val; });
+    initdata->rack->registerCv(initdata->prefix, "filter_type", [&](const int val) { cv_pp_filter_type = val; });
+    initdata->rack->registerParam(initdata->prefix, "cutoff", [&](const int val) { pp_cutoff = val; });
+    initdata->rack->registerCv(initdata->prefix, "cutoff", [&](const int val) { cv_pp_cutoff = val; });
+    initdata->rack->registerParam(initdata->prefix, "resonance", [&](const int val) { pp_resonance = val; });
+    initdata->rack->registerCv(initdata->prefix, "resonance", [&](const int val) { cv_pp_resonance = val; });
+    initdata->rack->registerParam(initdata->prefix, "lfo2_freq", [&](const int val) { pp_lfo2_freq = val; });
+    initdata->rack->registerCv(initdata->prefix, "lfo2_freq", [&](const int val) { cv_pp_lfo2_freq = val; });
+    initdata->rack->registerParam(initdata->prefix, "lfo2_amt", [&](const int val) { pp_lfo2_amt = val; });
+    initdata->rack->registerCv(initdata->prefix, "lfo2_amt", [&](const int val) { cv_pp_lfo2_amt = val; });
+    initdata->rack->registerParam(initdata->prefix, "lfo2_rphase", [&](const int val) { pp_lfo2_rphase = val; });
+    initdata->rack->registerTrig(initdata->prefix, "lfo2_rphase", [&](const int val) { trig_pp_lfo2_rphase = val; });
+    initdata->rack->registerParam(initdata->prefix, "eg_filt_amt", [&](const int val) { pp_eg_filt_amt = val; });
+    initdata->rack->registerCv(initdata->prefix, "eg_filt_amt", [&](const int val) { cv_pp_eg_filt_amt = val; });
+    initdata->rack->registerParam(initdata->prefix, "enableEG", [&](const int val) { pp_enableEG = val; });
+    initdata->rack->registerTrig(initdata->prefix, "enableEG", [&](const int val) { trig_pp_enableEG = val; });
+    initdata->rack->registerParam(initdata->prefix, "latchEG", [&](const int val) { pp_latchEG = val; });
+    initdata->rack->registerTrig(initdata->prefix, "latchEG", [&](const int val) { trig_pp_latchEG = val; });
+    initdata->rack->registerParam(initdata->prefix, "eg_slow_fast", [&](const int val) { pp_eg_slow_fast = val; });
+    initdata->rack->registerTrig(initdata->prefix, "eg_slow_fast", [&](const int val) { trig_pp_eg_slow_fast = val; });
+    initdata->rack->registerParam(initdata->prefix, "attack", [&](const int val) { pp_attack = val; });
+    initdata->rack->registerCv(initdata->prefix, "attack", [&](const int val) { cv_pp_attack = val; });
+    initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val) { pp_decay = val; });
+    initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val) { cv_pp_decay = val; });
+    initdata->rack->registerParam(initdata->prefix, "sustain", [&](const int val) { pp_sustain = val; });
+    initdata->rack->registerCv(initdata->prefix, "sustain", [&](const int val) { cv_pp_sustain = val; });
+    initdata->rack->registerParam(initdata->prefix, "release", [&](const int val) { pp_release = val; });
+    initdata->rack->registerCv(initdata->prefix, "release", [&](const int val) { cv_pp_release = val; });
 
+    this->enabled = false;
 };
 
 void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
-    MK_FLT_PAR_ABS_PAN(fPPPan, pp_pan, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fPPLev, pp_lev, 4095.f, 2.f); fPPLev *= fPPLev;
-    MK_FLT_PAR_ABS(fPPFX1Send, pp_fx1, 4095.f, maxFXSendLevelDly); fPPFX1Send *= fPPFX1Send;
-    MK_FLT_PAR_ABS(fPPFX2Send, pp_fx2, 4095.f, maxFXSendLevelRev); fPPFX2Send *= fPPFX2Send;
+    if (!this->enabled) {
+        return;
+    }
 
     // zero input
-    float pp_out[32];
-    float pp_out_stereo[32 * 2];
     for (int i = 0; i < 32; i++) {
         pp_out[i] = 0.f;
         pp_out_stereo[i * 2 + 0] = 0.f;
@@ -246,7 +236,7 @@ void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
         pp_v_voices[i].SetCutoff(c);
         pp_v_voices[i].SetResonance(r);
         pp_v_voices[i].SetDetune(d);
-        pp_v_voices[i].Process(pp_out_stereo, 0);
+        pp_v_voices[i].Process(pp_out_stereo, 1); // 1 = right offset
     }
 
     // note off including latched mode
@@ -265,11 +255,4 @@ void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
         }
         pp_latchVoice = false;
     }
-
-    // convert to stereo and output
-    for (int i = 0; i < bufSz; i++) {
-        pp_out_stereo[i * 2 + 1] = pp_out_stereo[i * 2 + 0];
-    }
-
-    // mixRenderOutputStereo(pp_out_stereo, fPPLev, fPPPan, fPPFX1Send, fPPFX2Send);
 }

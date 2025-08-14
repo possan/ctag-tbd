@@ -29,21 +29,17 @@
 
 using namespace CTAG::SP;
 
-class DrumRackClap : DrumRackSynth {
+class DrumRackClap {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
-
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+	float cl_out[32];
+	
 private:
 	CTAG::SYNTHESIS::Clap cl;
-	float cl_out[32];
 	bool cl_trig_prev {false};
     atomic<int16_t> cl_trigger, trig_cl_trigger;
-	atomic<int16_t> cl_mute, trig_cl_mute;
-	atomic<int16_t> cl_lev, cv_cl_lev;
-	atomic<int16_t> cl_pan, cv_cl_pan;
-	atomic<int16_t> cl_fx1, cv_cl_fx1;
-	atomic<int16_t> cl_fx2, cv_cl_fx2;
 	atomic<int16_t> cl_f0, cv_cl_f0;
 	atomic<int16_t> cl_tone, cv_cl_tone;
 	atomic<int16_t> cl_decay, cv_cl_decay;

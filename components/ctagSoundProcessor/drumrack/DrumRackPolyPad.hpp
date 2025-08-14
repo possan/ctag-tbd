@@ -28,10 +28,13 @@
 
 using namespace CTAG::SP;
 
-class DrumRackPolyPad : DrumRackSynth {
+class DrumRackPolyPad {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+    float pp_out[32];
+    float pp_out_stereo[32 * 2];
 
 private:
     bool pp_trig_prev {false};
@@ -66,8 +69,4 @@ private:
 	atomic<int16_t> pp_decay, cv_pp_decay;
 	atomic<int16_t> pp_sustain, cv_pp_sustain;
 	atomic<int16_t> pp_release, cv_pp_release;
-	atomic<int16_t> pp_lev, cv_pp_lev;
-	atomic<int16_t> pp_pan, cv_pp_pan;
-	atomic<int16_t> pp_fx1, cv_pp_fx1;
-	atomic<int16_t> pp_fx2, cv_pp_fx2;
 };

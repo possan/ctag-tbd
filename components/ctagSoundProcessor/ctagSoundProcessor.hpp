@@ -88,16 +88,15 @@ namespace CTAG {
 
             virtual ~ctagSoundProcessor() {};
 
-            void* operator new (std::size_t size) {
-                return ctagSPAllocator::Allocate(size);
-            }
-
-            void operator delete (void *ptr) noexcept {
-                // arena allocator will just reset the arena
-            }
-            void* operator new[] (std::size_t size) = delete;
-            void* operator new[] (std::size_t size, const std::nothrow_t& tag) = delete;
-            void operator delete[] (void *ptr) noexcept = delete;
+            // void* operator new (std::size_t size) {
+            //     return ctagSPAllocator::Allocate(size);
+            // }
+            // void operator delete (void *ptr) noexcept {
+            //     // arena allocator will just reset the arena
+            // }
+            // void* operator new[] (std::size_t size) = delete;
+            // void* operator new[] (std::size_t size, const std::nothrow_t& tag) = delete;
+            // void operator delete[] (void *ptr) noexcept = delete;
 
             int GetAudioBufferSize() { return bufSz; }
 

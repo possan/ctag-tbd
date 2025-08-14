@@ -5,179 +5,106 @@
   "hint": "A mix of drums and samples",
   "params": [
     {
-      "id": "ab_group",
-      "name": "Analogue Bass Drum",
+      "id": "ch1_group",
+      "name": "Channel 1 - Drum group - Kicks",
       "type": "group",
       "params": [
         {
-          "id": "ab_trigger",
-          "name": "Trigger",
-          "type": "bool"
-        },
-        {
-          "id": "ab_mute",
+          "id": "ch1_mute",
           "name": "Mute",
           "type": "bool"
         },
         {
-          "id": "ab_lev",
+          "id": "ch1_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch1_lev",
           "name": "Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "ab_pan",
+          "id": "ch1_pan",
           "name": "Pan",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "ab_fx1",
-          "name": "Delay Send",
+          "id": "ch1_fx1",
+          "name": "FX Send 1",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "ab_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "ab_accent",
-          "name": "Accent",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "ab_f0",
-          "name": "Base Frequency",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "ab_tone",
-          "name": "Tone",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "ab_decay",
-          "name": "Decay",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "ab_a_fm",
-          "name": "Attack FM",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "ab_s_fm",
-          "name": "Self FM",
+          "id": "ch1_fx2",
+          "name": "FX Send 2",
           "type": "int",
           "min": 0,
           "max": 4095
         }
       ]
     },
-    {
-      "id": "db_group",
-      "name": "Digital Bass Drum",
+     {
+      "id": "ch1_db_group",
+      "name": "Channel 1 - Machine 0 - Digital Bass Drum",
       "type": "group",
       "params": [
         {
-          "id": "db_trigger",
+          "id": "ch1_db_trigger",
           "name": "Trigger",
           "type": "bool"
         },
         {
-          "id": "db_mute",
-          "name": "Mute",
-          "type": "bool"
-        },
-        {
-          "id": "db_lev",
-          "name": "Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "db_pan",
-          "name": "Pan",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "db_fx1",
-          "name": "Delay Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "db_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "db_accent",
+          "id": "ch1_db_accent",
           "name": "Accent",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "db_f0",
+          "id": "ch1_db_f0",
           "name": "Base Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "db_tone",
+          "id": "ch1_db_tone",
           "name": "Tone",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "db_decay",
+          "id": "ch1_db_decay",
           "name": "Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "db_dirty",
+          "id": "ch1_db_dirty",
           "name": "Dirtiness",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "db_fm_env",
+          "id": "ch1_db_fm_env",
           "name": "FM Envelope",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "db_fm_dcy",
+          "id": "ch1_db_fm_dcy",
           "name": "FM Decay",
           "type": "int",
           "min": 0,
@@ -186,109 +113,178 @@
       ]
     },
     {
-      "id": "fmb_group",
-      "name": "FM Bass Drum",
+      "id": "ch1_ab_group",
+      "name": "Channel 1 - Machine 1 - Analogue Bass Drum",
       "type": "group",
       "params": [
         {
-          "id": "fmb_trigger",
+          "id": "ch1_ab_trigger",
           "name": "Trigger",
           "type": "bool"
         },
         {
-          "id": "fmb_mute",
-          "name": "Mute",
-          "type": "bool"
-        },
-        {
-          "id": "fmb_lev",
-          "name": "Level",
+          "id": "ch1_ab_accent",
+          "name": "Accent",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "fmb_pan",
-          "name": "Pan",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "fmb_fx1",
-          "name": "Delay Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "fmb_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "fmb_use_ratio_mode",
-          "name": "Use Ratio Mode",
-          "type": "bool"
-        },
-        {
-          "id": "fmb_mod_env_sync",
-          "name": "Mod Env Sync",
-          "type": "bool"
-        },
-        {
-          "id": "fmb_f_b",
+          "id": "ch1_ab_f0",
           "name": "Base Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "fmb_d_b",
+          "id": "ch1_ab_tone",
+          "name": "Tone",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch1_ab_decay",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch1_ab_a_fm",
+          "name": "Attack FM",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch1_ab_s_fm",
+          "name": "Self FM",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+   
+    {
+      "id": "ch2_group",
+      "name": "Channel 2 - Drum group - Kicks 2, because why not!",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch2_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "ch2_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch2_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch2_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch2_fx1",
+          "name": "FX Send 1",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch2_fx2",
+          "name": "FX Send 2",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+    {
+      "id": "ch2_fmb1_group",
+      "name": "Channel 2 - Machine 0 - FM Bass Drum",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch2_fmb1_trigger",
+          "name": "Trigger",
+          "type": "bool"
+        },
+        {
+          "id": "ch2_fmb1_use_ratio_mode",
+          "name": "Use Ratio Mode",
+          "type": "bool"
+        },
+        {
+          "id": "ch2_fmb1_mod_env_sync",
+          "name": "Mod Env Sync",
+          "type": "bool"
+        },
+        {
+          "id": "ch2_fmb1_f_b",
+          "name": "Base Frequency",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch2_fmb1_d_b",
           "name": "Carrier Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "fmb_f_m",
+          "id": "ch2_fmb1_f_m",
           "name": "Modulator Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "fmb_I",
+          "id": "ch2_fmb1_I",
           "name": "Modulation Index",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "fmb_d_m",
+          "id": "ch2_fmb1_d_m",
           "name": "Modulator Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "fmb_b_m",
+          "id": "ch2_fmb1_b_m",
           "name": "Modulator Feedback",
           "type": "int",
           "min": 0,
           "max": 16
         },
         {
-          "id": "fmb_A_f",
+          "id": "ch2_fmb1_A_f",
           "name": "Freq Env Amount",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "fmb_d_f",
+          "id": "ch2_fmb1_d_f",
           "name": "Freq Env Decay",
           "type": "int",
           "min": 0,
@@ -296,159 +292,176 @@
         }
       ]
     },
+
     {
-      "id": "as_group",
-      "name": "Analogue Snare",
+      "id": "ch2_fmb2_group",
+      "name": "Channel 2 - Machine 1 - FM Bass Drum 2 (For now)",
       "type": "group",
       "params": [
         {
-          "id": "as_trigger",
+          "id": "ch2_fmb2_trigger",
           "name": "Trigger",
           "type": "bool"
         },
         {
-          "id": "as_mute",
-          "name": "Mute",
+          "id": "ch2_fmb2_use_ratio_mode",
+          "name": "Use Ratio Mode",
           "type": "bool"
         },
         {
-          "id": "as_lev",
-          "name": "Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
+          "id": "ch2_fmb2_mod_env_sync",
+          "name": "Mod Env Sync",
+          "type": "bool"
         },
         {
-          "id": "as_pan",
-          "name": "Pan",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "as_fx1",
-          "name": "Delay Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "as_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "as_accent",
-          "name": "Accent",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "as_f0",
+          "id": "ch2_fmb2_f_b",
           "name": "Base Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "as_tone",
-          "name": "Tone",
+          "id": "ch2_fmb2_d_b",
+          "name": "Carrier Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "as_decay",
-          "name": "Decay",
+          "id": "ch2_fmb2_f_m",
+          "name": "Modulator Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "as_a_spy",
-          "name": "Snappy",
+          "id": "ch2_fmb2_I",
+          "name": "Modulation Index",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch2_fmb2_d_m",
+          "name": "Modulator Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch2_fmb2_b_m",
+          "name": "Modulator Feedback",
+          "type": "int",
+          "min": 0,
+          "max": 16
+        },
+        {
+          "id": "ch2_fmb2_A_f",
+          "name": "Freq Env Amount",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch2_fmb2_d_f",
+          "name": "Freq Env Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         }
       ]
     },
+
+
+
     {
-      "id": "ds_group",
-      "name": "Digital Snare",
+      "id": "ch3_group",
+      "name": "Channel 3 - Drum group - Snares",
       "type": "group",
       "params": [
         {
-          "id": "ds_trigger",
-          "name": "Trigger",
-          "type": "bool"
-        },
-        {
-          "id": "ds_mute",
+          "id": "ch3_mute",
           "name": "Mute",
           "type": "bool"
         },
         {
-          "id": "ds_lev",
+          "id": "ch3_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch3_lev",
           "name": "Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "ds_pan",
+          "id": "ch3_pan",
           "name": "Pan",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "ds_fx1",
-          "name": "Delay Send",
+          "id": "ch3_fx1",
+          "name": "FX Send 1",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "ds_fx2",
-          "name": "Reverb Send",
+          "id": "ch3_fx2",
+          "name": "FX Send 2",
           "type": "int",
           "min": 0,
           "max": 4095
+        }
+      ]
+    },
+
+    {
+      "id": "ch3_ds_group",
+      "name": "Channel 3 - Machine 0 - Digital Snare",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch3_ds_trigger",
+          "name": "Trigger",
+          "type": "bool"
         },
         {
-          "id": "ds_accent",
+          "id": "ch3_ds_accent",
           "name": "Accent",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "ds_f0",
+          "id": "ch3_ds_f0",
           "name": "Base Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "ds_fm_amt",
+          "id": "ch3_ds_fm_amt",
           "name": "FM Amount",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "ds_decay",
+          "id": "ch3_ds_decay",
           "name": "Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "ds_spy",
+          "id": "ch3_ds_spy",
           "name": "Snappy",
           "type": "int",
           "min": 0,
@@ -456,79 +469,145 @@
         }
       ]
     },
+
     {
-      "id": "hh1_group",
-      "name": "HiHat 1",
+      "id": "ch3_as_group",
+      "name": "Channel 3 - Machine 1 - Analogue Snare",
       "type": "group",
       "params": [
         {
-          "id": "hh1_trigger",
+          "id": "ch3_as_trigger",
           "name": "Trigger",
           "type": "bool"
         },
         {
-          "id": "hh1_mute",
-          "name": "Mute",
-          "type": "bool"
-        },
-        {
-          "id": "hh1_lev",
-          "name": "Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "hh1_pan",
-          "name": "Pan",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "hh1_fx1",
-          "name": "Delay Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "hh1_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "hh1_accent",
+          "id": "ch3_as_accent",
           "name": "Accent",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "hh1_f0",
+          "id": "ch3_as_f0",
           "name": "Base Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "hh1_tone",
+          "id": "ch3_as_tone",
           "name": "Tone",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "hh1_decay",
+          "id": "ch3_as_decay",
           "name": "Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "hh1_noise",
+          "id": "ch3_as_a_spy",
+          "name": "Snappy",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+
+
+
+    {
+      "id": "ch4_group",
+      "name": "Channel 4 - Drum group - Hihats",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch4_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "ch4_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch4_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch4_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch4_fx1",
+          "name": "FX Send 1",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch4_fx2",
+          "name": "FX Send 2",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+
+    {
+      "id": "ch4_hh1_group",
+      "name": "Channel 4 - Machine 0 - HiHat 1",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch4_hh1_trigger",
+          "name": "Trigger",
+          "type": "bool"
+        },
+        {
+          "id": "ch4_hh1_accent",
+          "name": "Accent",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch4_hh1_f0",
+          "name": "Base Frequency",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch4_hh1_tone",
+          "name": "Tone",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch4_hh1_decay",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch4_hh1_noise",
           "name": "Noise Level",
           "type": "int",
           "min": 0,
@@ -537,78 +616,45 @@
       ]
     },
     {
-      "id": "hh2_group",
-      "name": "HiHat 2",
+      "id": "ch4_hh2_group",
+      "name": "Channel 4 - Machine 0 - HiHat 2",
       "type": "group",
       "params": [
         {
-          "id": "hh2_trigger",
+          "id": "ch4_hh2_trigger",
           "name": "Trigger",
           "type": "bool"
         },
         {
-          "id": "hh2_mute",
-          "name": "Mute",
-          "type": "bool"
-        },
-        {
-          "id": "hh2_lev",
-          "name": "Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "hh2_pan",
-          "name": "Pan",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "hh2_fx1",
-          "name": "Delay Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "hh2_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "hh2_accent",
+          "id": "ch4_hh2_accent",
           "name": "Accent",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "hh2_f0",
+          "id": "ch4_hh2_f0",
           "name": "Base Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "hh2_tone",
+          "id": "ch4_hh2_tone",
           "name": "Tone",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "hh2_decay",
+          "id": "ch4_hh2_decay",
           "name": "Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "hh2_noise",
+          "id": "ch4_hh2_noise",
           "name": "Noise Level",
           "type": "int",
           "min": 0,
@@ -617,78 +663,92 @@
       ]
     },
     {
-      "id": "rs_group",
+      "id": "ch5_group",
+      "name": "Channel 5 - Drum group - Rimshot",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch5_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "ch5_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch5_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch5_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch5_fx1",
+          "name": "FX Send 1",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch5_fx2",
+          "name": "FX Send 2",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+    {
+      "id": "ch5_rs_group",
       "name": "Rim Shot",
       "type": "group",
       "params": [
         {
-          "id": "rs_trigger",
+          "id": "ch5_rs_trigger",
           "name": "Trigger",
           "type": "bool"
         },
         {
-          "id": "rs_mute",
-          "name": "Mute",
-          "type": "bool"
-        },
-        {
-          "id": "rs_lev",
-          "name": "Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "rs_pan",
-          "name": "Pan",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "rs_fx1",
-          "name": "Delay Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "rs_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "rs_accent",
+          "id": "ch5_rs_accent",
           "name": "Accent",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "rs_f0",
+          "id": "ch5_rs_f0",
           "name": "Base Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "rs_tone",
+          "id": "ch5_rs_tone",
           "name": "Tone",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "rs_decay",
+          "id": "ch5_rs_decay",
           "name": "Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "rs_noise",
+          "id": "ch5_rs_noise",
           "name": "Noise Level",
           "type": "int",
           "min": 0,
@@ -697,78 +757,92 @@
       ]
     },
     {
-      "id": "cl_group",
-      "name": "Clap",
+      "id": "ch6_group",
+      "name": "Channel 6 - Drum group - Clap",
       "type": "group",
       "params": [
         {
-          "id": "cl_trigger",
-          "name": "Trigger",
-          "type": "bool"
-        },
-        {
-          "id": "cl_mute",
+          "id": "ch6_mute",
           "name": "Mute",
           "type": "bool"
         },
         {
-          "id": "cl_lev",
+          "id": "ch6_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch6_lev",
           "name": "Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "cl_pan",
+          "id": "ch6_pan",
           "name": "Pan",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "cl_fx1",
-          "name": "Delay Send",
+          "id": "ch6_fx1",
+          "name": "FX Send 1",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "cl_fx2",
-          "name": "Reverb Send",
+          "id": "ch6_fx2",
+          "name": "FX Send 2",
           "type": "int",
           "min": 0,
           "max": 4095
+        }
+      ]
+    },
+    {
+      "id": "ch6_cl_group",
+      "name": "Clap",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch6_cl_trigger",
+          "name": "Trigger",
+          "type": "bool"
         },
         {
-          "id": "cl_f0",
+          "id": "ch6_cl_f0",
           "name": "Base Frequency",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "cl_tone",
+          "id": "ch6_cl_tone",
           "name": "Tone",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "cl_decay",
+          "id": "ch6_cl_decay",
           "name": "Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "cl_scale",
+          "id": "ch6_cl_scale",
           "name": "Scale",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "cl_transient",
+          "id": "ch6_cl_transient",
           "name": "Transient",
           "type": "int",
           "min": 0,
@@ -776,152 +850,170 @@
         }
       ]
     },
+
+
+
     {
-      "id": "s1_group",
-      "name": "Sample 1",
+      "id": "ch7_group",
+      "name": "Channel 7 - Drum group - Samples",
       "type": "group",
       "params": [
         {
-          "id": "s1_gate",
-          "name": "Gate",
-          "type": "bool"
-        },
-        {
-          "id": "s1_mute",
+          "id": "ch7_mute",
           "name": "Mute",
           "type": "bool"
         },
         {
-          "id": "s1_lev",
+          "id": "ch7_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch7_lev",
           "name": "Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s1_pan",
+          "id": "ch7_pan",
           "name": "Pan",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "s1_fx1",
-          "name": "Delay Send",
+          "id": "ch7_fx1",
+          "name": "FX Send 1",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s1_fx2",
-          "name": "Reverb Send",
+          "id": "ch7_fx2",
+          "name": "FX Send 2",
           "type": "int",
           "min": 0,
           "max": 4095
+        }
+      ]
+    },
+
+    {
+      "id": "ch7_smp_group",
+      "name": "Channel 7 - Machine 0 - Sampler",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch7_smp_gate",
+          "name": "Gate",
+          "type": "bool"
         },
         {
-          "id": "s1_speed",
+          "id": "ch7_smp_speed",
           "name": "Speed / Tune",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "s1_pitch",
+          "id": "ch7_smp_pitch",
           "name": "Pitch",
           "type": "int",
           "min": -12,
           "max": 12
         },
         {
-          "id": "s1_bank",
+          "id": "ch7_smp_bank",
           "name": "Bank",
           "type": "int",
           "min": 0,
           "max": 31
         },
         {
-          "id": "s1_slice",
+          "id": "ch7_smp_slice",
           "name": "Slice",
           "type": "int",
           "min": 0,
           "max": 31
         },
         {
-          "id": "s1_start",
+          "id": "ch7_smp_start",
           "name": "Start",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s1_end",
+          "id": "ch7_smp_end",
           "name": "End",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s1_lp",
+          "id": "ch7_smp_lp",
           "name": "Loop",
           "type": "bool"
         },
         {
-          "id": "s1_lp_pp",
+          "id": "ch7_smp_lp_pp",
           "name": "Ping-pong",
           "type": "bool"
         },
         {
-          "id": "s1_lp_pos",
+          "id": "ch7_smp_lp_pos",
           "name": "End",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s1_atk",
+          "id": "ch7_smp_atk",
           "name": "Attack",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s1_dcy",
+          "id": "ch7_smp_dcy",
           "name": "Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s1_eg2fm",
+          "id": "ch7_smp_eg2fm",
           "name": "EG FM Amount",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s1_brr",
+          "id": "ch7_smp_brr",
           "name": "Bit Reduction",
           "type": "int",
           "min": 0,
           "max": 14
         },
         {
-          "id": "s1_ft",
+          "id": "ch7_smp_ft",
           "name": "Filter Type",
           "type": "int",
           "min": 0,
           "max": 3
         },
         {
-          "id": "s1_fc",
+          "id": "ch7_smp_fc",
           "name": "Filter Cutoff",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s1_fq",
+          "id": "ch7_smp_fq",
           "name": "Filter Q",
           "type": "int",
           "min": 0,
@@ -929,152 +1021,172 @@
         }
       ]
     },
+
+
+
+
+
+
     {
-      "id": "s2_group",
-      "name": "Sample 2",
+      "id": "ch8_group",
+      "name": "Channel 8 - Drum group - Sampler",
       "type": "group",
       "params": [
         {
-          "id": "s2_gate",
-          "name": "Gate",
-          "type": "bool"
-        },
-        {
-          "id": "s2_mute",
+          "id": "ch8_mute",
           "name": "Mute",
           "type": "bool"
         },
         {
-          "id": "s2_lev",
+          "id": "ch8_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch8_lev",
           "name": "Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s2_pan",
+          "id": "ch8_pan",
           "name": "Pan",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "s2_fx1",
-          "name": "Delay Send",
+          "id": "ch8_fx1",
+          "name": "FX Send 1",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s2_fx2",
-          "name": "Reverb Send",
+          "id": "ch8_fx2",
+          "name": "FX Send 2",
           "type": "int",
           "min": 0,
           "max": 4095
+        }
+      ]
+    },
+    {
+      "id": "ch8_smp_group",
+      "name": "Channel 8 - Machine 0 - Sampler",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch8_smp_gate",
+          "name": "Gate",
+          "type": "bool"
         },
         {
-          "id": "s2_speed",
+          "id": "ch8_smp_speed",
           "name": "Speed / Tune",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "s2_pitch",
+          "id": "ch8_smp_pitch",
           "name": "Pitch",
           "type": "int",
           "min": -24,
           "max": 24
         },
         {
-          "id": "s2_bank",
+          "id": "ch8_smp_bank",
           "name": "Bank",
           "type": "int",
           "min": 0,
           "max": 31
         },
         {
-          "id": "s2_slice",
+          "id": "ch8_smp_slice",
           "name": "Slice",
           "type": "int",
           "min": 0,
           "max": 31
         },
         {
-          "id": "s2_start",
+          "id": "ch8_smp_start",
           "name": "Start",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s2_end",
+          "id": "ch8_smp_end",
           "name": "End",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s2_lp",
+          "id": "ch8_smp_lp",
           "name": "Loop",
           "type": "bool"
         },
         {
-          "id": "s2_lp_pp",
+          "id": "ch8_smp_lp_pp",
           "name": "Ping-pong",
           "type": "bool"
         },
         {
-          "id": "s2_lp_pos",
+          "id": "ch8_smp_lp_pos",
           "name": "End",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s2_atk",
+          "id": "ch8_smp_atk",
           "name": "Attack",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s2_dcy",
+          "id": "ch8_smp_dcy",
           "name": "Decay",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s2_eg2fm",
+          "id": "ch8_smp_eg2fm",
           "name": "EG FM Amount",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s2_brr",
+          "id": "ch8_smp_brr",
           "name": "Bit Reduction",
           "type": "int",
           "min": 0,
           "max": 14
         },
         {
-          "id": "s2_ft",
+          "id": "ch8_smp_ft",
           "name": "Filter Type",
           "type": "int",
           "min": 0,
           "max": 3
         },
         {
-          "id": "s2_fc",
+          "id": "ch8_smp_fc",
           "name": "Filter Cutoff",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s2_fq",
+          "id": "ch8_smp_fq",
           "name": "Filter Q",
           "type": "int",
           "min": 0,
@@ -1083,368 +1195,70 @@
       ]
     },
     {
-      "id": "s3_group",
-      "name": "Sample 3",
+      "id": "ch9_group",
+      "name": "Channel 9 - Bass group - TBD03",
       "type": "group",
       "params": [
         {
-          "id": "s3_gate",
-          "name": "Gate",
-          "type": "bool"
-        },
-        {
-          "id": "s3_mute",
+          "id": "ch9_mute",
           "name": "Mute",
           "type": "bool"
         },
         {
-          "id": "s3_lev",
+          "id": "ch9_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch9_lev",
           "name": "Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s3_pan",
+          "id": "ch9_pan",
           "name": "Pan",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "s3_fx1",
-          "name": "Delay Send",
+          "id": "ch9_fx1",
+          "name": "FX Send 1",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "s3_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s3_speed",
-          "name": "Speed / Tune",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "s3_pitch",
-          "name": "Pitch",
-          "type": "int",
-          "min": -48,
-          "max": 48
-        },
-        {
-          "id": "s3_bank",
-          "name": "Bank",
-          "type": "int",
-          "min": 0,
-          "max": 31
-        },
-        {
-          "id": "s3_slice",
-          "name": "Slice",
-          "type": "int",
-          "min": 0,
-          "max": 31
-        },
-        {
-          "id": "s3_start",
-          "name": "Start",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s3_end",
-          "name": "End",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s3_lp",
-          "name": "Loop",
-          "type": "bool"
-        },
-        {
-          "id": "s3_lp_pp",
-          "name": "Ping-pong",
-          "type": "bool"
-        },
-        {
-          "id": "s3_lp_pos",
-          "name": "End",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s3_atk",
-          "name": "Attack",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s3_dcy",
-          "name": "Decay",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s3_eg2fm",
-          "name": "EG FM Amount",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s3_brr",
-          "name": "Bit Reduction",
-          "type": "int",
-          "min": 0,
-          "max": 14
-        },
-        {
-          "id": "s3_ft",
-          "name": "Filter Type",
-          "type": "int",
-          "min": 0,
-          "max": 3
-        },
-        {
-          "id": "s3_fc",
-          "name": "Filter Cutoff",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s3_fq",
-          "name": "Filter Q",
+          "id": "ch9_fx2",
+          "name": "FX Send 2",
           "type": "int",
           "min": 0,
           "max": 4095
         }
       ]
     },
+    
     {
-      "id": "s4_group",
-      "name": "Sample 4",
-      "type": "group",
-      "params": [
-        {
-          "id": "s4_gate",
-          "name": "Gate",
-          "type": "bool"
-        },
-        {
-          "id": "s4_mute",
-          "name": "Mute",
-          "type": "bool"
-        },
-        {
-          "id": "s4_lev",
-          "name": "Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_pan",
-          "name": "Pan",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "s4_fx1",
-          "name": "Delay Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_speed",
-          "name": "Speed / Tune",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "s4_pitch",
-          "name": "Pitch",
-          "type": "int",
-          "min": -12,
-          "max": 12
-        },
-        {
-          "id": "s4_bank",
-          "name": "Bank",
-          "type": "int",
-          "min": 0,
-          "max": 31
-        },
-        {
-          "id": "s4_slice",
-          "name": "Slice",
-          "type": "int",
-          "min": 0,
-          "max": 31
-        },
-        {
-          "id": "s4_start",
-          "name": "Start",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_end",
-          "name": "End",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_lp",
-          "name": "Loop",
-          "type": "bool"
-        },
-        {
-          "id": "s4_lp_pp",
-          "name": "Ping-pong",
-          "type": "bool"
-        },
-        {
-          "id": "s4_lp_pos",
-          "name": "End",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_atk",
-          "name": "Attack",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_dcy",
-          "name": "Decay",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_eg2fm",
-          "name": "EG FM Amount",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_brr",
-          "name": "Bit Reduction",
-          "type": "int",
-          "min": 0,
-          "max": 14
-        },
-        {
-          "id": "s4_ft",
-          "name": "Filter Type",
-          "type": "int",
-          "min": 0,
-          "max": 3
-        },
-        {
-          "id": "s4_fc",
-          "name": "Filter Cutoff",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "s4_fq",
-          "name": "Filter Q",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        }
-      ]
-    },
-    {
-      "id": "in_group",
-      "name": "Input",
-      "type": "group",
-      "params": [
-                {
-          "id": "in_mute",
-          "name": "Mute",
-          "type": "bool"
-        },
-        {
-          "id": "in_lev",
-          "name": "Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "in_pan",
-          "name": "Pan",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "in_fx1",
-          "name": "Delay Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "in_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        }
-      ]
-    },
-    {
-      "id": "td3_group",
+      "id": "ch9_tbd03_group",
       "name": "TBD03",
       "type": "group",
       "params": [
         {
-          "id": "td3_trigger",
+          "id": "ch9_tbd03_trigger",
           "name": "Trigger",
           "type": "bool"
         },
         {
-          "id": "td3_sync_trig",
+          "id": "ch9_tbd03_sync_trig",
           "name": "Sync on Trigger",
           "type": "bool"
         },
         {
-          "id": "td3_pitch",
+          "id": "ch9_tbd03_pitch",
           "name": "Pitch",
           "type": "int",
           "min": 0,
@@ -1452,7 +1266,7 @@
           "step": 1
         },
         {
-          "id": "td3_shape",
+          "id": "ch9_tbd03_shape",
           "name": "Shape",
           "type": "int",
           "min": 0,
@@ -1460,7 +1274,7 @@
           "step": 1
         },
         {
-          "id": "td3_param_0",
+          "id": "ch9_tbd03_param_0",
           "name": "Osc Morph 0",
           "type": "int",
           "min": 0,
@@ -1468,7 +1282,7 @@
           "step": 1
         },
         {
-          "id": "td3_param_1",
+          "id": "ch9_tbd03_param_1",
           "name": "Osc Morph 1",
           "type": "int",
           "min": 0,
@@ -1476,87 +1290,87 @@
           "step": 1
         },
         {
-          "id": "td3_filter_type",
+          "id": "ch9_tbd03_filter_type",
           "name": "Filter Type",
           "type": "int",
           "min": 0,
           "max": 4
         },
         {
-          "id": "td3_cutoff",
+          "id": "ch9_tbd03_cutoff",
           "name": "Cutoff",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_resonance",
+          "id": "ch9_tbd03_resonance",
           "name": "Resonance",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_envelope",
+          "id": "ch9_tbd03_envelope",
           "name": "Env Mod VCF",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_saturation",
+          "id": "ch9_tbd03_saturation",
           "name": "Saturation",
           "type": "int",
           "min": 0,
           "max": 65535
         },
         {
-          "id": "td3_drive",
+          "id": "ch9_tbd03_drive",
           "name": "Overdrive",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_accent",
+          "id": "ch9_tbd03_accent",
           "name": "Accent",
           "type": "bool"
         },
         {
-          "id": "td3_accent_level",
+          "id": "ch9_tbd03_accent_level",
           "name": "Accent Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_slide",
+          "id": "ch9_tbd03_slide",
           "name": "Slide",
           "type": "bool"
         },
         {
-          "id": "td3_slide_level",
+          "id": "ch9_tbd03_slide_level",
           "name": "Slide Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_decay_vca",
+          "id": "ch9_tbd03_decay_vca",
           "name": "Decay VCA",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_decay_vcf",
+          "id": "ch9_tbd03_decay_vcf",
           "name": "Decay VCF",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_p0_amt",
+          "id": "ch9_tbd03_p0_amt",
           "name": "P0 Amount",
           "hint": "P0 EG VCF MOD",
           "type": "int",
@@ -1564,55 +1378,107 @@
           "max": 4095
         },
         {
-          "id": "td3_p1_amt",
+          "id": "ch9_tbd03_p1_amt",
           "name": "P1 Amount",
           "hint": "P1 EG VCF MOD",
           "type": "int",
           "min": -4095,
           "max": 4095
+        }
+      ]
+    },
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    {
+      "id": "ch10_group",
+      "name": "Channel 10 - Bass group - TBD03 2",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch10_mute",
+          "name": "Mute",
+          "type": "bool"
         },
         {
-          "id": "td3_lev",
+          "id": "ch10_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch10_lev",
           "name": "Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_pan",
+          "id": "ch10_pan",
           "name": "Pan",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "td3_fx1",
-          "name": "Delay Send",
+          "id": "ch10_fx1",
+          "name": "FX Send 1",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "td3_fx2",
-          "name": "Reverb Send",
+          "id": "ch10_fx2",
+          "name": "FX Send 2",
           "type": "int",
           "min": 0,
           "max": 4095
         }
       ]
     },
+    
+    
+    
+    
     {
-      "id": "pp_group",
-      "name": "Polypad",
+      "id": "ch10_tbd03_group",
+      "name": "TBD03",
       "type": "group",
       "params": [
         {
-          "id": "pp_enableEG",
+          "id": "ch10_tbd03_trigger",
           "name": "Trigger",
           "type": "bool"
         },
         {
-          "id": "pp_pitch",
+          "id": "ch10_tbd03_sync_trig",
+          "name": "Sync on Trigger",
+          "type": "bool"
+        },
+        {
+          "id": "ch10_tbd03_pitch",
           "name": "Pitch",
           "type": "int",
           "min": 0,
@@ -1620,214 +1486,7 @@
           "step": 1
         },
         {
-          "id": "pp_q_scale",
-          "name": "Quantization Scale",
-          "type": "int",
-          "min": 0,
-          "max": 47,
-          "step": 1
-        },
-        {
-          "id": "pp_chord",
-          "name": "Chord",
-          "type": "int",
-          "min": 0,
-          "max": 17,
-          "step": 1
-        },
-        {
-          "id": "pp_inversion",
-          "name": "Inversion",
-          "type": "int",
-          "min": -2,
-          "max": 2,
-          "step": 1
-        },
-        {
-          "id": "pp_detune",
-          "name": "Detune",
-          "type": "int",
-          "min": 0,
-          "max": 32767,
-          "step": 1
-        },
-        {
-          "id": "pp_nnotes",
-          "name": "Number Notes",
-          "type": "int",
-          "min": 1,
-          "max": 4,
-          "step": 1
-        },
-        {
-          "id": "pp_ncvoices",
-          "name": "Number Chord Voices",
-          "type": "int",
-          "min": 1,
-          "max": 8,
-          "step": 1
-        },
-        {
-          "id": "pp_voicehold",
-          "name": "Hold Pre Voice",
-          "type": "bool",
-          "hint": "hold previous voice"
-        },
-        {
-          "id": "pp_lfo1_freq",
-          "name": "Vibrato Frequency",
-          "type": "int",
-          "min": 0,
-          "max": 4095,
-          "step": 1
-        },
-        {
-          "id": "pp_lfo1_amt",
-          "name": "Vibrato Amount",
-          "type": "int",
-          "min": 0,
-          "max": 4095,
-          "step": 1
-        },
-        {
-          "id": "pp_filter_type",
-          "name": "Filter Type",
-          "type": "int",
-          "min": 0,
-          "max": 2,
-          "step": 1
-        },
-        {
-          "id": "pp_cutoff",
-          "name": "Cutoff",
-          "type": "int",
-          "min": 1750,
-          "max": 16383,
-          "step": 1
-        },
-        {
-          "id": "pp_resonance",
-          "name": "Resonance",
-          "type": "int",
-          "min": 0,
-          "max": 32767,
-          "step": 1
-        },
-        {
-          "id": "pp_lfo2_freq",
-          "name": "Filter FM Frequency",
-          "type": "int",
-          "min": 0,
-          "max": 4095,
-          "step": 1
-        },
-        {
-          "id": "pp_lfo2_amt",
-          "name": "Filter FM Amount",
-          "type": "int",
-          "min": 0,
-          "max": 4095,
-          "step": 1
-        },
-        {
-          "id": "pp_lfo2_rphase",
-          "name": "Filter FM Random Phase",
-          "type": "bool"
-        },
-        {
-          "id": "pp_eg_filt_amt",
-          "name": "Filter EG Amount",
-          "type": "int",
-          "min": -4095,
-          "max": 4095,
-          "step": 1
-        },
-        {
-          "id": "pp_latchEG",
-          "name": "EG Latch Mode",
-          "type": "bool",
-          "hint": "latches trigger"
-        },
-        {
-          "id": "pp_eg_slow_fast",
-          "name": "EG Fast / Slow",
-          "type": "bool",
-          "hint": "slow or fast"
-        },
-        {
-          "id": "pp_attack",
-          "name": "Attack",
-          "type": "int",
-          "min": 0,
-          "max": 4095,
-          "step": 1
-        },
-        {
-          "id": "pp_decay",
-          "name": "Decay",
-          "type": "int",
-          "min": 0,
-          "max": 4095,
-          "step": 1
-        },
-        {
-          "id": "pp_sustain",
-          "name": "Sustain",
-          "type": "int",
-          "min": 0,
-          "max": 4095,
-          "step": 1
-        },
-        {
-          "id": "pp_release",
-          "name": "Release",
-          "type": "int",
-          "min": 0,
-          "max": 4095,
-          "step": 1
-        },
-        {
-          "id": "pp_lev",
-          "name": "Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "pp_pan",
-          "name": "Pan",
-          "type": "int",
-          "min": -4095,
-          "max": 4095
-        },
-        {
-          "id": "pp_fx1",
-          "name": "Delay Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "pp_fx2",
-          "name": "Reverb Send",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        }
-      ]
-    },
-    {
-      "id": "mo_group",
-      "name": "Macro Oscillator",
-      "type": "group",
-      "params": [
-        {
-          "id": "mo_enableEG",
-          "name": "Trigger",
-          "type": "bool"
-        },
-        {
-          "id": "mo_shape",
+          "id": "ch10_tbd03_shape",
           "name": "Shape",
           "type": "int",
           "min": 0,
@@ -1835,7 +1494,211 @@
           "step": 1
         },
         {
-          "id": "mo_pitch",
+          "id": "ch10_tbd03_param_0",
+          "name": "Osc Morph 0",
+          "type": "int",
+          "min": 0,
+          "max": 32767,
+          "step": 1
+        },
+        {
+          "id": "ch10_tbd03_param_1",
+          "name": "Osc Morph 1",
+          "type": "int",
+          "min": 0,
+          "max": 32767,
+          "step": 1
+        },
+        {
+          "id": "ch10_tbd03_filter_type",
+          "name": "Filter Type",
+          "type": "int",
+          "min": 0,
+          "max": 4
+        },
+        {
+          "id": "ch10_tbd03_cutoff",
+          "name": "Cutoff",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch10_tbd03_resonance",
+          "name": "Resonance",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch10_tbd03_envelope",
+          "name": "Env Mod VCF",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch10_tbd03_saturation",
+          "name": "Saturation",
+          "type": "int",
+          "min": 0,
+          "max": 65535
+        },
+        {
+          "id": "ch10_tbd03_drive",
+          "name": "Overdrive",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch10_tbd03_accent",
+          "name": "Accent",
+          "type": "bool"
+        },
+        {
+          "id": "ch10_tbd03_accent_level",
+          "name": "Accent Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch10_tbd03_slide",
+          "name": "Slide",
+          "type": "bool"
+        },
+        {
+          "id": "ch10_tbd03_slide_level",
+          "name": "Slide Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch10_tbd03_decay_vca",
+          "name": "Decay VCA",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch10_tbd03_decay_vcf",
+          "name": "Decay VCF",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch10_tbd03_p0_amt",
+          "name": "P0 Amount",
+          "hint": "P0 EG VCF MOD",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch10_tbd03_p1_amt",
+          "name": "P1 Amount",
+          "hint": "P1 EG VCF MOD",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        }
+      ]
+    },
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    {
+      "id": "ch11_group",
+      "name": "Channel 11 - Synth group - Macro Oscillator",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch11_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "ch11_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch11_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch11_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch11_fx1",
+          "name": "FX Send 1",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch11_fx2",
+          "name": "FX Send 2",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+    
+    {
+      "id": "ch11_mo_group",
+      "name": "Channel 11 - Machine 0 - Macro Oscillator",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch11_mo_enableEG",
+          "name": "Trigger",
+          "type": "bool"
+        },
+        {
+          "id": "ch11_mo_shape",
+          "name": "Shape",
+          "type": "int",
+          "min": 0,
+          "max": 46,
+          "step": 1
+        },
+        {
+          "id": "ch11_mo_pitch",
           "name": "Pitch",
           "type": "int",
           "min": 0,
@@ -1843,7 +1706,7 @@
           "step": 1
         },
         {
-          "id": "mo_decimation",
+          "id": "ch11_mo_decimation",
           "name": "Decimation",
           "type": "int",
           "min": 1,
@@ -1851,7 +1714,7 @@
           "step": 1
         },
         {
-          "id": "mo_bit_reduction",
+          "id": "ch11_mo_bit_reduction",
           "name": "Bit Reduction",
           "type": "int",
           "min": 0,
@@ -1859,7 +1722,7 @@
           "step": 1
         },
         {
-          "id": "mo_q_scale",
+          "id": "ch11_mo_q_scale",
           "name": "Quantization Scale",
           "type": "int",
           "min": 0,
@@ -1867,7 +1730,7 @@
           "step": 1
         },
         {
-          "id": "mo_param_0",
+          "id": "ch11_mo_param_0",
           "name": "Parameter 0",
           "type": "int",
           "min": 0,
@@ -1875,7 +1738,7 @@
           "step": 1
         },
         {
-          "id": "mo_param_1",
+          "id": "ch11_mo_param_1",
           "name": "Parameter 1",
           "type": "int",
           "min": 0,
@@ -1883,7 +1746,7 @@
           "step": 1
         },
         {
-          "id": "mo_waveshaping",
+          "id": "ch11_mo_waveshaping",
           "name": "Wave Shaping",
           "type": "int",
           "min": 0,
@@ -1891,7 +1754,7 @@
           "step": 1
         },
         {
-          "id": "mo_fm_amt",
+          "id": "ch11_mo_fm_amt",
           "name": "FM Amount",
           "hint": "FM Amount",
           "type": "int",
@@ -1899,7 +1762,7 @@
           "max": 64
         },
         {
-          "id": "mo_p0_amt",
+          "id": "ch11_mo_p0_amt",
           "name": "P0 Amount",
           "hint": "P0 Amount",
           "type": "int",
@@ -1907,7 +1770,7 @@
           "max": 64
         },
         {
-          "id": "mo_p1_amt",
+          "id": "ch11_mo_p1_amt",
           "name": "P1 Amount",
           "hint": "P1 Amount",
           "type": "int",
@@ -1915,12 +1778,12 @@
           "max": 64
         },
         {
-          "id": "mo_loopEG",
+          "id": "ch11_mo_loopEG",
           "name": "Loop EG",
           "type": "bool"
         },
         {
-          "id": "mo_attack",
+          "id": "ch11_mo_attack",
           "name": "Attack",
           "type": "int",
           "min": 0,
@@ -1928,7 +1791,819 @@
           "step": 1
         },
         {
-          "id": "mo_decay",
+          "id": "ch11_mo_decay",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        }
+      ]
+    },
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    {
+      "id": "ch12_group",
+      "name": "Channel 12 - Synth group - Macro Oscillator (for now)",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch12_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "ch12_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch12_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch12_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch12_fx1",
+          "name": "FX Send 1",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch12_fx2",
+          "name": "FX Send 2",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+    
+        {
+      "id": "ch12_mo_group",
+      "name": "Channel 12 - Machine 0 - Macro Oscillator (for now)",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch12_mo_enableEG",
+          "name": "Trigger",
+          "type": "bool"
+        },
+        {
+          "id": "ch12_mo_shape",
+          "name": "Shape",
+          "type": "int",
+          "min": 0,
+          "max": 46,
+          "step": 1
+        },
+        {
+          "id": "ch12_mo_pitch",
+          "name": "Pitch",
+          "type": "int",
+          "min": 0,
+          "max": 16383,
+          "step": 1
+        },
+        {
+          "id": "ch12_mo_decimation",
+          "name": "Decimation",
+          "type": "int",
+          "min": 1,
+          "max": 30,
+          "step": 1
+        },
+        {
+          "id": "ch12_mo_bit_reduction",
+          "name": "Bit Reduction",
+          "type": "int",
+          "min": 0,
+          "max": 6,
+          "step": 1
+        },
+        {
+          "id": "ch12_mo_q_scale",
+          "name": "Quantization Scale",
+          "type": "int",
+          "min": 0,
+          "max": 47,
+          "step": 1
+        },
+        {
+          "id": "ch12_mo_param_0",
+          "name": "Parameter 0",
+          "type": "int",
+          "min": 0,
+          "max": 32767,
+          "step": 1
+        },
+        {
+          "id": "ch12_mo_param_1",
+          "name": "Parameter 1",
+          "type": "int",
+          "min": 0,
+          "max": 32767,
+          "step": 1
+        },
+        {
+          "id": "ch12_mo_waveshaping",
+          "name": "Wave Shaping",
+          "type": "int",
+          "min": 0,
+          "max": 65535,
+          "step": 1
+        },
+        {
+          "id": "ch12_mo_fm_amt",
+          "name": "FM Amount",
+          "hint": "FM Amount",
+          "type": "int",
+          "min": -64,
+          "max": 64
+        },
+        {
+          "id": "ch12_mo_p0_amt",
+          "name": "P0 Amount",
+          "hint": "P0 Amount",
+          "type": "int",
+          "min": -64,
+          "max": 64
+        },
+        {
+          "id": "ch12_mo_p1_amt",
+          "name": "P1 Amount",
+          "hint": "P1 Amount",
+          "type": "int",
+          "min": -64,
+          "max": 64
+        },
+        {
+          "id": "ch12_mo_loopEG",
+          "name": "Loop EG",
+          "type": "bool"
+        },
+        {
+          "id": "ch12_mo_attack",
+          "name": "Attack",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_mo_decay",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        }
+      ]
+    },
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    {
+      "id": "ch13_group",
+      "name": "Channel 13 - Synth group - Sampler",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch13_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "ch13_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch13_fx1",
+          "name": "FX Send 1",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_fx2",
+          "name": "FX Send 2",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+    
+    {
+      "id": "ch13_smp_group",
+      "name": "Sample 4",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch13_smp_gate",
+          "name": "Gate",
+          "type": "bool"
+        },
+        {
+          "id": "ch13_smp_speed",
+          "name": "Speed / Tune",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch13_smp_pitch",
+          "name": "Pitch",
+          "type": "int",
+          "min": -12,
+          "max": 12
+        },
+        {
+          "id": "ch13_smp_bank",
+          "name": "Bank",
+          "type": "int",
+          "min": 0,
+          "max": 31
+        },
+        {
+          "id": "ch13_smp_slice",
+          "name": "Slice",
+          "type": "int",
+          "min": 0,
+          "max": 31
+        },
+        {
+          "id": "ch13_smp_start",
+          "name": "Start",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_smp_end",
+          "name": "End",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_smp_lp",
+          "name": "Loop",
+          "type": "bool"
+        },
+        {
+          "id": "ch13_smp_lp_pp",
+          "name": "Ping-pong",
+          "type": "bool"
+        },
+        {
+          "id": "ch13_smp_lp_pos",
+          "name": "End",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_smp_atk",
+          "name": "Attack",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_smp_dcy",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_smp_eg2fm",
+          "name": "EG FM Amount",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_smp_brr",
+          "name": "Bit Reduction",
+          "type": "int",
+          "min": 0,
+          "max": 14
+        },
+        {
+          "id": "ch13_smp_ft",
+          "name": "Filter Type",
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "id": "ch13_smp_fc",
+          "name": "Filter Cutoff",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_smp_fq",
+          "name": "Filter Q",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    {
+      "id": "ch14_group",
+      "name": "Channel 14 - Synth group - Sampler",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch14_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "ch14_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch14_fx1",
+          "name": "FX Send 1",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_fx2",
+          "name": "FX Send 2",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+    
+    {
+      "id": "ch14_smp_group",
+      "name": "Sample 3",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch14_smp_gate",
+          "name": "Gate",
+          "type": "bool"
+        },
+        {
+          "id": "ch14_smp_speed",
+          "name": "Speed / Tune",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_pitch",
+          "name": "Pitch",
+          "type": "int",
+          "min": -48,
+          "max": 48
+        },
+        {
+          "id": "ch14_smp_bank",
+          "name": "Bank",
+          "type": "int",
+          "min": 0,
+          "max": 31
+        },
+        {
+          "id": "ch14_smp_slice",
+          "name": "Slice",
+          "type": "int",
+          "min": 0,
+          "max": 31
+        },
+        {
+          "id": "ch14_smp_start",
+          "name": "Start",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_end",
+          "name": "End",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_lp",
+          "name": "Loop",
+          "type": "bool"
+        },
+        {
+          "id": "ch14_smp_lp_pp",
+          "name": "Ping-pong",
+          "type": "bool"
+        },
+        {
+          "id": "ch14_smp_lp_pos",
+          "name": "End",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_atk",
+          "name": "Attack",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_dcy",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_eg2fm",
+          "name": "EG FM Amount",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_brr",
+          "name": "Bit Reduction",
+          "type": "int",
+          "min": 0,
+          "max": 14
+        },
+        {
+          "id": "ch14_smp_ft",
+          "name": "Filter Type",
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "id": "ch14_smp_fc",
+          "name": "Filter Cutoff",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_fq",
+          "name": "Filter Q",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    {
+      "id": "ch15_group",
+      "name": "Channel 15 - Synth group - Chords",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch15_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "ch15_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch15_lev",
+          "name": "Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch15_pan",
+          "name": "Pan",
+          "type": "int",
+          "min": -4095,
+          "max": 4095
+        },
+        {
+          "id": "ch15_fx1",
+          "name": "FX Send 1",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch15_fx2",
+          "name": "FX Send 2",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        }
+      ]
+    },
+
+    {
+      "id": "ch15_pp_group",
+      "name": "Polypad",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch15_pp_enableEG",
+          "name": "Trigger",
+          "type": "bool"
+        },
+        {
+          "id": "ch15_pp_pitch",
+          "name": "Pitch",
+          "type": "int",
+          "min": 0,
+          "max": 16383,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_q_scale",
+          "name": "Quantization Scale",
+          "type": "int",
+          "min": 0,
+          "max": 47,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_chord",
+          "name": "Chord",
+          "type": "int",
+          "min": 0,
+          "max": 17,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_inversion",
+          "name": "Inversion",
+          "type": "int",
+          "min": -2,
+          "max": 2,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_detune",
+          "name": "Detune",
+          "type": "int",
+          "min": 0,
+          "max": 32767,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_nnotes",
+          "name": "Number Notes",
+          "type": "int",
+          "min": 1,
+          "max": 4,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_ncvoices",
+          "name": "Number Chord Voices",
+          "type": "int",
+          "min": 1,
+          "max": 8,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_voicehold",
+          "name": "Hold Pre Voice",
+          "type": "bool",
+          "hint": "hold previous voice"
+        },
+        {
+          "id": "ch15_pp_lfo1_freq",
+          "name": "Vibrato Frequency",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_lfo1_amt",
+          "name": "Vibrato Amount",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_filter_type",
+          "name": "Filter Type",
+          "type": "int",
+          "min": 0,
+          "max": 2,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_cutoff",
+          "name": "Cutoff",
+          "type": "int",
+          "min": 1750,
+          "max": 16383,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_resonance",
+          "name": "Resonance",
+          "type": "int",
+          "min": 0,
+          "max": 32767,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_lfo2_freq",
+          "name": "Filter FM Frequency",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_lfo2_amt",
+          "name": "Filter FM Amount",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_lfo2_rphase",
+          "name": "Filter FM Random Phase",
+          "type": "bool"
+        },
+        {
+          "id": "ch15_pp_eg_filt_amt",
+          "name": "Filter EG Amount",
+          "type": "int",
+          "min": -4095,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_latchEG",
+          "name": "EG Latch Mode",
+          "type": "bool",
+          "hint": "latches trigger"
+        },
+        {
+          "id": "ch15_pp_eg_slow_fast",
+          "name": "EG Fast / Slow",
+          "type": "bool",
+          "hint": "slow or fast"
+        },
+        {
+          "id": "ch15_pp_attack",
+          "name": "Attack",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_decay",
           "name": "Decay",
           "type": "int",
           "min": 0,
@@ -1936,38 +2611,97 @@
           "step": 1
         },
         {
-          "id": "mo_lev",
+          "id": "ch15_pp_sustain",
+          "name": "Sustain",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch15_pp_release",
+          "name": "Release",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        }
+      ]
+    },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    {
+      "id": "ch16_group",
+      "name": "Channel 16 - Input group",
+      "type": "group",
+      "params": [
+        {
+          "id": "ch16_mute",
+          "name": "Mute",
+          "type": "bool"
+        },
+        {
+          "id": "ch16_device",
+          "name": "Device",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch16_lev",
           "name": "Level",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "mo_pan",
+          "id": "ch16_pan",
           "name": "Pan",
           "type": "int",
           "min": -4095,
           "max": 4095
         },
         {
-          "id": "mo_fx1",
-          "name": "Delay Send",
+          "id": "ch16_fx1",
+          "name": "FX Send 1",
           "type": "int",
           "min": 0,
           "max": 4095
         },
         {
-          "id": "mo_fx2",
-          "name": "Reverb Send",
+          "id": "ch16_fx2",
+          "name": "FX Send 2",
           "type": "int",
           "min": 0,
           "max": 4095
         }
       ]
     },
+
     {
       "id": "fx1_group",
-      "name": "Delay",
+      "name": "FX Bus 1 - Delay",
       "type": "group",
       "params": [
         {
@@ -2027,12 +2761,23 @@
           "type": "int",
           "min": 0,
           "max": 4095
+        },
+        {
+          "id": "fx1_amount",
+          "name": "Delay Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
         }
       ]
     },
+
+
+
+
     {
       "id": "fx2_group",
-      "name": "Reverb",
+      "name": "FX Bus 2 - Reverb",
       "type": "group",
       "params": [
         {
@@ -2048,12 +2793,22 @@
           "name": "Low Pass",
           "min": 0,
           "max": 4095
+        },
+        {
+          "id": "fx2_amount",
+          "name": "Reverb Level",
+          "type": "int",
+          "min": 0,
+          "max": 4095
         }
       ]
     },
+
+
+
     {
       "id": "c_group",
-      "name": "Compressor",
+      "name": "Master - Compressor",
       "type": "group",
       "params": [
         {
@@ -2121,7 +2876,7 @@
     },
     {
       "id": "sum",
-      "name": "Overall Mix",
+      "name": "Master - Levels",
       "type": "group",
       "params": [
         {
@@ -2132,20 +2887,6 @@
         {
           "id": "sum_lev",
           "name": "Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "fx1_amount",
-          "name": "Delay Level",
-          "type": "int",
-          "min": 0,
-          "max": 4095
-        },
-        {
-          "id": "fx2_amount",
-          "name": "Reverb Level",
           "type": "int",
           "min": 0,
           "max": 4095

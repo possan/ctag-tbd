@@ -74,6 +74,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     float peakL = 0.f, peakR = 0.f;
     int ngState = NG_OPEN;
     float lramp[BUF_SZ];
+    int64_t before;
     bool isStereoCH0 = false;
     esp_cpu_cycle_count_t start, diff;
 
@@ -96,6 +97,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         lramp[i] *= lramp[i];
     }
 
+    int framecounter = 0;
     while (runAudioTask) {
 
         // update data from ADCs and GPIOs for real-time control
@@ -106,6 +108,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
         // track the cpu cycles for audio task
         start = esp_cpu_get_cycle_count();
+        before = esp_timer_get_time();
 
         // In peak detection
         // dc cut input
@@ -281,8 +284,14 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         if(diff > CPU_MAX_ALLOWED_CYCLES) ledData = 0xB39134; // orange code for cpu overflow
         ledStatus = ledData;
 
+        int64_t diff2 = esp_timer_get_time() - before;
+        if (framecounter % 300 == 0) {
+            ESP_LOGI("SPManager", "Audio task cycles diff %d, micros %d", (int)diff, (int)diff2);
+        }
+
         // write raw float data back to CODEC
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
+        framecounter ++;
     }
     memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
     DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
@@ -361,7 +370,7 @@ static char freertosstats[2000] = {
 
 static void debug_task(void *pvParameters) {
   while (true) {
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
     printf("SPManager: Getting freeRTOS Stats...\n");
     vTaskGetRunTimeStats((char *)&freertosstats);
     printf("SPManager: FreeRTOS Stats:\n%s", freertosstats);

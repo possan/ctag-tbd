@@ -29,10 +29,12 @@
 
 using namespace CTAG::SP;
 
-class DrumRackMO : DrumRackSynth {
+class DrumRackMO {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+    float mo_out[32];
 
 private:
 	braids::MacroOscillator mo_osc;
@@ -64,8 +66,4 @@ private:
 	atomic<int16_t> mo_loopEG, trig_mo_loopEG;
 	atomic<int16_t> mo_attack, cv_mo_attack;
 	atomic<int16_t> mo_decay, cv_mo_decay;
-	atomic<int16_t> mo_lev, cv_mo_lev;
-	atomic<int16_t> mo_pan, cv_mo_pan;
-	atomic<int16_t> mo_fx1, cv_mo_fx1;
-	atomic<int16_t> mo_fx2, cv_mo_fx2;
 };

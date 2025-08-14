@@ -29,21 +29,17 @@
 
 using namespace CTAG::SP;
 
-class DrumRackABD : DrumRackSynth {
+class DrumRackABD {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
+	bool enabled;
+	float abd_out[32];
 
 private:
-	float abd_out[32];
 	bool abd_trig_prev {false};
 	plaits::AnalogBassDrum abd;
 	atomic<int16_t> ab_trigger, trig_ab_trigger;
-	atomic<int16_t> ab_mute, trig_ab_mute;
-	atomic<int16_t> ab_lev, cv_ab_lev;
-	atomic<int16_t> ab_pan, cv_ab_pan;
-	atomic<int16_t> ab_fx1, cv_ab_fx1;
-	atomic<int16_t> ab_fx2, cv_ab_fx2;
 	atomic<int16_t> ab_accent, cv_ab_accent;
 	atomic<int16_t> ab_f0, cv_ab_f0;
 	atomic<int16_t> ab_tone, cv_ab_tone;

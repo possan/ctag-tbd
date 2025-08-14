@@ -29,10 +29,10 @@
 
 using namespace CTAG::SP;
 
-class DrumRackFxDelay : DrumRackSynth {
+class DrumRackFxDelay {
 public:
-    void Process(const DrumRackProcessData &data) override;
-    void Init(const DrumRackInitData *initdata) override;
+    void Process(const DrumRackProcessData &data);
+    void Init(const DrumRackInitData *initdata);
 
 private:
     
