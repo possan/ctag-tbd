@@ -507,7 +507,7 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch13_smp_"; ch13_ro.Init(&dri);
 
     dri.prefix = "ch14_"; ch14.Init(&dri);
-    dri.prefix = "ch14_smp_";ch14_ro.Init(&dri);
+    dri.prefix = "ch14_smp_"; ch14_ro.Init(&dri);
 
     dri.prefix = "ch15_"; ch15.Init(&dri);
     dri.prefix = "ch15_pp_"; ch15_pp.Init(&dri);
@@ -586,11 +586,16 @@ void ctagSoundProcessorDrumRack::knowYourself(){
 	pMapCv.emplace("fx1_base", [&](const int val){ cv_fx1_base = val;});
 	pMapPar.emplace("fx1_width", [&](const int val){ fx1_width = val;});
 	pMapCv.emplace("fx1_width", [&](const int val){ cv_fx1_width = val;});
+    pMapPar.emplace("fx1_amount", [&](const int val){ fx1_amount = val;});
+	pMapCv.emplace("fx1_amount", [&](const int val){ cv_fx1_amount = val;});
 
     pMapPar.emplace("fx2_time", [&](const int val){ fx2_time = val;});
 	pMapCv.emplace("fx2_time", [&](const int val){ cv_fx2_time = val;});
 	pMapPar.emplace("fx2_lp", [&](const int val){ fx2_lp = val;});
 	pMapCv.emplace("fx2_lp", [&](const int val){ cv_fx2_lp = val;});
+    pMapPar.emplace("fx2_amount", [&](const int val){ fx2_amount = val;});
+	pMapCv.emplace("fx2_amount", [&](const int val){ cv_fx2_amount = val;});
+    
 
     pMapPar.emplace("c_thres", [&](const int val){ c_thres = val;});
 	pMapCv.emplace("c_thres", [&](const int val){ cv_c_thres = val;});
@@ -616,11 +621,6 @@ void ctagSoundProcessorDrumRack::knowYourself(){
 	pMapPar.emplace("sum_lev", [&](const int val){ sum_lev = val;});
 	pMapCv.emplace("sum_lev", [&](const int val){ cv_sum_lev = val;});
 
-    pMapPar.emplace("fx1_amount", [&](const int val){ fx1_amount = val;});
-	pMapCv.emplace("fx1_amount", [&](const int val){ cv_fx1_amount = val;});
-
-    pMapPar.emplace("fx2_amount", [&](const int val){ fx2_amount = val;});
-	pMapCv.emplace("fx2_amount", [&](const int val){ cv_fx2_amount = val;});
 
     isStereo = true;
 	id = "DrumRack";
