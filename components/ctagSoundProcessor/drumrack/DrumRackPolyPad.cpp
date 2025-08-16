@@ -71,7 +71,7 @@ void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
     }
 
     // zero input
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < BUF_SZ; i++) {
         pp_out[i] = 0.f;
         pp_out_stereo[i * 2 + 0] = 0.f;
         pp_out_stereo[i * 2 + 1] = 0.f;
@@ -240,7 +240,7 @@ void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
     }
 
     // it isn't stereo after all...
-    for(int i=0;i<32;i++) {
+    for(int i=0;i<BUF_SZ;i++) {
         pp_out_stereo[i*2+1] = pp_out_stereo[i*2+0];
     }
 

@@ -34,7 +34,7 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float fmb_out[32];
+	float fmb_out[BUF_SZ];
 
 private:
 	CTAG::SYNTHESIS::FmKick fmb;

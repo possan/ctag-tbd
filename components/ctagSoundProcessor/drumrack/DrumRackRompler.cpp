@@ -99,5 +99,5 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     MK_INT_PAR_ABS(iS1FType, s1_ft, 4.f)
     CONSTRAIN(iS1FType, 0, 3);
     rompler[0].params.filterType = static_cast<CTAG::SYNTHESIS::RomplerVoiceMinimal::FilterType>(iS1FType);
-    rompler[0].Process(s1_out, 32);
+    rompler[0].Process(s1_out, BUF_SZ);
 };

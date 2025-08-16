@@ -34,7 +34,7 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float rs_out[32];
+	float rs_out[BUF_SZ];
 
 private:
 	CTAG::SYNTHESIS::Rimshot rs;

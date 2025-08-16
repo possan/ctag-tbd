@@ -52,5 +52,5 @@ void DrumRackRimshot::Process(const DrumRackProcessData &data) {
     }
     rs_trig_prev = bRSTrig;
 
-    rs.Process(rs_out, 32);
+    rs.Process(rs_out, BUF_SZ);
 }

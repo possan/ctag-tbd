@@ -51,8 +51,8 @@ namespace CTAG {
             CTAG::SP::HELPERS::ctagADSREnv envelopeHighRes[2];
             CTAG::SP::HELPERS::ctagSineSource lfo;
             CTAG::SP::HELPERS::ctagSineSource lfoHighRes;
-            const uint8_t sync1[32] = {0};
-            const uint8_t sync2[32] = {0};
+            const uint8_t sync1[BUF_SZ] = {0};
+            const uint8_t sync2[BUF_SZ] = {0};
             float smoothp0[2] {0.f, 0.f}, smoothp1[2] {0.f, 0.f};
             bool prevTrigger[2] = {false, false};
             const uint16_t bit_reduction_masks[7] = {

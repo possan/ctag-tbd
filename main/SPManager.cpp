@@ -44,7 +44,7 @@ respective component folders / files if different from this license.
 
 #define MAX(x, y) ((x)>(y)) ? (x) : (y)
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
-#define BUF_SZ 32
+#define BUF_SZ 64
 //#define NOISE_GATE_LEVEL_CLOSE 0.000065f
 #define NOISE_GATE_LEVEL_CLOSE 0.0001f
 #define NOISE_GATE_LEVEL_OPEN 0.0003f
@@ -57,7 +57,7 @@ using namespace CTAG::DRIVERS;
 #define NG_BOTH 1
 #define NG_LEFT 2
 #define NG_RIGHT 3
-#define CPU_MAX_ALLOWED_CYCLES 261224 // is 32/44100kHz * 360MHz
+#define CPU_MAX_ALLOWED_CYCLES 450000 // just guessing...
 
 // global variable, spiffs base directory
 namespace CTAG {
@@ -289,9 +289,14 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         // write raw float data back to CODEC
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
-        if (framecounter % 200 == 0) {
+        if (framecounter % 300 == 0) {
             ESP_LOGI("SPManager", "Audio task cycles diff %d, micros %d, output: L:[%1.3f %1.3f] R:[%1.3f %1.3f]", (int)diff, (int)diff2,
                      fbuf[0], fbuf[2], fbuf[1], fbuf[3]);
+
+            if (fbuf[0] != fbuf[0]) {
+                ESP_LOGI("SPManager", "Audio task cycles is maybe NAN?");
+                memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
+            }
         }
 
         framecounter ++;

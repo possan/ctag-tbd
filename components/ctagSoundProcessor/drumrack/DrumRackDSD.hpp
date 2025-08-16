@@ -34,7 +34,7 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float dsd_out[32];
+	float dsd_out[BUF_SZ];
 	
 private:
 	bool dsd_trig_prev {false};

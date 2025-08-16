@@ -34,11 +34,11 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float asd_out[32];
+	float out[BUF_SZ];
 	
 private:
 	plaits::AnalogSnareDrum asd;
-	bool asd_trig_prev {false};
+	bool trig_prev {false};
 	atomic<int16_t> as_trigger, trig_as_trigger;
 	atomic<int16_t> as_accent, cv_as_accent;
 	atomic<int16_t> as_f0, cv_as_f0;

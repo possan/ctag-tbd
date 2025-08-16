@@ -62,5 +62,5 @@ void DrumRackDBD::Process(const DrumRackProcessData &data) {
         fDBFmEnv,
         fDBFmDcy,
         dbd_out,
-        32);
+        BUF_SZ);
 }

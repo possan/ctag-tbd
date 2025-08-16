@@ -33,8 +33,8 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-    float pp_out[32];
-    float pp_out_stereo[32 * 2];
+    float pp_out[BUF_SZ];
+    float pp_out_stereo[BUF_SZ * 2];
 
 private:
     bool pp_trig_prev {false};

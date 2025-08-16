@@ -30,6 +30,8 @@ respective component folders / files if different from this license.
 
 using namespace std;
 
+#define BUF_SZ 64
+
 namespace CTAG {
     namespace SP {
         // from plaits chord engine augmented with inversions
@@ -95,7 +97,7 @@ namespace CTAG {
             bool IsDead();
 
         private:
-            int16_t buffer[32];
+            int16_t buffer[BUF_SZ];
             int8_t scale[4];
 
             HELPERS::ctagADSREnv adsr;

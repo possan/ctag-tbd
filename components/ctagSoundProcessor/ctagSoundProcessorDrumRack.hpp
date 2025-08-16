@@ -152,15 +152,15 @@ namespace CTAG {
             // reverb
             float *reverbBuffer;
             mifx::Reverb reverb;
+			int framecounter;
 
-        	float combined_out[32*2];
-        	float send1_out[32*2];
-        	float send2_out[32*2];
-            float temp1_[32];
-            float temp2_[32];
+        	float combined_out[BUF_SZ*2];
+        	float send1_out[BUF_SZ*2];
+        	float send2_out[BUF_SZ*2];
+            float temp1_[BUF_SZ];
+            float temp2_[BUF_SZ];
 
-            // rompler
-            CTAG::SYNTHESIS::RomplerVoiceMinimal rompler[4];
+            // romplers
             CTAG::SP::HELPERS::ctagSampleRom sampleRom;
 
             // private attributes could go here

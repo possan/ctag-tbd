@@ -18,7 +18,7 @@ void FmKick::Init() {
 void FmKick::Trigger() {
     Init();
     // Calculate decay constants for iterative envelopes WITHOUT std::expf
-    float dt = 32.0f / 44100.f; // Assuming 44100Hz sample rate and 32 samples per block
+    float dt = (float)BUF_SZ / 44100.f; // Assuming 44100Hz sample rate and BUF_SZ samples per block
     // For small x, exp(-x) ≈ 1 - x
     amp_decay_const = 1.0f - (dt / params.d_b);
     mod_decay_const = 1.0f - (dt / params.d_m);

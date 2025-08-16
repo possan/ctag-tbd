@@ -34,7 +34,7 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-    float in_out[32 * 2];
+    float in_out[BUF_SZ * 2];
 
 private:
     atomic<int16_t> in_mute, trig_in_mute;

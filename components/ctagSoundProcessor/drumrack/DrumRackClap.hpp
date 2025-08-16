@@ -34,7 +34,7 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float cl_out[32];
+	float cl_out[BUF_SZ];
 	
 private:
 	CTAG::SYNTHESIS::Clap cl;

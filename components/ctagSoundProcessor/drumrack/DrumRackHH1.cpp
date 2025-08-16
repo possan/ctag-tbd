@@ -27,16 +27,16 @@ void DrumRackHH1::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackHH1::Process(const DrumRackProcessData &data) {
-    MK_BOOL_PAR(bHH1Trig, hh1_trigger)
-    if (bHH1Trig != hh1_trig_prev){
-        hh1_trig_prev = bHH1Trig;
-    }
-    else{
-        bHH1Trig = false;
-    }
-
     if (!this->enabled) {
         return;
+    }
+
+    MK_BOOL_PAR(bHH1Trig, hh1_trigger)
+    if (bHH1Trig != hh1_trig_prev){
+        if (bHH1Trig) {
+            printf("DrumRackHH1: Trigger.\n");
+        }
+        hh1_trig_prev = bHH1Trig;
     }
 
     MK_FLT_PAR_ABS(fHH1Accent, hh1_accent, 4095.f, 1.f)
@@ -55,5 +55,5 @@ void DrumRackHH1::Process(const DrumRackProcessData &data) {
         temp1_,
         temp2_,
         hh1_out,
-        32);
+        BUF_SZ);
 }

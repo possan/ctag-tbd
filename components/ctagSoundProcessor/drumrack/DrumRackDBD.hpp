@@ -34,7 +34,7 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float dbd_out[32];
+	float dbd_out[BUF_SZ];
 	
 private:
 	plaits::SyntheticBassDrum dbd;

@@ -39,12 +39,12 @@ void DrumRackFMB::Init(const DrumRackInitData *initdata) {
 
 void DrumRackFMB::Process(const DrumRackProcessData &data) {
     MK_BOOL_PAR(bFMBTrig, fmb_trigger)
-    if (bFMBTrig != fmb_trig_prev && bFMBTrig){
-	    fmb_trig_prev = true;
-	    fmb.Trigger();
-    }
-    else if (!bFMBTrig){
-	    fmb_trig_prev = false;
+    if (bFMBTrig != fmb_trig_prev) {
+        if (bFMBTrig) {
+            printf("DrumRackFMB: Trigger.\n");
+            fmb.Trigger();
+        }
+	    fmb_trig_prev = bFMBTrig;
     }
 
     if (!this->enabled) {
@@ -82,5 +82,5 @@ void DrumRackFMB::Process(const DrumRackProcessData &data) {
     fmb.params.A_f = fFMBAmpFreq;
     fmb.params.d_f = fFMBDecayFreq;
 
-    fmb.Process(fmb_out, 32);
+    fmb.Process(fmb_out, BUF_SZ);
 }

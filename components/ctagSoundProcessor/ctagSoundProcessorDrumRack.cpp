@@ -15,7 +15,7 @@ void ctagSoundProcessorDrumRack::mixRenderOutputMono(float *source, float level,
     float sL2 = mL * fx2;
     float sR2 = mR * fx2;
 
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < bufSz; i++) {
         combined_out[i*2+0] += source[i] * mL;
         combined_out[i*2+1] += source[i] * mR;
         send1_out[i*2+0] += source[i] * sL1;
@@ -33,7 +33,7 @@ void ctagSoundProcessorDrumRack::mixRenderOutputStereo(float *source, float leve
     float sL2 = mL * fx2;
     float sR = mR * fx2;
 
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < bufSz; i++) {
         combined_out[i*2+0] += source[i*2+0] * mL;
         combined_out[i*2+1] += source[i*2+1] * mR;
         send1_out[i*2+0] += source[i*2+0] * sL1;
@@ -113,7 +113,7 @@ void ctagSoundProcessorDrumRack::renderMasterOutput(const ProcessData& data) {
     MK_FLT_PAR_ABS(fRevAmount, fx2_amount, 4095.f, 2.f)
 
     // sum compressor
-    float buf_fx1_l[32], buf_fx1_r[32], buf_fx2[32];
+    float buf_fx1_l[BUF_SZ], buf_fx1_r[BUF_SZ], buf_fx2[BUF_SZ];
     MK_BOOL_PAR(bTapeDigital, fx1_tape_digital)
     MK_BOOL_PAR(bSideChainLPF, c_lpf)
     MK_FLT_PAR_ABS_MIN_MAX(fCompMUPGain, c_gain, 4095.f, 0.f, 60.f) // in dB
@@ -132,7 +132,7 @@ void ctagSoundProcessorDrumRack::renderMasterOutput(const ProcessData& data) {
     fMixLevel *= fMixLevel;
 
     // Render final buffer
-    for (int i = 0; i < 32; i++){
+    for (int i = 0; i < bufSz; i++){
         float fVal_l = combined_out[i * 2 + 0];
         float fVal_r = combined_out[i * 2 + 1];
 
@@ -164,14 +164,14 @@ void ctagSoundProcessorDrumRack::renderMasterOutput(const ProcessData& data) {
     }
 
     // fx buffers
-    float dly_buf_l[32], dly_buf_r[32];
-    float rev_buf_l[32], rev_buf_r[32];
+    float dly_buf_l[BUF_SZ], dly_buf_r[BUF_SZ];
+    float rev_buf_l[BUF_SZ], rev_buf_r[BUF_SZ];
 
     // delay
     CONSTRAIN(fDelayTime, 0.0001, 2000.f)
     float ofs = fDelayTime * 44.1f;
     if(fabsf(ofs - delayOffset) < 16) ofs = delayOffset;
-    for(int i=0; i<32; i++){
+    for(int i=0; i<bufSz; i++){
         // Calculate the delay offset in samples
         if(delayOffset != ofs){
             if(bTapeDigital){
@@ -228,21 +228,21 @@ void ctagSoundProcessorDrumRack::renderMasterOutput(const ProcessData& data) {
     }
 
     // reverb
-    reverb.Process(rev_buf_l, rev_buf_r, 32);
+    reverb.Process(rev_buf_l, rev_buf_r, bufSz);
 
     // add fx to sum
     fRevAmount *= fRevAmount;
     fDelayAmount *= fDelayAmount;
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < bufSz; i++) {
         data.buf[i * 2] += rev_buf_l[i] * fRevAmount + dly_buf_l[i] * fDelayAmount;
         data.buf[i * 2 + 1] += rev_buf_r[i] * fRevAmount + dly_buf_r[i] * fDelayAmount;
     }
 }
 
 void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
-    memset(combined_out, 0, 32 * 2 * sizeof(float));
-    memset(send1_out, 0, 32 * 2 * sizeof(float));
-    memset(send2_out, 0, 32 * 2 * sizeof(float));
+    memset(combined_out, 0, bufSz * 2 * sizeof(float));
+    memset(send1_out, 0, bufSz * 2 * sizeof(float));
+    memset(send2_out, 0, bufSz * 2 * sizeof(float));
 
 	struct DrumRackProcessData idata;
 	idata.cv = data.cv;
@@ -271,7 +271,7 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch1_ab.enabled = ch1.enabled && ch1.device == 1;
         ch1_ab.Process(idata);
         if (ch1_ab.enabled) {
-            mixRenderOutputMono(ch1_ab.abd_out, ch1.level, ch1.pan, ch1.send1, ch1.send2);
+            mixRenderOutputMono(ch1_ab.out, ch1.level, ch1.pan, ch1.send1, ch1.send2);
         }
     }
 
@@ -301,7 +301,7 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch3_as.enabled = ch3.enabled && ch3.device == 1;
         ch3_as.Process(idata);
         if (ch3_as.enabled) {
-            mixRenderOutputMono(ch3_as.asd_out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
+            mixRenderOutputMono(ch3_as.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
         }
     }
 
@@ -424,9 +424,23 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
     preprocessFX2(data); // reverb
     preprocessMaster(data); // sum compressor
 
+    if (framecounter % 500 == 0) {
+        ESP_LOGI("ctagSoundProcessorDrumRack", "Framecounter %d", framecounter);
+
+        if (data.buf[0] != data.buf[0]) {
+            ESP_LOGI("ctagSoundProcessorDrumRack", "Output is maybe NAN?");
+            memset(data.buf, 0, BUF_SZ * 2 * sizeof(float));
+            // clear delay and reverb buffers
+            std::fill_n(delayBuffer_l, delayBufferSizeMax, 0.f);
+            std::fill_n(delayBuffer_r, delayBufferSizeMax, 0.f);
+            std::fill_n(reverbBuffer, 32768, 0.f);
+        }
+    }
+    framecounter ++;
+
     MK_BOOL_PAR(bSumMute, sum_mute)
     if (bSumMute){
-        memset(data.buf, 0, 32 * 2 * sizeof(float));
+        memset(data.buf, 0, bufSz * 2 * sizeof(float));
         return;
     }
 
@@ -455,6 +469,8 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
 	printf("ctagSoundProcessorDrumRack::Init(%zu, %x)\n", blockSize, (uintptr_t) blockPtr);
 
     knowYourself();
+
+    framecounter = 0;
 
     DrumRackInitData dri;
     dri.rack = this;
@@ -542,6 +558,8 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     reverbBuffer = static_cast<float*>(heap_caps_malloc(32768 * sizeof(float), MALLOC_CAP_SPIRAM));
     ESP_LOGI("ctagSoundProcessorDrumRack", "Allocate: reverbBuffer=0x%x", (unsigned int)reverbBuffer);
     assert(reverbBuffer != nullptr);
+    std::fill_n(reverbBuffer, 32768, 0.f);
+
     // assert(blockSize >= 32768 * 4);
     reverb.Init(reverbBuffer); // requires 32768*4 bytes = 128KB
     reverb.Clear();
@@ -567,7 +585,7 @@ ctagSoundProcessorDrumRack::~ctagSoundProcessorDrumRack(){
 void ctagSoundProcessorDrumRack::knowYourself(){
     // autogenerated code here
     // sectionCpp0
-    
+
     pMapPar.emplace("fx1_time_ms", [&](const int val){ fx1_time_ms = val;});
 	pMapCv.emplace("fx1_time_ms", [&](const int val){ cv_fx1_time_ms = val;});
 	pMapPar.emplace("fx1_sync", [&](const int val){ fx1_sync = val;});
@@ -595,7 +613,6 @@ void ctagSoundProcessorDrumRack::knowYourself(){
 	pMapCv.emplace("fx2_lp", [&](const int val){ cv_fx2_lp = val;});
     pMapPar.emplace("fx2_amount", [&](const int val){ fx2_amount = val;});
 	pMapCv.emplace("fx2_amount", [&](const int val){ cv_fx2_amount = val;});
-    
 
     pMapPar.emplace("c_thres", [&](const int val){ c_thres = val;});
 	pMapCv.emplace("c_thres", [&](const int val){ cv_c_thres = val;});
@@ -611,7 +628,8 @@ void ctagSoundProcessorDrumRack::knowYourself(){
 	pMapCv.emplace("c_gain", [&](const int val){ cv_c_gain = val;});
 	pMapPar.emplace("c_mix", [&](const int val){ c_mix = val;});
 	pMapCv.emplace("c_mix", [&](const int val){ cv_c_mix = val;});
-	pMapPar.emplace("c_dly_level", [&](const int val){ c_dly_level = val;});
+
+    pMapPar.emplace("c_dly_level", [&](const int val){ c_dly_level = val;});
 	pMapCv.emplace("c_dly_level", [&](const int val){ cv_c_dly_level = val;});
 	pMapPar.emplace("c_rev_level", [&](const int val){ c_rev_level = val;});
 	pMapCv.emplace("c_rev_level", [&](const int val){ cv_c_rev_level = val;});
@@ -620,7 +638,6 @@ void ctagSoundProcessorDrumRack::knowYourself(){
 	pMapTrig.emplace("sum_mute", [&](const int val){ trig_sum_mute = val;});
 	pMapPar.emplace("sum_lev", [&](const int val){ sum_lev = val;});
 	pMapCv.emplace("sum_lev", [&](const int val){ cv_sum_lev = val;});
-
 
     isStereo = true;
 	id = "DrumRack";

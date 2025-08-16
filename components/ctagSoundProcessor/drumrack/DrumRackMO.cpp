@@ -154,8 +154,8 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
     mo_osc.set_pitch(ipitch);
 
     // render audio data
-    int16_t buffer[32];
-    mo_osc.Render(mo_sync, buffer, 32);
+    int16_t buffer[BUF_SZ];
+    mo_osc.Render(mo_sync, buffer, BUF_SZ);
 
     // calculate amplitude modulation
     int32_t mod_gain = 65535;
@@ -176,7 +176,7 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
         br = static_cast<int32_t>(fabsf(data.cv[cv_mo_bit_reduction]) * 6);
     }
     int16_t bit_mask = mo_bit_reduction_masks[6 - br];
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < BUF_SZ; i++) {
         if ((i % dfactor) == 0) {
             sample = buffer[i] & bit_mask;
         }

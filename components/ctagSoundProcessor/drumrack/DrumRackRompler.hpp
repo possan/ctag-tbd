@@ -31,10 +31,10 @@ using namespace CTAG::SP;
 
 class DrumRackRompler {
 public:
-    void Process(const DrumRackProcessData &    data);
+    void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-    float s1_out[32];
+    float s1_out[BUF_SZ];
 
 private:
     CTAG::SYNTHESIS::RomplerVoiceMinimal rompler[1];

@@ -29,10 +29,10 @@ void DrumRackHH2::Init(const DrumRackInitData *initdata) {
 void DrumRackHH2::Process(const DrumRackProcessData &data) {
     MK_BOOL_PAR(bHH2Trig, hh2_trigger)
     if (bHH2Trig != hh2_trig_prev){
+        if (bHH2Trig) {
+            printf("DrumRackHH2: Trigger.\n");
+        }
         hh2_trig_prev = bHH2Trig;
-    }
-    else{
-        bHH2Trig = false;
     }
 
     if (!this->enabled) {
@@ -55,5 +55,5 @@ void DrumRackHH2::Process(const DrumRackProcessData &data) {
         temp1_,
         temp2_,
         hh2_out,
-        32);
+        BUF_SZ);
 }

@@ -61,5 +61,5 @@ void DrumRackClap::Process(const DrumRackProcessData &data) {
         cl_trig_prev = false;
     }
 
-    cl.Process(cl_out, 32);
+    cl.Process(cl_out, BUF_SZ);
 }

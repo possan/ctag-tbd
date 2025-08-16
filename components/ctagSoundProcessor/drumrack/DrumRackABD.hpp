@@ -34,10 +34,10 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float abd_out[32];
+	float out[BUF_SZ];
 
 private:
-	bool abd_trig_prev {false};
+	bool trig_prev {false};
 	plaits::AnalogBassDrum abd;
 	atomic<int16_t> ab_trigger, trig_ab_trigger;
 	atomic<int16_t> ab_accent, cv_ab_accent;

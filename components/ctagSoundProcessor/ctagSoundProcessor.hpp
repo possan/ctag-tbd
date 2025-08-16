@@ -24,6 +24,8 @@ respective component folders / files if different from this license.
 
 #pragma once
 
+#define BUF_SZ 64
+
 #define MK_BOOL_PAR(outname, inname) \
     bool outname = inname;\
     if(trig_##inname != -1) outname = data.trig[trig_##inname] == 1 ? false : true;
@@ -220,7 +222,7 @@ namespace CTAG {
             };
 
             bool isStereo = false;
-            int const bufSz = 32;
+            int const bufSz = BUF_SZ;
             int processCh = 0;
             int instance {0};
             std::unique_ptr<ctagSPDataModel> model = nullptr;

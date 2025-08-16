@@ -182,8 +182,8 @@ void DrumRackTBD03::Process(const DrumRackProcessData &data) {
     td3_osc.set_pitch(ipitch);
 
     // render audio data
-    int16_t buffer[32];
-    td3_osc.Render(td3_sync, buffer, 32);
+    int16_t buffer[BUF_SZ];
+    td3_osc.Render(td3_sync, buffer, BUF_SZ);
 
     // apply filter and EGs
     int ftype = td3_filter_type;
@@ -252,9 +252,9 @@ void DrumRackTBD03::Process(const DrumRackProcessData &data) {
     filter->SetResonance(r);
     filter->SetGain(dri);
 
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < BUF_SZ; i++) {
         float eg = td3_pre_eg_val +
-                   (egvalVCA - td3_pre_eg_val) / (float) 32 * i; // linear fade from previous eg value to avoid glitches
+                   (egvalVCA - td3_pre_eg_val) / (float) BUF_SZ * i; // linear fade from previous eg value to avoid glitches
         // apply non linearity to filter input
         int16_t warped = td3_ws.Transform(buffer[i]);
         buffer[i] = stmlib::Mix(buffer[i], warped, signature);

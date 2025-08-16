@@ -144,7 +144,7 @@ void ctagSoundProcessorMacOsc::Process(const ProcessData &data) {
     osc.set_pitch(ipitch);
 
     // render audio data
-    int16_t buffer[32];
+    int16_t buffer[BUF_SZ];
     osc.Render(sync, buffer, bufSz);
 
     // calculate amplitude modulation

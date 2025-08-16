@@ -54,5 +54,5 @@ void DrumRackDSD::Process(const DrumRackProcessData &data) {
         fDSDecay,
         fDSSpy,
         dsd_out,
-        32);
+        BUF_SZ);
 }

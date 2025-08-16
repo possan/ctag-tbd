@@ -2,6 +2,8 @@
 #include "DrumModel.hpp"
 #include "plaits/dsp/fm/operator.h"
 
+#define BUF_SZ 64
+
 namespace CTAG::SYNTHESIS{
 class FmKick : public DrumModel {
 public:

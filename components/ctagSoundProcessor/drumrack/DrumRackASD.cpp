@@ -27,31 +27,31 @@ void DrumRackASD::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackASD::Process(const DrumRackProcessData &data) {
-    MK_BOOL_PAR(bASTrig, as_trigger)
-    if (bASTrig != asd_trig_prev){
-        asd_trig_prev = bASTrig;
+    MK_BOOL_PAR(_trig, as_trigger)
+    if (_trig != trig_prev){
+        trig_prev = _trig;
     }
     else{
-        bASTrig = false;
+        _trig = false;
     }
 
     if (!this->enabled) {
         return;
     }
 
-    MK_FLT_PAR_ABS(fASAccent, as_accent, 4095.f, 1.f)
-    MK_FLT_PAR_ABS_MIN_MAX(fASF0, as_f0, 4095.f, 0.001f, 0.01f)
-    MK_FLT_PAR_ABS(fASTone, as_tone, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fASDecay, as_decay, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fASAspy, as_a_spy, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_accent, as_accent, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_MIN_MAX(_f0, as_f0, 4095.f, 0.001f, 0.01f)
+    MK_FLT_PAR_ABS(_tone, as_tone, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_decay, as_decay, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_a_spy, as_a_spy, 4095.f, 1.f)
     asd.Render(
         false,
-        bASTrig,
-        fASAccent,
-        fASF0,
-        fASTone,
-        fASDecay,
-        fASAspy,
-        asd_out,
-        32);
+        _trig,
+        _accent,
+        _f0,
+        _tone,
+        _decay,
+        _a_spy,
+        out,
+        BUF_SZ);
 }
