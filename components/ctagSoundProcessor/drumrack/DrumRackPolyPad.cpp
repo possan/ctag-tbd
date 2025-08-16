@@ -236,7 +236,12 @@ void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
         pp_v_voices[i].SetCutoff(c);
         pp_v_voices[i].SetResonance(r);
         pp_v_voices[i].SetDetune(d);
-        pp_v_voices[i].Process(pp_out_stereo, 1); // 1 = right offset
+        pp_v_voices[i].Process(pp_out_stereo, 0);
+    }
+
+    // it isn't stereo after all...
+    for(int i=0;i<32;i++) {
+        pp_out_stereo[i*2+1] = pp_out_stereo[i*2+0];
     }
 
     // note off including latched mode
