@@ -285,12 +285,15 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         ledStatus = ledData;
 
         int64_t diff2 = esp_timer_get_time() - before;
-        if (framecounter % 300 == 0) {
-            ESP_LOGI("SPManager", "Audio task cycles diff %d, micros %d", (int)diff, (int)diff2);
-        }
 
         // write raw float data back to CODEC
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
+
+        if (framecounter % 200 == 0) {
+            ESP_LOGI("SPManager", "Audio task cycles diff %d, micros %d, output: L:[%1.3f %1.3f] R:[%1.3f %1.3f]", (int)diff, (int)diff2,
+                     fbuf[0], fbuf[2], fbuf[1], fbuf[3]);
+        }
+
         framecounter ++;
     }
     memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
@@ -371,8 +374,9 @@ static char freertosstats[2000] = {
 static void debug_task(void *pvParameters) {
   while (true) {
     vTaskDelay(2000 / portTICK_PERIOD_MS);
-    printf("SPManager: Getting freeRTOS Stats...\n");
+    // printf("SPManager: Getting freeRTOS Stats...\n");
     vTaskGetRunTimeStats((char *)&freertosstats);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
     printf("SPManager: FreeRTOS Stats:\n%s", freertosstats);
     ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
@@ -466,8 +470,7 @@ void SoundProcessorManager::StartSoundProcessor() {
     runAudioTask = 1;
     xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 8192, nullptr, tskIDLE_PRIORITY + 10, &audioTaskH, 1);
 
-    xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 2,
-                            NULL, 0);
+    // XTASKCREATEPINNEDTOCORE(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 1);
 
 #if defined(CONFIG_TBD_PLATFORM_MK2) || defined(CONFIG_TBD_PLATFORM_AEM) || defined(CONFIG_TBD_PLATFORM_BBA)
     //FAV::Favorites::StartUI();
