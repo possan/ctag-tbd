@@ -145,12 +145,14 @@ namespace CTAG::SYNTHESIS {
                     }
                 }else{
                     // obtain sample rom data
-                    assert(readBufferLength <= (readBufferMaxSize - 2)); // beyond buffer size?
-                    sampleRom.ReadSlice(readBufferInt16, slice, readPos, readBufferLength);
-                    // and write convert to float buffer
-                    for (int i = 0; i < readBufferLength; i++) {
-                        readBufferFloat[i + 2] =
-                                static_cast<float>(readBufferInt16[i]&brr_mask) * 0.000030518509476f; // only 2 for linear interp
+                    if ( readBufferLength <= (readBufferMaxSize - 2) ) {
+                        // assert(readBufferLength <= (readBufferMaxSize - 2)); // beyond buffer size? 
+                        sampleRom.ReadSlice(readBufferInt16, slice, readPos, readBufferLength);
+                        // and write convert to float buffer
+                        for (int i = 0; i < readBufferLength; i++) {
+                            readBufferFloat[i + 2] =
+                            static_cast<float>(readBufferInt16[i]&brr_mask) * 0.000030518509476f; // only 2 for linear interp
+                        }
                     }
                 }
 
