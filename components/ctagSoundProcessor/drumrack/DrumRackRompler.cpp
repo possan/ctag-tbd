@@ -5,9 +5,7 @@
 using namespace CTAG::SP;
 
 void DrumRackRompler::Init(const DrumRackInitData *initdata) {
-    for (auto& r : rompler){
-        r.Init(44100.f);
-    }
+    rompler.Init(44100.f);
 
     initdata->rack->registerParam(initdata->prefix, "gate", [&](const int val){ s1_gate = val;});
 	initdata->rack->registerTrig(initdata->prefix, "gate", [&](const int val){ trig_s1_gate = val;});
@@ -57,49 +55,49 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     uint32_t firstNonWtSlice = data.firstNonWtSlice; // sampleRom.GetFirstNonWaveTableSlice();
 
     MK_BOOL_PAR(bGateS1, s1_gate)
-    rompler[0].params.gate = bGateS1;
+    rompler.params.gate = bGateS1;
 
     float fS1Speed = s1_speed / 4095.f * 2.f;
     if (cv_s1_speed != -1) fS1Speed += data.cv[cv_s1_speed] * 2.f;
     CONSTRAIN(fS1Speed, -2.f, 2.f)
-    rompler[0].params.playbackSpeed = fS1Speed;
+    rompler.params.playbackSpeed = fS1Speed;
     float fS1Pitch = s1_pitch;
     if (cv_s1_pitch != -1){
         fS1Pitch += data.cv[cv_s1_pitch] * 12.f * 5.f;
     }
-    rompler[0].params.pitch = fS1Pitch;
+    rompler.params.pitch = fS1Pitch;
     MK_INT_PAR_ABS(iS1Bank, s1_bank, 32.f)
     CONSTRAIN(iS1Bank, 0, 31)
     MK_INT_PAR_ABS(iS1Slice, s1_slice, 32.f)
     CONSTRAIN(iS1Slice, 0, 31)
     iS1Slice = iS1Bank * 32 + iS1Slice + firstNonWtSlice;
-    rompler[0].params.slice = iS1Slice;
+    rompler.params.slice = iS1Slice;
     MK_FLT_PAR_ABS(fS1Start, s1_start, 4095.f, 1.f)
-    rompler[0].params.startOffsetRelative = fS1Start;
+    rompler.params.startOffsetRelative = fS1Start;
     MK_FLT_PAR_ABS(fS1Length, s1_end, 4095.f, 1.f)
-    rompler[0].params.lengthRelative = fS1Length;
+    rompler.params.lengthRelative = fS1Length;
     MK_FLT_PAR_ABS(fS1LoopPos, s1_lp_pos, 4095.f, 1.f)
-    rompler[0].params.loopMarker = fS1LoopPos;
+    rompler.params.loopMarker = fS1LoopPos;
     MK_BOOL_PAR(bS1Loop, s1_lp)
-    rompler[0].params.loop = bS1Loop;
+    rompler.params.loop = bS1Loop;
     MK_BOOL_PAR(bS1LoopPipo, s1_lp_pp)
-    rompler[0].params.loopPiPo = bS1LoopPipo;
+    rompler.params.loopPiPo = bS1LoopPipo;
     MK_FLT_PAR_ABS(fS1Attack, s1_atk, 4095.f, 2.f)
-    rompler[0].params.a = fS1Attack;
+    rompler.params.a = fS1Attack;
     MK_FLT_PAR_ABS(fS1Decay, s1_dcy, 4095.f, 50.f)
-    rompler[0].params.d = fS1Decay;
+    rompler.params.d = fS1Decay;
     MK_FLT_PAR_ABS_SFT(fS1EGFM, s1_eg2fm, 4095.f, 12.f)
-    rompler[0].params.egFM = fS1EGFM;
+    rompler.params.egFM = fS1EGFM;
     MK_INT_PAR_ABS(iS1Brr, s1_brr, 16)
     CONSTRAIN(iS1Brr, 0, 14)
-    rompler[0].params.bitReduction = iS1Brr;
+    rompler.params.bitReduction = iS1Brr;
     // filter params
     MK_FLT_PAR_ABS(fS1Cut, s1_fc, 4095.f, 1.f)
-    rompler[0].params.cutoff = fS1Cut;
+    rompler.params.cutoff = fS1Cut;
     MK_FLT_PAR_ABS(fS1Reso, s1_fq, 4095.f, 10.f)
-    rompler[0].params.resonance = fS1Reso;
+    rompler.params.resonance = fS1Reso;
     MK_INT_PAR_ABS(iS1FType, s1_ft, 4.f)
     CONSTRAIN(iS1FType, 0, 3);
-    rompler[0].params.filterType = static_cast<CTAG::SYNTHESIS::RomplerVoiceMinimal::FilterType>(iS1FType);
-    rompler[0].Process(s1_out, BUF_SZ);
+    rompler.params.filterType = static_cast<CTAG::SYNTHESIS::RomplerVoiceMinimal::FilterType>(iS1FType);
+    rompler.Process(s1_out, BUF_SZ);
 };

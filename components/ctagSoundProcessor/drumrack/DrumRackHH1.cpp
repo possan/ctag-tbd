@@ -27,39 +27,39 @@ void DrumRackHH1::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackHH1::Process(const DrumRackProcessData &data) {
-    std::fill_n(hh1_out, BUF_SZ, 0.f);
+    std::fill_n(out, BUF_SZ, 0.f);
 
     if (!this->enabled) {
         return;
     }
 
-    MK_BOOL_PAR(bHH1Trig, hh1_trigger)
-    if (bHH1Trig != hh1_trig_prev){
-        if (bHH1Trig) {
+    MK_BOOL_PAR(_trig, hh1_trigger)
+    if (_trig != trig_prev){
+        if (_trig) {
             // printf("DrumRackHH1: Trigger.\n");
         }
-        hh1_trig_prev = bHH1Trig;
+        trig_prev = _trig;
     }
 
-    MK_FLT_PAR_ABS(fHH1Accent, hh1_accent, 4095.f, 1.f)
-    MK_FLT_PAR_ABS_MIN_MAX(fHH1F0, hh1_f0, 4095.f, 0.0005f, 0.1f)
-    MK_FLT_PAR_ABS(fHH1Tone, hh1_tone, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fHH1Decay, hh1_decay, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fHH1Noise, hh1_noise, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_accent, hh1_accent, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_MIN_MAX(_f0, hh1_f0, 4095.f, 0.0005f, 0.1f)
+    MK_FLT_PAR_ABS(_tone, hh1_tone, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_decay, hh1_decay, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_noise, hh1_noise, 4095.f, 1.f)
     hh1.Render(
         false,
-        bHH1Trig,
-        fHH1Accent,
-        fHH1F0,
-        fHH1Tone,
-        fHH1Decay,
-        fHH1Noise,
-        temp1_,
-        temp2_,
-        hh1_out,
+        _trig,
+        _accent,
+        _f0,
+        _tone,
+        _decay,
+        _noise,
+        temp1,
+        temp2,
+        out,
         BUF_SZ);
 
-    if (hh1_out[0] != hh1_out[0]) {
+    if (out[0] != out[0]) {
         printf("DrumRackHH1: NaN detected!\n");
         hh1.Init();
     }

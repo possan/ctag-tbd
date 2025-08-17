@@ -34,17 +34,17 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float dbd_out[BUF_SZ];
+	float out[BUF_SZ];
 	
 private:
 	plaits::SyntheticBassDrum dbd;
-	bool dbd_trig_prev {false};
-	atomic<int16_t> db_trigger, trig_db_trigger;
-	atomic<int16_t> db_accent, cv_db_accent;
-	atomic<int16_t> db_f0, cv_db_f0;
-	atomic<int16_t> db_tone, cv_db_tone;
-	atomic<int16_t> db_decay, cv_db_decay;
-	atomic<int16_t> db_dirty, cv_db_dirty;
-	atomic<int16_t> db_fm_env, cv_db_fm_env;
-	atomic<int16_t> db_fm_dcy, cv_db_fm_dcy;
+	bool trig_prev {false};
+	atomic<int16_t> trigger, trig_trigger;
+	atomic<int16_t> accent, cv_accent;
+	atomic<int16_t> f0, cv_f0;
+	atomic<int16_t> tone, cv_tone;
+	atomic<int16_t> decay, cv_decay;
+	atomic<int16_t> dirty, cv_dirty;
+	atomic<int16_t> fm_env, cv_fm_env;
+	atomic<int16_t> fm_dcy, cv_fm_dcy;
 };

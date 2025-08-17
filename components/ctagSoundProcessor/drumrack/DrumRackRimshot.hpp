@@ -39,10 +39,10 @@ public:
 private:
 	CTAG::SYNTHESIS::Rimshot rs;
 	bool rs_trig_prev {false};
-	atomic<int16_t> rs_trigger, trig_rs_trigger;
-	atomic<int16_t> rs_accent, cv_rs_accent;
-	atomic<int16_t> rs_f0, cv_rs_f0;
-	atomic<int16_t> rs_tone, cv_rs_tone;
-	atomic<int16_t> rs_decay, cv_rs_decay;
-	atomic<int16_t> rs_noise, cv_rs_noise;
+	atomic<int16_t> trigger, trig_trigger;
+	atomic<int16_t> accent, cv_accent;
+	atomic<int16_t> f0, cv_f0;
+	atomic<int16_t> tone, cv_tone;
+	atomic<int16_t> decay, cv_decay;
+	atomic<int16_t> noise, cv_noise;
 };

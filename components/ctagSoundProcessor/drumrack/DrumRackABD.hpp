@@ -39,11 +39,11 @@ public:
 private:
 	bool trig_prev {false};
 	plaits::AnalogBassDrum abd;
-	atomic<int16_t> ab_trigger, trig_ab_trigger;
-	atomic<int16_t> ab_accent, cv_ab_accent;
-	atomic<int16_t> ab_f0, cv_ab_f0;
-	atomic<int16_t> ab_tone, cv_ab_tone;
-	atomic<int16_t> ab_decay, cv_ab_decay;
-	atomic<int16_t> ab_a_fm, cv_ab_a_fm;
-	atomic<int16_t> ab_s_fm, cv_ab_s_fm;
+	atomic<int16_t> trigger, trig_trigger;
+	atomic<int16_t> accent, cv_accent;
+	atomic<int16_t> f0, cv_f0;
+	atomic<int16_t> tone, cv_tone;
+	atomic<int16_t> decay, cv_decay;
+	atomic<int16_t> a_fm, cv_a_fm;
+	atomic<int16_t> s_fm, cv_s_fm;
 };

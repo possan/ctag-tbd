@@ -37,7 +37,7 @@ void DrumRackChannelMixer::PreProcess(const DrumRackProcessData &data) {
 
 	int idev = 	(int)fDev;
 	if (idev != this->device) {
-		ESP_LOGI("DrumRackChannelMixer", "Device changed from %d to %d", this->device, idev);
+		// ESP_LOGI("DrumRackChannelMixer", "Device changed from %d to %d", this->device, idev);
 		this->device = idev;
 	}
 

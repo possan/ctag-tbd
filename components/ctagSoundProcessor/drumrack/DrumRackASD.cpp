@@ -10,24 +10,24 @@ using namespace CTAG::SP;
 void DrumRackASD::Init(const DrumRackInitData *initdata) {
     asd.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "trigger", [&](const int val){ as_trigger = val;});
-	initdata->rack->registerTrig(initdata->prefix, "trigger", [&](const int val){ trig_as_trigger = val;});
-	initdata->rack->registerParam(initdata->prefix, "accent", [&](const int val){ as_accent = val;});
-	initdata->rack->registerCv(initdata->prefix, "accent", [&](const int val){ cv_as_accent = val;});
-	initdata->rack->registerParam(initdata->prefix, "f0", [&](const int val){ as_f0 = val;});
-	initdata->rack->registerCv(initdata->prefix, "f0", [&](const int val){ cv_as_f0 = val;});
-	initdata->rack->registerParam(initdata->prefix, "tone", [&](const int val){ as_tone = val;});
-	initdata->rack->registerCv(initdata->prefix, "tone", [&](const int val){ cv_as_tone = val;});
-	initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val){ as_decay = val;});
-	initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val){ cv_as_decay = val;});
-	initdata->rack->registerParam(initdata->prefix, "a_spy", [&](const int val){ as_a_spy = val;});
-	initdata->rack->registerCv(initdata->prefix, "a_spy", [&](const int val){ cv_as_a_spy = val;});
+    initdata->rack->registerParam(initdata->prefix, "trigger", [&](const int val){ trigger = val;});
+	initdata->rack->registerTrig(initdata->prefix, "trigger", [&](const int val){ trig_trigger = val;});
+	initdata->rack->registerParam(initdata->prefix, "accent", [&](const int val){ accent = val;});
+	initdata->rack->registerCv(initdata->prefix, "accent", [&](const int val){ cv_accent = val;});
+	initdata->rack->registerParam(initdata->prefix, "f0", [&](const int val){ f0 = val;});
+	initdata->rack->registerCv(initdata->prefix, "f0", [&](const int val){ cv_f0 = val;});
+	initdata->rack->registerParam(initdata->prefix, "tone", [&](const int val){ tone = val;});
+	initdata->rack->registerCv(initdata->prefix, "tone", [&](const int val){ cv_tone = val;});
+	initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val){ decay = val;});
+	initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val){ cv_decay = val;});
+	initdata->rack->registerParam(initdata->prefix, "a_spy", [&](const int val){ a_spy = val;});
+	initdata->rack->registerCv(initdata->prefix, "a_spy", [&](const int val){ cv_a_spy = val;});
 
     this->enabled = false;
 }
 
 void DrumRackASD::Process(const DrumRackProcessData &data) {
-    MK_BOOL_PAR(_trig, as_trigger)
+    MK_BOOL_PAR(_trig, trigger)
     if (_trig != trig_prev){
         trig_prev = _trig;
     }
@@ -41,11 +41,11 @@ void DrumRackASD::Process(const DrumRackProcessData &data) {
         return;
     }
 
-    MK_FLT_PAR_ABS(_accent, as_accent, 4095.f, 1.f)
-    MK_FLT_PAR_ABS_MIN_MAX(_f0, as_f0, 4095.f, 0.001f, 0.01f)
-    MK_FLT_PAR_ABS(_tone, as_tone, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(_decay, as_decay, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(_a_spy, as_a_spy, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_accent, accent, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_MIN_MAX(_f0, f0, 4095.f, 0.001f, 0.01f)
+    MK_FLT_PAR_ABS(_tone, tone, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_decay, decay, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_a_spy, a_spy, 4095.f, 1.f)
     asd.Render(
         false,
         _trig,

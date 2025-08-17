@@ -34,20 +34,20 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float fmb_out[BUF_SZ];
+	float out[BUF_SZ];
 
 private:
 	CTAG::SYNTHESIS::FmKick fmb;
-	bool fmb_trig_prev {false};
-	atomic<int16_t> fmb_trigger, trig_fmb_trigger;
-	atomic<int16_t> fmb_use_ratio_mode, trig_fmb_use_ratio_mode;
-	atomic<int16_t> fmb_mod_env_sync, trig_fmb_mod_env_sync;
-	atomic<int16_t> fmb_f_b, cv_fmb_f_b;
-	atomic<int16_t> fmb_d_b, cv_fmb_d_b;
-	atomic<int16_t> fmb_f_m, cv_fmb_f_m;
-	atomic<int16_t> fmb_I, cv_fmb_I;
-	atomic<int16_t> fmb_d_m, cv_fmb_d_m;
-	atomic<int16_t> fmb_b_m, cv_fmb_b_m;
-	atomic<int16_t> fmb_A_f, cv_fmb_A_f;
-	atomic<int16_t> fmb_d_f, cv_fmb_d_f;
+	bool trig_prev {false};
+	atomic<int16_t> trigger, trig_trigger;
+	atomic<int16_t> use_ratio_mode, trig_use_ratio_mode;
+	atomic<int16_t> mod_env_sync, trig_mod_env_sync;
+	atomic<int16_t> f_b, cv_f_b;
+	atomic<int16_t> d_b, cv_d_b;
+	atomic<int16_t> f_m, cv_f_m;
+	atomic<int16_t> I, cv_I;
+	atomic<int16_t> d_m, cv_d_m;
+	atomic<int16_t> b_m, cv_b_m;
+	atomic<int16_t> A_f, cv_A_f;
+	atomic<int16_t> d_f, cv_d_f;
 };

@@ -157,8 +157,6 @@ namespace CTAG {
         	float combined_out[BUF_SZ*2];
         	float send1_out[BUF_SZ*2];
         	float send2_out[BUF_SZ*2];
-            float temp1_[BUF_SZ];
-            float temp2_[BUF_SZ];
 
             // romplers
             CTAG::SP::HELPERS::ctagSampleRom sampleRom;

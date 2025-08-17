@@ -34,15 +34,15 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float cl_out[BUF_SZ];
+	float out[BUF_SZ];
 	
 private:
 	CTAG::SYNTHESIS::Clap cl;
-	bool cl_trig_prev {false};
-    atomic<int16_t> cl_trigger, trig_cl_trigger;
-	atomic<int16_t> cl_f0, cv_cl_f0;
-	atomic<int16_t> cl_tone, cv_cl_tone;
-	atomic<int16_t> cl_decay, cv_cl_decay;
-	atomic<int16_t> cl_scale, cv_cl_scale;
-	atomic<int16_t> cl_transient, cv_cl_transient;
+	bool trig_prev {false};
+    atomic<int16_t> trigger, trig_trigger;
+	atomic<int16_t> f0, cv_f0;
+	atomic<int16_t> tone, cv_tone;
+	atomic<int16_t> decay, cv_decay;
+	atomic<int16_t> scale, cv_scale;
+	atomic<int16_t> transient, cv_transient;
 };

@@ -34,13 +34,13 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float hh1_out[BUF_SZ];
+	float out[BUF_SZ];
 
 private:
 	plaits::HiHat<plaits::SquareNoise, plaits::SwingVCA, true, false> hh1;
-	bool hh1_trig_prev {false};
-	float temp1_[BUF_SZ];
-	float temp2_[BUF_SZ];
+	bool trig_prev {false};
+	float temp1[BUF_SZ];
+	float temp2[BUF_SZ];
 	atomic<int16_t> hh1_trigger, trig_hh1_trigger;
 	atomic<int16_t> hh1_accent, cv_hh1_accent;
 	atomic<int16_t> hh1_f0, cv_hh1_f0;

@@ -34,15 +34,15 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-	float dsd_out[BUF_SZ];
+	float out[BUF_SZ];
 	
 private:
-	bool dsd_trig_prev {false};
+	bool trig_prev {false};
 	plaits::SyntheticSnareDrum dsd;
-	atomic<int16_t> ds_trigger, trig_ds_trigger;
-	atomic<int16_t> ds_accent, cv_ds_accent;
-	atomic<int16_t> ds_f0, cv_ds_f0;
-	atomic<int16_t> ds_fm_amt, cv_ds_fm_amt;
-	atomic<int16_t> ds_decay, cv_ds_decay;
-	atomic<int16_t> ds_spy, cv_ds_spy;
+	atomic<int16_t> trigger, trig_trigger;
+	atomic<int16_t> accent, cv_accent;
+	atomic<int16_t> f0, cv_f0;
+	atomic<int16_t> fm_amt, cv_fm_amt;
+	atomic<int16_t> decay, cv_decay;
+	atomic<int16_t> spy, cv_spy;
 };

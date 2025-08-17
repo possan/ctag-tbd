@@ -39,10 +39,10 @@ public:
 private:
 	plaits::AnalogSnareDrum asd;
 	bool trig_prev {false};
-	atomic<int16_t> as_trigger, trig_as_trigger;
-	atomic<int16_t> as_accent, cv_as_accent;
-	atomic<int16_t> as_f0, cv_as_f0;
-	atomic<int16_t> as_tone, cv_as_tone;
-	atomic<int16_t> as_decay, cv_as_decay;
-	atomic<int16_t> as_a_spy, cv_as_a_spy;
+	atomic<int16_t> trigger, trig_trigger;
+	atomic<int16_t> accent, cv_accent;
+	atomic<int16_t> f0, cv_f0;
+	atomic<int16_t> tone, cv_tone;
+	atomic<int16_t> decay, cv_decay;
+	atomic<int16_t> a_spy, cv_a_spy;
 };

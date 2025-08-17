@@ -10,56 +10,56 @@ using namespace CTAG::SP;
 void DrumRackHH2::Init(const DrumRackInitData *initdata) {
     hh2.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "trigger", [&](const int val){ hh2_trigger = val;});
-	initdata->rack->registerTrig(initdata->prefix, "trigger", [&](const int val){ trig_hh2_trigger = val;});
-	initdata->rack->registerParam(initdata->prefix, "accent", [&](const int val){ hh2_accent = val;});
-	initdata->rack->registerCv(initdata->prefix, "accent", [&](const int val){ cv_hh2_accent = val;});
-	initdata->rack->registerParam(initdata->prefix, "f0", [&](const int val){ hh2_f0 = val;});
-	initdata->rack->registerCv(initdata->prefix, "f0", [&](const int val){ cv_hh2_f0 = val;});
-	initdata->rack->registerParam(initdata->prefix, "tone", [&](const int val){ hh2_tone = val;});
-	initdata->rack->registerCv(initdata->prefix, "tone", [&](const int val){ cv_hh2_tone = val;});
-	initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val){ hh2_decay = val;});
-	initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val){ cv_hh2_decay = val;});
-	initdata->rack->registerParam(initdata->prefix, "noise", [&](const int val){ hh2_noise = val;});
-	initdata->rack->registerCv(initdata->prefix, "noise", [&](const int val){ cv_hh2_noise = val;});
+    initdata->rack->registerParam(initdata->prefix, "trigger", [&](const int val){ trigger = val;});
+	initdata->rack->registerTrig(initdata->prefix, "trigger", [&](const int val){ trig_trigger = val;});
+	initdata->rack->registerParam(initdata->prefix, "accent", [&](const int val){ accent = val;});
+	initdata->rack->registerCv(initdata->prefix, "accent", [&](const int val){ cv_accent = val;});
+	initdata->rack->registerParam(initdata->prefix, "f0", [&](const int val){ f0 = val;});
+	initdata->rack->registerCv(initdata->prefix, "f0", [&](const int val){ cv_f0 = val;});
+	initdata->rack->registerParam(initdata->prefix, "tone", [&](const int val){ tone = val;});
+	initdata->rack->registerCv(initdata->prefix, "tone", [&](const int val){ cv_tone = val;});
+	initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val){ decay = val;});
+	initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val){ cv_decay = val;});
+	initdata->rack->registerParam(initdata->prefix, "noise", [&](const int val){ noise = val;});
+	initdata->rack->registerCv(initdata->prefix, "noise", [&](const int val){ cv_noise = val;});
 
     this->enabled = false;
 }
 
 void DrumRackHH2::Process(const DrumRackProcessData &data) {
-    std::fill_n(hh2_out, BUF_SZ, 0.f);
+    std::fill_n(out, BUF_SZ, 0.f);
 
-    MK_BOOL_PAR(bHH2Trig, hh2_trigger)
-    if (bHH2Trig != hh2_trig_prev){
-        if (bHH2Trig) {
+    MK_BOOL_PAR(_trig, trigger)
+    if (_trig != trig_prev){
+        if (_trig) {
             // printf("DrumRackHH2: Trigger.\n");
         }
-        hh2_trig_prev = bHH2Trig;
+        trig_prev = _trig;
     }
 
     if (!this->enabled) {
         return;
     }
 
-    MK_FLT_PAR_ABS(fHH2Accent, hh2_accent, 4095.f, 1.f)
-    MK_FLT_PAR_ABS_MIN_MAX(fHH2F0, hh2_f0, 4095.f, .00001f, .1f)
-    MK_FLT_PAR_ABS(fHH2Tone, hh2_tone, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fHH2Decay, hh2_decay, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fHH2Noise, hh2_noise, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_accent, accent, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_MIN_MAX(_f0, f0, 4095.f, .00001f, .1f)
+    MK_FLT_PAR_ABS(_tone, tone, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_decay, decay, 4095.f, 1.f)
+    MK_FLT_PAR_ABS(_noise, noise, 4095.f, 1.f)
     hh2.Render(
         false,
-        bHH2Trig,
-        fHH2Accent,
-        fHH2F0,
-        fHH2Tone,
-        fHH2Decay,
-        fHH2Noise,
-        temp1_,
-        temp2_,
-        hh2_out,
+        _trig,
+        _accent,
+        _f0,
+        _tone,
+        _decay,
+        _noise,
+        temp1,
+        temp2,
+        out,
         BUF_SZ);
 
-    if (hh2_out[0] != hh2_out[0]) {
+    if (out[0] != out[0]) {
         printf("DrumRackHH2: NaN detected!\n");
         hh2.Init();
     }
