@@ -262,9 +262,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         // ch16_in.Process(idata); - it does nothing...
         if (ch1_db.enabled) {
             mixRenderOutputStereo(data.buf, ch16.level, ch16.pan, ch16.send1, ch16.send2);
-            if (framecounter % 1000 == 0) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH16 out [%1.3f %1.3f]", data.buf[0], data.buf[1]);
-            }
         }
     }
 
@@ -273,19 +270,13 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch1_db.enabled = ch1.enabled && ch1.device == 0;
         ch1_db.Process(idata);
         if (ch1_db.enabled) {
-            mixRenderOutputMono(ch1_db.dbd_out, ch1.level, ch1.pan, ch1.send1, ch1.send2);
-            if (framecounter % 1000 == 20) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH1 out [%1.3f %1.3f]", ch1_db.dbd_out[0], ch1_db.dbd_out[1]);
-            }
+            mixRenderOutputMono(ch1_db.out, ch1.level, ch1.pan, ch1.send1, ch1.send2);
         }
 
         ch1_ab.enabled = ch1.enabled && ch1.device == 1;
         ch1_ab.Process(idata);
         if (ch1_ab.enabled) {
             mixRenderOutputMono(ch1_ab.out, ch1.level, ch1.pan, ch1.send1, ch1.send2);
-            if (framecounter % 1000 == 0) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH1 out [%1.3f %1.3f]", ch1_ab.out[0], ch1_ab.out[1]);
-            }
         }
     }
 
@@ -294,19 +285,13 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch2_fmb1.enabled = ch2.enabled && ch2.device == 0;
         ch2_fmb1.Process(idata);
         if (ch2_fmb1.enabled) {
-            mixRenderOutputMono(ch2_fmb1.fmb_out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
-            if (framecounter % 1000 == 40) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH2 out [%1.3f %1.3f]", ch2_fmb1.fmb_out[0], ch2_fmb1.fmb_out[1]);
-            }
+            mixRenderOutputMono(ch2_fmb1.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
         }
 
         ch2_fmb2.enabled = ch2.enabled && ch2.device == 1;
         ch2_fmb2.Process(idata);
         if (ch2_fmb2.enabled) {
-            mixRenderOutputMono(ch2_fmb2.fmb_out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
-            if (framecounter % 1000 == 60) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH2 out [%1.3f %1.3f]", ch2_fmb2.fmb_out[0], ch2_fmb2.fmb_out[1]);
-            }
+            mixRenderOutputMono(ch2_fmb2.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
         }
     }
 
@@ -315,19 +300,13 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch3_ds.enabled = ch3.enabled && ch3.device == 0;
         ch3_ds.Process(idata);
         if (ch3_ds.enabled) {
-            mixRenderOutputMono(ch3_ds.dsd_out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
-            if (framecounter % 1000 == 80) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH3 out [%1.3f %1.3f]", ch3_ds.dsd_out[0], ch3_ds.dsd_out[1]);
-            }
+            mixRenderOutputMono(ch3_ds.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
         }
 
         ch3_as.enabled = ch3.enabled && ch3.device == 1;
         ch3_as.Process(idata);
         if (ch3_as.enabled) {
             mixRenderOutputMono(ch3_as.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
-            if (framecounter % 1000 == 100) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH3 out [%1.3f %1.3f]", ch3_as.out[0], ch3_as.out[1]);
-            }
         }
     }
 
@@ -336,19 +315,13 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch4_hh1.enabled = ch4.enabled && ch4.device == 0;
         ch4_hh1.Process(idata);
         if (ch4_hh1.enabled) {
-            mixRenderOutputMono(ch4_hh1.hh1_out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
-            if (framecounter % 1000 == 120) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH4 out [%1.3f %1.3f]", ch4_hh1.hh1_out[0], ch4_hh1.hh1_out[1]);
-            }
+            mixRenderOutputMono(ch4_hh1.out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
         }
 
         ch4_hh2.enabled = ch4.enabled && ch4.device == 1;
         ch4_hh2.Process(idata);
         if (ch4_hh2.enabled) {
-            mixRenderOutputMono(ch4_hh2.hh2_out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
-            if (framecounter % 1000 == 140) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH4 out [%1.3f %1.3f]", ch4_hh2.hh2_out[0], ch4_hh2.hh2_out[1]);
-            }
+            mixRenderOutputMono(ch4_hh2.out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
         }
     }
 
@@ -358,9 +331,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch5_rs.Process(idata);
         if (ch5_rs.enabled) {
             mixRenderOutputMono(ch5_rs.rs_out, ch5.level, ch5.pan, ch5.send1, ch5.send2);
-            if (framecounter % 1000 == 160) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH5 out [%1.3f %1.3f]", ch5_rs.rs_out[0], ch5_rs.rs_out[1]);
-            }
         }
     }
 
@@ -369,10 +339,7 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch6_cl.enabled = ch6.enabled && ch6.device == 0;
         ch6_cl.Process(idata);
         if (ch6_cl.enabled) {
-            mixRenderOutputMono(ch6_cl.cl_out, ch6.level, ch6.pan, ch6.send1, ch6.send2);
-            if (framecounter % 1000 == 180) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH6 out [%1.3f %1.3f]", ch6_cl.cl_out[0], ch6_cl.cl_out[1]);
-            }
+            mixRenderOutputMono(ch6_cl.out, ch6.level, ch6.pan, ch6.send1, ch6.send2);
         }
     }
 
@@ -382,9 +349,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch7_ro.Process(idata);
         if (ch7_ro.enabled) {
             mixRenderOutputMono(ch7_ro.s1_out, ch7.level, ch7.pan, ch7.send1, ch7.send2);
-            if (framecounter % 1000 == 200) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH7 out [%1.3f %1.3f]", ch7_ro.s1_out[0], ch7_ro.s1_out[1]);
-            }
         }
     }
 
@@ -394,9 +358,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch8_ro.Process(idata);
         if (ch8_ro.enabled) {
             mixRenderOutputMono(ch8_ro.s1_out, ch8.level, ch8.pan, ch8.send1, ch8.send2);
-            if (framecounter % 1000 == 220) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH8 out [%1.3f %1.3f]", ch8_ro.s1_out[0], ch8_ro.s1_out[1]);
-            }
         }
     }
 
@@ -406,9 +367,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch9_td3.Process(idata);
         if (ch9_td3.enabled) {
             mixRenderOutputMono(ch9_td3.td3_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
-            if (framecounter % 1000 == 240) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH9 out [%1.3f %1.3f]", ch9_td3.td3_out[0], ch9_td3.td3_out[1]);
-            }
         }
     }
 
@@ -418,9 +376,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch10_td3.Process(idata);
         if (ch10_td3.enabled) {
             mixRenderOutputMono(ch10_td3.td3_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
-            if (framecounter % 1000 == 260) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH10 out [%1.3f %1.3f]", ch10_td3.td3_out[0], ch10_td3.td3_out[1]);
-            }
         }
     }
 
@@ -430,9 +385,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch11_mo.Process(idata);
         if (ch11_mo.enabled) {
             mixRenderOutputMono(ch11_mo.mo_out, ch11.level, ch11.pan, ch11.send1, ch11.send2);
-        if (framecounter % 1000 == 280) {
-            ESP_LOGI("ctagSoundProcessorDrumRack", "CH11 out [%1.3f %1.3f]", ch11_mo.mo_out[0], ch11_mo.mo_out[1]);
-        }
         }
     }
 
@@ -442,9 +394,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch12_mo.Process(idata);
         if (ch12_mo.enabled) {
             mixRenderOutputMono(ch12_mo.mo_out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
-            if (framecounter % 1000 == 300) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH12 out [%1.3f %1.3f]", ch12_mo.mo_out[0], ch12_mo.mo_out[1]);
-            }
         }
     }
 
@@ -454,9 +403,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch13_ro.Process(idata);
         if (ch13_ro.enabled) {
             mixRenderOutputMono(ch13_ro.s1_out, ch13.level, ch13.pan, ch13.send1, ch13.send2);
-            if (framecounter % 1000 == 320) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH13 out [%1.3f %1.3f]", ch13_ro.s1_out[0], ch13_ro.s1_out[1]);
-            }
         }
     }
 
@@ -466,9 +412,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch14_ro.Process(idata);
         if (ch14_ro.enabled) {
             mixRenderOutputMono(ch14_ro.s1_out, ch14.level, ch14.pan, ch14.send1, ch14.send2);
-            if (framecounter % 1000 == 340) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH14 out [%1.3f %1.3f]", ch14_ro.s1_out[0], ch14_ro.s1_out[1]);
-            }
         }
     }
 
@@ -478,9 +421,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
         ch15_pp.Process(idata);
         if (ch15_pp.enabled) {
             mixRenderOutputStereo(ch15_pp.pp_out_stereo, ch15.level, ch15.pan, ch15.send1, ch15.send2);
-            if (framecounter % 1000 == 360) {
-                ESP_LOGI("ctagSoundProcessorDrumRack", "CH15 out [%1.3f %1.3f]", ch15_pp.pp_out_stereo[0], ch15_pp.pp_out_stereo[1]);
-            }
         }
     }
 
@@ -489,38 +429,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
     preprocessFX2(data); // reverb
     preprocessMaster(data); // sum compressor
 
-
-    if (framecounter % 1000 == 500) {
-        ESP_LOGI("ctagSoundProcessorDrumRack", "Framecounter %d", framecounter);
-
-        if (combined_out[0] != combined_out[0]) {
-            ESP_LOGI("ctagSoundProcessorDrumRack", "combined_out is NAN?");
-            // memset(data.buf, 0, BUF_SZ * 2 * sizeof(float));
-            // // clear delay and reverb buffers
-            // std::fill_n(delayBuffer_l, delayBufferSizeMax, 0.f);
-            // std::fill_n(delayBuffer_r, delayBufferSizeMax, 0.f);
-            // std::fill_n(reverbBuffer, 32768, 0.f);
-        }
-
-        if (send1_out[0] != send1_out[0]) {
-            ESP_LOGI("ctagSoundProcessorDrumRack", "send1_out is NAN?");
-            // memset(data.buf, 0, BUF_SZ * 2 * sizeof(float));
-            // // clear delay and reverb buffers
-            // std::fill_n(delayBuffer_l, delayBufferSizeMax, 0.f);
-            // std::fill_n(delayBuffer_r, delayBufferSizeMax, 0.f);
-            // std::fill_n(reverbBuffer, 32768, 0.f);
-        }
-        
-        if (send2_out[0] != send2_out[0]) {
-            ESP_LOGI("ctagSoundProcessorDrumRack", "send2_out is NAN?");
-            // memset(data.buf, 0, BUF_SZ * 2 * sizeof(float));
-            // // clear delay and reverb buffers
-            // std::fill_n(delayBuffer_l, delayBufferSizeMax, 0.f);
-            // std::fill_n(delayBuffer_r, delayBufferSizeMax, 0.f);
-            // std::fill_n(reverbBuffer, 32768, 0.f);
-        }
-    }
-
     MK_BOOL_PAR(bSumMute, sum_mute)
     if (bSumMute){
         memset(data.buf, 0, bufSz * 2 * sizeof(float));
@@ -528,19 +436,6 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
     }
 
     renderMasterOutput(data);
-
-    if (framecounter % 1000 == 700) {
-
-        if (data.buf[0] != data.buf[0]) {
-            ESP_LOGI("ctagSoundProcessorDrumRack", "data.buf output is NAN?");
-            memset(data.buf, 0, BUF_SZ * 2 * sizeof(float));
-            // clear delay and reverb buffers
-            std::fill_n(delayBuffer_l, delayBufferSizeMax, 0.f);
-            std::fill_n(delayBuffer_r, delayBufferSizeMax, 0.f);
-            std::fill_n(reverbBuffer, 32768, 0.f);
-        }
-
-    }
 }
 
 void ctagSoundProcessorDrumRack::registerCv(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter){
