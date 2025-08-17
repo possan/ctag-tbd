@@ -64,4 +64,9 @@ void DrumRackClap::Process(const DrumRackProcessData &data) {
     }
 
     cl.Process(cl_out, BUF_SZ);
+
+    if (cl_out[0] != cl_out[0]) {
+        printf("DrumRackCL: NaN detected!\n");
+        cl.Init();
+    }
 }

@@ -57,4 +57,9 @@ void DrumRackDSD::Process(const DrumRackProcessData &data) {
         fDSSpy,
         dsd_out,
         BUF_SZ);
+
+    if (dsd_out[0] != dsd_out[0]) {
+        printf("DrumRackDSD: NaN detected!\n");
+        dsd.Init();
+    }
 }

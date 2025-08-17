@@ -65,4 +65,9 @@ void DrumRackDBD::Process(const DrumRackProcessData &data) {
         fDBFmDcy,
         dbd_out,
         BUF_SZ);
+
+    if (dbd_out[0] != dbd_out[0]) {
+        printf("DrumRackDBD: NaN detected!\n");
+        dbd.Init();
+    }
 }

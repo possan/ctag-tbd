@@ -263,4 +263,12 @@ void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
         }
         pp_latchVoice = false;
     }
+
+    if (pp_out_stereo[0] != pp_out_stereo[0]) {
+        printf("DrumRackPolyPad: NaN detected!\n");
+        // hh2.Init();
+        for (auto &v:pp_v_voices) {
+            v.NoteOff();
+        }
+    }
 }

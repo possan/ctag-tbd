@@ -36,7 +36,7 @@ void DrumRackHH1::Process(const DrumRackProcessData &data) {
     MK_BOOL_PAR(bHH1Trig, hh1_trigger)
     if (bHH1Trig != hh1_trig_prev){
         if (bHH1Trig) {
-            printf("DrumRackHH1: Trigger.\n");
+            // printf("DrumRackHH1: Trigger.\n");
         }
         hh1_trig_prev = bHH1Trig;
     }
@@ -58,4 +58,9 @@ void DrumRackHH1::Process(const DrumRackProcessData &data) {
         temp2_,
         hh1_out,
         BUF_SZ);
+
+    if (hh1_out[0] != hh1_out[0]) {
+        printf("DrumRackHH1: NaN detected!\n");
+        hh1.Init();
+    }
 }

@@ -34,7 +34,7 @@ void DrumRackABD::Process(const DrumRackProcessData &data) {
     MK_BOOL_PAR(_trig, ab_trigger)
     if (_trig != trig_prev){
         if (_trig) {
-            printf("DrumRackABD: Trigger.\n");
+            // printf("DrumRackABD: Trigger.\n");
         }
         trig_prev = _trig;
     }
@@ -62,4 +62,9 @@ void DrumRackABD::Process(const DrumRackProcessData &data) {
         _s_fm,
         out,
         BUF_SZ);
+
+    if (out[0] != out[0]) {
+        printf("DrumRackABD: NaN detected!\n");
+        abd.Init();
+    }
 }

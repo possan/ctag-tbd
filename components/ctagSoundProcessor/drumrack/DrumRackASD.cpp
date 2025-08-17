@@ -56,4 +56,9 @@ void DrumRackASD::Process(const DrumRackProcessData &data) {
         _a_spy,
         out,
         BUF_SZ);
+    
+    if (out[0] != out[0]) {
+        printf("DrumRackASD: NaN detected!\n");
+        asd.Init();
+    }
 }

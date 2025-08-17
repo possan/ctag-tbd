@@ -55,4 +55,9 @@ void DrumRackRimshot::Process(const DrumRackProcessData &data) {
     rs_trig_prev = bRSTrig;
 
     rs.Process(rs_out, BUF_SZ);
+
+    if (rs_out[0] != rs_out[0]) {
+        printf("DrumRackRimshot: NaN detected!\n");
+        rs.Init();
+    }
 }
