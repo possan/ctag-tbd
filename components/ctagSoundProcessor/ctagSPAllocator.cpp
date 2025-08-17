@@ -61,12 +61,11 @@ void *ctagSPAllocator::Allocate(std::size_t const &size) {
     void *ptr = nullptr;
 
     ESP_LOGI("ctagSPAllocator", "Allocate: allocating %d bytes", size);
-    ptr = heap_caps_calloc(1, size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    // ptr = heap_caps_calloc(1, size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    ptr = malloc(size);
     ESP_LOGI("ctagSPAllocator", "Allocate: ptr=0x%x", (unsigned int)ptr);
 
     // ptr = heap_caps_calloc(1, size, MALLOC_CAP_32BIT | MALLOC_CAP_SPIRAM);
-
-
     // if(allocationType == AllocationType::CH0){
     //     if(size1 >= size){
     //         ptr = buffer1;
