@@ -475,7 +475,7 @@ void SoundProcessorManager::StartSoundProcessor() {
 #endif
     // create audio thread
     runAudioTask = 1;
-    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 8192, nullptr, tskIDLE_PRIORITY + 10, &audioTaskH, 1);
+    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 16384, nullptr, tskIDLE_PRIORITY + 10, &audioTaskH, 1);
 
     // XTASKCREATEPINNEDTOCORE(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 1);
 
