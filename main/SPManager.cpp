@@ -122,195 +122,199 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         // vTaskSuspendAll();
 
         float max = 0.f;
+
+        // for now, running freertos on ONE core and pausing it during audio processing
+        // seems to be the only way to not corrupt floating point numbers...
+        vTaskSuspendAll();
     
-        if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
-            // In peak detection
-            // dc cut input
-            float maxl = 0.f, maxr = 0.f;
-            for (uint32_t i = 0; i < BUF_SZ; i++) {
-                fbuf[i * 2] = in_dccutl(fbuf[i * 2]);
-                float val = fabsf(fbuf[i * 2]);
-                if (val > maxl) maxl = val;
-                fbuf[i * 2 + 1] = in_dccutr(fbuf[i * 2 + 1]);
-                val = fabsf(fbuf[i * 2 + 1]);
-                if (val > maxr) maxr = val;
-            }
-            max = maxl >= maxr ? maxl : maxr;
-            peakIn = 0.95f * peakIn + 0.05f * max;
-
-            // noise gate
-            if (noiseGateCfg == 1) { // both channels noise gate
-                if (ngState == NG_OPEN && peakIn < NOISE_GATE_LEVEL_CLOSE) {
-                    ngState = NG_BOTH;
-                    for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp down buffer
-                        fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
-                        fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
-                    }
-                } else if (ngState != NG_OPEN && peakIn > NOISE_GATE_LEVEL_OPEN) {
-                    ngState = NG_OPEN;
-                    for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp up buffer
-                        fbuf[i * 2] *= lramp[i];
-                        fbuf[i * 2 + 1] *= lramp[i];
-                    }
-                } else if (ngState != NG_OPEN) {
-                    memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
-                }
-            } else if (noiseGateCfg == 2) { // left channel
-                peakL = 0.95f * peakL + 0.05f * maxl;
-                if (ngState == NG_OPEN && peakL < NOISE_GATE_LEVEL_CLOSE) {
-                    ngState = NG_LEFT;
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
-                        fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
-                    }
-                } else if (ngState != NG_OPEN && peakL > NOISE_GATE_LEVEL_OPEN) {
-                    ngState = NG_OPEN;
-                    for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
-                        fbuf[i * 2] *= lramp[i];
-                    }
-                } else if (ngState != NG_OPEN) {
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0;
-                    }
-                }
-            } else if (noiseGateCfg == 3) { // right channel
-                peakR = 0.95f * peakR + 0.05f * maxr;
-                if (ngState == NG_OPEN && peakR < NOISE_GATE_LEVEL_CLOSE) {
-                    ngState = NG_RIGHT;
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
-                        fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
-                    }
-                } else if (ngState != NG_OPEN && peakR > NOISE_GATE_LEVEL_OPEN) {
-                    ngState = NG_OPEN;
-                    for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
-                        fbuf[i * 2 + 1] *= lramp[i];
-                    }
-                } else if (ngState != NG_OPEN) {
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2 + 1] = 0;
-                    }
-                }
-            }
-
-            // led indicator, green for input
-            max = 255.f + 3.2f * CTAG::SP::HELPERS::fast_dBV(peakIn); // cut away at approx -80dB
-            //ESP_LOGI("SP", "Max %.9f %f", peakIn, max);
-            if (max > 0 && ngState == NG_OPEN) {
-                ledData = ((uint32_t) max);
-                ledData <<= 8; // green
-            }
-            xSemaphoreGive(processMutex);
-        } else {
-            // mute audio
-            memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
+        // if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
+        // In peak detection
+        // dc cut input
+        float maxl = 0.f, maxr = 0.f;
+        for (uint32_t i = 0; i < BUF_SZ; i++) {
+            fbuf[i * 2] = in_dccutl(fbuf[i * 2]);
+            float val = fabsf(fbuf[i * 2]);
+            if (val > maxl) maxl = val;
+            fbuf[i * 2 + 1] = in_dccutr(fbuf[i * 2 + 1]);
+            val = fabsf(fbuf[i * 2 + 1]);
+            if (val > maxr) maxr = val;
         }
+        max = maxl >= maxr ? maxl : maxr;
+        peakIn = 0.95f * peakIn + 0.05f * max;
 
-        taskYIELD();
-
-        if (sp[0] != nullptr) {
-            if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
-                // apply sound processors
-                    isStereoCH0 = sp[0]->GetIsStereo();
-                    sp[0]->Process(pd);
-                    
-                    xSemaphoreGive(processMutex);
-            } else {
-                // mute audio
+        // noise gate
+        if (noiseGateCfg == 1) { // both channels noise gate
+            if (ngState == NG_OPEN && peakIn < NOISE_GATE_LEVEL_CLOSE) {
+                ngState = NG_BOTH;
+                for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp down buffer
+                    fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
+                    fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
+                }
+            } else if (ngState != NG_OPEN && peakIn > NOISE_GATE_LEVEL_OPEN) {
+                ngState = NG_OPEN;
+                for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp up buffer
+                    fbuf[i * 2] *= lramp[i];
+                    fbuf[i * 2 + 1] *= lramp[i];
+                }
+            } else if (ngState != NG_OPEN) {
                 memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
             }
+        } else if (noiseGateCfg == 2) { // left channel
+            peakL = 0.95f * peakL + 0.05f * maxl;
+            if (ngState == NG_OPEN && peakL < NOISE_GATE_LEVEL_CLOSE) {
+                ngState = NG_LEFT;
+                for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
+                    fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
+                }
+            } else if (ngState != NG_OPEN && peakL > NOISE_GATE_LEVEL_OPEN) {
+                ngState = NG_OPEN;
+                for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
+                    fbuf[i * 2] *= lramp[i];
+                }
+            } else if (ngState != NG_OPEN) {
+                for (uint32_t i = 0; i < BUF_SZ; i++) {
+                    fbuf[i * 2] = 0;
+                }
+            }
+        } else if (noiseGateCfg == 3) { // right channel
+            peakR = 0.95f * peakR + 0.05f * maxr;
+            if (ngState == NG_OPEN && peakR < NOISE_GATE_LEVEL_CLOSE) {
+                ngState = NG_RIGHT;
+                for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
+                    fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
+                }
+            } else if (ngState != NG_OPEN && peakR > NOISE_GATE_LEVEL_OPEN) {
+                ngState = NG_OPEN;
+                for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
+                    fbuf[i * 2 + 1] *= lramp[i];
+                }
+            } else if (ngState != NG_OPEN) {
+                for (uint32_t i = 0; i < BUF_SZ; i++) {
+                    fbuf[i * 2 + 1] = 0;
+                }
+            }
         }
 
-        taskYIELD();
+        // led indicator, green for input
+        max = 255.f + 3.2f * CTAG::SP::HELPERS::fast_dBV(peakIn); // cut away at approx -80dB
+        //ESP_LOGI("SP", "Max %.9f %f", peakIn, max);
+        if (max > 0 && ngState == NG_OPEN) {
+            ledData = ((uint32_t) max);
+            ledData <<= 8; // green
+        }
+        //     xSemaphoreGive(processMutex);
+        // } else {
+        //     // mute audio
+        //     memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
+        // }
 
-        if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
-            if (!isStereoCH0){
-                // check if ch0 -> ch1 daisy chain, i.e. use output of ch0 as input for ch1
-                if(ch01Daisy){
+        // taskYIELD();
+
+        if (sp[0] != nullptr) {
+            // if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
+            // apply sound processors
+            isStereoCH0 = sp[0]->GetIsStereo();
+            sp[0]->Process(pd);
+            // xSemaphoreGive(processMutex);
+            // } else {
+            //     // mute audio
+            //     memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
+            // }
+        }
+
+        // taskYIELD();
+
+        // if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
+        if (!isStereoCH0){
+            // check if ch0 -> ch1 daisy chain, i.e. use output of ch0 as input for ch1
+            if(ch01Daisy){
+                for (uint32_t i = 0; i < BUF_SZ; i++) {
+                    fbuf[i * 2 + 1] = fbuf[i * 2];
+                }
+            }
+            if (sp[1] != nullptr) sp[1]->Process(pd); // 0 is not a stereo processor
+        }
+
+        // to stereo conversion
+        if (!isStereoCH0) {
+            if (toStereoCH0 || toStereoCH1) {
+                float sb[BUF_SZ * 2];
+                memcpy(sb, fbuf, BUF_SZ * 2 * sizeof(float));
+                if (toStereoCH0 == 1 && toStereoCH1 == 0) { // spread CH0 to both channels
                     for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2 + 1] = fbuf[i * 2];
+                        fbuf[i * 2] = 0.5f * sb[i * 2];
+                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
                     }
-                }
-                if (sp[1] != nullptr) sp[1]->Process(pd); // 0 is not a stereo processor
-            }
-
-            // to stereo conversion
-            if (!isStereoCH0) {
-                if (toStereoCH0 || toStereoCH1) {
-                    float sb[BUF_SZ * 2];
-                    memcpy(sb, fbuf, BUF_SZ * 2 * sizeof(float));
-                    if (toStereoCH0 == 1 && toStereoCH1 == 0) { // spread CH0 to both channels
-                        for (uint32_t i = 0; i < BUF_SZ; i++) {
-                            fbuf[i * 2] = 0.5f * sb[i * 2];
-                            fbuf[i * 2 + 1] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
-                        }
-                    } else if (toStereoCH1 == 1 && toStereoCH0 == 0) { // spread CH1 to both channels
-                        for (uint32_t i = 0; i < BUF_SZ; i++) {
-                            fbuf[i * 2] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
-                            fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1];
-                        }
-                    } else if (toStereoCH0 == 1 && toStereoCH1 == 1) { // spread CH0 + CH1 to both channels
-                        for (uint32_t i = 0; i < BUF_SZ; i++) {
-                            fbuf[i * 2] = fbuf[i * 2 + 1] = 0.5f * (sb[i * 2] + sb[i * 2 + 1]);
-                        }
-                    } else if (toStereoCH0 == 2 && toStereoCH1 == 2) { // swap channels
-                        for (uint32_t i = 0; i < BUF_SZ; i++) {
-                            fbuf[i * 2] = sb[i * 2 + 1];
-                            fbuf[i * 2 + 1] = sb[i * 2];
-                        }
-                    } else if (toStereoCH0 == 2 && toStereoCH1 == 0) { // mix CH0 with CH1 on CH1
-                        for (uint32_t i = 0; i < BUF_SZ; i++) {
-                            fbuf[i * 2] = 0.f;
-                            fbuf[i * 2 + 1] += sb[i * 2];
-                        }
-                    } else if (toStereoCH0 == 0 && toStereoCH1 == 2) { // mix CH1 with CH0 on CH0
-                        for (uint32_t i = 0; i < BUF_SZ; i++) {
-                            fbuf[i * 2] += sb[i * 2 + 1];
-                            fbuf[i * 2 + 1] = 0.f;
-                        }
-                    } else if (toStereoCH0 == 2 && toStereoCH1 == 1) { // move CH0 to CH1, spread CH1 to both
-                        for (uint32_t i = 0; i < BUF_SZ; i++) {
-                            fbuf[i * 2] = 0.5f * sb[i * 2 + 1];
-                            fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
-                        }
-                    } else if (toStereoCH0 == 1 && toStereoCH1 == 2) { // move CH1 to CH0, spread CH0 to both
-                        for (uint32_t i = 0; i < BUF_SZ; i++) {
-                            fbuf[i * 2] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
-                            fbuf[i * 2 + 1] = 0.5f * sb[i * 2];
-                        }
+                } else if (toStereoCH1 == 1 && toStereoCH0 == 0) { // spread CH1 to both channels
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {
+                        fbuf[i * 2] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
+                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1];
+                    }
+                } else if (toStereoCH0 == 1 && toStereoCH1 == 1) { // spread CH0 + CH1 to both channels
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {
+                        fbuf[i * 2] = fbuf[i * 2 + 1] = 0.5f * (sb[i * 2] + sb[i * 2 + 1]);
+                    }
+                } else if (toStereoCH0 == 2 && toStereoCH1 == 2) { // swap channels
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {
+                        fbuf[i * 2] = sb[i * 2 + 1];
+                        fbuf[i * 2 + 1] = sb[i * 2];
+                    }
+                } else if (toStereoCH0 == 2 && toStereoCH1 == 0) { // mix CH0 with CH1 on CH1
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {
+                        fbuf[i * 2] = 0.f;
+                        fbuf[i * 2 + 1] += sb[i * 2];
+                    }
+                } else if (toStereoCH0 == 0 && toStereoCH1 == 2) { // mix CH1 with CH0 on CH0
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {
+                        fbuf[i * 2] += sb[i * 2 + 1];
+                        fbuf[i * 2 + 1] = 0.f;
+                    }
+                } else if (toStereoCH0 == 2 && toStereoCH1 == 1) { // move CH0 to CH1, spread CH1 to both
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {
+                        fbuf[i * 2] = 0.5f * sb[i * 2 + 1];
+                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
+                    }
+                } else if (toStereoCH0 == 1 && toStereoCH1 == 2) { // move CH1 to CH0, spread CH0 to both
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {
+                        fbuf[i * 2] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
+                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2];
                     }
                 }
             }
-
-            // Out peak detection, red for output
-            // limiting output
-            max = 0.f;
-            for (uint32_t i = 0; i < BUF_SZ; i++) {
-                // soft limiting
-                if (ch0_outputSoftClip) {
-                    fbuf[i * 2] = stmlib::SoftClip(fbuf[i * 2]);
-                }
-                if (ch1_outputSoftClip) {
-                    fbuf[i * 2 + 1] = stmlib::SoftClip(fbuf[i * 2 + 1]);
-                }
-                //if (fbuf[i * 2] > max) max = fbuf[i * 2];
-                //if (fbuf[i * 2 + 1] > max) max = fbuf[i * 2 + 1];
-            }
-
-            // just take first sample of block for level meter
-            max = fabsf(fbuf[0] + fbuf[1]) / 2.f;
-            peakOut = 0.9f * peakOut + 0.1f * max;
-            //ESP_LOGW("PEAK", "max %.12f, peak %.12f", max, peakOut);
-            max = 255.f + 3.2f * HELPERS::fast_dBV(peakOut);
-            if (max > 0.f) ledData |= ((uint32_t) max) << 16; // red
-
-            // get cpu cycles for audio task and tone led
-            xSemaphoreGive(processMutex);
-        } else {
-            // mute audio
-            memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
         }
 
-            //  xTaskResumeAll();
-            // taskEXIT_CRITICAL(&mux);
+        // Out peak detection, red for output
+        // limiting output
+        max = 0.f;
+        for (uint32_t i = 0; i < BUF_SZ; i++) {
+            // soft limiting
+            if (ch0_outputSoftClip) {
+                fbuf[i * 2] = stmlib::SoftClip(fbuf[i * 2]);
+            }
+            if (ch1_outputSoftClip) {
+                fbuf[i * 2 + 1] = stmlib::SoftClip(fbuf[i * 2 + 1]);
+            }
+            //if (fbuf[i * 2] > max) max = fbuf[i * 2];
+            //if (fbuf[i * 2 + 1] > max) max = fbuf[i * 2 + 1];
+        }
+
+        // just take first sample of block for level meter
+        max = fabsf(fbuf[0] + fbuf[1]) / 2.f;
+        peakOut = 0.9f * peakOut + 0.1f * max;
+        //ESP_LOGW("PEAK", "max %.12f, peak %.12f", max, peakOut);
+        max = 255.f + 3.2f * HELPERS::fast_dBV(peakOut);
+        if (max > 0.f) ledData |= ((uint32_t) max) << 16; // red
+
+        // get cpu cycles for audio task and tone led
+        //     xSemaphoreGive(processMutex);
+        // } else {
+        //     // mute audio
+        //     memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
+        // }
+
+        xTaskResumeAll();
+
+        // taskEXIT_CRITICAL(&mux);
 
         diff = esp_cpu_get_cycle_count() - start;
         if(diff > CPU_MAX_ALLOWED_CYCLES) ledData = 0xB39134; // orange code for cpu overflow
@@ -354,7 +358,7 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     ESP_LOGI("SPManager", "Switching ch%d to plugin %s", chan, id.c_str());
 
     // destroy active plugin
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     if(nullptr != sp[chan]){
         delete sp[chan]; // destruct processor
         sp[chan] = nullptr;
@@ -379,7 +383,7 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     sp[chan] = ctagSoundProcessorFactory::Create(id, aType);
     model->SetActivePluginID(id, chan);
     sp[chan]->LoadPreset(model->GetActivePatchNum(chan));
-    xSemaphoreGive(processMutex);
+    // xSemaphoreGive(processMutex);
 
 
     ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
@@ -406,23 +410,20 @@ atomic<uint32_t> SoundProcessorManager::runAudioTask;
 atomic<uint32_t> SoundProcessorManager::ch0_outputSoftClip;
 atomic<uint32_t> SoundProcessorManager::ch1_outputSoftClip;
 
-static char freertosstats[2000] = {
-    0,
-};
+
+static char freertosstats[2000] = { 0, };
 
 static void debug_task(void *pvParameters) {
   while (true) {
     vTaskDelay(2000 / portTICK_PERIOD_MS);
-    // printf("SPManager: Getting freeRTOS Stats...\n");
-    vTaskGetRunTimeStats((char *)&freertosstats);
-    vTaskDelay(200 / portTICK_PERIOD_MS);
-    printf("SPManager: FreeRTOS Stats:\n%s", freertosstats);
+    // vTaskGetRunTimeStats((char *)&freertosstats);
+    // vTaskDelay(200 / portTICK_PERIOD_MS);
+    // printf("SPManager: FreeRTOS Stats:\n%s", freertosstats);
     ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    taskYIELD();
   }
 }
 
@@ -507,9 +508,9 @@ void SoundProcessorManager::StartSoundProcessor() {
 #endif
     // create audio thread
     runAudioTask = 1;
-    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 16384, nullptr, tskIDLE_PRIORITY + 10, &audioTaskH, 1);
+    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 16384, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 0);
 
-    // XTASKCREATEPINNEDTOCORE(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 1);
+    xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 0);
 
 #if defined(CONFIG_TBD_PLATFORM_MK2) || defined(CONFIG_TBD_PLATFORM_AEM) || defined(CONFIG_TBD_PLATFORM_BBA)
     //FAV::Favorites::StartUI();
@@ -535,19 +536,19 @@ void SoundProcessorManager::SetChannelParamValue(const int chan, const string &i
 void SoundProcessorManager::ChannelSavePreset(const int chan, const string &name, const int number) {
     ledBlink = 3;
     if (sp[chan] == nullptr) return;
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     sp[chan]->SavePreset(name, number);
     model->SetActivePatchNum(number, chan);
-    xSemaphoreGive(processMutex);
+    // xSemaphoreGive(processMutex);
 }
 
 void SoundProcessorManager::ChannelLoadPreset(const int chan, const int number) {
     ledBlink = 3;
     if (sp[chan] == nullptr) return;
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     sp[chan]->LoadPreset(number);
     model->SetActivePatchNum(number, chan);
-    xSemaphoreGive(processMutex);
+    // xSemaphoreGive(processMutex);
 }
 
 string SoundProcessorManager::GetStringID(const int chan) {
@@ -557,10 +558,10 @@ string SoundProcessorManager::GetStringID(const int chan) {
 
 void SoundProcessorManager::SetConfigurationFromJSON(const string &data) {
     ledBlink = 3;
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     model->SetConfigurationFromJSON(data);
     updateConfiguration();
-    xSemaphoreGive(processMutex);
+    // xSemaphoreGive(processMutex);
 }
 
 void SoundProcessorManager::updateConfiguration() {
@@ -681,13 +682,13 @@ void SoundProcessorManager::KillAudioTask() {
 }
 
 void SoundProcessorManager::DisablePluginProcessing() {
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     ledBlink = 42;
 }
 
 void SoundProcessorManager::EnablePluginProcessing() {
     ledBlink = 5;
-    xSemaphoreGive(processMutex);
+    // xSemaphoreGive(processMutex);
 }
 
 void SoundProcessorManager::RefreshSampleRom() {
