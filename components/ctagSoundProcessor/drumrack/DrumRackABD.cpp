@@ -39,6 +39,8 @@ void DrumRackABD::Process(const DrumRackProcessData &data) {
         trig_prev = _trig;
     }
 
+    std::fill_n(out, BUF_SZ, 0.f);
+
     if (!this->enabled) {
         return;
     }

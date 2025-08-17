@@ -66,6 +66,9 @@ void DrumRackPolyPad::Init(const DrumRackInitData *initdata) {
 };
 
 void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
+    std::fill_n(pp_out, BUF_SZ, 0.f);
+    std::fill_n(pp_out_stereo, BUF_SZ * 2, 0.f);
+
     if (!this->enabled) {
         return;
     }

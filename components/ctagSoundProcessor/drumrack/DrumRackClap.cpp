@@ -28,6 +28,8 @@ void DrumRackClap::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackClap::Process(const DrumRackProcessData &data) {
+    std::fill_n(cl_out, BUF_SZ, 0.f);
+
     if (!this->enabled) {
         return;
     }

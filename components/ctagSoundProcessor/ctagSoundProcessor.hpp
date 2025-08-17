@@ -24,7 +24,7 @@ respective component folders / files if different from this license.
 
 #pragma once
 
-#define BUF_SZ 64
+#define BUF_SZ 32
 
 #define MK_BOOL_PAR(outname, inname) \
     bool outname = inname;\

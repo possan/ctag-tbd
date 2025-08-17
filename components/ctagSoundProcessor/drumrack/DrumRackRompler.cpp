@@ -48,6 +48,8 @@ void DrumRackRompler::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackRompler::Process(const DrumRackProcessData &data) {
+    std::fill_n(s1_out, BUF_SZ, 0.f);
+
     if (!this->enabled) {
         return;
     }

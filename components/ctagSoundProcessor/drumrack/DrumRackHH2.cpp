@@ -27,6 +27,8 @@ void DrumRackHH2::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackHH2::Process(const DrumRackProcessData &data) {
+    std::fill_n(hh2_out, BUF_SZ, 0.f);
+
     MK_BOOL_PAR(bHH2Trig, hh2_trigger)
     if (bHH2Trig != hh2_trig_prev){
         if (bHH2Trig) {

@@ -28,6 +28,8 @@ void DrumRackDSD::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackDSD::Process(const DrumRackProcessData &data) {
+    std::fill_n(dsd_out, BUF_SZ, 0.f);
+
     MK_BOOL_PAR(bDSTrig, ds_trigger)
     if (bDSTrig != dsd_trig_prev){
         dsd_trig_prev = bDSTrig;

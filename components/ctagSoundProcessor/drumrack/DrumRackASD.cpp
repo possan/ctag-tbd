@@ -35,6 +35,8 @@ void DrumRackASD::Process(const DrumRackProcessData &data) {
         _trig = false;
     }
 
+    std::fill_n(out, BUF_SZ, 0.f);
+
     if (!this->enabled) {
         return;
     }

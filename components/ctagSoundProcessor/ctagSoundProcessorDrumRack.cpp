@@ -240,9 +240,14 @@ void ctagSoundProcessorDrumRack::renderMasterOutput(const ProcessData& data) {
 }
 
 void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
-    memset(combined_out, 0, bufSz * 2 * sizeof(float));
-    memset(send1_out, 0, bufSz * 2 * sizeof(float));
-    memset(send2_out, 0, bufSz * 2 * sizeof(float));
+    framecounter ++;
+    // memset(combined_out, 0, bufSz * 2 * sizeof(float));
+    // memset(send1_out, 0, bufSz * 2 * sizeof(float));
+    // memset(send2_out, 0, bufSz * 2 * sizeof(float));
+    
+    std::fill_n(combined_out, bufSz * 2, 0.f);
+    std::fill_n(send1_out, bufSz * 2, 0.f);
+    std::fill_n(send2_out, bufSz * 2, 0.f);
 
 	struct DrumRackProcessData idata;
 	idata.cv = data.cv;

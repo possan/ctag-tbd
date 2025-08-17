@@ -38,6 +38,8 @@ void DrumRackFMB::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackFMB::Process(const DrumRackProcessData &data) {
+    std::fill_n(fmb_out, BUF_SZ, 0.f);
+
     MK_BOOL_PAR(bFMBTrig, fmb_trigger)
     if (bFMBTrig != fmb_trig_prev) {
         if (bFMBTrig) {

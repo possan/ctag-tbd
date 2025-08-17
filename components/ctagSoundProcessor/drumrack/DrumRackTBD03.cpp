@@ -74,6 +74,8 @@ void DrumRackTBD03::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackTBD03::Process(const DrumRackProcessData &data) {
+    std::fill_n(td3_out, BUF_SZ, 0.f);
+
     float dvcf, dvca;
     bool trg;
 

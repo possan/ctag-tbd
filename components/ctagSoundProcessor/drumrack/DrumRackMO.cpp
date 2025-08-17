@@ -54,6 +54,8 @@ void DrumRackMO::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackMO::Process(const DrumRackProcessData &data) {
+    std::fill_n(mo_out, BUF_SZ, 0.f);
+
     if (!this->enabled) {
         return;
     }

@@ -27,6 +27,8 @@ void DrumRackHH1::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackHH1::Process(const DrumRackProcessData &data) {
+    std::fill_n(hh1_out, BUF_SZ, 0.f);
+
     if (!this->enabled) {
         return;
     }

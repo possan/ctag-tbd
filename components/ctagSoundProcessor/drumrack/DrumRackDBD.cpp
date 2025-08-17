@@ -32,6 +32,8 @@ void DrumRackDBD::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackDBD::Process(const DrumRackProcessData &data) {
+    std::fill_n(dbd_out, BUF_SZ, 0.f);
+
     MK_BOOL_PAR(bDBTrig, db_trigger)
     if (bDBTrig != dbd_trig_prev){
         dbd_trig_prev = bDBTrig;

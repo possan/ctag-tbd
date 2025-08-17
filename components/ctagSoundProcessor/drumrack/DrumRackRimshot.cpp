@@ -28,6 +28,8 @@ void DrumRackRimshot::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackRimshot::Process(const DrumRackProcessData &data) {
+    std::fill_n(rs_out, BUF_SZ, 0.f);
+
     if (!this->enabled) {
         return;
     }
