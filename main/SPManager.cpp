@@ -108,94 +108,120 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         // get normalized raw data from CODEC
         DRIVERS::Codec::ReadBuffer(fbuf, BUF_SZ);
 
+        taskYIELD();
+
         // track the cpu cycles for audio task
         start = esp_cpu_get_cycle_count();
         before = esp_timer_get_time();
 
-        // In peak detection
-        // dc cut input
-        float maxl = 0.f, maxr = 0.f;
-        float max = 0.f;
-        for (uint32_t i = 0; i < BUF_SZ; i++) {
-            fbuf[i * 2] = in_dccutl(fbuf[i * 2]);
-            float val = fabsf(fbuf[i * 2]);
-            if (val > maxl) maxl = val;
-            fbuf[i * 2 + 1] = in_dccutr(fbuf[i * 2 + 1]);
-            val = fabsf(fbuf[i * 2 + 1]);
-            if (val > maxr) maxr = val;
-        }
-        max = maxl >= maxr ? maxl : maxr;
-        peakIn = 0.95f * peakIn + 0.05f * max;
+        uint32_t ledData = 0;
+    
+        // sound processors
+        // static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
+        // taskENTER_CRITICAL(&mux);
+        // vTaskSuspendAll();
 
-        // noise gate
-        if (noiseGateCfg == 1) { // both channels noise gate
-            if (ngState == NG_OPEN && peakIn < NOISE_GATE_LEVEL_CLOSE) {
-                ngState = NG_BOTH;
-                for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp down buffer
-                    fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
-                    fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
+        float max = 0.f;
+    
+        if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
+            // In peak detection
+            // dc cut input
+            float maxl = 0.f, maxr = 0.f;
+            for (uint32_t i = 0; i < BUF_SZ; i++) {
+                fbuf[i * 2] = in_dccutl(fbuf[i * 2]);
+                float val = fabsf(fbuf[i * 2]);
+                if (val > maxl) maxl = val;
+                fbuf[i * 2 + 1] = in_dccutr(fbuf[i * 2 + 1]);
+                val = fabsf(fbuf[i * 2 + 1]);
+                if (val > maxr) maxr = val;
+            }
+            max = maxl >= maxr ? maxl : maxr;
+            peakIn = 0.95f * peakIn + 0.05f * max;
+
+            // noise gate
+            if (noiseGateCfg == 1) { // both channels noise gate
+                if (ngState == NG_OPEN && peakIn < NOISE_GATE_LEVEL_CLOSE) {
+                    ngState = NG_BOTH;
+                    for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp down buffer
+                        fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
+                        fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
+                    }
+                } else if (ngState != NG_OPEN && peakIn > NOISE_GATE_LEVEL_OPEN) {
+                    ngState = NG_OPEN;
+                    for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp up buffer
+                        fbuf[i * 2] *= lramp[i];
+                        fbuf[i * 2 + 1] *= lramp[i];
+                    }
+                } else if (ngState != NG_OPEN) {
+                    memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
                 }
-            } else if (ngState != NG_OPEN && peakIn > NOISE_GATE_LEVEL_OPEN) {
-                ngState = NG_OPEN;
-                for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp up buffer
-                    fbuf[i * 2] *= lramp[i];
-                    fbuf[i * 2 + 1] *= lramp[i];
+            } else if (noiseGateCfg == 2) { // left channel
+                peakL = 0.95f * peakL + 0.05f * maxl;
+                if (ngState == NG_OPEN && peakL < NOISE_GATE_LEVEL_CLOSE) {
+                    ngState = NG_LEFT;
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
+                        fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
+                    }
+                } else if (ngState != NG_OPEN && peakL > NOISE_GATE_LEVEL_OPEN) {
+                    ngState = NG_OPEN;
+                    for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
+                        fbuf[i * 2] *= lramp[i];
+                    }
+                } else if (ngState != NG_OPEN) {
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {
+                        fbuf[i * 2] = 0;
+                    }
                 }
-            } else if (ngState != NG_OPEN) {
+            } else if (noiseGateCfg == 3) { // right channel
+                peakR = 0.95f * peakR + 0.05f * maxr;
+                if (ngState == NG_OPEN && peakR < NOISE_GATE_LEVEL_CLOSE) {
+                    ngState = NG_RIGHT;
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
+                        fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
+                    }
+                } else if (ngState != NG_OPEN && peakR > NOISE_GATE_LEVEL_OPEN) {
+                    ngState = NG_OPEN;
+                    for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
+                        fbuf[i * 2 + 1] *= lramp[i];
+                    }
+                } else if (ngState != NG_OPEN) {
+                    for (uint32_t i = 0; i < BUF_SZ; i++) {
+                        fbuf[i * 2 + 1] = 0;
+                    }
+                }
+            }
+
+            // led indicator, green for input
+            max = 255.f + 3.2f * CTAG::SP::HELPERS::fast_dBV(peakIn); // cut away at approx -80dB
+            //ESP_LOGI("SP", "Max %.9f %f", peakIn, max);
+            if (max > 0 && ngState == NG_OPEN) {
+                ledData = ((uint32_t) max);
+                ledData <<= 8; // green
+            }
+            xSemaphoreGive(processMutex);
+        } else {
+            // mute audio
+            memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
+        }
+
+        taskYIELD();
+
+        if (sp[0] != nullptr) {
+            if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
+                // apply sound processors
+                    isStereoCH0 = sp[0]->GetIsStereo();
+                    sp[0]->Process(pd);
+                    
+                    xSemaphoreGive(processMutex);
+            } else {
+                // mute audio
                 memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
             }
-        } else if (noiseGateCfg == 2) { // left channel
-            peakL = 0.95f * peakL + 0.05f * maxl;
-            if (ngState == NG_OPEN && peakL < NOISE_GATE_LEVEL_CLOSE) {
-                ngState = NG_LEFT;
-                for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
-                    fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
-                }
-            } else if (ngState != NG_OPEN && peakL > NOISE_GATE_LEVEL_OPEN) {
-                ngState = NG_OPEN;
-                for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
-                    fbuf[i * 2] *= lramp[i];
-                }
-            } else if (ngState != NG_OPEN) {
-                for (uint32_t i = 0; i < BUF_SZ; i++) {
-                    fbuf[i * 2] = 0;
-                }
-            }
-        } else if (noiseGateCfg == 3) { // right channel
-            peakR = 0.95f * peakR + 0.05f * maxr;
-            if (ngState == NG_OPEN && peakR < NOISE_GATE_LEVEL_CLOSE) {
-                ngState = NG_RIGHT;
-                for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
-                    fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
-                }
-            } else if (ngState != NG_OPEN && peakR > NOISE_GATE_LEVEL_OPEN) {
-                ngState = NG_OPEN;
-                for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
-                    fbuf[i * 2 + 1] *= lramp[i];
-                }
-            } else if (ngState != NG_OPEN) {
-                for (uint32_t i = 0; i < BUF_SZ; i++) {
-                    fbuf[i * 2 + 1] = 0;
-                }
-            }
         }
 
-        // led indicator, green for input
-        max = 255.f + 3.2f * CTAG::SP::HELPERS::fast_dBV(peakIn); // cut away at approx -80dB
-        uint32_t ledData = 0;
-        //ESP_LOGI("SP", "Max %.9f %f", peakIn, max);
-        if (max > 0 && ngState == NG_OPEN) {
-            ledData = ((uint32_t) max);
-            ledData <<= 8; // green
-        }
+        taskYIELD();
 
-        // sound processors
-        if (xSemaphoreTake(processMutex, 0) == pdTRUE) {
-            // apply sound processors
-            if (sp[0] != nullptr) {
-                isStereoCH0 = sp[0]->GetIsStereo();
-                sp[0]->Process(pd);
-            }
+        if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
             if (!isStereoCH0){
                 // check if ch0 -> ch1 daisy chain, i.e. use output of ch0 as input for ch1
                 if(ch01Daisy){
@@ -205,88 +231,94 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                 }
                 if (sp[1] != nullptr) sp[1]->Process(pd); // 0 is not a stereo processor
             }
+
+            // to stereo conversion
+            if (!isStereoCH0) {
+                if (toStereoCH0 || toStereoCH1) {
+                    float sb[BUF_SZ * 2];
+                    memcpy(sb, fbuf, BUF_SZ * 2 * sizeof(float));
+                    if (toStereoCH0 == 1 && toStereoCH1 == 0) { // spread CH0 to both channels
+                        for (uint32_t i = 0; i < BUF_SZ; i++) {
+                            fbuf[i * 2] = 0.5f * sb[i * 2];
+                            fbuf[i * 2 + 1] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
+                        }
+                    } else if (toStereoCH1 == 1 && toStereoCH0 == 0) { // spread CH1 to both channels
+                        for (uint32_t i = 0; i < BUF_SZ; i++) {
+                            fbuf[i * 2] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
+                            fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1];
+                        }
+                    } else if (toStereoCH0 == 1 && toStereoCH1 == 1) { // spread CH0 + CH1 to both channels
+                        for (uint32_t i = 0; i < BUF_SZ; i++) {
+                            fbuf[i * 2] = fbuf[i * 2 + 1] = 0.5f * (sb[i * 2] + sb[i * 2 + 1]);
+                        }
+                    } else if (toStereoCH0 == 2 && toStereoCH1 == 2) { // swap channels
+                        for (uint32_t i = 0; i < BUF_SZ; i++) {
+                            fbuf[i * 2] = sb[i * 2 + 1];
+                            fbuf[i * 2 + 1] = sb[i * 2];
+                        }
+                    } else if (toStereoCH0 == 2 && toStereoCH1 == 0) { // mix CH0 with CH1 on CH1
+                        for (uint32_t i = 0; i < BUF_SZ; i++) {
+                            fbuf[i * 2] = 0.f;
+                            fbuf[i * 2 + 1] += sb[i * 2];
+                        }
+                    } else if (toStereoCH0 == 0 && toStereoCH1 == 2) { // mix CH1 with CH0 on CH0
+                        for (uint32_t i = 0; i < BUF_SZ; i++) {
+                            fbuf[i * 2] += sb[i * 2 + 1];
+                            fbuf[i * 2 + 1] = 0.f;
+                        }
+                    } else if (toStereoCH0 == 2 && toStereoCH1 == 1) { // move CH0 to CH1, spread CH1 to both
+                        for (uint32_t i = 0; i < BUF_SZ; i++) {
+                            fbuf[i * 2] = 0.5f * sb[i * 2 + 1];
+                            fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
+                        }
+                    } else if (toStereoCH0 == 1 && toStereoCH1 == 2) { // move CH1 to CH0, spread CH0 to both
+                        for (uint32_t i = 0; i < BUF_SZ; i++) {
+                            fbuf[i * 2] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
+                            fbuf[i * 2 + 1] = 0.5f * sb[i * 2];
+                        }
+                    }
+                }
+            }
+
+            // Out peak detection, red for output
+            // limiting output
+            max = 0.f;
+            for (uint32_t i = 0; i < BUF_SZ; i++) {
+                // soft limiting
+                if (ch0_outputSoftClip) {
+                    fbuf[i * 2] = stmlib::SoftClip(fbuf[i * 2]);
+                }
+                if (ch1_outputSoftClip) {
+                    fbuf[i * 2 + 1] = stmlib::SoftClip(fbuf[i * 2 + 1]);
+                }
+                //if (fbuf[i * 2] > max) max = fbuf[i * 2];
+                //if (fbuf[i * 2 + 1] > max) max = fbuf[i * 2 + 1];
+            }
+
+            // just take first sample of block for level meter
+            max = fabsf(fbuf[0] + fbuf[1]) / 2.f;
+            peakOut = 0.9f * peakOut + 0.1f * max;
+            //ESP_LOGW("PEAK", "max %.12f, peak %.12f", max, peakOut);
+            max = 255.f + 3.2f * HELPERS::fast_dBV(peakOut);
+            if (max > 0.f) ledData |= ((uint32_t) max) << 16; // red
+
+            // get cpu cycles for audio task and tone led
             xSemaphoreGive(processMutex);
         } else {
             // mute audio
             memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
         }
 
-        // to stereo conversion
-        if (!isStereoCH0) {
-            if (toStereoCH0 || toStereoCH1) {
-                float sb[BUF_SZ * 2];
-                memcpy(sb, fbuf, BUF_SZ * 2 * sizeof(float));
-                if (toStereoCH0 == 1 && toStereoCH1 == 0) { // spread CH0 to both channels
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.5f * sb[i * 2];
-                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
-                    }
-                } else if (toStereoCH1 == 1 && toStereoCH0 == 0) { // spread CH1 to both channels
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
-                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1];
-                    }
-                } else if (toStereoCH0 == 1 && toStereoCH1 == 1) { // spread CH0 + CH1 to both channels
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = fbuf[i * 2 + 1] = 0.5f * (sb[i * 2] + sb[i * 2 + 1]);
-                    }
-                } else if (toStereoCH0 == 2 && toStereoCH1 == 2) { // swap channels
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = sb[i * 2 + 1];
-                        fbuf[i * 2 + 1] = sb[i * 2];
-                    }
-                } else if (toStereoCH0 == 2 && toStereoCH1 == 0) { // mix CH0 with CH1 on CH1
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.f;
-                        fbuf[i * 2 + 1] += sb[i * 2];
-                    }
-                } else if (toStereoCH0 == 0 && toStereoCH1 == 2) { // mix CH1 with CH0 on CH0
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] += sb[i * 2 + 1];
-                        fbuf[i * 2 + 1] = 0.f;
-                    }
-                } else if (toStereoCH0 == 2 && toStereoCH1 == 1) { // move CH0 to CH1, spread CH1 to both
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.5f * sb[i * 2 + 1];
-                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2 + 1] + sb[i * 2];
-                    }
-                } else if (toStereoCH0 == 1 && toStereoCH1 == 2) { // move CH1 to CH0, spread CH0 to both
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2] = 0.5f * sb[i * 2] + sb[i * 2 + 1];
-                        fbuf[i * 2 + 1] = 0.5f * sb[i * 2];
-                    }
-                }
-            }
-        }
+            //  xTaskResumeAll();
+            // taskEXIT_CRITICAL(&mux);
 
-        // Out peak detection, red for output
-        // limiting output
-        max = 0.f;
-        for (uint32_t i = 0; i < BUF_SZ; i++) {
-            // soft limiting
-            if (ch0_outputSoftClip) {
-                fbuf[i * 2] = stmlib::SoftClip(fbuf[i * 2]);
-            }
-            if (ch1_outputSoftClip) {
-                fbuf[i * 2 + 1] = stmlib::SoftClip(fbuf[i * 2 + 1]);
-            }
-            //if (fbuf[i * 2] > max) max = fbuf[i * 2];
-            //if (fbuf[i * 2 + 1] > max) max = fbuf[i * 2 + 1];
-        }
-
-        // just take first sample of block for level meter
-        max = fabsf(fbuf[0] + fbuf[1]) / 2.f;
-        peakOut = 0.9f * peakOut + 0.1f * max;
-        //ESP_LOGW("PEAK", "max %.12f, peak %.12f", max, peakOut);
-        max = 255.f + 3.2f * HELPERS::fast_dBV(peakOut);
-        if (max > 0.f) ledData |= ((uint32_t) max) << 16; // red
-
-        // get cpu cycles for audio task and tone led
         diff = esp_cpu_get_cycle_count() - start;
         if(diff > CPU_MAX_ALLOWED_CYCLES) ledData = 0xB39134; // orange code for cpu overflow
         ledStatus = ledData;
 
         int64_t diff2 = esp_timer_get_time() - before;
+
+        taskYIELD();
 
         // write raw float data back to CODEC
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
