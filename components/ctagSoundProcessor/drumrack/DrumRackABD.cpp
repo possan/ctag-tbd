@@ -34,7 +34,7 @@ void DrumRackABD::Process(const DrumRackProcessData &data) {
     MK_BOOL_PAR(_trig, trigger)
     if (_trig != trig_prev){
         if (_trig) {
-            // printf("DrumRackABD: Trigger.\n");
+            printf("ABD\n");
         }
         trig_prev = _trig;
     }

@@ -49,10 +49,13 @@ void DrumRackRimshot::Process(const DrumRackProcessData &data) {
     rs.params.noise_level = _noise;
 
     MK_BOOL_PAR(_trig, trigger)
-    if (_trig != rs_trig_prev && _trig) {
-        rs.Trigger();
+    if (_trig != trig_prev) {
+        if (_trig) {
+            printf("RS\n");
+            rs.Trigger();
+        }
+        trig_prev = _trig;
     }
-    rs_trig_prev = _trig;
 
     rs.Process(rs_out, BUF_SZ);
 

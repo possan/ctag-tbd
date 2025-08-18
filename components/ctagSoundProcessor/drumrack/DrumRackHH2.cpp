@@ -30,9 +30,9 @@ void DrumRackHH2::Process(const DrumRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);
 
     MK_BOOL_PAR(_trig, trigger)
-    if (_trig != trig_prev){
+    if (_trig != trig_prev) {
         if (_trig) {
-            // printf("DrumRackHH2: Trigger.\n");
+            printf("HH2\n");
         }
         trig_prev = _trig;
     }

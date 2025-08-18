@@ -43,11 +43,12 @@ void DrumRackFMB::Process(const DrumRackProcessData &data) {
     MK_BOOL_PAR(_trig, trigger)
     if (_trig != trig_prev) {
         if (_trig) {
-            // printf("DrumRackFMB: Trigger.\n");
+            printf("FMB\n");
             fmb.Trigger();
         }
-	    trig_prev = _trig;
+        trig_prev = _trig;
     }
+
 
     if (!this->enabled) {
         return;

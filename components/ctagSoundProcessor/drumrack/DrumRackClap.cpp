@@ -54,13 +54,13 @@ void DrumRackClap::Process(const DrumRackProcessData &data) {
     cl.params.scale = _scale_trans;
     cl.params.transient = _trans_ % 16;
 
-    MK_BOOL_PAR(bCLTrig, trigger)
-    if (bCLTrig != trig_prev && bCLTrig){
-        trig_prev = true;
-        cl.Trigger();
-    }
-    else if (!bCLTrig){
-        trig_prev = false;
+    MK_BOOL_PAR(_trig, trigger)
+    if (_trig != trig_prev){
+        if (_trig) {
+            printf("CL\n");
+            cl.Trigger();
+        }
+        trig_prev = _trig;
     }
 
     cl.Process(out, BUF_SZ);

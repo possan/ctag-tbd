@@ -32,10 +32,10 @@ void DrumRackDSD::Process(const DrumRackProcessData &data) {
 
     MK_BOOL_PAR(_trig, trigger)
     if (_trig != trig_prev){
+        if (_trig) {
+            printf("DSD\n");
+        }
         trig_prev = _trig;
-    }
-    else{
-        _trig = false;
     }
 
     if (!this->enabled) {

@@ -38,7 +38,7 @@ public:
 
 private:
 	CTAG::SYNTHESIS::Rimshot rs;
-	bool rs_trig_prev {false};
+	bool trig_prev {false};
 	atomic<int16_t> trigger, trig_trigger;
 	atomic<int16_t> accent, cv_accent;
 	atomic<int16_t> f0, cv_f0;
