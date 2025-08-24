@@ -38,6 +38,7 @@
 #include "drumrack/DrumRackTBD03.hpp"
 #include "drumrack/DrumRackPolyPad.hpp"
 #include "drumrack/DrumRackMO.hpp"
+#include "drumrack/DrumRackWTOsc.hpp"
 #include "drumrack/DrumRackInput.hpp"
 #include "drumrack/DrumRackFxDelay.hpp"
 #include "drumrack/DrumRackFxReverb.hpp"
@@ -100,6 +101,7 @@ namespace CTAG {
 			DrumRackMO ch11_mo;
 			DrumRackChannelMixer ch11;
 
+			DrumRackWTOsc ch12_wtosc;
 			DrumRackMO ch12_mo;
 			DrumRackChannelMixer ch12;
 

@@ -56,6 +56,10 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
 
     MK_BOOL_PAR(bGateS1, s1_gate)
     rompler.params.gate = bGateS1;
+    if (bGateS1 && !trig_prev) {
+        printf("S\n");
+        trig_prev = bGateS1;
+    }
 
     float fS1Speed = s1_speed / 4095.f * 2.f;
     if (cv_s1_speed != -1) fS1Speed += data.cv[cv_s1_speed] * 2.f;

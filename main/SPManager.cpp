@@ -41,6 +41,7 @@ respective component folders / files if different from this license.
 #include "helpers/ctagSampleRom.hpp"
 #include "freeverb3/efilter.hpp"
 #include "stmlib/dsp/dsp.h"
+#include "rp2350_spi_stream.hpp"
 
 #define MAX(x, y) ((x)>(y)) ? (x) : (y)
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
@@ -77,7 +78,12 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     int64_t before;
     bool isStereoCH0 = false;
     esp_cpu_cycle_count_t start, diff;
+    uint8_t trigs[N_TRIGS];
+    float cvs[N_CVS];
 
+    std::fill_n(fbuf, BUF_SZ * 2, 0.f);
+    std::fill_n(cvs, N_CVS, 0.f);
+    std::fill_n(trigs, N_TRIGS, 1);
 
     fv3::dccut_f in_dccutl, in_dccutr;
     //fv3::dccut_f out_dccutl, out_dccutr;
@@ -90,6 +96,8 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
     SP::ProcessData pd;
     pd.buf = fbuf;
+    pd.cv = (float *)&cvs;
+    pd.trig = (uint8_t *)&trigs;
 
     // generate linear ramp ]0,1[ squared
     for (uint32_t i = 0; i < BUF_SZ; i++) {
@@ -101,7 +109,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     while (runAudioTask) {
 
         // update data from ADCs and GPIOs for real-time control
-        CTAG::CTRL::Control::Update(&pd.trig, &pd.cv, ledStatusUI);
+        CTAG::CTRL::Control::Update(pd.trig, pd.cv, ledStatusUI);
 
         std::fill_n(fbuf, BUF_SZ * 2, 0.f);
 
@@ -127,8 +135,9 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         // taskENTER_CRITICAL(&mux);
         // // taskDISABLE_INTERRUPTS();
         // vTaskSuspendAll();
-    
-        if (xSemaphoreTake(processMutex, 1 / portTICK_PERIOD_MS) == pdTRUE) {
+
+        if (xSemaphoreTake(processMutex, 1 
+            / portTICK_PERIOD_MS) == pdTRUE) {
             // In peak detection
             // dc cut input
             float maxl = 0.f, maxr = 0.f;
@@ -331,7 +340,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         // write raw float data back to CODEC
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
-        if (framecounter % 100 == 0) {
+        if (framecounter % 900 == 0) {
             ESP_LOGI("SPManager", "Audio task cycles diff %d, micros %d, output: L:[%1.3f %1.3f] R:[%1.3f %1.3f]", (int)diff, (int)diff2,
                      fbuf[0], fbuf[2], fbuf[1], fbuf[3]);
 
@@ -419,15 +428,19 @@ static char freertosstats[2000] = { 0, };
 
 static void debug_task(void *pvParameters) {
   while (true) {
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    vTaskDelay(4000 / portTICK_PERIOD_MS);
     // vTaskGetRunTimeStats((char *)&freertosstats);
     // vTaskDelay(200 / portTICK_PERIOD_MS);
     // ESP_LOGI("SPManager", "FreeRTOS Stats:\n%s", freertosstats);
-    ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+
+    ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!, %ld/%ld/%ld failed spi transfers",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
-             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM),
+             DRIVERS::rp2350_spi_stream::transferErrorCount,
+             DRIVERS::rp2350_spi_stream::transferSuccessCount,
+             DRIVERS::rp2350_spi_stream::parseErrorCount);
   }
 }
 

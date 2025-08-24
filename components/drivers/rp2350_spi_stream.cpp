@@ -22,6 +22,7 @@ respective component folders / files if different from this license.
 #include "rp2350_spi_stream.hpp"
 
 #include <algorithm>
+#include <atomic>
 
 #include "esp_log.h"
 #include "esp_intr_alloc.h"
@@ -43,6 +44,9 @@ DMA_ATTR static uint8_t *rcvBuf2;
 DMA_ATTR static uint8_t *sendBuf0;
 DMA_ATTR static uint8_t *sendBuf1;
 DMA_ATTR static uint8_t *sendBuf2;
+uint32_t CTAG::DRIVERS::rp2350_spi_stream::transferErrorCount = 0;
+uint32_t CTAG::DRIVERS::rp2350_spi_stream::transferSuccessCount = 0;
+uint32_t CTAG::DRIVERS::rp2350_spi_stream::parseErrorCount = 0;
 
 /*
 QueueHandle_t debug_queue = nullptr;
@@ -56,6 +60,9 @@ static void debug_thread(void* arg) {
 */
 
 uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
+    transferErrorCount = 0;
+    transferSuccessCount = 0;
+    parseErrorCount = 0;
 
     //Configuration for the SPI bus
     spi_bus_config_t buscfg = {
@@ -67,7 +74,7 @@ uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
         .data4_io_num = -1,
         .data5_io_num = -1,
         .data6_io_num = -1,
-        .data7_io_num = -1,
+        .data7_io_num = -1,   
         .data_io_default_level = false,
         .max_transfer_sz = SPI_DATA_SZ,
         .flags = 0,
@@ -131,7 +138,7 @@ uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
 
 IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(uint8_t **dst, uint32_t const max_len, uint32_t ledStatus) {
     if (max_len > SPI_DATA_SZ - 2) {
-        //ESP_LOGE("rp2350_spi_stream", "max_len %d is too large, max is %d", max_len, DATA_SZ - 2);
+        ESP_LOGE("rp2350_spi_stream", "max_len %lu is too large, max is %d", max_len, SPI_DATA_SZ - 2);
         return 0; // Invalid length
     }
 
@@ -150,7 +157,8 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(uint8_t **
     esp_err_t ret;
     ret = spi_slave_queue_trans(RCV_HOST, &transaction[currentTransaction], 0);
     if (ESP_OK != ret) {
-        //ESP_LOGE("rp2350_spi_stream", "Failed to queue transaction: %s", esp_err_to_name(ret));
+        // ESP_LOGD("rp2350_spi_stream", "Failed to queue transaction: %s", esp_err_to_name(ret));
+        transferErrorCount++;
         return 0; // Failed to queue transaction
     }
     currentTransaction = (currentTransaction + 1) % 3; // switch to next transaction buffer
@@ -159,7 +167,8 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(uint8_t **
     spi_slave_transaction_t* ret_trans;
     ret = spi_slave_get_trans_result(RCV_HOST, &ret_trans, 0);
     if (ESP_OK != ret) {
-        //ESP_LOGE("rp2350_spi_stream", "Failed receive transaction: %s", esp_err_to_name(ret));
+        transferErrorCount++;
+        // ESP_LOGE("rp2350_spi_stream", "Failed receive transaction: %s", esp_err_to_name(ret));
         return 0;
     }
 
@@ -168,12 +177,16 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(uint8_t **
 
     // check watermark for valid transaction, if not *dst remains unchanged on previous buffer
     if (ret_buf[0] != 0xCA || ret_buf[1] != 0xFE) {
-        //ESP_LOGE("rp2350_spi_stream", "Invalid transaction received, expected CA FE, got %02X %02X", ret_buf[0], ret_buf[1]);
+        ESP_LOGE("rp2350_spi_stream", "Invalid transaction received (%d bits), expected CA FE, got [%02X %02X] %02X %02X %02X %02X",
+            ret_trans->length,
+            ret_buf[0], ret_buf[1], ret_buf[2], ret_buf[3], ret_buf[4], ret_buf[5]);
+        parseErrorCount++;
         return 0; // Invalid transaction
     }
 
     // data was valid, return new buffer pointer
     *dst = &ret_buf[2];
+    transferSuccessCount++;
 
     /*
     static int val = 0;

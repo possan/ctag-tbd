@@ -1865,10 +1865,220 @@
         }
       ]
     },
+
+
     
+    {
+      "id": "ch12_wtosc_group",
+      "name": "Channel 12 - Machine 0 - WT Osc",
+      "type": "group",
+      "params": [
+
         {
+          "id": "ch12_wtosc_gain",
+          "name": "Gain",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_gate",
+          "name": "Gate",
+          "type": "bool"
+        },
+        {
+          "id": "ch12_wtosc_pitch",
+          "type": "int",
+          "name": "Pitch",
+          "min": -48,
+          "max": 48,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_q_scale",
+          "name": "Quantization Scale",
+          "type": "int",
+          "min": 0,
+          "max": 47,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_tune",
+          "type": "int",
+          "name": "Tune",
+          "min": -2048,
+          "max": 2048,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_wavebank",
+          "type": "int",
+          "name": "Wave Bank",
+          "hint": "If wave bank is unavailable in ROM, no sound will be audible",
+          "min": 0,
+          "max": 31,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_wave",
+          "type": "int",
+          "name": "Wave",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+
+        {
+          "id": "ch12_wtosc_fmode",
+          "name": "Filter Mode",
+          "hint": "0: Off, 1: LP, 2: BP, 3:HP",
+          "type": "int",
+          "min": 0,
+          "max": 3,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_fcut",
+          "name": "Filter Cutoff",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_freso",
+          "name": "Filter Resonance",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+
+
+        {
+          "id": "ch12_wtosc_lfo2wave",
+          "name": "LFO Wave",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_lfo2am",
+          "name": "LFO AM",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_lfo2fm",
+          "name": "LFO FM",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_lfo2filtfm",
+          "name": "LFO Filter FM",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_eg2wave",
+          "name": "EG Wave",
+          "type": "int",
+          "min": -4095,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_eg2am",
+          "name": "EG AM",
+          "type": "int",
+          "min": -4095,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_eg2fm",
+          "name": "EG FM",
+          "type": "int",
+          "min": -4095,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_eg2filtfm",
+          "name": "EG Filter FM",
+          "type": "int",
+          "min": -4095,
+          "max": 4095,
+          "step": 1
+        },
+
+        {
+          "id": "ch12_wtosc_lfospeed",
+          "name": "Speed",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_lfosync",
+          "name": "Sync",
+          "hint": "Sync to gate",
+          "type": "bool"
+        },
+
+        {
+          "id": "ch12_wtosc_egfasl",
+          "name": "Fast / Slow",
+          "type": "bool"
+        },
+        {
+          "id": "ch12_wtosc_attack",
+          "name": "Attack",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_decay",
+          "name": "Decay",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_sustain",
+          "name": "Sustain",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        },
+        {
+          "id": "ch12_wtosc_release",
+          "name": "Release",
+          "type": "int",
+          "min": 0,
+          "max": 4095,
+          "step": 1
+        }
+      ]
+    },
+
+    {
       "id": "ch12_mo_group",
-      "name": "Channel 12 - Machine 0 - Macro Oscillator (for now)",
+      "name": "Channel 12 - Machine 1 - Macro Oscillator (for now)",
       "type": "group",
       "params": [
         {
@@ -1991,24 +2201,17 @@
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
     {
       "id": "ch13_group",
       "name": "Channel 13 - Synth group - Sampler",

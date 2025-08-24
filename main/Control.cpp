@@ -29,11 +29,28 @@ respective component folders / files if different from this license.
 #define BUF_SZ (N_CVS*4 + N_TRIGS)
 
 uint8_t *CTAG::CTRL::Control::buf_ptr = nullptr; // buffer pointer for current cv + trig data
+uint16_t updatecounter = 0;
 
-IRAM_ATTR void CTAG::CTRL::Control::Update(uint8_t **trigs, float **cvs, uint32_t ledStatus) {
-    CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(&buf_ptr, BUF_SZ, ledStatus);
-    *cvs = (float*) buf_ptr;
-    *trigs = &buf_ptr[N_CVS*4];
+IRAM_ATTR void CTAG::CTRL::Control::Update(uint8_t *trigs, float *cvs, uint32_t ledStatus) {
+    if (CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(&buf_ptr, BUF_SZ, ledStatus)) {
+
+        if (updatecounter % 3000 == 0) {
+            ESP_LOGI("Control", "Got SPI update %d%d%d%d%d%d%d%d",
+                buf_ptr[N_CVS * 4 + 0],
+                buf_ptr[N_CVS * 4 + 1],
+                buf_ptr[N_CVS * 4 + 2],
+                buf_ptr[N_CVS * 4 + 3],
+                buf_ptr[N_CVS * 4 + 4],
+                buf_ptr[N_CVS * 4 + 5],
+                buf_ptr[N_CVS * 4 + 6],
+                buf_ptr[N_CVS * 4 + 7]);
+        }
+
+        updatecounter ++;
+
+        memcpy(cvs, buf_ptr, N_CVS * 4);
+        memcpy(trigs, &buf_ptr[N_CVS * 4], N_TRIGS);
+    }
 }
 
 void CTAG::CTRL::Control::SetCVChannelBiPolar(const bool &v0, const bool &v1, const bool &v2, const bool &v3) {

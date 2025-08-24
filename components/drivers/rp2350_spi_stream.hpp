@@ -23,6 +23,8 @@ respective component folders / files if different from this license.
 #pragma once
 
 #include "driver/spi_slave.h"
+#include <stdint.h>
+#include <atomic>
 
 namespace CTAG {
     namespace DRIVERS {
@@ -31,6 +33,9 @@ namespace CTAG {
             rp2350_spi_stream() = delete;
             static uint8_t* Init(); // Initialize the SPI stream, returns pointer to the buffer
             static uint32_t GetCurrentBuffer(uint8_t **dst, uint32_t const max_len, uint32_t ledStatus);
+            static uint32_t transferErrorCount;
+            static uint32_t transferSuccessCount;
+            static uint32_t parseErrorCount;
         private:
             static spi_slave_transaction_t transaction[3];
             static uint32_t currentTransaction;

@@ -96,6 +96,7 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
     }
 
     if (!mo_prevTrigger && trigger) {
+        printf("MO\n");
         //envelope.Trigger(braids::EnvelopeSegment::ENV_SEGMENT_ATTACK);
         mo_envelope.Trigger();
         mo_osc.Strike();

@@ -8,6 +8,7 @@
 #include <atomic>
 
 #include "../ctagSoundProcessor.hpp"
+#include "helpers/ctagSampleRom.hpp"
 
 using namespace std;
 
@@ -19,6 +20,7 @@ namespace CTAG {
             float *cv;
             uint8_t *trig;
             uint32_t firstNonWtSlice;
+            HELPERS::ctagSampleRom *sampleRom;
         };
 
         struct DrumRackInitData {

@@ -253,6 +253,7 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
 	idata.cv = data.cv;
 	idata.trig = data.trig;
     idata.firstNonWtSlice = sampleRom.GetFirstNonWaveTableSlice();
+    idata.sampleRom = &sampleRom;
 
     // process input first
 
@@ -390,7 +391,13 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
 
     ch12.PreProcess(idata);
     if (ch12.enabled) {
-        ch12_mo.enabled = ch12.enabled && ch12.device == 0;
+        ch12_wtosc.enabled = ch12.enabled && ch12.device == 0;
+        ch12_wtosc.Process(idata);
+        if (ch12_wtosc.enabled) {
+            mixRenderOutputMono(ch12_wtosc.out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
+        }
+
+        ch12_mo.enabled = ch12.enabled && ch12.device == 1;
         ch12_mo.Process(idata);
         if (ch12_mo.enabled) {
             mixRenderOutputMono(ch12_mo.mo_out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
@@ -508,7 +515,8 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch11_mo_"; ch11_mo.Init(&dri);
 
     dri.prefix = "ch12_"; ch12.Init(&dri);
-    dri.prefix = "ch12_mo_"; ch12_mo.Init(&dri); // WT OSC DUO later
+    dri.prefix = "ch12_wtosc_"; ch12_wtosc.Init(&dri);
+    dri.prefix = "ch12_mo_"; ch12_mo.Init(&dri);
 
     dri.prefix = "ch13_"; ch13.Init(&dri);
     dri.prefix = "ch13_smp_"; ch13_ro.Init(&dri);

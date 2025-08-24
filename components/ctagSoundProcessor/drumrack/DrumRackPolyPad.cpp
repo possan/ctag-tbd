@@ -63,21 +63,15 @@ void DrumRackPolyPad::Init(const DrumRackInitData *initdata) {
     initdata->rack->registerCv(initdata->prefix, "release", [&](const int val) { cv_pp_release = val; });
 
     this->enabled = false;
+    pp_preNCVoices = 99;
 };
 
 void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
-    std::fill_n(pp_out, BUF_SZ, 0.f);
+    // std::fill_n(pp_out, BUF_SZ, 0.f);
     std::fill_n(pp_out_stereo, BUF_SZ * 2, 0.f);
 
     if (!this->enabled) {
         return;
-    }
-
-    // zero input
-    for (int i = 0; i < BUF_SZ; i++) {
-        pp_out[i] = 0.f;
-        pp_out_stereo[i * 2 + 0] = 0.f;
-        pp_out_stereo[i * 2 + 1] = 0.f;
     }
 
     int32_t NCVoices = pp_ncvoices;
@@ -92,23 +86,34 @@ void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
     // start chord
     bool shouldTrigger = pp_enableEG;
     if (trig_pp_enableEG != -1) shouldTrigger = data.trig[trig_pp_enableEG] == 1 ? 0 : 1; // inverted logic
-    if (pp_latchEG) {
-        if (!pp_toggle && shouldTrigger) {
-            pp_latched = !pp_latched;
-            pp_toggle = true;
-        } else if (!shouldTrigger) {
-            pp_toggle = false;
+    if (shouldTrigger != trig_prev) {
+        if (shouldTrigger) {
+            printf("PP1\n");
         }
-        if (pp_latched && shouldTrigger) {
-            shouldTrigger = false;
-        }
+        trig_prev = shouldTrigger;
     } else {
-        pp_latched = true;
-        pp_toggle = false;
+        shouldTrigger = false;
     }
-    shouldTrigger = shouldTrigger && (pp_latchVoice == false);
+
+    // if (pp_latchEG) {
+    //     if (!pp_toggle && shouldTrigger) {
+    //         pp_latched = !pp_latched;
+    //         pp_toggle = true;
+    //     } else if (!shouldTrigger) {
+    //         pp_toggle = false;
+    //     }
+    //     if (pp_latched && shouldTrigger) {
+    //         shouldTrigger = false;
+    //     }
+    // } else {
+    //     pp_latched = true;
+    //     pp_toggle = false;
+    // }
+    // shouldTrigger = shouldTrigger && (pp_latchVoice == false);
     // start processing voices
+
     if (shouldTrigger) {
+        printf("PP2\n");
         // check if voice needs to be killed because too many are active
 
         // sort array according to voice time to live, last in array has shortest TTL

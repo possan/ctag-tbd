@@ -33,7 +33,7 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
-    float pp_out[BUF_SZ];
+    // float pp_out[BUF_SZ];
     float pp_out_stereo[BUF_SZ * 2];
 
 private:
@@ -44,6 +44,7 @@ private:
 	bool pp_toggle = false;
 	int32_t pp_preNCVoices = 0;
 	braids::Quantizer pp_quantizer;
+	bool trig_prev {false};
 
 	atomic<int16_t> pp_pitch, cv_pp_pitch;
 	atomic<int16_t> pp_q_scale, cv_pp_q_scale;

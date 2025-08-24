@@ -37,7 +37,8 @@ public:
     float s1_out[BUF_SZ];
 
 private:
-    CTAG::SYNTHESIS::RomplerVoiceMinimal rompler;
+	CTAG::SYNTHESIS::RomplerVoiceMinimal rompler;
+	bool trig_prev {false};
 	atomic<int16_t> s1_gate, trig_s1_gate;
 	atomic<int16_t> s1_speed, cv_s1_speed;
 	atomic<int16_t> s1_pitch, cv_s1_pitch;

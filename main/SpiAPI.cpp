@@ -117,7 +117,6 @@ namespace CTAG::SPIAPI{
         while (bytes_to_be_received > 0){
             spi_slave_transmit(RCV_HOST, &transaction, portMAX_DELAY);
 
-
             // fingerprint check
             if (receive_buffer[0] != 0xCA || receive_buffer[1] != 0xFE){
                 str = "FP wrong: " + std::to_string(receive_buffer[0]) + " " + std::to_string(receive_buffer[1]);
@@ -218,6 +217,8 @@ namespace CTAG::SPIAPI{
             const int32_t param_value = int32_param_2;
             // value is the third parameter, e.g. for setting a parameter value
             std::string string_parameter{string_param_3};
+
+            ESP_LOGI("spiapi", "Received string: %s", string_parameter.c_str());
 
             // handle request
             switch (requestType){

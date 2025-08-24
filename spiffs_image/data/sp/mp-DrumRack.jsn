@@ -1736,16 +1736,130 @@
                     "cv": -1
                 },
 
-
-
-
-
-
-
-
-
-
-
+                {
+                    "id": "ch12_wtosc_gain",
+                    "current": 2047,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_gate",
+                    "current": 1,
+                    "trig": -1
+                },
+                {
+                    "id": "ch12_wtosc_pitch",
+                    "current": -12,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_q_scale",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_tune",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_wavebank",
+                    "current": 0
+                },
+                {
+                    "id": "ch12_wtosc_wave",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_fmode",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_fcut",
+                    "current": 3000,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_freso",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_lfo2wave",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_lfo2am",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_lfo2fm",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_lfo2filtfm",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_eg2wave",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_eg2am",
+                    "current": 4095,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_eg2fm",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_eg2filtfm",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_lfospeed",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_lfosync",
+                    "current": 0,
+                    "trig": -1
+                },
+                {
+                    "id": "ch12_wtosc_egfasl",
+                    "current": 0,
+                    "trig": -1
+                },
+                {
+                    "id": "ch12_wtosc_attack",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_decay",
+                    "current": 1000,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_sustain",
+                    "current": 600,
+                    "cv": -1
+                },
+                {
+                    "id": "ch12_wtosc_release",
+                    "current": 600,
+                    "cv": -1
+                },
 
                 {
                     "id": "ch12_mo_shape",

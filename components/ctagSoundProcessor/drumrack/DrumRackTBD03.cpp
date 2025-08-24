@@ -90,6 +90,7 @@ void DrumRackTBD03::Process(const DrumRackProcessData &data) {
     }
 
     if (trg && !td3_pre_trig) {
+        printf("TBDD3\n");
         td3_isAccent = td3_accent;
         if (trig_td3_accent != -1) {
             td3_isAccent = data.trig[trig_td3_accent] == 0 ? 1 : 0;
