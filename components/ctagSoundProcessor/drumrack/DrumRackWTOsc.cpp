@@ -58,13 +58,13 @@ void DrumRackWTOsc::handleMidiNoteOn(uint8_t note, uint8_t vel) {
     // TODO: Implement
     midi_trig = true;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
-    printf("WTOsc Note on %d %d (%f hz)\n", note, vel, midi_freq);
+    // printf("WTOsc Note on %d %d (%f hz)\n", note, vel, midi_freq);
 }
 
 void DrumRackWTOsc::handleMidiNoteOff(uint8_t note, uint8_t vel) {
     // TODO: Implement
     midi_trig = false;
-    printf("WTOsc Note off %d %d\n", note, vel);
+    // printf("WTOsc Note off %d %d\n", note, vel);
 }
 
 // void DrumRackWTOsc::handleMidiCC(uint8_t control, uint8_t value) {
@@ -130,7 +130,7 @@ void DrumRackWTOsc::Process(const DrumRackProcessData &data) {
     // }
 
     if (trigger) {
-        printf("WTOSC\n");
+        // printf("WTOSC\n");
         if (bLFOSync) {
             lfo.SetFrequencyPhase(fLFOSpeed, 0.f);
         } else {

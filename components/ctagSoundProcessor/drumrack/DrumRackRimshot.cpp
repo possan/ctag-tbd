@@ -22,7 +22,7 @@ void DrumRackRimshot::Init(const DrumRackInitData *initdata) {
 
 void DrumRackRimshot::handleMidiNoteOn() {
     midi_trig = true;
-    printf("Rimshot note on\n");
+    // printf("Rimshot note on\n");
 }
 
 // void DrumRackRimshot::handleMidiCC(uint8_t control, uint8_t value) {
@@ -59,7 +59,7 @@ void DrumRackRimshot::Process(const DrumRackProcessData &data) {
     }
     if (_trig != trig_prev) {
         if (_trig) {
-            printf("RS\n");
+            // printf("RS\n");
             rs.Trigger();
         }
         trig_prev = _trig;

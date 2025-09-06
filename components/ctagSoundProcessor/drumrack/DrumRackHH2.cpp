@@ -21,7 +21,7 @@ void DrumRackHH2::Init(const DrumRackInitData *initdata) {
 
 void DrumRackHH2::handleMidiNoteOn() {
     midi_trig = true;
-    printf("HH2 note on\n");
+    // printf("H/H2 note on\n");
 }
 
 // void DrumRackHH2::handleMidiCC(uint8_t control, uint8_t value) {
@@ -36,7 +36,7 @@ void DrumRackHH2::Process(const DrumRackProcessData &data) {
     bool _trig = false;
     if (_trig != trig_prev) {
         if (_trig) {
-            printf("HH2\n");
+            // printf("HH2\n");
         }
         trig_prev = _trig;
     }

@@ -42,12 +42,12 @@ void DrumRackMO::handleMidiNoteOn(uint8_t note, uint8_t vel) {
     midi_trig = true;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
     mo_pitch = note << 7; //  midi_freq * 128.0f; //   * 12.f * 5.f * 128.f  * 100.f; // 1/100 Hz per semitone
-    printf("MO note on %d, %d (%f hz)\n", note, vel, midi_freq);
+    // printf("MO note on %d, %d (%f hz)\n", note, vel, midi_freq);
 }
 
 void DrumRackMO::handleMidiNoteOff(uint8_t note, uint8_t vel) {
     // TODO: Implement
-    printf("MO note off %d, %d\n", note, vel);
+    // printf("MO note off %d, %d\n", note, vel);
 }
 
 // void DrumRackMO::handleMidiCC(uint8_t control, uint8_t value) {
@@ -101,7 +101,7 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
     }
 
     if (!mo_prevTrigger && trigger) {
-        printf("MO\n");
+        // printf("MO\n");
         //envelope.Trigger(braids::EnvelopeSegment::ENV_SEGMENT_ATTACK);
         mo_envelope.Trigger();
         mo_osc.Strike();

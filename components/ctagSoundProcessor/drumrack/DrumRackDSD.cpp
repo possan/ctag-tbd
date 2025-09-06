@@ -22,7 +22,7 @@ void DrumRackDSD::Init(const DrumRackInitData *initdata) {
 
 void DrumRackDSD::handleMidiNoteOn() {
     midi_trig = true;
-    printf("DSD note on\n");
+    // printf("DSD note on\n");
 }
 
 // void DrumRackDSD::handleMidiCC(uint8_t control, uint8_t value) {
@@ -40,9 +40,9 @@ void DrumRackDSD::Process(const DrumRackProcessData &data) {
         midi_trig = false;
     }
     if (_trig != trig_prev){
-        if (_trig) {
-            printf("DSD\n");
-        }
+        // if (_trig) {
+        //     printf("DSD\n");
+        // }
         trig_prev = _trig;
     }
 

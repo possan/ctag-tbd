@@ -56,10 +56,7 @@ namespace CTAG {
             virtual void Init(std::size_t blockSize, void *blockPtr) override;
             virtual ~ctagSoundProcessorDrumRack();
 
-			// void registerCv(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
 	        void registerParam(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
-    	    // void registerTrig(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
-    	    // void registerCC(const char *prefix, const char *suffix, int cc);
 			void registerParam(const DrumRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter);
 			void registerParamAndCC(const DrumRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter);
 

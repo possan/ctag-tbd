@@ -45,12 +45,12 @@ void DrumRackPolyPad::handleMidiNoteOn(uint8_t note, uint8_t vel) {
     // TODO: Implement
     midi_trig = true;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
-    printf("PolyPad note on %d, %d (%f hz)\n", note, vel, midi_freq);
+    // printf("PolyPad note on %d, %d (%f hz)\n", note, vel, midi_freq);
 }
 
 void DrumRackPolyPad::handleMidiNoteOff(uint8_t note, uint8_t vel) {
     // TODO: Implement
-    printf("PolyPad note off %d, %d\n", note, vel);
+    // printf("PolyPad note off %d, %d\n", note, vel);
 }
 
 // void DrumRackPolyPad::handleMidiCC(uint8_t control, uint8_t value) {
@@ -61,8 +61,6 @@ void DrumRackPolyPad::handleMidiNoteOff(uint8_t note, uint8_t vel) {
 void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
     // std::fill_n(pp_out, BUF_SZ, 0.f);
     std::fill_n(pp_out_stereo, BUF_SZ * 2, 0.f);
-
-    return;
 
     if (!this->enabled) {
         return;
@@ -85,9 +83,9 @@ void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
     }
     // if (trig_pp_enableEG != -1) shouldTrigger = data.trig[trig_pp_enableEG] == 1 ? 0 : 1; // inverted logic
     if (shouldTrigger != trig_prev) {
-        if (shouldTrigger) {
-            printf("PP1\n");
-        }
+        // if (shouldTrigger) {
+        //     printf("PP1\n");
+        // }
         trig_prev = shouldTrigger;
     } else {
         shouldTrigger = false;

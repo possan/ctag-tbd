@@ -29,12 +29,12 @@ void DrumRackRompler::Init(const DrumRackInitData *initdata) {
 
 void DrumRackRompler::handleMidiNoteOn(uint8_t note, uint8_t vel) {
     // TODO: Implement
-    printf("Rompler Note on %d %d\n", note, vel);
+    // printf("Rompler Note on %d %d\n", note, vel);
 }
 
 void DrumRackRompler::handleMidiNoteOff(uint8_t note, uint8_t vel) {
     // TODO: Implement
-    printf("Rompler Note off %d %d\n", note, vel);
+    // printf("Rompler Note off %d %d\n", note, vel);
 }
 
 // void DrumRackRompler::handleMidiCC(uint8_t control, uint8_t value) {
@@ -56,7 +56,7 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
     rompler.params.gate = bGateS1;
     if (bGateS1 && !trig_prev) {
-        printf("S\n");
+        // printf("S\n");
         trig_prev = bGateS1;
     }
 

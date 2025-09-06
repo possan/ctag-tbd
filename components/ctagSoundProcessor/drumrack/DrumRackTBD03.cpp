@@ -57,7 +57,7 @@ void DrumRackTBD03::Init(const DrumRackInitData *initdata) {
 void DrumRackTBD03::handleMidiNoteOn(uint8_t note, uint8_t vel) {
     midi_trig = true;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
-    printf("TBDD3 Note on %d %d (%f hz)\n", note, vel, midi_freq);
+    // printf("TBDD3 Note on %d %d (%f hz)\n", note, vel, midi_freq);
 }
 
 void DrumRackTBD03::handleMidiNoteOff(uint8_t note, uint8_t vel) {
@@ -122,7 +122,7 @@ void DrumRackTBD03::Process(const DrumRackProcessData &data) {
     // }
 
     if (midi_trig && !td3_pre_trig) {
-        printf("TBDD3\n");
+        // printf("TBDD3\n");
         td3_isAccent = td3_accent;
         if (trig_td3_accent != -1) {
             td3_isAccent = data.trig[trig_td3_accent] == 0 ? 1 : 0;

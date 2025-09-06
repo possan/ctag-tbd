@@ -27,7 +27,7 @@ void DrumRackFMB::Init(const DrumRackInitData *initdata) {
 
 void DrumRackFMB::handleMidiNoteOn() {
     midi_trig = true;
-    printf("FMB note on\n");
+    // printf("FMB note on\n");
 }
 
 // void DrumRackFMB::handleMidiCC(uint8_t control, uint8_t value) {
@@ -46,7 +46,7 @@ void DrumRackFMB::Process(const DrumRackProcessData &data) {
     }
     if (_trig != trig_prev) {
         if (_trig) {
-            printf("FMB\n");
+            // printf("FMB\n");
             fmb.Trigger();
         }
         trig_prev = _trig;

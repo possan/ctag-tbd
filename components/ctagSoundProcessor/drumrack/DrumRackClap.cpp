@@ -65,7 +65,7 @@ void DrumRackClap::Process(const DrumRackProcessData &data) {
     }
     if (_trig != trig_prev){
         if (_trig) {
-            printf("CL\n");
+            // printf("CL\n");
             cl.Trigger();
         }
         trig_prev = _trig;

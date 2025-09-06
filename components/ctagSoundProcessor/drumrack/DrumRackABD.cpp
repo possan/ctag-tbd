@@ -22,7 +22,7 @@ void DrumRackABD::Init(const DrumRackInitData *initdata) {
 
 void DrumRackABD::handleMidiNoteOn() {
     midi_trig = true;
-    printf("ABD note on\n");
+    // printf("ABD note on\n");
 }
 
 // void DrumRackABD::handleMidiCC(uint8_t control, uint8_t value) {
@@ -38,9 +38,9 @@ void DrumRackABD::Process(const DrumRackProcessData &data) {
         midi_trig = false;
     }
     if (_trig != trig_prev){
-        if (_trig) {
-            printf("ABD\n");
-        }
+        // if (_trig) {
+            // printf("ABD\n");
+        // }
         trig_prev = _trig;
     }
 
