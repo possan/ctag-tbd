@@ -56,9 +56,19 @@ namespace CTAG {
             virtual void Init(std::size_t blockSize, void *blockPtr) override;
             virtual ~ctagSoundProcessorDrumRack();
 
-			void registerCv(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
+			// void registerCv(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
 	        void registerParam(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
-    	    void registerTrig(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
+    	    // void registerTrig(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
+    	    // void registerCC(const char *prefix, const char *suffix, int cc);
+			void registerParam(const DrumRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter);
+			void registerParamAndCC(const DrumRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter);
+
+            void handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel);
+            void handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel);
+            void handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value);
+            void handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel);
+            void handleMidiPatchChange(const uint8_t channel, const uint8_t patch);
+            void handleMidiPitchBend(const uint8_t channel, const uint16_t bend);
 
         private:
             virtual void knowYourself() override;

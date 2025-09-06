@@ -34,6 +34,8 @@ public:
     void Process(const DrumRackProcessData &data);
     void Init(const DrumRackInitData *initdata);
 
+	// void handleMidiCC(uint8_t control, uint8_t value);
+
 private:
     
 };

@@ -35,6 +35,8 @@ public:
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
     float in_out[BUF_SZ * 2];
+ 
+	// void handleMidiCC(uint8_t control, uint8_t value);
 
 private:
     atomic<int16_t> in_mute, trig_in_mute;

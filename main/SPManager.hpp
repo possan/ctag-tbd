@@ -100,12 +100,21 @@ namespace CTAG {
             static void EnablePluginProcessing();
             static void RefreshSampleRom();
 
+            static void handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t velocity);
+            static void handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t velocity);
+            static void handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t velocity);
+            static void handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value);
+            static void handleMidiPatchChange(const uint8_t channel, const uint8_t patch);
+            static void handleMidiPitchBend(const uint8_t channel, const uint16_t bend);
+
         private:
             static void audio_task(void *pvParams);
 
             static void led_task(void *pvParams);
 
             static void updateConfiguration();
+
+            static void parseIncomingMidiMessages(const uint8_t *buf, const size_t len);
 
             static TaskHandle_t audioTaskH, ledTaskH;
             static ctagSoundProcessor *sp[2];

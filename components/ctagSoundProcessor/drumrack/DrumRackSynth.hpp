@@ -25,6 +25,8 @@ namespace CTAG {
 
         struct DrumRackInitData {
             const char *prefix;
+            int midi_channel;
+            int cc_base;
             ctagSoundProcessorDrumRack *rack;
         };
     }

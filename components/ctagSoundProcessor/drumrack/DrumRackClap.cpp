@@ -11,21 +11,24 @@ using namespace CTAG::SP;
 void DrumRackClap::Init(const DrumRackInitData *initdata) {
     cl.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "trigger", [&](const int val){ trigger = val;});
-	initdata->rack->registerTrig(initdata->prefix, "trigger", [&](const int val){ trig_trigger = val;});
-	initdata->rack->registerParam(initdata->prefix, "f0", [&](const int val){ f0 = val;});
-	initdata->rack->registerCv(initdata->prefix, "f0", [&](const int val){ cv_f0 = val;});
-	initdata->rack->registerParam(initdata->prefix, "tone", [&](const int val){ tone = val;});
-	initdata->rack->registerCv(initdata->prefix, "tone", [&](const int val){ cv_tone = val;});
-	initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val){ decay = val;});
-	initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val){ cv_decay = val;});
-	initdata->rack->registerParam(initdata->prefix, "scale", [&](const int val){ scale = val;});
-	initdata->rack->registerCv(initdata->prefix, "scale", [&](const int val){ cv_scale = val;});
-	initdata->rack->registerParam(initdata->prefix, "transient", [&](const int val){ transient = val;});
-	initdata->rack->registerCv(initdata->prefix, "transient", [&](const int val){ cv_transient = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 7, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 8, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "scale", 9, [&](const int val){ scale = val;});
+    initdata->rack->registerParamAndCC(initdata, "transient", 10, [&](const int val){ transient = val;});
 
     this->enabled = false;
 }
+
+void DrumRackClap::handleMidiNoteOn() {
+    midi_trig = true;
+    printf("Clap note on\n");
+}
+
+// void DrumRackClap::handleMidiCC(uint8_t control, uint8_t value) {
+//     // TODO: Implement
+//     printf("Clap CC %d %d\n", control, value);
+// }
 
 void DrumRackClap::Process(const DrumRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);
@@ -34,15 +37,15 @@ void DrumRackClap::Process(const DrumRackProcessData &data) {
         return;
     }
 
-    MK_FLT_PAR_ABS_MIN_MAX(_pitch1_, f0, 4095.f, 350.f, 4000.f)
-    MK_FLT_PAR_ABS_MIN_MAX(_pitch2_, f0, 4095.f, 300.f, 3000.f)
-    MK_FLT_PAR_ABS_MIN_MAX(_reso1_, tone, 4095.f, 1.f, 2.5f)
-    MK_FLT_PAR_ABS_MIN_MAX(_reso2_, tone, 4095.f, 0.75f, 6.5f)
-    MK_FLT_PAR_ABS_MIN_MAX(_decay1_, decay, 4095.f, 0.05f, 0.3f)
-    MK_FLT_PAR_ABS_MIN_MAX(_decay2_, decay, 4095.f, 0.05f, 2.f)
-    MK_FLT_PAR_ABS_MIN_MAX(_scale_attack_, scale, 4095.f, 0.f, 0.1f)
-    MK_FLT_PAR_ABS_MIN_MAX(_scale_trans, scale, 4095.f, 1.f, 3.f)
-    MK_INT_PAR_ABS(_trans_, transient, 16)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_pitch1_, f0, 4095.f, 350.f, 4000.f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_pitch2_, f0, 4095.f, 300.f, 3000.f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_reso1_, tone, 4095.f, 1.f, 2.5f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_reso2_, tone, 4095.f, 0.75f, 6.5f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_decay1_, decay, 4095.f, 0.05f, 0.3f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_decay2_, decay, 4095.f, 0.05f, 2.f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_scale_attack_, scale, 4095.f, 0.f, 0.1f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_scale_trans, scale, 4095.f, 1.f, 3.f)
+    MK_INT_PAR_ABS_NOCV(_trans_, transient, 16)
 
     cl.params.pitch1 = _pitch1_ / 44100.f;
     cl.params.pitch2 = _pitch2_ / 44100.f;
@@ -54,7 +57,12 @@ void DrumRackClap::Process(const DrumRackProcessData &data) {
     cl.params.scale = _scale_trans;
     cl.params.transient = _trans_ % 16;
 
-    MK_BOOL_PAR(_trig, trigger)
+    // MK_BOOL_PAR_NOCV(_trig, trigger)
+    bool _trig = false;
+    if (midi_trig) {
+        _trig = true;
+        midi_trig = false;
+    }
     if (_trig != trig_prev){
         if (_trig) {
             printf("CL\n");

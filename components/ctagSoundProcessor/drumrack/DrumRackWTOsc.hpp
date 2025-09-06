@@ -37,6 +37,10 @@ public:
 	bool enabled;
     float out[BUF_SZ];
 
+	void handleMidiNoteOn(uint8_t note, uint8_t vel);
+	void handleMidiNoteOff(uint8_t note, uint8_t vel);
+	// void handleMidiCC(uint8_t control, uint8_t value);
+
 private:
 	void prepareWavetables(HELPERS::ctagSampleRom *samplerom);
 	plaits::WavetableOscillator<256, 64> oscillator;
@@ -54,9 +58,11 @@ private:
 	bool preGate = false;
 	braids::Quantizer pitchQuantizer;
 	float pre_fWt = 0.f;
+	float midi_freq {0.0f};
+	bool midi_trig {false};
 
 	atomic<int32_t> gain, cv_gain;
-	atomic<int32_t> gate, trig_gate;
+	// atomic<int32_t> gate, trig_gate;
 	atomic<int32_t> pitch, cv_pitch;
 	atomic<int32_t> q_scale, cv_q_scale;
 	atomic<int32_t> tune, cv_tune;

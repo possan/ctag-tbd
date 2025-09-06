@@ -36,9 +36,15 @@ public:
 	bool enabled;
     float s1_out[BUF_SZ];
 
+	void handleMidiNoteOn(uint8_t note, uint8_t vel);
+	void handleMidiNoteOff(uint8_t note, uint8_t vel);
+	// void handleMidiCC(uint8_t control, uint8_t value);
+
 private:
 	CTAG::SYNTHESIS::RomplerVoiceMinimal rompler;
 	bool trig_prev {false};
+	float midi_freq {0.0f};
+	bool midi_trig {false};
 	atomic<int16_t> s1_gate, trig_s1_gate;
 	atomic<int16_t> s1_speed, cv_s1_speed;
 	atomic<int16_t> s1_pitch, cv_s1_pitch;

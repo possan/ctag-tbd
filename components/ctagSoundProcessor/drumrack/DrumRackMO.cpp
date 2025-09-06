@@ -19,39 +19,41 @@ void DrumRackMO::Init(const DrumRackInitData *initdata) {
     mo_envelope.SetModeExp();
     mo_quantizer.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "shape", [&](const int val) { mo_shape = val; });
-    initdata->rack->registerCv(initdata->prefix, "shape", [&](const int val) { cv_mo_shape = val; });
-    initdata->rack->registerParam(initdata->prefix, "pitch", [&](const int val) { mo_pitch = val; });
-    initdata->rack->registerCv(initdata->prefix, "pitch", [&](const int val) { cv_mo_pitch = val; });
-    initdata->rack->registerParam(initdata->prefix, "decimation", [&](const int val) { mo_decimation = val; });
-    initdata->rack->registerCv(initdata->prefix, "decimation", [&](const int val) { cv_mo_decimation = val; });
-    initdata->rack->registerParam(initdata->prefix, "bit_reduction", [&](const int val) { mo_bit_reduction = val; });
-    initdata->rack->registerCv(initdata->prefix, "bit_reduction", [&](const int val) { cv_mo_bit_reduction = val; });
-    initdata->rack->registerParam(initdata->prefix, "q_scale", [&](const int val) { mo_q_scale = val; });
-    initdata->rack->registerCv(initdata->prefix, "q_scale", [&](const int val) { cv_mo_q_scale = val; });
-    initdata->rack->registerParam(initdata->prefix, "param_0", [&](const int val) { mo_param_0 = val; });
-    initdata->rack->registerCv(initdata->prefix, "param_0", [&](const int val) { cv_mo_param_0 = val; });
-    initdata->rack->registerParam(initdata->prefix, "param_1", [&](const int val) { mo_param_1 = val; });
-    initdata->rack->registerCv(initdata->prefix, "param_1", [&](const int val) { cv_mo_param_1 = val; });
-    initdata->rack->registerParam(initdata->prefix, "waveshaping", [&](const int val) { mo_waveshaping = val; });
-    initdata->rack->registerCv(initdata->prefix, "waveshaping", [&](const int val) { cv_mo_waveshaping = val; });
-    initdata->rack->registerParam(initdata->prefix, "fm_amt", [&](const int val) { mo_fm_amt = val; });
-    initdata->rack->registerCv(initdata->prefix, "fm_amt", [&](const int val) { cv_mo_fm_amt = val; });
-    initdata->rack->registerParam(initdata->prefix, "p0_amt", [&](const int val) { mo_p0_amt = val; });
-    initdata->rack->registerCv(initdata->prefix, "p0_amt", [&](const int val) { cv_mo_p0_amt = val; });
-    initdata->rack->registerParam(initdata->prefix, "p1_amt", [&](const int val) { mo_p1_amt = val; });
-    initdata->rack->registerCv(initdata->prefix, "p1_amt", [&](const int val) { cv_mo_p1_amt = val; });
-    initdata->rack->registerParam(initdata->prefix, "enableEG", [&](const int val) { mo_enableEG = val; });
-    initdata->rack->registerTrig(initdata->prefix, "enableEG", [&](const int val) { trig_mo_enableEG = val; });
-    initdata->rack->registerParam(initdata->prefix, "loopEG", [&](const int val) { mo_loopEG = val; });
-    initdata->rack->registerTrig(initdata->prefix, "loopEG", [&](const int val) { trig_mo_loopEG = val; });
-    initdata->rack->registerParam(initdata->prefix, "attack", [&](const int val) { mo_attack = val; });
-    initdata->rack->registerCv(initdata->prefix, "attack", [&](const int val) { cv_mo_attack = val; });
-    initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val) { mo_decay = val; });
-    initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val) { cv_mo_decay = val; });
+    initdata->rack->registerParamAndCC(initdata, "shape", 6, [&](const int val) { mo_shape = val; });
+    initdata->rack->registerParamAndCC(initdata, "pitch", 7, [&](const int val) { mo_pitch = val; });
+    initdata->rack->registerParamAndCC(initdata, "decimation", 8, [&](const int val) { mo_decimation = val; });
+    initdata->rack->registerParamAndCC(initdata, "bit_reduction", 9, [&](const int val) { mo_bit_reduction = val; });
+    initdata->rack->registerParamAndCC(initdata, "q_scale", 10, [&](const int val) { mo_q_scale = val; });
+    initdata->rack->registerParamAndCC(initdata, "param_0", 11, [&](const int val) { mo_param_0 = val; });
+    initdata->rack->registerParamAndCC(initdata, "param_1", 12, [&](const int val) { mo_param_1 = val; });
+    initdata->rack->registerParamAndCC(initdata, "waveshaping", 13, [&](const int val) { mo_waveshaping = val; });
+    initdata->rack->registerParamAndCC(initdata, "fm_amt", 14, [&](const int val) { mo_fm_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "p0_amt", 15, [&](const int val) { mo_p0_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "p1_amt", 16, [&](const int val) { mo_p1_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "loopEG", 17, [&](const int val) { mo_loopEG = val; });
+    initdata->rack->registerParamAndCC(initdata, "attack", 18, [&](const int val) { mo_attack = val; });
+    initdata->rack->registerParamAndCC(initdata, "decay", 19, [&](const int val) { mo_decay = val; });
 
     this->enabled = false;
 }
+
+void DrumRackMO::handleMidiNoteOn(uint8_t note, uint8_t vel) {
+    // TODO: Implement
+    midi_trig = true;
+    midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
+    mo_pitch = note << 7; //  midi_freq * 128.0f; //   * 12.f * 5.f * 128.f  * 100.f; // 1/100 Hz per semitone
+    printf("MO note on %d, %d (%f hz)\n", note, vel, midi_freq);
+}
+
+void DrumRackMO::handleMidiNoteOff(uint8_t note, uint8_t vel) {
+    // TODO: Implement
+    printf("MO note off %d, %d\n", note, vel);
+}
+
+// void DrumRackMO::handleMidiCC(uint8_t control, uint8_t value) {
+//     // TODO: Implement
+//     printf("MO CC %d, %d\n", control, value);
+// }
 
 void DrumRackMO::Process(const DrumRackProcessData &data) {
     std::fill_n(mo_out, BUF_SZ, 0.f);
@@ -89,10 +91,13 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
     mo_osc.set_shape(ms);
 
     bool trigger = false;
-    if (trig_mo_enableEG != -1) {
-        trigger = data.trig[trig_mo_enableEG] == 1 ? false : true;
-    } else {
-        trigger = mo_enableEG;
+    if (midi_trig) {
+        trigger = true;
+        midi_trig = false;
+    // } else if (trig_mo_enableEG != -1) {
+    //     trigger = data.trig[trig_mo_enableEG] == 1 ? false : true;
+    // } else {
+    //     trigger = mo_enableEG;
     }
 
     if (!mo_prevTrigger && trigger) {
@@ -137,14 +142,14 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
 
     // pitch calculation and quantization + fm
     int32_t ipitch = mo_pitch;
-    if (cv_mo_pitch != -1) {
-        ipitch += static_cast<int32_t>(data.cv[cv_mo_pitch] * 12.f * 5.f * 128.f); // five octaves
-    }
+    // if (cv_mo_pitch != -1) {
+    //     ipitch += static_cast<int32_t>(data.cv[cv_mo_pitch] * 12.f * 5.f * 128.f); // five octaves
+    // }
     int32_t sc = mo_q_scale;
-    if (cv_mo_q_scale != -1) {
-        sc = static_cast<int32_t>(fabsf(data.cv[cv_mo_q_scale]) * 48.f);
-        CONSTRAIN(sc, 0, 47);
-    }
+    // if (cv_mo_q_scale != -1) {
+    //     sc = static_cast<int32_t>(fabsf(data.cv[cv_mo_q_scale]) * 48.f);
+    //     CONSTRAIN(sc, 0, 47);
+    // }
     mo_quantizer.Configure(braids::scales[sc]);
     ipitch = mo_quantizer.Process(ipitch, mo_pitch);
 

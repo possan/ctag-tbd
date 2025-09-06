@@ -37,10 +37,10 @@ std::size_t ctagSPAllocator::size2 = 0;
 ctagSPAllocator::AllocationType ctagSPAllocator::allocationType = ctagSPAllocator::AllocationType::CH0;
 
 void ctagSPAllocator::AllocateInternalBuffer(std::size_t const &size) {
-    ESP_LOGI("ctagSPAllocator", "AllocateInternalBuffer: allocating %d bytes", size);
+    ESP_LOGI("ctagSPAllocator", "AllocateInternalBuffer: allocating %d bytes", (int)size);
     internalBuffer = heap_caps_malloc(size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     if(nullptr == internalBuffer){
-        ESP_LOGE("ctagSPAllocator", "AllocateInternalBuffer: could not allocate memory of size %d", size);
+        ESP_LOGE("ctagSPAllocator", "AllocateInternalBuffer: could not allocate memory of size %d", (int)size);
         assert(nullptr != internalBuffer);
     }
     totalSize = size;
@@ -63,7 +63,7 @@ void *ctagSPAllocator::Allocate(std::size_t const &size) {
     ESP_LOGI("ctagSPAllocator", "Allocate: allocating %d bytes", size);
     // ptr = heap_caps_calloc(1, size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     ptr = malloc(size);
-    ESP_LOGI("ctagSPAllocator", "Allocate: ptr=0x%x", (unsigned int)ptr);
+    ESP_LOGI("ctagSPAllocator", "Allocate: ptr=0x%"PRIu32, (uint32_t)ptr);
 
     // ptr = heap_caps_calloc(1, size, MALLOC_CAP_32BIT | MALLOC_CAP_SPIRAM);
     // if(allocationType == AllocationType::CH0){

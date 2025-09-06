@@ -11,12 +11,9 @@ void DrumRackFxReverb::Init(const DrumRackInitData *initdata) {
      
 }
 
-// void DrumRackFxReverb::SetParamValue(const string &id, const string &key, const int val) {
-//     // Implementation of setting parameter value
-//     // This is where you would handle the parameter setting logic
-//     // For example, you might store the value in a map or update an internal state
-//     // ESP_LOGI("DrumRackFxReverb", "Setting parameter %s with key %s to value %d", id.c_str(), key.c_str(), val);
-//     // You can add your specific logic here
+// void DrumRackFxReverb::handleMidiCC(uint8_t control, uint8_t value) {
+//     // TODO: Implement
+//     printf("FxReverb CC %d %d\n", control, value);
 // }
 
 void DrumRackFxReverb::Process(const DrumRackProcessData &data) {

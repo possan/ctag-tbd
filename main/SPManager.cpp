@@ -80,10 +80,12 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     esp_cpu_cycle_count_t start, diff;
     uint8_t trigs[N_TRIGS];
     float cvs[N_CVS];
+    uint8_t midibuffer[N_MIDIBYTES];
 
     std::fill_n(fbuf, BUF_SZ * 2, 0.f);
     std::fill_n(cvs, N_CVS, 0.f);
     std::fill_n(trigs, N_TRIGS, 1);
+    std::fill_n(midibuffer, N_MIDIBYTES, 0);
 
     fv3::dccut_f in_dccutl, in_dccutr;
     //fv3::dccut_f out_dccutl, out_dccutr;
@@ -109,7 +111,10 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     while (runAudioTask) {
 
         // update data from ADCs and GPIOs for real-time control
-        CTAG::CTRL::Control::Update(pd.trig, pd.cv, ledStatusUI);
+        CTAG::CTRL::Control::Update(pd.trig, pd.cv, (uint8_t*)&midibuffer, ledStatusUI);
+
+        // parse incoming midi messages
+        parseIncomingMidiMessages((uint8_t *)&midibuffer, N_MIDIBYTES);
 
         std::fill_n(fbuf, BUF_SZ * 2, 0.f);
 
@@ -525,7 +530,7 @@ void SoundProcessorManager::StartSoundProcessor() {
 #endif
     // create audio thread
     runAudioTask = 1;
-    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 16384, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 0);
+    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 32768, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 0);
     xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 0);
 
 #if defined(CONFIG_TBD_PLATFORM_MK2) || defined(CONFIG_TBD_PLATFORM_AEM) || defined(CONFIG_TBD_PLATFORM_BBA)
@@ -710,4 +715,167 @@ void SoundProcessorManager::EnablePluginProcessing() {
 void SoundProcessorManager::RefreshSampleRom() {
     ledBlink = 5;
     ctagSampleRom::RefreshDataStructure();
+}
+
+
+
+
+void SoundProcessorManager::handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t velocity) {
+    if (sp[0] != nullptr) {
+        sp[0]->handleMidiNoteOff(channel, note, velocity);
+    }
+    if (sp[1] != nullptr) {
+        sp[1]->handleMidiNoteOff(channel, note, velocity);
+    }  
+}
+
+void SoundProcessorManager::handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t velocity) {
+if (sp[0] != nullptr) {
+        sp[0]->handleMidiNoteOn(channel, note, velocity);
+    }
+    if (sp[1] != nullptr) {
+        sp[1]->handleMidiNoteOn(channel, note, velocity);
+    }
+}
+
+void SoundProcessorManager::handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t velocity) {
+    if (sp[0] != nullptr) {
+        sp[0]->handleMidiAftertouch(channel, note, velocity);
+    }
+    if (sp[1] != nullptr) {
+        sp[1]->handleMidiAftertouch(channel, note, velocity);
+    }
+}
+
+void SoundProcessorManager::handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value) {
+    if (sp[0] != nullptr) {
+        sp[0]->handleMidiControlChange(channel, control, value);
+    }
+    if (sp[1] != nullptr) {
+        sp[1]->handleMidiControlChange(channel, control, value);
+    }
+}
+
+void SoundProcessorManager::handleMidiPatchChange(const uint8_t channel, const uint8_t patch) {
+    if (sp[0] != nullptr) {
+        sp[0]->handleMidiPatchChange(channel, patch);
+    }
+    if (sp[1] != nullptr) {
+        sp[1]->handleMidiPatchChange(channel, patch);
+    }
+}
+
+
+void SoundProcessorManager::handleMidiPitchBend(const uint8_t channel, const uint16_t bend) {
+    if (sp[0] != nullptr) {
+        sp[0]->handleMidiPitchBend(channel, bend);
+    }
+    if (sp[1] != nullptr) {
+        sp[1]->handleMidiPitchBend(channel, bend);
+    }
+}
+
+
+void SoundProcessorManager::parseIncomingMidiMessages(const uint8_t *buf, const size_t len) {
+    // for now, just forward all midi data to control class
+    // CTRL::Control::ParseMidiMessages(buf, len);
+
+    int left = len;
+    int o = 0;
+
+    while(left > 3) {
+        uint8_t b0 = buf[o++];
+        left --;
+
+        if (b0 == 0) {
+            // probably end of event stream
+            return;
+        }
+
+        uint8_t channel = (b0 & 0x0F);
+        uint8_t cmd = (b0 & 0xF0);
+
+        switch(cmd) {
+            case 0x80: // note off
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiNoteOff(channel, b1, b2);
+                break;
+            }
+            case 0x90: // note on
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiNoteOn(channel, b1, b2);
+                break;
+            }
+            case 0xA0: // aftertouch
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiAftertouch(channel, b1, b2);
+                break;
+            }
+            case 0xB0: // control change
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiControlChange(channel, b1, b2);
+                break;
+            }
+            case 0xC0: // program change
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++]; // not used?
+                left -= 2;
+                handleMidiPatchChange(channel, b1);
+                break;
+            }
+            case 0xE0: // pitch bend
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiPitchBend(channel, b2 * 128 + b1);
+                break;
+            }
+            case 0xF0: // system common / real time
+                // TODO handle sysex, clock, start, stop, continue, ...
+                switch(b0) {
+                    case 0xF0: // sysex start
+                        return; // just ignore and bail out for now
+
+                    case 0xF8: // timing clock
+                    case 0xFA: // start
+                    case 0xFB: // continue
+                    case 0xFC: // stop
+                    case 0xFE: // active sensing
+                    case 0xFF: // system reset
+                        // ignore for now
+                        break;
+                }
+                break; // fail for now
+            default:
+                // for anything else, just stop parsing.
+                return;
+        }
+    }
+
 }

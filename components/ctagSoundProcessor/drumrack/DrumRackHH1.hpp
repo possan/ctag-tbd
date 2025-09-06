@@ -36,12 +36,16 @@ public:
 	bool enabled;
 	float out[BUF_SZ];
 
+	void handleMidiNoteOn();
+	// void handleMidiCC(uint8_t control, uint8_t value);
+
 private:
 	plaits::HiHat<plaits::SquareNoise, plaits::SwingVCA, true, false> hh1;
 	bool trig_prev {false};
+	bool midi_trig {false};
 	float temp1[BUF_SZ];
 	float temp2[BUF_SZ];
-	atomic<int16_t> hh1_trigger, trig_hh1_trigger;
+	// atomic<int16_t> hh1_trigger, trig_hh1_trigger;
 	atomic<int16_t> hh1_accent, cv_hh1_accent;
 	atomic<int16_t> hh1_f0, cv_hh1_f0;
 	atomic<int16_t> hh1_tone, cv_hh1_tone;

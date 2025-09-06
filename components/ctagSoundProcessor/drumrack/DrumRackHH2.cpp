@@ -10,26 +10,30 @@ using namespace CTAG::SP;
 void DrumRackHH2::Init(const DrumRackInitData *initdata) {
     hh2.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "trigger", [&](const int val){ trigger = val;});
-	initdata->rack->registerTrig(initdata->prefix, "trigger", [&](const int val){ trig_trigger = val;});
-	initdata->rack->registerParam(initdata->prefix, "accent", [&](const int val){ accent = val;});
-	initdata->rack->registerCv(initdata->prefix, "accent", [&](const int val){ cv_accent = val;});
-	initdata->rack->registerParam(initdata->prefix, "f0", [&](const int val){ f0 = val;});
-	initdata->rack->registerCv(initdata->prefix, "f0", [&](const int val){ cv_f0 = val;});
-	initdata->rack->registerParam(initdata->prefix, "tone", [&](const int val){ tone = val;});
-	initdata->rack->registerCv(initdata->prefix, "tone", [&](const int val){ cv_tone = val;});
-	initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val){ decay = val;});
-	initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val){ cv_decay = val;});
-	initdata->rack->registerParam(initdata->prefix, "noise", [&](const int val){ noise = val;});
-	initdata->rack->registerCv(initdata->prefix, "noise", [&](const int val){ cv_noise = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 6, [&](const int val){ accent = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 7, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 8, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 9, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "noise", 10, [&](const int val){ noise = val;});
 
     this->enabled = false;
 }
 
+void DrumRackHH2::handleMidiNoteOn() {
+    midi_trig = true;
+    printf("HH2 note on\n");
+}
+
+// void DrumRackHH2::handleMidiCC(uint8_t control, uint8_t value) {
+//     // TODO: Implement
+//     printf("HH2 CC %d %d\n", control, value);
+// }
+
 void DrumRackHH2::Process(const DrumRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);
 
-    MK_BOOL_PAR(_trig, trigger)
+    // MK_BOOL_PAR_NOCV(_trig, trigger)
+    bool _trig = false;
     if (_trig != trig_prev) {
         if (_trig) {
             printf("HH2\n");
@@ -41,11 +45,11 @@ void DrumRackHH2::Process(const DrumRackProcessData &data) {
         return;
     }
 
-    MK_FLT_PAR_ABS(_accent, accent, 4095.f, 1.f)
-    MK_FLT_PAR_ABS_MIN_MAX(_f0, f0, 4095.f, .00001f, .1f)
-    MK_FLT_PAR_ABS(_tone, tone, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(_decay, decay, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(_noise, noise, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(_accent, accent, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0, f0, 4095.f, .00001f, .1f)
+    MK_FLT_PAR_ABS_NOCV(_tone, tone, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(_decay, decay, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(_noise, noise, 4095.f, 1.f)
     hh2.Render(
         false,
         _trig,

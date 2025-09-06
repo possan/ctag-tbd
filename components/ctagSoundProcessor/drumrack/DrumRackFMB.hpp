@@ -36,10 +36,14 @@ public:
 	bool enabled;
 	float out[BUF_SZ];
 
+	void handleMidiNoteOn();
+	// void handleMidiCC(uint8_t control, uint8_t value);
+
 private:
 	CTAG::SYNTHESIS::FmKick fmb;
 	bool trig_prev {false};
-	atomic<int16_t> trigger, trig_trigger;
+	bool midi_trig {false};
+	// atomic<int16_t> trigger, trig_trigger;
 	atomic<int16_t> use_ratio_mode, trig_use_ratio_mode;
 	atomic<int16_t> mod_env_sync, trig_mod_env_sync;
 	atomic<int16_t> f_b, cv_f_b;

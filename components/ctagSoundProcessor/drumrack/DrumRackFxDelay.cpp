@@ -11,12 +11,9 @@ void DrumRackFxDelay::Init(const DrumRackInitData *initdata) {
      
 }
 
-// void DrumRackFxDelay::SetParamValue(const string &id, const string &key, const int val) {
-//     // Implementation of setting parameter value
-//     // This is where you would handle the parameter setting logic
-//     // For example, you might store the value in a map or update an internal state
-//     // ESP_LOGI("DrumRackFxDelay", "Setting parameter %s with key %s to value %d", id.c_str(), key.c_str(), val);
-//     // You can add your specific logic here
+// void DrumRackFxDelay::handleMidiCC(uint8_t control, uint8_t value) {
+//     // TODO: Implement
+//     printf("FxDelay CC %d %d\n", control, value);
 // }
 
 void DrumRackFxDelay::Process(const DrumRackProcessData &data) {

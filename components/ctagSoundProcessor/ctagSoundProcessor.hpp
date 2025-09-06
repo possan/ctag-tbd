@@ -30,38 +30,66 @@ respective component folders / files if different from this license.
     bool outname = inname;\
     if(trig_##inname != -1) outname = data.trig[trig_##inname] == 1 ? false : true;
 
+#define MK_BOOL_PAR_NOCV(outname, inname) \
+    bool outname = inname;
+
 #define MK_FLT_PAR_ABS(outname, inname, norm, scale) \
     float outname = inname / norm * scale;\
     if(cv_##inname != -1) outname = fabsf(data.cv[cv_##inname]) * scale;
 
+#define MK_FLT_PAR_ABS_NOCV(outname, inname, norm, scale) \
+    float outname = inname / norm * scale;
+
 #define MK_FLT_PAR_ABS_ADD(outname, inname, norm, scale) \
     float outname = inname / norm * scale;\
-    if(cv_##inname != -1) outname += fabsf(data.cv[cv_##inname]) * scale;    
+    if(cv_##inname != -1) outname += fabsf(data.cv[cv_##inname]) * scale;
+
+#define MK_FLT_PAR_ABS_ADD_NOCV(outname, inname, norm, scale) \
+    float outname = inname / norm * scale;
 
 #define MK_FLT_PAR_ABS_SFT(outname, inname, norm, scale) \
     float outname = inname / norm * scale;\
     if(cv_##inname != -1) outname = (fabsf(data.cv[cv_##inname]) - 0.5f) * 2.f * scale;
 
+#define MK_FLT_PAR_ABS_SFT_NOCV(outname, inname, norm, scale) \
+    float outname = inname / norm * scale;
+
 #define MK_FLT_PAR(outname, inname, norm, scale) \
     float outname = inname / norm * scale;\
     if(cv_##inname != -1) outname = data.cv[cv_##inname] * scale;
+
+#define MK_FLT_PAR_NOCV(outname, inname, norm, scale) \
+    float outname = inname / norm * scale;
 
 #define MK_INT_PAR_ABS(outname, inname, scale) \
     int outname = inname;\
     if(cv_##inname != -1) outname = static_cast<int>(fabsf(data.cv[cv_##inname]) * scale);
 
+#define MK_INT_PAR_ABS_NOCV(outname, inname, scale) \
+    int outname = inname;
+
 #define MK_INT_PAR(outname, inname, scale) \
     int outname = inname;\
     if(cv_##inname != -1) outname = static_cast<int>(data.cv[cv_##inname] * scale);
-    
- #define MK_FLT_PAR_ABS_MIN_MAX(outname, inname, norm, out_min, out_max) \
+
+#define MK_INT_PAR_NOCV(outname, inname, scale) \
+    int outname = inname;
+
+#define MK_FLT_PAR_ABS_MIN_MAX(outname, inname, norm, out_min, out_max) \
     float outname = inname/norm * (out_max-out_min)+out_min; \
-    if(cv_##inname != -1) outname = fabsf(data.cv[cv_##inname]) * (out_max-out_min)+out_min;   
+    if(cv_##inname != -1) outname = fabsf(data.cv[cv_##inname]) * (out_max-out_min)+out_min;
+
+#define MK_FLT_PAR_ABS_MIN_MAX_NOCV(outname, inname, norm, out_min, out_max) \
+    float outname = inname/norm * (out_max-out_min)+out_min;
 
 #define MK_FLT_PAR_ABS_PAN(outname, inname, norm, scale)  \
     float outname = (inname/norm+1.f)/2.f * scale; \
-    if(cv_##inname != -1) outname = fabsf(data.cv[cv_##inname]) * scale; 
+    if(cv_##inname != -1) outname = fabsf(data.cv[cv_##inname]) * scale;
 
+#define MK_FLT_PAR_ABS_PAN_NOCV(outname, inname, norm, scale)  \
+    float outname = (inname/norm+1.f)/2.f * scale;
+
+#define CC_TO_MAP_KEY(ch, cc) (((ch) * 256) + (cc))
 
 #include <stdint.h>
 #include <string>
@@ -173,6 +201,37 @@ namespace CTAG {
                 loadPresetInternal();
             }
 
+
+            virtual void handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel) {
+                // override if needed
+                ESP_LOGI("SP", "Not overriden MIDI: note off %d, %d, %d", channel, note, vel);
+            };
+
+            virtual void handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel) {
+                // override if needed
+                ESP_LOGI("SP", "Not overriden MIDI: note on %d, %d, %d", channel, note, vel);
+            };
+
+            virtual void handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel) {
+                // override if needed
+                ESP_LOGI("SP", "Not overriden MIDI: aftertouch %d, %d, %d", channel, note, vel);
+            };
+
+            virtual void handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value) {
+                // override if needed
+                ESP_LOGI("SP", "Not overriden MIDI: CC %d, %d, %d", channel, control, value);
+            };
+
+            virtual void handleMidiPatchChange(const uint8_t channel, const uint8_t patch) {
+                // override if needed
+                ESP_LOGI("SP", "Not overriden MIDI: Patch Change %d, %d", channel, patch);
+            };
+
+            virtual void handleMidiPitchBend(const uint8_t channel, const uint16_t bend) {
+                // override if needed
+                ESP_LOGI("SP", "Not overriden MIDI: pitch bend %d, %d", channel, bend);
+            };
+
         protected:
 
             virtual void knowYourself() = 0;
@@ -230,6 +289,7 @@ namespace CTAG {
             map<string, function<void(const int)>> pMapPar;
             map<string, function<void(const int)>> pMapCv;
             map<string, function<void(const int)>> pMapTrig;
+            map<const int, string> pMapCC;
         };
     }
 }

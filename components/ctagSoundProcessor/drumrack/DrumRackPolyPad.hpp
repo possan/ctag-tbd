@@ -36,6 +36,10 @@ public:
     // float pp_out[BUF_SZ];
     float pp_out_stereo[BUF_SZ * 2];
 
+	void handleMidiNoteOn(uint8_t note, uint8_t vel);
+	void handleMidiNoteOff(uint8_t note, uint8_t vel);
+	// void handleMidiCC(uint8_t control, uint8_t value);
+
 private:
     bool pp_trig_prev {false};
 	array<ChordSynth, 8> pp_v_voices;
@@ -45,6 +49,8 @@ private:
 	int32_t pp_preNCVoices = 0;
 	braids::Quantizer pp_quantizer;
 	bool trig_prev {false};
+	float midi_freq {0.0f};
+	bool midi_trig {false};
 
 	atomic<int16_t> pp_pitch, cv_pp_pitch;
 	atomic<int16_t> pp_q_scale, cv_pp_q_scale;

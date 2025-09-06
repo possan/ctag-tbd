@@ -9,36 +9,72 @@ using namespace CTAG::SP;
 #define maxFXSendLevelRev 1.5f
 
 void DrumRackChannelMixer::Init(const DrumRackInitData *initdata) {
-	initdata->rack->registerParam(initdata->prefix, "mute", [&](const int val){ mix_mute = val;});
-	initdata->rack->registerTrig(initdata->prefix, "mute", [&](const int val){ trig_mix_mute = val;});
-	initdata->rack->registerParam(initdata->prefix, "device", [&](const int val){ mix_device = val;});
-	initdata->rack->registerCv(initdata->prefix, "device", [&](const int val){ cv_mix_device = val;});
-	initdata->rack->registerParam(initdata->prefix, "lev", [&](const int val){ mix_lev = val;});
-	initdata->rack->registerCv(initdata->prefix, "lev", [&](const int val){ cv_mix_lev = val;});
-	initdata->rack->registerParam(initdata->prefix, "pan", [&](const int val){ mix_pan = val;});
-	initdata->rack->registerCv(initdata->prefix, "pan", [&](const int val){ cv_mix_pan = val;});
-	initdata->rack->registerParam(initdata->prefix, "fx1", [&](const int val){ mix_fx1 = val;});
-	initdata->rack->registerCv(initdata->prefix, "fx1", [&](const int val){ cv_mix_fx1 = val;});
-	initdata->rack->registerParam(initdata->prefix, "fx2", [&](const int val){ mix_fx2 = val;});
-	initdata->rack->registerCv(initdata->prefix, "fx2", [&](const int val){ cv_mix_fx2 = val;});
-	this->enabled = false;
+	cc_base = initdata->cc_base;
+
+	// initdata->rack->registerParamAndCC(initdata, "mute", [&](const int val){ mix_mute = val;});
+	// initdata->rack->registerTrig(initdata->prefix, "mute", [&](const int val){ trig_mix_mute = val;});
+
+	initdata->rack->registerParamAndCC(initdata, "device", 0, [&](const int val){ mix_device = val;});
+	initdata->rack->registerParamAndCC(initdata, "lev", 1, [&](const int val){ mix_lev = val;});
+	initdata->rack->registerParamAndCC(initdata, "pan", 2, [&](const int val){ mix_pan = val;});
+	initdata->rack->registerParamAndCC(initdata, "fx1", 3, [&](const int val){ mix_fx1 = val;});
+	initdata->rack->registerParamAndCC(initdata, "fx2", 4, [&](const int val){ mix_fx2 = val;});
+
+	this->enabled = true;
 	this->device = -1;
 }
 
+// void DrumRackChannelMixer::handleMidiCC(uint8_t control, uint8_t value) {
+// 	return;
+
+// 	int localcontrol = control - cc_base;
+// 	if (localcontrol < 0 || localcontrol > 5) return;
+
+//     // printf("ChannelMixer CC %d (%d) %d\n", control, localcontrol, value);
+
+// 	if (localcontrol == 0) {
+// 		if (value != this->device) {
+// 			printf("Device changed from %d to %d\n", this->device, value);
+// 			this->device = value;
+// 		}
+
+// 		// mix_device = value;
+// 		// device = value;
+// 	    // printf("  device %d\n", (int)mix_device);
+// 	}
+
+// 	if (localcontrol == 1) {
+// 		mix_lev = (value * 4096.0f) / 127.0f;
+//     	printf("  level %d\n", (int)mix_lev);
+// 	}
+
+// 	if (localcontrol == 2) {
+// 		mix_pan = value * 4096.0f / 127.0f;
+// 	}
+
+// 	if (localcontrol == 3) {
+// 		mix_fx1 = value * 4096.0f / 127.0f;
+// 	}
+
+// 	if (localcontrol == 4) {
+// 		mix_fx2 = value * 4096.0f / 127.0f;
+// 	}
+// }
+
 void DrumRackChannelMixer::PreProcess(const DrumRackProcessData &data) {
-    MK_BOOL_PAR(bMute, mix_mute)
-    MK_FLT_PAR_ABS(fDev, mix_device, 4095.f, 10.f);
-    MK_FLT_PAR_ABS_PAN(fPan, mix_pan, 4095.f, 1.f)
-    MK_FLT_PAR_ABS(fLev, mix_lev, 4095.f, 2.f); fLev *= fLev;
-    MK_FLT_PAR_ABS(fFX1Send, mix_fx1, 4095.f, maxFXSendLevelDly); fFX1Send *= fFX1Send;
-    MK_FLT_PAR_ABS(fFX2Send, mix_fx2, 4095.f, maxFXSendLevelRev); fFX2Send *= fFX2Send;
+    // MK_BOOL_PAR_NOCV(bMute, mix_mute)
+    MK_FLT_PAR_ABS_NOCV(fDev, mix_device, 4095.f, 4095.f);
+    MK_FLT_PAR_ABS_PAN_NOCV(fPan, mix_pan, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(fLev, mix_lev, 4095.f, 2.f); fLev *= fLev;
+    MK_FLT_PAR_ABS_NOCV(fFX1Send, mix_fx1, 4095.f, maxFXSendLevelDly); fFX1Send *= fFX1Send;
+    MK_FLT_PAR_ABS_NOCV(fFX2Send, mix_fx2, 4095.f, maxFXSendLevelRev); fFX2Send *= fFX2Send;
 
-    this->enabled = (!bMute && fLev > minVolume);
+    // this->enabled = true // (/*!bMute &&*/ fLev > minVolume);
+	// int idev = 	(int)fDev;
 
-	int idev = 	(int)fDev;
-	if (idev != this->device) {
-		// ESP_LOGI("DrumRackChannelMixer", "Device changed from %d to %d", this->device, idev);
-		this->device = idev;
+	if (this->mix_device != this->device) {
+		ESP_LOGI("DrumRackChannelMixer", "Device changed from %d to %d", this->device, (int)this->mix_device);
+		this->device = this->mix_device;
 	}
 
 	this->pan = fPan;

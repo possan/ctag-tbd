@@ -36,10 +36,14 @@ public:
 	bool enabled;
 	float out[BUF_SZ];
 	
+	void handleMidiNoteOn();
+	// void handleMidiCC(uint8_t control, uint8_t value);
+
 private:
 	plaits::AnalogSnareDrum asd;
 	bool trig_prev {false};
-	atomic<int16_t> trigger, trig_trigger;
+	bool midi_trig {false};
+	// atomic<int16_t> trigger, trig_trigger;
 	atomic<int16_t> accent, cv_accent;
 	atomic<int16_t> f0, cv_f0;
 	atomic<int16_t> tone, cv_tone;

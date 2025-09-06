@@ -11,21 +11,24 @@ using namespace CTAG::SP;
 void DrumRackRimshot::Init(const DrumRackInitData *initdata) {
     rs.Init();
 
-    initdata->rack->registerParam(initdata->prefix, "trigger", [&](const int val){ trigger = val;});
-	initdata->rack->registerTrig(initdata->prefix, "trigger", [&](const int val){ trig_trigger = val;});
-	initdata->rack->registerParam(initdata->prefix, "accent", [&](const int val){ accent = val;});
-	initdata->rack->registerCv(initdata->prefix, "accent", [&](const int val){ cv_accent = val;});
-	initdata->rack->registerParam(initdata->prefix, "f0", [&](const int val){ f0 = val;});
-	initdata->rack->registerCv(initdata->prefix, "f0", [&](const int val){ cv_f0 = val;});
-	initdata->rack->registerParam(initdata->prefix, "tone", [&](const int val){ tone = val;});
-	initdata->rack->registerCv(initdata->prefix, "tone", [&](const int val){ cv_tone = val;});
-	initdata->rack->registerParam(initdata->prefix, "decay", [&](const int val){ decay = val;});
-	initdata->rack->registerCv(initdata->prefix, "decay", [&](const int val){ cv_decay = val;});
-	initdata->rack->registerParam(initdata->prefix, "noise", [&](const int val){ noise = val;});
-	initdata->rack->registerCv(initdata->prefix, "noise", [&](const int val){ cv_noise = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 6, [&](const int val){ accent = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 7, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 8, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 9, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "noise", 10, [&](const int val){ noise = val;});
 
     this->enabled = false;
 }
+
+void DrumRackRimshot::handleMidiNoteOn() {
+    midi_trig = true;
+    printf("Rimshot note on\n");
+}
+
+// void DrumRackRimshot::handleMidiCC(uint8_t control, uint8_t value) {
+//     // TODO: Implement
+//     printf("Rimshot CC %d %d\n", control, value);
+// }
 
 void DrumRackRimshot::Process(const DrumRackProcessData &data) {
     std::fill_n(rs_out, BUF_SZ, 0.f);
@@ -34,12 +37,12 @@ void DrumRackRimshot::Process(const DrumRackProcessData &data) {
         return;
     }
 
-    MK_FLT_PAR_ABS_MIN_MAX(_f0_, f0, 4095.f, 70.f, 350.f)
-    MK_FLT_PAR_ABS_MIN_MAX(_decay, decay, 4095.f, .1f, .75f)
-    MK_FLT_PAR_ABS_MIN_MAX(_noise, noise, 4095.f, 0.f, .2f)
-    MK_FLT_PAR_ABS_MIN_MAX(_accent, accent, 4095.f, 0.1f, 1.f)
-    MK_FLT_PAR_ABS_MIN_MAX(_base, tone, 4095.f, .35f, .65f)
-    MK_FLT_PAR_ABS_MIN_MAX(_reso_hp, tone, 4095.f, 5.f, 1.f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0_, f0, 4095.f, 70.f, 350.f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_decay, decay, 4095.f, .1f, .75f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_noise, noise, 4095.f, 0.f, .2f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_accent, accent, 4095.f, 0.1f, 1.f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_base, tone, 4095.f, .35f, .65f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_reso_hp, tone, 4095.f, 5.f, 1.f)
 
     rs.params.f0 = _f0_ / 44100.f;
     rs.params.decay = _decay;
@@ -48,7 +51,12 @@ void DrumRackRimshot::Process(const DrumRackProcessData &data) {
     rs.params.base = _base;
     rs.params.noise_level = _noise;
 
-    MK_BOOL_PAR(_trig, trigger)
+    // MK_BOOL_PAR_NOCV(_trig, trigger)
+    bool _trig = false;
+    if (midi_trig) {
+        _trig = true;
+        midi_trig = false;
+    }
     if (_trig != trig_prev) {
         if (_trig) {
             printf("RS\n");

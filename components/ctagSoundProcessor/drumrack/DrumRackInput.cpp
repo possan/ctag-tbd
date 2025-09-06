@@ -12,6 +12,11 @@ void DrumRackInput::Init(const DrumRackInitData *initdata) {
     this->enabled = false;
 }
 
+// void DrumRackInput::handleMidiCC(uint8_t control, uint8_t value) {
+//     // TODO: Implement
+//     printf("Input CC %d %d\n", control, value);
+// }
+
 void DrumRackInput::Process(const DrumRackProcessData &data) {
     if (!this->enabled) {
         return;
