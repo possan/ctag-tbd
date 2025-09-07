@@ -28,36 +28,44 @@ void DrumRackWTOsc::Init(const DrumRackInitData *initdata) {
 
     this->enabled = false;
 
-	initdata->rack->registerParamAndCC(initdata, "gain", 6, [&](const int val){ gain = val;});
-    initdata->rack->registerParamAndCC(initdata, "pitch", 7, [&](const int val){ pitch = val;});
-    initdata->rack->registerParamAndCC(initdata, "q_scale", 8, [&](const int val){ q_scale = val;});
-    initdata->rack->registerParamAndCC(initdata, "tune", 9, [&](const int val){ tune = val;});
-    initdata->rack->registerParamAndCC(initdata, "wavebank", 10, [&](const int val){ wavebank = val;});
-    initdata->rack->registerParamAndCC(initdata, "wave", 11, [&](const int val){ wave = val;});
-    initdata->rack->registerParamAndCC(initdata, "fmode", 12, [&](const int val){ fmode = val;});
-    initdata->rack->registerParamAndCC(initdata, "fcut", 13, [&](const int val){ fcut = val;});
-    initdata->rack->registerParamAndCC(initdata, "freso", 14, [&](const int val){ freso = val;});
-    initdata->rack->registerParamAndCC(initdata, "lfo2wave", 15, [&](const int val){ lfo2wave = val;});
-    initdata->rack->registerParamAndCC(initdata, "lfo2am", 16, [&](const int val){ lfo2am = val;});
-    initdata->rack->registerParamAndCC(initdata, "lfo2fm", 17, [&](const int val){ lfo2fm = val;});
-    initdata->rack->registerParamAndCC(initdata, "lfo2filtfm", 18, [&](const int val){ lfo2filtfm = val;});
-    initdata->rack->registerParamAndCC(initdata, "eg2wave", 19, [&](const int val){ eg2wave = val;});
-    initdata->rack->registerParamAndCC(initdata, "eg2am", 20, [&](const int val){ eg2am = val;});
-    initdata->rack->registerParamAndCC(initdata, "eg2fm", 21, [&](const int val){ eg2fm = val;});
-    initdata->rack->registerParamAndCC(initdata, "eg2filtfm", 22, [&](const int val){ eg2filtfm = val;});
-    initdata->rack->registerParamAndCC(initdata, "lfospeed", 23, [&](const int val){ lfospeed = val;});
-    initdata->rack->registerParamAndCC(initdata, "lfosync", 24, [&](const int val){ lfosync = val;});
-    initdata->rack->registerParamAndCC(initdata, "egfasl", 25, [&](const int val){ egfasl = val;});
-    initdata->rack->registerParamAndCC(initdata, "attack", 26, [&](const int val){ attack = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay", 27, [&](const int val){ decay = val;});
-    initdata->rack->registerParamAndCC(initdata, "sustain", 28, [&](const int val){ sustain = val;});
-    initdata->rack->registerParamAndCC(initdata, "release", 29, [&](const int val){ release = val;});
+    initdata->rack->registerParamAndCC(initdata, "wavebank", 6, [&](const int val){ wavebank = val;});
+    initdata->rack->registerParamAndCC(initdata, "wave", 7, [&](const int val){ wave = val;});
+    initdata->rack->registerParamAndCC(initdata, "tune", 8, [&](const int val){ tune = val;});
+
+    initdata->rack->registerParamAndCC(initdata, "fmode", 10, [&](const int val){ fmode = val;});
+    initdata->rack->registerParamAndCC(initdata, "fcut", 11, [&](const int val){ fcut = val;});
+    initdata->rack->registerParamAndCC(initdata, "freso", 12, [&](const int val){ freso = val;});
+    initdata->rack->registerParamAndCC(initdata, "q_scale", 13, [&](const int val){ q_scale = val;});
+
+    initdata->rack->registerParamAndCC(initdata, "attack", 14, [&](const int val){ attack = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 15, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "sustain", 16, [&](const int val){ sustain = val;});
+    initdata->rack->registerParamAndCC(initdata, "release", 17, [&](const int val){ release = val;});
+
+    initdata->rack->registerParamAndCC(initdata, "eg2wave", 18, [&](const int val){ eg2wave = val;});
+    // initdata->rack->registerParamAndCC(initdata, "eg2am", 19, [&](const int val){ eg2am = val;});
+    initdata->rack->registerParamAndCC(initdata, "eg2fm", 20, [&](const int val){ eg2fm = val;});
+    initdata->rack->registerParamAndCC(initdata, "eg2filtfm", 21, [&](const int val){ eg2filtfm = val;});
+
+    initdata->rack->registerParamAndCC(initdata, "lfospeed", 22, [&](const int val){ lfospeed = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfosync", 23, [&](const int val){ lfosync = val;});
+    // initdata->rack->registerParamAndCC(initdata, "egfasl", 24, [&](const int val){ egfasl = val;});
+
+    initdata->rack->registerParamAndCC(initdata, "lfo2wave", 25, [&](const int val){ lfo2wave = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfo2am", 26, [&](const int val){ lfo2am = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfo2fm", 27, [&](const int val){ lfo2fm = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfo2filtfm", 28, [&](const int val){ lfo2filtfm = val;});
+
+    initdata->rack->registerParamAndCC(initdata, "gain", 29, [&](const int val){ gain = val;});
+    // initdata->rack->registerParamAndCC(initdata, "pitch", 9, [&](const int val){ pitch = val;});
 }
 
 void DrumRackWTOsc::handleMidiNoteOn(uint8_t note, uint8_t vel) {
     // TODO: Implement
     midi_trig = true;
+    midi_note = note;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
+    pitch = note * 128.0f;
     // printf("WTOsc Note on %d %d (%f hz)\n", note, vel, midi_freq);
 }
 
@@ -80,10 +88,9 @@ void DrumRackWTOsc::Process(const DrumRackProcessData &data) {
     }
 
     // wave select
-    currentBank = wavebank;
-	if(cv_wave != -1) ONE_POLE(fWave, fabsf(data.cv[cv_wave]), 0.1f)
-	else fWave = wave / 4095.f;
-
+    currentBank = (wavebank * 16) / 4096;
+	// if(cv_wave != -1) ONE_POLE(fWave, fabsf(data.cv[cv_wave]), 0.1f) else
+    fWave = wave / 4095.f;
 
     if(lastBank != currentBank) { // this is slow, hence not modulated by CV
         prepareWavetables(data.sampleRom);
@@ -96,23 +103,24 @@ void DrumRackWTOsc::Process(const DrumRackProcessData &data) {
     // adsr + adsr modulation
     // MK_BOOL_PAR_NOCV(bGate, gate)
     adsr.Gate(midi_trig);
-    MK_BOOL_PAR_NOCV(bEGSlow, egfasl)
+    // MK_BOOL_PAR_NOCV(bEGSlow, egfasl)
     MK_FLT_PAR_ABS_NOCV(fAttack, attack, 4095.f, 10.f)
     MK_FLT_PAR_ABS_NOCV(fDecay, decay, 4095.f, 10.f)
     MK_FLT_PAR_ABS_NOCV(fSustain, sustain, 4095.f, 1.f)
     MK_FLT_PAR_ABS_NOCV(fRelease, release, 4095.f, 10.f)
-    if(bEGSlow){
-        fAttack *= 30.f;
-        fDecay *= 30.f;
-        fRelease *= 30.f;
-    }
+    // if(bEGSlow){
+    //     fAttack *= 30.f;
+    //     fDecay *= 30.f;
+    //     fRelease *= 30.f;
+    // }
     adsr.SetAttack(fAttack);
     adsr.SetDecay(fDecay);
     adsr.SetSustain(fSustain);
     adsr.SetRelease(fRelease);
 
     // adsr modulation
-    MK_FLT_PAR_ABS_SFT_NOCV(fEGAM, eg2am, 4095.f, 1.f)
+    // MK_FLT_PAR_ABS_SFT_NOCV(fEGAM, eg2am, 4095.f, 1.f)
+    float fEGAM = 1.0f;
     MK_FLT_PAR_ABS_SFT_NOCV(fEGFM, eg2fm, 4095.f, 12.f)
     MK_FLT_PAR_ABS_SFT_NOCV(fEGFMFilt, eg2filtfm, 4095.f, 1.f)
     MK_FLT_PAR_ABS_SFT_NOCV(fEGWave, eg2wave, 4095.f, 1.f)
@@ -121,7 +129,7 @@ void DrumRackWTOsc::Process(const DrumRackProcessData &data) {
     // modulation LFO
     MK_FLT_PAR_ABS_NOCV(fLFOSpeed, lfospeed, 4095.f, 20.f)
     MK_BOOL_PAR_NOCV(bLFOSync, lfosync)
-    
+
     bool trigger = preGate != midi_trig && midi_trig;
 
     // if (midi_trig) {
@@ -147,21 +155,22 @@ void DrumRackWTOsc::Process(const DrumRackProcessData &data) {
     valLFO = lfo.Process();
 
     // // pitch / tuning / FM
-    int32_t ipitch = pitch;
-    ipitch += 48; // midi note * resolution
-    ipitch *= 128;
+    int32_t ipitch = 0;
+    // ipitch += 48; // midi note * resolution
+    // ipitch *= 128;
+    ipitch += static_cast<int32_t>(midi_note * 128.0f);
     int32_t ipitch_root = ipitch;
-    if (cv_pitch != -1) {
-        ipitch += static_cast<int32_t>(data.cv[cv_pitch] * 12.f * 5.f * 128.f); // five octaves
-    }
-    int32_t sc = q_scale;
-    if (cv_q_scale != -1) {
-        sc = static_cast<int32_t>(fabsf(data.cv[cv_q_scale]) * 48.f);
-        CONSTRAIN(sc, 0, 47);
-    }
+    // if (cv_pitch != -1) {
+    //     ipitch += static_cast<int32_t>(data.cv[cv_pitch] * 12.f * 5.f * 128.f); // five octaves
+    // }
+    int32_t sc = q_scale * 48 / 4096;
+    // if (cv_q_scale != -1) {
+    //     sc = static_cast<int32_t>(fabsf(data.cv[cv_q_scale]) * 48.f);
+    CONSTRAIN(sc, 0, 47);
+    // }
     //ESP_LOGE("WTOSC", "Scale %d", sc);
-    pitchQuantizer.Configure(braids::scales[sc]);
-    ipitch = pitchQuantizer.Process(ipitch, ipitch_root);
+    // pitchQuantizer.Configure(braids::scales[sc]);
+    // ipitch = pitchQuantizer.Process(ipitch, ipitch_root);
 
     float fPitch = static_cast<float>(ipitch);
     fPitch /= 128.f;

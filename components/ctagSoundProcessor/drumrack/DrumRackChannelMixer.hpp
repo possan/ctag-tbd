@@ -44,10 +44,10 @@ public:
 	// void handleMidiCC(uint8_t control, uint8_t value);
 
 private:
-	atomic<int16_t> mix_lev, cv_mix_lev;
-	atomic<int16_t> mix_device, cv_mix_device;
-	atomic<int16_t> mix_pan, cv_mix_pan;
-	atomic<int16_t> mix_fx1, cv_mix_fx1;
-	atomic<int16_t> mix_fx2, cv_mix_fx2;
+	atomic<int16_t> mix_lev; //, cv_mix_lev;
+	atomic<int16_t> mix_device; //, cv_mix_device;
+	atomic<int16_t> mix_pan; //, cv_mix_pan;
+	atomic<int16_t> mix_fx1; //, cv_mix_fx1;
+	atomic<int16_t> mix_fx2; //, cv_mix_fx2;
 	// atomic<int16_t> mix_mute, trig_mix_mute;
 };

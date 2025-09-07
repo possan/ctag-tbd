@@ -37,13 +37,14 @@ void DrumRackHH1::Process(const DrumRackProcessData &data) {
     }
 
     // MK_BOOL_PAR_NOCV(_trig, hh1_trigger)
-    bool _trig = false;
+    bool _trig = midi_trig;
     if (_trig != trig_prev) {
         if (_trig) {
-            // printf("HH1\n");
+            printf("HH1\n");
         }
         trig_prev = _trig;
     }
+    midi_trig = false;
 
     MK_FLT_PAR_ABS_NOCV(_accent, hh1_accent, 4095.f, 1.f)
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0, hh1_f0, 4095.f, 0.0005f, 0.1f)

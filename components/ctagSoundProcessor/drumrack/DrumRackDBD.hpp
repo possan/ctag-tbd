@@ -44,11 +44,11 @@ private:
 	bool trig_prev {false};
 	bool midi_trig {false};
 	// atomic<int16_t> trigger, trig_trigger;
-	atomic<int16_t> accent, cv_accent;
-	atomic<int16_t> f0, cv_f0;
-	atomic<int16_t> tone, cv_tone;
-	atomic<int16_t> decay, cv_decay;
-	atomic<int16_t> dirty, cv_dirty;
-	atomic<int16_t> fm_env, cv_fm_env;
-	atomic<int16_t> fm_dcy, cv_fm_dcy;
+	atomic<int16_t> accent; //, cv_accent;
+	atomic<int16_t> f0; //, cv_f0;
+	atomic<int16_t> tone; //, cv_tone;
+	atomic<int16_t> decay; //, cv_decay;
+	atomic<int16_t> dirty; //, cv_dirty;
+	atomic<int16_t> fm_env; //, cv_fm_env;
+	atomic<int16_t> fm_dcy; //, cv_fm_dcy;
 };

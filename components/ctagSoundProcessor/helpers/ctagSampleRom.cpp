@@ -44,7 +44,7 @@ namespace CTAG::SP::HELPERS {
     uint32_t ctagSampleRom::nSlicesBuffered = 0;
 
     ctagSampleRom::ctagSampleRom() {
-        //ESP_LOGE("SR", "nConsumers %li", nConsumers.load());
+        ESP_LOGI("SR", "nConsumers %li", nConsumers.load());
         nConsumers++;
         if(nConsumers == 1)
             RefreshDataStructure();
@@ -139,6 +139,7 @@ namespace CTAG::SP::HELPERS {
         totalSize = 0;
         numberSlices = 0;
         headerSize = 0;
+        ESP_LOGI("SROM", "Sample rom at 0x%"PRIx32" bytes", (long)CONFIG_SAMPLE_ROM_START_ADDRESS);
         //spi_flash_read(CONFIG_SAMPLE_ROM_START_ADDRESS, &deadface, 4);
         esp_flash_read(nullptr, &deadface, CONFIG_SAMPLE_ROM_START_ADDRESS, 4);
         if (deadface != 0xdeadface) {
@@ -149,11 +150,11 @@ namespace CTAG::SP::HELPERS {
         //spi_flash_read(CONFIG_SAMPLE_ROM_START_ADDRESS + 4, &totalSize, 4);
         esp_flash_read(nullptr,&totalSize, CONFIG_SAMPLE_ROM_START_ADDRESS + 4, 4);
         headerSize += 4;
-        ESP_LOGD("SROM", "Total sample data size %li bytes", totalSize);
+        ESP_LOGI("SROM", "Total sample data size %li bytes", totalSize);
         //spi_flash_read(CONFIG_SAMPLE_ROM_START_ADDRESS + 8, &numberSlices, 4);
         esp_flash_read(nullptr, &numberSlices, CONFIG_SAMPLE_ROM_START_ADDRESS + 8, 4);
         headerSize += 4;
-        ESP_LOGD("SROM", "Number slices %li", numberSlices);
+        ESP_LOGI("SROM", "Number slices %li", numberSlices);
         // alloc memory
         sliceOffsets = (uint32_t *) heap_caps_malloc(numberSlices * sizeof(uint32_t), MALLOC_CAP_SPIRAM);
         assert(sliceOffsets != nullptr);
@@ -167,7 +168,7 @@ namespace CTAG::SP::HELPERS {
             sliceSizes[i] = sliceOffsets[i] - lastOffset;
             lastOffset = sliceOffsets[i];
             sliceOffsets[i] -= sliceSizes[i];
-            ESP_LOGD("SROM", "Slice size %li, offset %li", sliceSizes[i], sliceOffsets[i]);
+            // ESP_LOGI("SROM", "Slice size %li, offset %li", sliceSizes[i], sliceOffsets[i]);
         }
         // get first non Wt Slice
         for (int i = 0; i < numberSlices; i++) {

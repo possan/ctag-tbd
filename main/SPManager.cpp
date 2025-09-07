@@ -345,14 +345,16 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         // write raw float data back to CODEC
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
-        if (framecounter % 900 == 0) {
-            ESP_LOGI("SPManager", "Audio task cycles diff %d, micros %d, output: L:[%1.3f %1.3f] R:[%1.3f %1.3f]", (int)diff, (int)diff2,
-                     fbuf[0], fbuf[2], fbuf[1], fbuf[3]);
+        if (framecounter % 2900 == 0) {
+            printf("Audio task cycles %d, micros %d\n", (int)diff, (int)diff2);
 
-            if (fbuf[0] != fbuf[0]) {
-                ESP_LOGI("SPManager", "Audio task cycles is maybe NAN?");
-                memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
-            }
+            // ESP_LOGI("SPManager", "Audio task cycles diff %d, micros %d, output: L:[%1.3f %1.3f] R:[%1.3f %1.3f]", (int)diff, (int)diff2,
+            //          fbuf[0], fbuf[2], fbuf[1], fbuf[3]);
+
+            // if (fbuf[0] != fbuf[0]) {
+            //     ESP_LOGI("SPManager", "Audio task cycles is maybe NAN?");
+            //     memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
+            // }
         }
 
         framecounter ++;
@@ -530,7 +532,7 @@ void SoundProcessorManager::StartSoundProcessor() {
 #endif
     // create audio thread
     runAudioTask = 1;
-    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 32768, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 0);
+    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 40000, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 0);
     xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 0);
 
 #if defined(CONFIG_TBD_PLATFORM_MK2) || defined(CONFIG_TBD_PLATFORM_AEM) || defined(CONFIG_TBD_PLATFORM_BBA)
@@ -726,11 +728,11 @@ void SoundProcessorManager::handleMidiNoteOff(const uint8_t channel, const uint8
     }
     if (sp[1] != nullptr) {
         sp[1]->handleMidiNoteOff(channel, note, velocity);
-    }  
+    }
 }
 
 void SoundProcessorManager::handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t velocity) {
-if (sp[0] != nullptr) {
+    if (sp[0] != nullptr) {
         sp[0]->handleMidiNoteOn(channel, note, velocity);
     }
     if (sp[1] != nullptr) {

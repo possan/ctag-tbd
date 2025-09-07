@@ -24,43 +24,6 @@ void DrumRackChannelMixer::Init(const DrumRackInitData *initdata) {
 	this->device = -1;
 }
 
-// void DrumRackChannelMixer::handleMidiCC(uint8_t control, uint8_t value) {
-// 	return;
-
-// 	int localcontrol = control - cc_base;
-// 	if (localcontrol < 0 || localcontrol > 5) return;
-
-//     // printf("ChannelMixer CC %d (%d) %d\n", control, localcontrol, value);
-
-// 	if (localcontrol == 0) {
-// 		if (value != this->device) {
-// 			printf("Device changed from %d to %d\n", this->device, value);
-// 			this->device = value;
-// 		}
-
-// 		// mix_device = value;
-// 		// device = value;
-// 	    // printf("  device %d\n", (int)mix_device);
-// 	}
-
-// 	if (localcontrol == 1) {
-// 		mix_lev = (value * 4096.0f) / 127.0f;
-//     	printf("  level %d\n", (int)mix_lev);
-// 	}
-
-// 	if (localcontrol == 2) {
-// 		mix_pan = value * 4096.0f / 127.0f;
-// 	}
-
-// 	if (localcontrol == 3) {
-// 		mix_fx1 = value * 4096.0f / 127.0f;
-// 	}
-
-// 	if (localcontrol == 4) {
-// 		mix_fx2 = value * 4096.0f / 127.0f;
-// 	}
-// }
-
 void DrumRackChannelMixer::PreProcess(const DrumRackProcessData &data) {
     // MK_BOOL_PAR_NOCV(bMute, mix_mute)
     MK_FLT_PAR_ABS_NOCV(fDev, mix_device, 4095.f, 4095.f);
@@ -73,7 +36,7 @@ void DrumRackChannelMixer::PreProcess(const DrumRackProcessData &data) {
 	// int idev = 	(int)fDev;
 
 	if (this->mix_device != this->device) {
-		ESP_LOGI("DrumRackChannelMixer", "Device changed from %d to %d", this->device, (int)this->mix_device);
+		// ESP_LOGI("DrumRackChannelMixer", "Device changed from %d to %d", this->device, (int)this->mix_device);
 		this->device = this->mix_device;
 	}
 

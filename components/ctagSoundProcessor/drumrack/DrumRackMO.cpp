@@ -19,20 +19,24 @@ void DrumRackMO::Init(const DrumRackInitData *initdata) {
     mo_envelope.SetModeExp();
     mo_quantizer.Init();
 
+    
     initdata->rack->registerParamAndCC(initdata, "shape", 6, [&](const int val) { mo_shape = val; });
-    initdata->rack->registerParamAndCC(initdata, "pitch", 7, [&](const int val) { mo_pitch = val; });
-    initdata->rack->registerParamAndCC(initdata, "decimation", 8, [&](const int val) { mo_decimation = val; });
-    initdata->rack->registerParamAndCC(initdata, "bit_reduction", 9, [&](const int val) { mo_bit_reduction = val; });
-    initdata->rack->registerParamAndCC(initdata, "q_scale", 10, [&](const int val) { mo_q_scale = val; });
-    initdata->rack->registerParamAndCC(initdata, "param_0", 11, [&](const int val) { mo_param_0 = val; });
-    initdata->rack->registerParamAndCC(initdata, "param_1", 12, [&](const int val) { mo_param_1 = val; });
-    initdata->rack->registerParamAndCC(initdata, "waveshaping", 13, [&](const int val) { mo_waveshaping = val; });
-    initdata->rack->registerParamAndCC(initdata, "fm_amt", 14, [&](const int val) { mo_fm_amt = val; });
-    initdata->rack->registerParamAndCC(initdata, "p0_amt", 15, [&](const int val) { mo_p0_amt = val; });
-    initdata->rack->registerParamAndCC(initdata, "p1_amt", 16, [&](const int val) { mo_p1_amt = val; });
-    initdata->rack->registerParamAndCC(initdata, "loopEG", 17, [&](const int val) { mo_loopEG = val; });
-    initdata->rack->registerParamAndCC(initdata, "attack", 18, [&](const int val) { mo_attack = val; });
-    initdata->rack->registerParamAndCC(initdata, "decay", 19, [&](const int val) { mo_decay = val; });
+    initdata->rack->registerParamAndCC(initdata, "param_0", 7, [&](const int val) { mo_param_0 = val; });
+    initdata->rack->registerParamAndCC(initdata, "param_1", 8, [&](const int val) { mo_param_1 = val; });
+    initdata->rack->registerParamAndCC(initdata, "waveshaping", 9, [&](const int val) { mo_waveshaping = val; });
+    
+    initdata->rack->registerParamAndCC(initdata, "p0_amt", 10, [&](const int val) { mo_p0_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "p1_amt", 11, [&](const int val) { mo_p1_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "fm_amt", 12, [&](const int val) { mo_fm_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "q_scale", 13, [&](const int val) { mo_q_scale = val; });
+    
+    initdata->rack->registerParamAndCC(initdata, "attack", 14, [&](const int val) { mo_attack = val; });
+    initdata->rack->registerParamAndCC(initdata, "decay", 15, [&](const int val) { mo_decay = val; });
+    initdata->rack->registerParamAndCC(initdata, "loopEG", 16, [&](const int val) { mo_loopEG = val; });
+    
+    initdata->rack->registerParamAndCC(initdata, "decimation", 17, [&](const int val) { mo_decimation = val; });
+    initdata->rack->registerParamAndCC(initdata, "bit_reduction", 18, [&](const int val) { mo_bit_reduction = val; });
+    // initdata->rack->registerParamAndCC(initdata, "pitch", 19, [&](const int val) { mo_pitch = val; });
 
     this->enabled = false;
 }
@@ -40,6 +44,7 @@ void DrumRackMO::Init(const DrumRackInitData *initdata) {
 void DrumRackMO::handleMidiNoteOn(uint8_t note, uint8_t vel) {
     // TODO: Implement
     midi_trig = true;
+    midi_note = note;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
     mo_pitch = note << 7; //  midi_freq * 128.0f; //   * 12.f * 5.f * 128.f  * 100.f; // 1/100 Hz per semitone
     // printf("MO note on %d, %d (%f hz)\n", note, vel, midi_freq);
@@ -65,12 +70,12 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
     // ad envelope and loop
     float a = mo_attack / 4095.f * 5.f;
     float d = mo_decay / 4095.f * 5.f;
-    if (cv_mo_attack != -1) {
-        a = fabsf(data.cv[cv_mo_attack]) * 12.f;
-    }
-    if (cv_mo_decay != -1) {
-        d = fabsf(data.cv[cv_mo_decay]) * 12.f;
-    }
+    // if (cv_mo_attack != -1) {
+    //     a = fabsf(data.cv[cv_mo_attack]) * 12.f;
+    // }
+    // if (cv_mo_decay != -1) {
+    //     d = fabsf(data.cv[cv_mo_decay]) * 12.f;
+    // }
     mo_envelope.SetAttack(a);
     mo_envelope.SetDecay(d);
     if (trig_mo_loopEG != -1) {
@@ -81,10 +86,10 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
     int32_t ad_value = static_cast<uint32_t>(mo_envelope.Process() * 65535.f);
 
     // shape
-    int s = mo_shape;
-    if (cv_mo_shape != -1) {
-        s = fabsf(data.cv[cv_mo_shape]) * (braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META + 1);
-    }
+    int s = mo_shape * 47 / 4096;
+    // if (cv_mo_shape != -1) {
+    //     s = fabsf(data.cv[cv_mo_shape]) * (braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META + 1);
+    // }
     braids::MacroOscillatorShape ms = static_cast<braids::MacroOscillatorShape>(s);
     if (ms >= braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META)
         ms = braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META;
@@ -110,31 +115,31 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
 
     // Set timbre and color: CV + internal modulation.
     int16_t parameters[2];
-    parameters[0] = mo_param_0;
-    parameters[1] = mo_param_1;
-    if (cv_mo_param_0 != -1) {
-        parameters[0] = static_cast<int16_t>(fabsf(data.cv[cv_mo_param_0] * 32767));
-    }
-    if (cv_mo_param_1 != -1) {
-        parameters[1] = static_cast<int16_t>(fabsf(data.cv[cv_mo_param_1] * 32767));
-    }
+    parameters[0] = mo_param_0 * 32768 / 4096;
+    parameters[1] = mo_param_1 * 32768 / 4096;
+    // if (cv_mo_param_0 != -1) {
+    //     parameters[0] = static_cast<int16_t>(fabsf(data.cv[cv_mo_param_0] * 32767));
+    // }
+    // if (cv_mo_param_1 != -1) {
+    //     parameters[1] = static_cast<int16_t>(fabsf(data.cv[cv_mo_param_1] * 32767));
+    // }
     int32_t mod_amt[2];
-    mod_amt[0] = mo_p0_amt;
-    mod_amt[1] = mo_p1_amt;
+    mod_amt[0] = mo_p0_amt * 64 / 4096;
+    mod_amt[1] = mo_p1_amt * 64 / 4096;
     int32_t mod[2];
-    if (cv_mo_p0_amt != -1) {
-        mod[0] = static_cast<int32_t >(data.cv[cv_mo_p0_amt] * 65535.f);
-    } else {
+    // if (cv_mo_p0_amt != -1) {
+    //     mod[0] = static_cast<int32_t >(data.cv[cv_mo_p0_amt] * 65535.f);
+    // } else {
         mod[0] = ad_value;
-    }
-    if (cv_mo_p1_amt != -1) {
-        mod[1] = static_cast<int32_t >(data.cv[cv_mo_p1_amt] * 65535.f);
-    } else {
+    // }
+    // if (cv_mo_p1_amt != -1) {
+        // mod[1] = static_cast<int32_t >(data.cv[cv_mo_p1_amt] * 65535.f);
+    // } else {
         mod[1] = ad_value;
-    }
+    // }
     for (int i = 0; i < 2; ++i) {
         int32_t value = parameters[i];
-        value += (mod[i] * mod_amt[i]) / 64;
+        value += (mod[i] * mod_amt[i]) / 128; // ad_value goes to 64k, 
         CONSTRAIN(value, 0, 32767);
         parameters[i] = value;
     }
@@ -145,18 +150,18 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
     // if (cv_mo_pitch != -1) {
     //     ipitch += static_cast<int32_t>(data.cv[cv_mo_pitch] * 12.f * 5.f * 128.f); // five octaves
     // }
-    int32_t sc = mo_q_scale;
+    int32_t sc = mo_q_scale * 47 / 4096;
     // if (cv_mo_q_scale != -1) {
     //     sc = static_cast<int32_t>(fabsf(data.cv[cv_mo_q_scale]) * 48.f);
-    //     CONSTRAIN(sc, 0, 47);
+    CONSTRAIN(sc, 0, 47);
     // }
     mo_quantizer.Configure(braids::scales[sc]);
     ipitch = mo_quantizer.Process(ipitch, mo_pitch);
 
-    int32_t fm = mo_fm_amt * ad_value / 512;
-    if (cv_mo_fm_amt != -1) {
-        fm = static_cast<int32_t>(data.cv[cv_mo_fm_amt] * 12.f * 3.f * 128.f); // three octaves
-    }
+    int32_t fm = mo_fm_amt * ad_value / 32768; // / 512;
+    // if (cv_mo_fm_amt != -1) {
+    //     fm = static_cast<int32_t>(data.cv[cv_mo_fm_amt] * 12.f * 3.f * 128.f); // three octaves
+    // }
     ipitch += fm;
     CONSTRAIN(ipitch, 0, 16383);
     mo_osc.set_pitch(ipitch);
@@ -166,23 +171,23 @@ void DrumRackMO::Process(const DrumRackProcessData &data) {
     mo_osc.Render(mo_sync, buffer, BUF_SZ);
 
     // calculate amplitude modulation
-    int32_t mod_gain = 65535;
-    mod_gain = (ad_value) / 16;
+    int32_t mod_gain = 65535; // a bit louder
+    mod_gain = (ad_value) / 8;
 
     // convert final audio buffer
     int32_t sample = 0;
-    uint16_t signature = mo_waveshaping;
-    if (cv_mo_waveshaping != -1) {
-        signature = static_cast<uint16_t>(fabsf(data.cv[cv_mo_waveshaping]) * 65535.f);
-    }
-    int32_t dfactor = mo_decimation;
-    if (cv_mo_decimation != -1) {
-        dfactor = static_cast<int32_t>(fabsf(data.cv[cv_mo_decimation]) * 30) + 1;
-    }
-    int32_t br = mo_bit_reduction;
-    if (cv_mo_bit_reduction != -1) {
-        br = static_cast<int32_t>(fabsf(data.cv[cv_mo_bit_reduction]) * 6);
-    }
+    uint16_t signature = mo_waveshaping * 16; // * 65535 / 4095;
+    // if (cv_mo_waveshaping != -1) {
+    //     signature = static_cast<uint16_t>(fabsf(data.cv[cv_mo_waveshaping]) * 65535.f);
+    // }
+    int32_t dfactor = (mo_decimation * 30 / 4096) + 1;
+    // if (cv_mo_decimation != -1) {
+    //     dfactor = static_cast<int32_t>(fabsf(data.cv[cv_mo_decimation]) * 30) + 1;
+    // }
+    int32_t br = mo_bit_reduction * 6 / 4096;
+    // if (cv_mo_bit_reduction != -1) {
+    //     br = static_cast<int32_t>(fabsf(data.cv[cv_mo_bit_reduction]) * 6);
+    // }
     int16_t bit_mask = mo_bit_reduction_masks[6 - br];
     for (int i = 0; i < BUF_SZ; i++) {
         if ((i % dfactor) == 0) {

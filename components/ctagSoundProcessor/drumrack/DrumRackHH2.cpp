@@ -33,13 +33,14 @@ void DrumRackHH2::Process(const DrumRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);
 
     // MK_BOOL_PAR_NOCV(_trig, trigger)
-    bool _trig = false;
+    bool _trig = midi_trig;
     if (_trig != trig_prev) {
         if (_trig) {
-            // printf("HH2\n");
+            printf("HH2\n");
         }
         trig_prev = _trig;
     }
+    midi_trig = false;
 
     if (!this->enabled) {
         return;

@@ -66,7 +66,7 @@ respective component folders / files if different from this license.
     if(cv_##inname != -1) outname = static_cast<int>(fabsf(data.cv[cv_##inname]) * scale);
 
 #define MK_INT_PAR_ABS_NOCV(outname, inname, scale) \
-    int outname = inname;
+    int outname = inname * scale / 4096;
 
 #define MK_INT_PAR(outname, inname, scale) \
     int outname = inname;\
@@ -204,32 +204,32 @@ namespace CTAG {
 
             virtual void handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel) {
                 // override if needed
-                ESP_LOGI("SP", "Not overriden MIDI: note off %d, %d, %d", channel, note, vel);
+                // ESP_LOGI("SP", "Not overriden MIDI: note off %d, %d, %d", channel, note, vel);
             };
 
             virtual void handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel) {
                 // override if needed
-                ESP_LOGI("SP", "Not overriden MIDI: note on %d, %d, %d", channel, note, vel);
+                // ESP_LOGI("SP", "Not overriden MIDI: note on %d, %d, %d", channel, note, vel);
             };
 
             virtual void handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel) {
                 // override if needed
-                ESP_LOGI("SP", "Not overriden MIDI: aftertouch %d, %d, %d", channel, note, vel);
+                // ESP_LOGI("SP", "Not overriden MIDI: aftertouch %d, %d, %d", channel, note, vel);
             };
 
             virtual void handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value) {
                 // override if needed
-                ESP_LOGI("SP", "Not overriden MIDI: CC %d, %d, %d", channel, control, value);
+                // ESP_LOGI("SP", "Not overriden MIDI: CC %d, %d, %d", channel, control, value);
             };
 
             virtual void handleMidiPatchChange(const uint8_t channel, const uint8_t patch) {
                 // override if needed
-                ESP_LOGI("SP", "Not overriden MIDI: Patch Change %d, %d", channel, patch);
+                // ESP_LOGI("SP", "Not overriden MIDI: Patch Change %d, %d", channel, patch);
             };
 
             virtual void handleMidiPitchBend(const uint8_t channel, const uint16_t bend) {
                 // override if needed
-                ESP_LOGI("SP", "Not overriden MIDI: pitch bend %d, %d", channel, bend);
+                // ESP_LOGI("SP", "Not overriden MIDI: pitch bend %d, %d", channel, bend);
             };
 
         protected:

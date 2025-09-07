@@ -46,9 +46,9 @@ private:
 	float temp1[BUF_SZ];
 	float temp2[BUF_SZ];
 	// atomic<int16_t> hh1_trigger, trig_hh1_trigger;
-	atomic<int16_t> hh1_accent, cv_hh1_accent;
-	atomic<int16_t> hh1_f0, cv_hh1_f0;
-	atomic<int16_t> hh1_tone, cv_hh1_tone;
-	atomic<int16_t> hh1_decay, cv_hh1_decay;
-	atomic<int16_t> hh1_noise, cv_hh1_noise;
+	atomic<int16_t> hh1_accent; //, cv_hh1_accent;
+	atomic<int16_t> hh1_f0; //, cv_hh1_f0;
+	atomic<int16_t> hh1_tone; //, cv_hh1_tone;
+	atomic<int16_t> hh1_decay; //, cv_hh1_decay;
+	atomic<int16_t> hh1_noise; //, cv_hh1_noise;
 };

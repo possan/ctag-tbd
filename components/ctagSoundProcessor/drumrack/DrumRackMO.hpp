@@ -56,21 +56,22 @@ private:
 			0xfff0,
 			0xffff};
 	float midi_freq {0.0f};
+	int midi_note {0};
 	bool midi_trig {false};
 
-	atomic<int16_t> mo_shape, cv_mo_shape;
-	atomic<int16_t> mo_pitch, cv_mo_pitch;	
-	atomic<int16_t> mo_decimation, cv_mo_decimation;
-	atomic<int16_t> mo_bit_reduction, cv_mo_bit_reduction;
-	atomic<int16_t> mo_q_scale, cv_mo_q_scale;
-	atomic<int16_t> mo_param_0, cv_mo_param_0;
-	atomic<int16_t> mo_param_1, cv_mo_param_1;
-	atomic<int16_t> mo_waveshaping, cv_mo_waveshaping;
-	atomic<int16_t> mo_fm_amt, cv_mo_fm_amt;
-	atomic<int16_t> mo_p0_amt, cv_mo_p0_amt;
-	atomic<int16_t> mo_p1_amt, cv_mo_p1_amt;
+	atomic<int16_t> mo_shape; //, cv_mo_shape;
+	atomic<int16_t> mo_pitch; //, cv_mo_pitch;	
+	atomic<int16_t> mo_decimation; //, cv_mo_decimation;
+	atomic<int16_t> mo_bit_reduction; //, cv_mo_bit_reduction;
+	atomic<int16_t> mo_q_scale; //, cv_mo_q_scale;
+	atomic<int16_t> mo_param_0; //, cv_mo_param_0;
+	atomic<int16_t> mo_param_1; //, cv_mo_param_1;
+	atomic<int16_t> mo_waveshaping; //, cv_mo_waveshaping;
+	atomic<int16_t> mo_fm_amt; //, cv_mo_fm_amt;
+	atomic<int16_t> mo_p0_amt; //, cv_mo_p0_amt;
+	atomic<int16_t> mo_p1_amt; //, cv_mo_p1_amt;
 	// atomic<int16_t> mo_enableEG, trig_mo_enableEG;
 	atomic<int16_t> mo_loopEG, trig_mo_loopEG;
-	atomic<int16_t> mo_attack, cv_mo_attack;
-	atomic<int16_t> mo_decay, cv_mo_decay;
+	atomic<int16_t> mo_attack; //, cv_mo_attack;
+	atomic<int16_t> mo_decay; //, cv_mo_decay;
 };

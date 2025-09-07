@@ -59,11 +59,11 @@ void DrumRackFMB::Process(const DrumRackProcessData &data) {
     MK_BOOL_PAR_NOCV(_use_ratio_mode, use_ratio_mode)
     MK_BOOL_PAR_NOCV(_mod_env_sync, mod_env_sync)
     float _f0 = f_b/4095.f * (200.f-20.f)+20.f;
-    if(cv_f_b != -1){
-        float fMod = data.cv[cv_f_b] * 5.f;
-        fMod = CTAG::SP::HELPERS::fastpow2(fMod);
-        _f0 *= fMod;
-    }
+    // if(cv_f_b != -1){
+    //     float fMod = data.cv[cv_f_b] * 5.f;
+    //     fMod = CTAG::SP::HELPERS::fastpow2(fMod);
+    //     _f0 *= fMod;
+    // }
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_d_b, d_b, 4095.f, 0.001f, 1.f)
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f_m, f_m, 4095.f, 40.f, 2000.f)
     MK_FLT_PAR_ABS_NOCV(_modindex, f_m, 4095.f, 63.f)

@@ -447,26 +447,10 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
     renderMasterOutput(data);
 }
 
-// void ctagSoundProcessorDrumRack::registerCv(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter){
-//     string fullId = string(prefix) + string(suffix);
-//     pMapCv.emplace(fullId, setter);
-// }
-
 void ctagSoundProcessorDrumRack::registerParam(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter){
     string fullId = string(prefix) + string(suffix);
     pMapPar.emplace(fullId, setter);
 }
-
-// void ctagSoundProcessorDrumRack::registerTrig(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter){
-//     string fullId = string(prefix) + string(suffix);
-//     pMapTrig.emplace(fullId, setter);
-// }
-
-// void ctagSoundProcessorDrumRack::registerCC(const char *prefix, const char *suffix, int cc) {
-//     // , function<DrumRackParameterSetter> setter){
-//     string fullId = string(prefix) + string(suffix);
-//     pMapCC.emplace(cc, fullId);
-// }
 
 void ctagSoundProcessorDrumRack::registerParamAndCC(const DrumRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter){
     string fullId = string(initdata->prefix) + string(suffix);
@@ -482,8 +466,7 @@ void ctagSoundProcessorDrumRack::registerParam(const DrumRackInitData *initdata,
 }
 
 void ctagSoundProcessorDrumRack::handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel) {
-    // override if needed
-    ESP_LOGI("ctagSoundProcessorDrumRack", "MIDI: note off %d, %d, %d", channel, note, vel);
+    // ESP_LOGI("ctagSoundProcessorDrumRack", "MIDI: note off %d, %d, %d", channel, note, vel);
 
     if (channel == 0) {
         if (ch9_td3.enabled) {
@@ -506,6 +489,9 @@ void ctagSoundProcessorDrumRack::handleMidiNoteOff(const uint8_t channel, const 
     if (channel == 3) {
         if (ch12_mo.enabled) {
             ch12_mo.handleMidiNoteOff(note, 0);
+        }
+        if (ch12_wtosc.enabled) {
+            ch12_wtosc.handleMidiNoteOff(note, 0);
         }
     }
 
@@ -541,62 +527,50 @@ void ctagSoundProcessorDrumRack::handleMidiNoteOff(const uint8_t channel, const 
 };
 
 void ctagSoundProcessorDrumRack::handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel) {
-    // override if needed
-    ESP_LOGI("ctagSoundProcessorDrumRack", "MIDI: note on %d, %d, %d", channel, note, vel);
+    // ESP_LOGI("ctagSoundProcessorDrumRack", "MIDI: note on %d, %d, %d", channel, note, vel);
 
     if (channel == 0) {
         if (ch9_td3.enabled) {
             ch9_td3.handleMidiNoteOn(note, vel);
-        } else {
-            printf("  ch9_td3 not enabled!\n");
         }
     }
 
     if (channel == 1) {
         if (ch10_td3.enabled) {
             ch10_td3.handleMidiNoteOn(note, vel);
-        } else {
-            printf("  ch10_td3 not enabled!\n");
         }
     }
 
     if (channel == 2) {
         if (ch11_mo.enabled) {
             ch11_mo.handleMidiNoteOn(note, vel);
-        } else {
-            printf("  ch11_mo not enabled!\n");
         }
     }
 
     if (channel == 3) {
         if (ch12_mo.enabled) {
             ch12_mo.handleMidiNoteOn(note, vel);
-        } else {
-            printf("  ch12_mo not enabled!\n");
+        }
+        if (ch12_wtosc.enabled) {
+            ch12_wtosc.handleMidiNoteOn(note, vel);
         }
     }
 
     if (channel == 4) {
         if (ch13_ro.enabled) {
             ch13_ro.handleMidiNoteOn(note, vel);
-        } else {
-            printf("  ch13_ro not enabled!\n");
         }
     }
 
     if (channel == 5) {
         if (ch14_ro.enabled) {
             ch14_ro.handleMidiNoteOn(note, vel);
-            } else {
-                printf("  ch14_ro not enabled!\n");
         }
     }
 
     if (channel == 6) {
         if (ch15_pp.enabled) {
             ch15_pp.handleMidiNoteOn(note, vel);
-        } else {
-            printf("  ch15_pp not enabled!\n");
         }
     }
 
@@ -610,85 +584,58 @@ void ctagSoundProcessorDrumRack::handleMidiNoteOn(const uint8_t channel, const u
         if (note == 36) { // kick 1
             if (ch1_ab.enabled) {
                 ch1_ab.handleMidiNoteOn();
-            } else {
-                printf("  ch1_ab not enabled!\n");
             }
             if (ch1_db.enabled) {
                 ch1_db.handleMidiNoteOn();
-            } else {
-                printf("  ch1_db not enabled!\n");
             }
         }
         else if (note == 37) { // kick 2
             if (ch2_fmb1.enabled) {
                 ch2_fmb1.handleMidiNoteOn();
-            } else {
-                printf("  ch2_fmb1 not enabled!\n");
             }
         }
         else if (note == 38) { // snare
             if (ch3_as.enabled) {
                 ch3_as.handleMidiNoteOn();
-            } else {
-                printf("  ch3_as not enabled!\n");
             }
             if (ch3_ds.enabled) {
                 ch3_ds.handleMidiNoteOn();
-            } else {
-                printf("  ch3_ds not enabled!\n");
             }
         }
         else if (note == 39) { // hat
             if (ch4_hh1.enabled) {
                 ch4_hh1.handleMidiNoteOn();
-            } else {
-                printf("  ch4_hh1 not enabled (d=%d, l=%f)!\n", ch4.device, ch4.level);
             }
             if (ch4_hh2.enabled) {
                 ch4_hh2.handleMidiNoteOn();
-            } else {
-                printf("  ch4_hh2 not enabled!\n");
             }
         }
         else if (note == 40) { // rs
             if (ch5_rs.enabled) {
                 ch5_rs.handleMidiNoteOn();
-            } else {
-                printf("  ch5_rs not enabled!\n");
             }
         }
         else if (note == 41) { // clap
             if (ch6_cl.enabled) {
                 ch6_cl.handleMidiNoteOn();
-            } else {
-                printf("  ch6_cl not enabled!\n");
             }
         }
     }
 
     if (channel == 11) {
-        // if (note == 36) { // samp 1
         if (ch7_ro.enabled) {
             ch7_ro.handleMidiNoteOn(note, 127);
-        } else {
-            printf("  ch7_ro not enabled!\n");
         }
-        // }
     }
 
     if (channel == 12) {
-        // if (note == 36) { // samp 2
         if (ch8_ro.enabled) {
             ch8_ro.handleMidiNoteOn(note, 127);
-        } else {
-            printf("  ch8_ro not enabled!\n");
         }
-        // }
     }
 };
 
 void ctagSoundProcessorDrumRack::handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel) {
-    // override if needed
     ESP_LOGI("ctagSoundProcessorDrumRack", "MIDI: aftertouch %d, %d, %d", channel, note, vel);
 };
 
@@ -699,7 +646,7 @@ void ctagSoundProcessorDrumRack::handleMidiControlChange(const uint8_t channel, 
     int key = CC_TO_MAP_KEY(channel, control);
     auto it = pMapCC.find(key);
     if (it != pMapCC.end()) {
-        printf("CC%d, CH%d map to %s = %d (%d)\n", control, channel, it->second.c_str(), cv_value, value);
+        // printf("CC%d, CH%d map to %s = %d (%d)\n", control, channel, it->second.c_str(), cv_value, value);
         auto it2 = pMapPar.find(it->second.c_str());
         if (it2 != pMapPar.end()) {
             (it2->second)(cv_value);
@@ -707,150 +654,6 @@ void ctagSoundProcessorDrumRack::handleMidiControlChange(const uint8_t channel, 
     } else {
         printf("No CC mapping for CC %d, CH %d\n", control, channel);
     }
-
-
-    // if (channel == 0) {
-    //     // if (ch9.enabled) {
-    //         ch9.handleMidiCC(control, value);
-    //     // }
-    //     if (ch9_td3.enabled) {
-    //         ch9_td3.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 1) {
-    //     // if (ch10.enabled) {
-    //         ch10.handleMidiCC(control, value);
-    //     // }
-    //     if (ch10_td3.enabled) {
-    //         ch10_td3.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 2) {
-    //     // if (ch11.enabled) {
-    //         ch11.handleMidiCC(control, value);
-    //     // }
-    //     if (ch11_mo.enabled) {
-    //         ch11_mo.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 3) {
-    //     // if (ch12.enabled) {
-    //         ch12.handleMidiCC(control, value);
-    //     // }
-    //     if (ch12_mo.enabled) {
-    //         ch12_mo.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 4) {
-    //     // if (ch13.enabled) {
-    //         ch13.handleMidiCC(control, value);
-    //     // }
-    //     if (ch13_ro.enabled) {
-    //         ch13_ro.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 5) {
-    //     // if (ch14.enabled) {
-    //         ch14.handleMidiCC(control, value);
-    //     // }
-    //     if (ch14_ro.enabled) {
-    //         ch14_ro.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 6) {
-    //     // if (ch15.enabled) {
-    //         ch15.handleMidiCC(control, value);
-    //     // }
-    //     if (ch15_pp.enabled) {
-    //         ch15_pp.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 7) {
-    //     // if (ch16.enabled) {
-    //         ch16.handleMidiCC(control, value);
-    //     // }
-    //     if (ch16_in.enabled) {
-    //         ch16_in.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 9) {
-    //     // if (ch1.enabled) {
-    //         ch1.handleMidiCC(control, value);
-    //     // }
-    //     if (ch1_ab.enabled) {
-    //         ch1_ab.handleMidiCC(control, value);
-    //     }
-    //     if (ch1_db.enabled) {
-    //         ch1_db.handleMidiCC(control, value);
-    //     }
-
-    //     // if (ch2.enabled) {
-    //         ch2.handleMidiCC(control, value);
-    //     // }
-    //     if (ch2_fmb1.enabled) {
-    //         ch2_fmb1.handleMidiCC(control, value);
-    //     }
-
-    //     // if (ch3.enabled) {
-    //         ch3.handleMidiCC(control, value);
-    //     // }
-    //     if (ch3_as.enabled) {
-    //         ch3_as.handleMidiCC(control, value);
-    //     }
-    //     if (ch3_ds.enabled) {
-    //         ch3_ds.handleMidiCC(control, value);
-    //     }
-
-    //     // if (ch4.enabled) {
-    //         ch4.handleMidiCC(control, value);
-    //     // }
-    //     if (ch4_hh1.enabled) {
-    //         ch4_hh1.handleMidiCC(control, value);
-    //     }
-    //     if (ch4_hh2.enabled) {
-    //         ch4_hh2.handleMidiCC(control, value);
-    //     }
-
-    //     // if (ch5.enabled) {
-    //         ch5.handleMidiCC(control, value);
-    //     // }
-    //     if (ch5_rs.enabled) {
-    //         ch5_rs.handleMidiCC(control, value);
-    //     }
-
-    //     // if (ch6.enabled) {
-    //         ch6.handleMidiCC(control, value);
-    //     // }
-    //     if (ch6_cl.enabled) {
-    //         ch6_cl.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 11) {
-    //     // if (ch7.enabled) {
-    //         ch7.handleMidiCC(control, value);
-    //     // }
-    //     if (ch7_ro.enabled) {
-    //         ch7_ro.handleMidiCC(control, value);
-    //     }
-    // }
-
-    // if (channel == 12) {
-    //     // if (ch8.enabled) {
-    //         ch8.handleMidiCC(control, value);
-    //     // }
-    //     if (ch8_ro.enabled) {
-    //         ch8_ro.handleMidiCC(control, value);
-    //     }
-    // }
 };
 
 void ctagSoundProcessorDrumRack::handleMidiPatchChange(const uint8_t channel, const uint8_t patch) {
@@ -981,28 +784,28 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     // print out some stats.
     ESP_LOGI("ctagSoundProcessorDrumRack", "DrumRack: number of parameters registered %d", pMapPar.size());
     int nn = 0;
-    auto it2 = pMapPar.begin();
-    do {
-        ESP_LOGI("ctagSoundProcessorDrumRack", "  %s", it2->first.c_str());
-        ++it2;
+    // auto it2 = pMapPar.begin();
+    // do {
+    //     ESP_LOGI("ctagSoundProcessorDrumRack", "  %s", it2->first.c_str());
+    //     ++it2;
 
-        if (nn++ % 50 == 0) {
-            taskYIELD();
-        }
-    } while (it2 != pMapPar.end());
+    //     if (nn++ % 50 == 0) {
+    //         taskYIELD();
+    //     }
+    // } while (it2 != pMapPar.end());
 
     ESP_LOGI("ctagSoundProcessorDrumRack", "DrumRack: number of CC's registered %d", pMapCC.size());
-    auto it = pMapCC.begin();
-    do {
-        int ch = (it->first >> 8) & 0xFF;
-        int co = it->first & 0xFF;
-        ESP_LOGI("ctagSoundProcessorDrumRack", "  CH %d, CC %d => %s", ch, co, it->second.c_str());
-        ++it;
+    // auto it = pMapCC.begin();
+    // do {
+    //     int ch = (it->first >> 8) & 0xFF;
+    //     int co = it->first & 0xFF;
+    //     ESP_LOGI("ctagSoundProcessorDrumRack", "  CH %d, CC %d => %s", ch, co, it->second.c_str());
+    //     ++it;
 
-        if (nn++ % 50 == 0) {
-            taskYIELD();
-        }
-    } while (it != pMapCC.end());
+    //     if (nn++ % 50 == 0) {
+    //         taskYIELD();
+    //     }
+    // } while (it != pMapCC.end());
 
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
@@ -1094,11 +897,11 @@ void ctagSoundProcessorDrumRack::knowYourself(){
     pMapPar.emplace("fx2_time", [&](const int val){ fx2_time = val;});
 	// pMapCv.emplace("fx2_time", [&](const int val){ cv_fx2_time = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 40), "fx2_time");
-	
+
     pMapPar.emplace("fx2_lp", [&](const int val){ fx2_lp = val;});
 	// pMapCv.emplace("fx2_lp", [&](const int val){ cv_fx2_lp = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 41), "fx2_lp");
-    
+
     pMapPar.emplace("fx2_amount", [&](const int val){ fx2_amount = val;});
 	// pMapCv.emplace("fx2_amount", [&](const int val){ cv_fx2_amount = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 42), "fx2_amount");

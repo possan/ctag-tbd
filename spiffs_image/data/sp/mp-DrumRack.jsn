@@ -951,7 +951,7 @@
                 },
                 {
                     "id": "ch7_smp_lp",
-                    "current": 1,
+                    "current": 0,
                     "trig": -1
                 },
                 {
@@ -1036,12 +1036,12 @@
                 },
                 {
                     "id": "ch8_smp_lp",
-                    "current": 1,
+                    "current": 0,
                     "trig": -1
                 },
                 {
                     "id": "ch8_smp_lp_pp",
-                    "current": 1,
+                    "current": 0,
                     "trig": -1
                 },
                 {
@@ -1206,12 +1206,12 @@
                 },
                 {
                     "id": "ch14_smp_lp",
-                    "current": 1,
+                    "current": 0,
                     "trig": -1
                 },
                 {
                     "id": "ch14_smp_lp_pp",
-                    "current": 1,
+                    "current": 0,
                     "trig": -1
                 },
                 {

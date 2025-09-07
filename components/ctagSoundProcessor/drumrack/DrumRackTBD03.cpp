@@ -9,8 +9,6 @@ using namespace CTAG::SP;
 #define td3_kAccentVCAFactor 1.5f
 
 void DrumRackTBD03::Init(const DrumRackInitData *initdata) {
-    // uint8_t *privatedata = initdata->allocator(1000);
-
     td3_pirkle_zdf_boost.Init();
     td3_karlson.Init();
     td3_blaukraut.Init();
@@ -29,91 +27,52 @@ void DrumRackTBD03::Init(const DrumRackInitData *initdata) {
     td3_adVCF.SetDecay(0.5f);
     td3_ws.Init(0xcafe);
 
-	initdata->rack->registerParamAndCC(initdata, "sync_trig", 6, [&](const int val){ td3_sync_trig = val;});
-    // initdata->rack->registerCC(initdata->prefix, "sync_trig", CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + 6));
-	// initdata->rack->registerTrig(initdata->prefix, "sync_trig", [&](const int val){ trig_td3_sync_trig = val;});
+    initdata->rack->registerParamAndCC(initdata, "shape", 6, [&](const int val){ td3_shape = val;});
+	initdata->rack->registerParamAndCC(initdata, "param_0", 7, [&](const int val){ td3_param_0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay_vca", 8, [&](const int val){ td3_decay_vca = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay_vcf", 9, [&](const int val){ td3_decay_vcf = val;});
 
-    initdata->rack->registerParamAndCC(initdata, "shape", 7, [&](const int val){ td3_shape = val;});
-	initdata->rack->registerParamAndCC(initdata, "param_0", 8, [&](const int val){ td3_param_0 = val;});
-    initdata->rack->registerParamAndCC(initdata, "param_1", 9, [&](const int val){ td3_param_1 = val;});
-	initdata->rack->registerParamAndCC(initdata, "filter_type", 10, [&](const int val){ td3_filter_type = val;});
-	initdata->rack->registerParamAndCC(initdata, "cutoff", 11, [&](const int val){ td3_cutoff = val;});
-	initdata->rack->registerParamAndCC(initdata, "resonance", 12, [&](const int val){ td3_resonance = val;});
-	initdata->rack->registerParamAndCC(initdata, "envelope", 13, [&](const int val){ td3_envelope = val;});
+    initdata->rack->registerParamAndCC(initdata, "cutoff", 10, [&](const int val){ td3_cutoff = val;});
+	initdata->rack->registerParamAndCC(initdata, "resonance", 11, [&](const int val){ td3_resonance = val;});
+	initdata->rack->registerParamAndCC(initdata, "envelope", 12, [&](const int val){ td3_envelope = val;});
+	initdata->rack->registerParamAndCC(initdata, "filter_type", 13, [&](const int val){ td3_filter_type = val;});
+
 	initdata->rack->registerParamAndCC(initdata, "saturation", 14, [&](const int val){ td3_saturation = val;});
-	initdata->rack->registerParamAndCC(initdata, "drive", 15, [&](const int val){ td3_drive = val;});
-	initdata->rack->registerParamAndCC(initdata, "accent", 16, [&](const int val){ td3_accent = val;});
-    initdata->rack->registerParamAndCC(initdata, "accent_level", 17, [&](const int val){ td3_accent_level = val;});
-    initdata->rack->registerParamAndCC(initdata, "slide", 18, [&](const int val){ td3_slide = val;});
-    initdata->rack->registerParamAndCC(initdata, "slide_level", 19, [&](const int val){ td3_slide_level = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay_vca", 20, [&](const int val){ td3_decay_vca = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay_vcf", 21, [&](const int val){ td3_decay_vcf = val;});
-    initdata->rack->registerParamAndCC(initdata, "p0_amt", 22, [&](const int val){ td3_p0_amt = val;});
-	initdata->rack->registerParamAndCC(initdata, "p1_amt", 23, [&](const int val){ td3_p1_amt = val;});
+    initdata->rack->registerParamAndCC(initdata, "drive", 15, [&](const int val){ td3_drive = val;});
+    initdata->rack->registerParamAndCC(initdata, "slide", 16, [&](const int val){ td3_slide = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 17, [&](const int val){ td3_accent = val;});
+
+    initdata->rack->registerParamAndCC(initdata, "param_1", 18, [&](const int val){ td3_param_1 = val;});
+    initdata->rack->registerParamAndCC(initdata, "p0_amt", 19, [&](const int val){ td3_p0_amt = val;});
+    initdata->rack->registerParamAndCC(initdata, "p1_amt", 20, [&](const int val){ td3_p1_amt = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent_level", 21, [&](const int val){ td3_accent_level = val;});
+
+    initdata->rack->registerParamAndCC(initdata, "slide_level", 22, [&](const int val){ td3_slide_level = val;});
+    initdata->rack->registerParamAndCC(initdata, "sync_trig", 23, [&](const int val){ td3_sync_trig = val;});
 
     this->enabled = false;
 }
 
 void DrumRackTBD03::handleMidiNoteOn(uint8_t note, uint8_t vel) {
     midi_trig = true;
-    midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
-    // printf("TBDD3 Note on %d %d (%f hz)\n", note, vel, midi_freq);
+    midi_note = note;
+    // midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
+    // printf("TBDD3 Note on %d %d\n", note, vel);
 }
 
 void DrumRackTBD03::handleMidiNoteOff(uint8_t note, uint8_t vel) {
     // printf("TBDD3 Note off %d %d\n", note, vel);
 }
 
-// void DrumRackTBD03::handleMidiCC(uint8_t control, uint8_t value) {
-//     int localcontrol = control;
-//     printf("TBDD3 CC %d %d\n", control, value);
-
-//     if (localcontrol == 6) {
-//         td3_shape = (value * 4096) / 127;
-//     }
-
-//     if (localcontrol == 7) {
-//         td3_param_0 = (value * 4096) / 127;
-//     }
-
-//     if (localcontrol == 8) {
-//         td3_decay_vca = (value * 4096) / 127;
-//     }
-
-//     if (localcontrol == 9) {
-//         td3_cutoff = (value * 4096) / 127;
-//     }
-
-//     if (localcontrol == 10) {
-//         td3_resonance = (value * 4096) / 127;
-//     }
-
-//     if (localcontrol == 11) {
-//         td3_envelope = (value * 4096) / 127;
-//     }
-
-//     if (localcontrol == 12) {
-//         td3_decay_vcf = (value * 4096) / 127;
-//     }
-    
-//     if (localcontrol == 13) {
-//         td3_filter_type = (value * 4096) / 127;
-//     }
-    
-//     if (localcontrol == 14) {
-//         td3_drive = (value * 4096) / 127;
-//     }
-// }
-
 void DrumRackTBD03::Process(const DrumRackProcessData &data) {
     std::fill_n(td3_out, BUF_SZ, 0.f);
-
-    float dvcf, dvca;
-    // bool trg = midi_trig;
 
     if (!this->enabled) {
         return;
     }
+
+    float dvcf, dvca;
+    // bool trg = midi_trig;
 
     // if (trig_td3_trigger != -1) {
     //     trg = data.trig[trig_td3_trigger] == 1 ? 0 : 1; // negative logic
@@ -124,22 +83,22 @@ void DrumRackTBD03::Process(const DrumRackProcessData &data) {
     if (midi_trig && !td3_pre_trig) {
         // printf("TBDD3\n");
         td3_isAccent = td3_accent;
-        if (trig_td3_accent != -1) {
-            td3_isAccent = data.trig[trig_td3_accent] == 0 ? 1 : 0;
-        }
+        // if (trig_td3_accent != -1) {
+        //     td3_isAccent = data.trig[trig_td3_accent] == 0 ? 1 : 0;
+        // }
         dvcf = td3_decay_vcf / 4095.f * 5.f;
-        if (cv_td3_decay_vcf != -1) {
-            dvcf = fabsf(data.cv[cv_td3_decay_vcf]) * 5.f;
-        }
+        // if (cv_td3_decay_vcf != -1) {
+        //     dvcf = fabsf(data.cv[cv_td3_decay_vcf]) * 5.f;
+        // }
         // if accent shorten decay of filter eg
         if (td3_isAccent) {
             dvcf = td3_kAccentDecay;
         }
         td3_adVCF.SetDecay(dvcf);
         dvca = td3_decay_vca / 4095.f * 5.f;
-        if (cv_td3_decay_vca != -1) {
-            dvca = fabsf(data.cv[cv_td3_decay_vca]) * 5.f;
-        }
+        // if (cv_td3_decay_vca != -1) {
+        //     dvca = fabsf(data.cv[cv_td3_decay_vca]) * 5.f;
+        // }
         td3_adVCA.SetDecay(dvca);
         td3_adVCF.Trigger();
         td3_adVCA.Trigger();
@@ -160,10 +119,10 @@ void DrumRackTBD03::Process(const DrumRackProcessData &data) {
     float egvalVCF = td3_adVCF.Process();
 
     // shape
-    int s = td3_shape;
-    if (cv_td3_shape != -1) {
-        s = fabsf(data.cv[cv_td3_shape]) * (braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META + 1);
-    }
+    int s = td3_shape * 47 / 4096;
+    // if (cv_td3_shape != -1) {
+    //     s = fabsf(data.cv[cv_td3_shape]) * (braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META + 1);
+    // }
     braids::MacroOscillatorShape ms = static_cast<braids::MacroOscillatorShape>(s);
     if (ms >= braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META)
         ms = braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META;
@@ -171,28 +130,28 @@ void DrumRackTBD03::Process(const DrumRackProcessData &data) {
 
     // Set timbre and color: CV + internal modulation.
     int16_t parameters[2];
-    parameters[0] = td3_param_0;
-    parameters[1] = td3_param_1;
-    if (cv_td3_param_0 != -1) {
-        parameters[0] = static_cast<int16_t>(fabsf(data.cv[cv_td3_param_0] * 32767));
-    }
-    if (cv_td3_param_1 != -1) {
-        parameters[1] = static_cast<int16_t>(fabsf(data.cv[cv_td3_param_1] * 32767));
-    }
+    parameters[0] = td3_param_0 * 32768 / 4096;
+    parameters[1] = td3_param_1 * 32768 / 4096;
+    // if (cv_td3_param_0 != -1) {
+    //     parameters[0] = static_cast<int16_t>(fabsf(data.cv[cv_td3_param_0] * 32767));
+    // }
+    // if (cv_td3_param_1 != -1) {
+    //     parameters[1] = static_cast<int16_t>(fabsf(data.cv[cv_td3_param_1] * 32767));
+    // }
     int32_t mod_amt[2];
-    mod_amt[0] = td3_p0_amt;
-    mod_amt[1] = td3_p1_amt;
+    mod_amt[0] = td3_p0_amt;// * 4096 / 4096;
+    mod_amt[1] = td3_p1_amt;// * 4096 / 4096;
     int32_t mod[2];
-    if (cv_td3_p0_amt != -1) {
-        mod[0] = static_cast<int32_t >(data.cv[cv_td3_p0_amt] * 65535.f);
-    } else {
+    // if (cv_td3_p0_amt != -1) {
+    //     mod[0] = static_cast<int32_t >(data.cv[cv_td3_p0_amt] * 65535.f);
+    // } else {
         mod[0] = static_cast<int32_t >(egvalVCF * 65535.f);
-    }
-    if (cv_td3_p1_amt != -1) {
-        mod[1] = static_cast<int32_t >(data.cv[cv_td3_p1_amt] * 65535.f);
-    } else {
+    // }
+    // if (cv_td3_p1_amt != -1) {
+    //     mod[1] = static_cast<int32_t >(data.cv[cv_td3_p1_amt] * 65535.f);
+    // } else {
         mod[1] = static_cast<int32_t >(egvalVCF * 65535.f);
-    }
+    // }
     for (int i = 0; i < 2; ++i) {
         int32_t value = parameters[i];
         value += (mod[i] * mod_amt[i]) / 8192;
@@ -205,14 +164,14 @@ void DrumRackTBD03::Process(const DrumRackProcessData &data) {
     MK_BOOL_PAR_NOCV(isSlide, td3_slide)
     MK_FLT_PAR_ABS_NOCV(fSlideLevel, td3_slide_level, 4095.f, 0.099f)
     fSlideLevel += 0.9f;
-    int32_t ipitch = midi_freq;
+    int32_t ipitch = 0; // midi_freq * 128.0f;
     // if (cv_td3_pitch != -1) {
-        float fPitch = midi_freq; //  data.cv[cv_td3_pitch] * 12.f * 5.f; // five octaves
-        if(isSlide){
-            fPitch = fSlideLevel * td3_pre_pitch_val + (1.f - fSlideLevel) * fPitch;
-        }
-        td3_pre_pitch_val = fPitch;
-        ipitch += static_cast<int32_t>(fPitch * 128.f);
+    float fPitch = midi_note; //  data.cv[cv_td3_pitch] * 12.f * 5.f; // five octaves
+    // // if(isSlide){
+    // //     fPitch = fSlideLevel * td3_pre_pitch_val + (1.f - fSlideLevel) * fPitch;
+    // // }
+    // td3_pre_pitch_val = fPitch;
+    ipitch += static_cast<int32_t>(fPitch * 128.f);
     // }
     CONSTRAIN(ipitch, 0, 16383);
     td3_osc.set_pitch(ipitch);
@@ -222,46 +181,47 @@ void DrumRackTBD03::Process(const DrumRackProcessData &data) {
     td3_osc.Render(td3_sync, buffer, BUF_SZ);
 
     // apply filter and EGs
-    int ftype = td3_filter_type;
-    if (cv_td3_filter_type != -1) {
-        ftype = static_cast<int>(fabsf(data.cv[cv_td3_filter_type]) * 5.f);
-    }
+    int ftype = (td3_filter_type * 4) / 4096;
+    // if (cv_td3_filter_type != -1) {
+    //     ftype = static_cast<int>(fabsf(data.cv[cv_td3_filter_type]) * 5.f);
+    // }
     CONSTRAIN(ftype, 0, 4)
+
     float c = td3_cutoff / 4095.f;
-    if (cv_td3_cutoff != -1) {
-        c = fabsf(data.cv[cv_td3_cutoff]);
-    }
+    // if (cv_td3_cutoff != -1) {
+    //     c = fabsf(data.cv[cv_td3_cutoff]);
+    // }
     c *= 27000.f;
     c -= 5000.f;
     float fenv = td3_envelope / 4095.f;
-    if (cv_td3_envelope != -1) {
-        fenv = fabsf(data.cv[cv_td3_envelope]);
-    }
+    // if (cv_td3_envelope != -1) {
+    //     fenv = fabsf(data.cv[cv_td3_envelope]);
+    // }
     c += fenv * egvalVCF * 22000.f;
     // if accent add to VCF envelope
     float facclev = td3_accent_level / 4095.f;
-    if (cv_td3_accent_level != -1) {
-        facclev = fabsf(data.cv[cv_td3_accent_level]);
-    }
+    // if (cv_td3_accent_level != -1) {
+    //     facclev = fabsf(data.cv[cv_td3_accent_level]);
+    // }
     if (td3_isAccent) {
         c += facclev * egvalVCF * 22000.f;
     }
 
     float r = td3_resonance / 4095.f;
-    if (cv_td3_resonance != -1) {
-        r = fabsf(data.cv[cv_td3_resonance]);
-    }
+    // if (cv_td3_resonance != -1) {
+    //     r = fabsf(data.cv[cv_td3_resonance]);
+    // }
 
-    int32_t signature = td3_saturation;
-    if (cv_td3_saturation != -1) {
-        signature = static_cast<int32_t>(fabsf(data.cv[cv_td3_saturation]) * 65535.f);
-    }
+    int32_t signature = td3_saturation * 16; // * 65535 / 4095;
+    // if (cv_td3_saturation != -1) {
+    //     signature = static_cast<int32_t>(fabsf(data.cv[cv_td3_saturation]) * 65535.f);
+    // }
     CONSTRAIN(signature, 0, 65535)
 
     float dri = td3_drive / 4095.f * 30.f;
-    if (cv_td3_drive != -1) {
-        dri = fabsf(data.cv[cv_td3_drive]) * 30.f;
-    }
+    // if (cv_td3_drive != -1) {
+    //     dri = fabsf(data.cv[cv_td3_drive]) * 30.f;
+    // }
 
     CONSTRAIN(c, 20.f, 22000.f)
     CONSTRAIN(r, 0.f, 1.f)

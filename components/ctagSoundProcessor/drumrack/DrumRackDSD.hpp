@@ -44,9 +44,9 @@ private:
 	bool trig_prev {false};
 	plaits::SyntheticSnareDrum dsd;
 	// atomic<int16_t> trigger, trig_trigger;
-	atomic<int16_t> accent, cv_accent;
-	atomic<int16_t> f0, cv_f0;
-	atomic<int16_t> fm_amt, cv_fm_amt;
-	atomic<int16_t> decay, cv_decay;
-	atomic<int16_t> spy, cv_spy;
+	atomic<int16_t> accent; //, cv_accent;
+	atomic<int16_t> f0; //, cv_f0;
+	atomic<int16_t> fm_amt; //, cv_fm_amt;
+	atomic<int16_t> decay; //, cv_decay;
+	atomic<int16_t> spy; //, cv_spy;
 };

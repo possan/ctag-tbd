@@ -7,33 +7,42 @@ using namespace CTAG::SP;
 void DrumRackRompler::Init(const DrumRackInitData *initdata) {
     rompler.Init(44100.f);
 
-    initdata->rack->registerParamAndCC(initdata, "speed", 6, [&](const int val){ s1_speed = val;});
-    initdata->rack->registerParamAndCC(initdata, "pitch", 7, [&](const int val){ s1_pitch = val;});
-    initdata->rack->registerParamAndCC(initdata, "bank", 8, [&](const int val){ s1_bank = val;});
-    initdata->rack->registerParamAndCC(initdata, "slice", 9, [&](const int val){ s1_slice = val;});
-    initdata->rack->registerParamAndCC(initdata, "start", 10, [&](const int val){ s1_start = val;});
-    initdata->rack->registerParamAndCC(initdata, "end", 11, [&](const int val){ s1_end = val;});
-    initdata->rack->registerParamAndCC(initdata, "lp", 12, [&](const int val){ s1_lp = val;});
-    initdata->rack->registerParamAndCC(initdata, "lp_pp", 13, [&](const int val){ s1_lp_pp = val;});
-    initdata->rack->registerParamAndCC(initdata, "lp_pos", 14, [&](const int val){ s1_lp_pos = val;});
-    initdata->rack->registerParamAndCC(initdata, "atk", 15, [&](const int val){ s1_atk = val;});
-    initdata->rack->registerParamAndCC(initdata, "dcy", 16, [&](const int val){ s1_dcy = val;});
-    initdata->rack->registerParamAndCC(initdata, "eg2fm", 17, [&](const int val){ s1_eg2fm = val;});
-    initdata->rack->registerParamAndCC(initdata, "brr", 18, [&](const int val){ s1_brr = val;});
-    initdata->rack->registerParamAndCC(initdata, "ft", 19, [&](const int val){ s1_ft = val;});
-    initdata->rack->registerParamAndCC(initdata, "fc", 20, [&](const int val){ s1_fc = val;});
-    initdata->rack->registerParamAndCC(initdata, "fq", 21, [&](const int val){ s1_fq = val;});
+    initdata->rack->registerParamAndCC(initdata, "bank", 6, [&](const int val){ s1_bank = val;});
+    initdata->rack->registerParamAndCC(initdata, "slice", 7, [&](const int val){ s1_slice = val;});
+    initdata->rack->registerParamAndCC(initdata, "start", 8, [&](const int val){ s1_start = val;});
+    initdata->rack->registerParamAndCC(initdata, "end", 9, [&](const int val){ s1_end = val;});
+    
+    initdata->rack->registerParamAndCC(initdata, "fc", 10, [&](const int val){ s1_fc = val;});
+    initdata->rack->registerParamAndCC(initdata, "fq", 11, [&](const int val){ s1_fq = val;});
+    initdata->rack->registerParamAndCC(initdata, "ft", 12, [&](const int val){ s1_ft = val;});
+    initdata->rack->registerParamAndCC(initdata, "brr", 13, [&](const int val){ s1_brr = val;});
+    
+    initdata->rack->registerParamAndCC(initdata, "atk", 14, [&](const int val){ s1_atk = val;});
+    initdata->rack->registerParamAndCC(initdata, "dcy", 15, [&](const int val){ s1_dcy = val;});
+    initdata->rack->registerParamAndCC(initdata, "speed", 16, [&](const int val){ s1_speed = val;});
+    // initdata->rack->registerParamAndCC(initdata, "pitch", 17, [&](const int val){ s1_pitch = val;});
+    
+    initdata->rack->registerParamAndCC(initdata, "lp", 18, [&](const int val){ s1_lp = val;});
+    initdata->rack->registerParamAndCC(initdata, "lp_pp", 19, [&](const int val){ s1_lp_pp = val;});
+    initdata->rack->registerParamAndCC(initdata, "lp_pos", 20, [&](const int val){ s1_lp_pos = val;});
+    initdata->rack->registerParamAndCC(initdata, "eg2fm", 21, [&](const int val){ s1_eg2fm = val;});
+
+    s1_lp = 0;
+    s1_lp_pp = 0;
 
     this->enabled = false;
 }
 
 void DrumRackRompler::handleMidiNoteOn(uint8_t note, uint8_t vel) {
-    // TODO: Implement
-    // printf("Rompler Note on %d %d\n", note, vel);
+    midi_trig = true;
+    midi_note = note;
+    midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
+    // printf("rompler note on %d, %d (%f hz)\n", note, vel, midi_freq);
 }
 
 void DrumRackRompler::handleMidiNoteOff(uint8_t note, uint8_t vel) {
     // TODO: Implement
+    // midi_trig = false;
     // printf("Rompler Note off %d %d\n", note, vel);
 }
 
@@ -45,33 +54,24 @@ void DrumRackRompler::handleMidiNoteOff(uint8_t note, uint8_t vel) {
 void DrumRackRompler::Process(const DrumRackProcessData &data) {
     std::fill_n(s1_out, BUF_SZ, 0.f);
 
-    return;
-
     if (!this->enabled) {
         return;
     }
 
-    uint32_t firstNonWtSlice = data.firstNonWtSlice; // sampleRom.GetFirstNonWaveTableSlice();
-
-    MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
-    rompler.params.gate = bGateS1;
-    if (bGateS1 && !trig_prev) {
-        // printf("S\n");
-        trig_prev = bGateS1;
-    }
-
-    float fS1Speed = s1_speed / 4095.f * 2.f;
-    if (cv_s1_speed != -1) fS1Speed += data.cv[cv_s1_speed] * 2.f;
-    CONSTRAIN(fS1Speed, -2.f, 2.f)
+    float fS1Speed = (s1_speed - 0) / 2048.f;
+    // if (cv_s1_speed != -1) fS1Speed += data.cv[cv_s1_speed] * 2.f;
+    CONSTRAIN(fS1Speed, 0.f, 2.f)
     rompler.params.playbackSpeed = fS1Speed;
-    float fS1Pitch = s1_pitch;
-    if (cv_s1_pitch != -1){
-        fS1Pitch += data.cv[cv_s1_pitch] * 12.f * 5.f;
-    }
-    rompler.params.pitch = fS1Pitch;
+    // float fS1Pitch = s1_pitch;
+    // if (cv_s1_pitch != -1){
+    //     fS1Pitch += data.cv[cv_s1_pitch] * 12.f * 5.f;
+    // }
+    rompler.params.pitch = midi_note;
+
+    uint32_t firstNonWtSlice = data.firstNonWtSlice; // sampleRom.GetFirstNonWaveTableSlice();
     MK_INT_PAR_ABS_NOCV(iS1Bank, s1_bank, 32.f)
     CONSTRAIN(iS1Bank, 0, 31)
-    MK_INT_PAR_ABS_NOCV(iS1Slice, s1_slice, 32.f)
+    MK_INT_PAR_ABS_NOCV(iS1Slice, s1_slice, 127.f) // midi cc
     CONSTRAIN(iS1Slice, 0, 31)
     iS1Slice = iS1Bank * 32 + iS1Slice + firstNonWtSlice;
     rompler.params.slice = iS1Slice;
@@ -101,6 +101,40 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     rompler.params.resonance = fS1Reso;
     MK_INT_PAR_ABS_NOCV(iS1FType, s1_ft, 4.f)
     CONSTRAIN(iS1FType, 0, 3);
+
+    // MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
+    rompler.params.gate = midi_trig;
+    if (midi_trig && !trig_prev) {
+        // printf("S1 %ld %1.1f %1.1f\n",
+        //     rompler.params.slice,
+        //     rompler.params.playbackSpeed,
+        //     rompler.params.pitch);
+
+        // printf("S1 %ld %1.1f %1.1f %1.1f %1.1f\n",
+        //     rompler.params.slice,
+        //     rompler.params.playbackSpeed,
+        //     rompler.params.pitch,
+        //     rompler.params.startOffsetRelative,
+        //     rompler.params.lengthRelative);
+
+        // printf("S2 %1.1f %1.1f %1.1f %1.1f %d\n",
+        //     (float)rompler.params.a,
+        //     (float)rompler.params.d,
+        //     (float)rompler.params.cutoff,
+        //     (float)rompler.params.resonance,
+        //     (int)rompler.params.filterType);
+
+        // printf("S3 %d %d %1.1f %1.1f %ld %d\n",
+        //     rompler.params.loop,
+        //     rompler.params.loopPiPo,
+        //     (float)rompler.params.loopMarker,
+        //     (float)rompler.params.egFM,
+        //     rompler.params.bitReduction,
+        //     rompler.params.gate);
+    }
+    trig_prev = midi_trig;
+    midi_trig = false;
+
     rompler.params.filterType = static_cast<CTAG::SYNTHESIS::RomplerVoiceMinimal::FilterType>(iS1FType);
     rompler.Process(s1_out, BUF_SZ);
 };

@@ -42,25 +42,25 @@ IRAM_ATTR void CTAG::CTRL::Control::Update(uint8_t *trigs, float *cvs, uint8_t *
         memcpy(trigs, &buf_ptr[N_CVS * 4], N_TRIGS);
         memcpy(midibytes, &buf_ptr[N_CVS * 4 + N_TRIGS], N_MIDIBYTES);
 
-        if (updatecounter % 1000 == 0) {
-            ESP_LOGI("Control", "Got SPI update %d%d%d%d%d%d%d%d %02X%02X%02X%02X%02X%02X%02X%02X",
-                trigs[0],
-                trigs[1],
-                trigs[2],
-                trigs[3],
-                trigs[4],
-                trigs[5],
-                trigs[6],
-                trigs[7],
-                midibytes[0],
-                midibytes[1],
-                midibytes[2],
-                midibytes[3],
-                midibytes[4],
-                midibytes[5],
-                midibytes[6],
-                midibytes[7]);
-        }
+        // if (updatecounter % 3000 == 0) {
+        //     ESP_LOGI("Control", "Got SPI update %d%d%d%d%d%d%d%d %02X%02X%02X%02X%02X%02X%02X%02X",
+        //         trigs[0],
+        //         trigs[1],
+        //         trigs[2],
+        //         trigs[3],
+        //         trigs[4],
+        //         trigs[5],
+        //         trigs[6],
+        //         trigs[7],
+        //         midibytes[0],
+        //         midibytes[1],
+        //         midibytes[2],
+        //         midibytes[3],
+        //         midibytes[4],
+        //         midibytes[5],
+        //         midibytes[6],
+        //         midibytes[7]);
+        // }
     }
 }
 

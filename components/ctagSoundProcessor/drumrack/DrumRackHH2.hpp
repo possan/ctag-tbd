@@ -46,9 +46,9 @@ private:
 	float temp1[BUF_SZ];
 	float temp2[BUF_SZ];
 	// atomic<int16_t> trigger, trig_trigger;
-	atomic<int16_t> accent, cv_accent;
-	atomic<int16_t> f0, cv_f0;
-	atomic<int16_t> tone, cv_tone;
-	atomic<int16_t> decay, cv_decay;
-	atomic<int16_t> noise, cv_noise;
+	atomic<int16_t> accent; //, cv_accent;
+	atomic<int16_t> f0; //, cv_f0;
+	atomic<int16_t> tone; //, cv_tone;
+	atomic<int16_t> decay; //, cv_decay;
+	atomic<int16_t> noise; //, cv_noise;
 };
