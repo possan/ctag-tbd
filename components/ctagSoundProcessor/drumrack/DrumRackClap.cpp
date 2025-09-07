@@ -22,7 +22,7 @@ void DrumRackClap::Init(const DrumRackInitData *initdata) {
 
 void DrumRackClap::handleMidiNoteOn() {
     midi_trig = true;
-    printf("Clap note on\n");
+    // printf("Clap note on\n");
 }
 
 // void DrumRackClap::handleMidiCC(uint8_t control, uint8_t value) {

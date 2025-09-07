@@ -11,13 +11,13 @@ using namespace CTAG::SP;
 void DrumRackDBD::Init(const DrumRackInitData *initdata) {
     dbd.Init();
 
-    initdata->rack->registerParamAndCC(initdata, "accent", 6, [&](const int val){ accent = val;});
-    initdata->rack->registerParamAndCC(initdata, "f0", 7, [&](const int val){ f0 = val;});
-    initdata->rack->registerParamAndCC(initdata, "tone", 8, [&](const int val){ tone = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay", 9, [&](const int val){ decay = val;});
-    initdata->rack->registerParamAndCC(initdata, "dirty", 10, [&](const int val){ dirty = val;});
-    initdata->rack->registerParamAndCC(initdata, "fm_env", 11, [&](const int val){ fm_env = val;});
-    initdata->rack->registerParamAndCC(initdata, "fm_dcy", 12, [&](const int val){ fm_dcy = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 7, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 8, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "dirty", 9, [&](const int val){ dirty = val;});
+    initdata->rack->registerParamAndCC(initdata, "fm_env", 10, [&](const int val){ fm_env = val;});
+    initdata->rack->registerParamAndCC(initdata, "fm_dcy", 11, [&](const int val){ fm_dcy = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 11, [&](const int val){ accent = val;});
 
     this->enabled = false;
 }

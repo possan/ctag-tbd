@@ -11,16 +11,16 @@ using namespace CTAG::SP;
 void DrumRackFMB::Init(const DrumRackInitData *initdata) {
     fmb.Init();
 
-    initdata->rack->registerParamAndCC(initdata, "use_ratio_mode", 6, [&](const int val){ use_ratio_mode = val;});
-	initdata->rack->registerParamAndCC(initdata, "mod_env_sync", 7, [&](const int val){ mod_env_sync = val;});
-    initdata->rack->registerParamAndCC(initdata, "f_b", 8, [&](const int val){ f_b = val;});
-    initdata->rack->registerParamAndCC(initdata, "d_b", 9, [&](const int val){ d_b = val;});
-    initdata->rack->registerParamAndCC(initdata, "f_m", 10, [&](const int val){ f_m = val;});
-    initdata->rack->registerParamAndCC(initdata, "I", 11, [&](const int val){ I = val;});
-    initdata->rack->registerParamAndCC(initdata, "d_m", 12, [&](const int val){ d_m = val;});
-    initdata->rack->registerParamAndCC(initdata, "b_m", 13, [&](const int val){ b_m = val;});
-    initdata->rack->registerParamAndCC(initdata, "A_f", 14, [&](const int val){ A_f = val;});
-    initdata->rack->registerParamAndCC(initdata, "d_f", 15, [&](const int val){ d_f = val;});
+    initdata->rack->registerParamAndCC(initdata, "f_b", 6, [&](const int val){ f_b = val;});
+    initdata->rack->registerParamAndCC(initdata, "d_b", 7, [&](const int val){ d_b = val;});
+    initdata->rack->registerParamAndCC(initdata, "f_m", 8, [&](const int val){ f_m = val;});
+    initdata->rack->registerParamAndCC(initdata, "d_m", 9, [&](const int val){ d_m = val;});
+    initdata->rack->registerParamAndCC(initdata, "b_m", 10, [&](const int val){ b_m = val;});
+    initdata->rack->registerParamAndCC(initdata, "A_f", 11, [&](const int val){ A_f = val;});
+    initdata->rack->registerParamAndCC(initdata, "d_f", 12, [&](const int val){ d_f = val;});
+    initdata->rack->registerParamAndCC(initdata, "I", 13, [&](const int val){ I = val;});
+    initdata->rack->registerParamAndCC(initdata, "use_ratio_mode", 14, [&](const int val){ use_ratio_mode = val;});
+	initdata->rack->registerParamAndCC(initdata, "mod_env_sync", 15, [&](const int val){ mod_env_sync = val;});
 
     this->enabled = false;
 }

@@ -11,12 +11,12 @@ using namespace CTAG::SP;
 void DrumRackDSD::Init(const DrumRackInitData *initdata) {
     dsd.Init();
 
-	initdata->rack->registerParamAndCC(initdata, "accent", 6, [&](const int val){ accent = val;});
-	initdata->rack->registerParamAndCC(initdata, "f0", 7, [&](const int val){ f0 = val;});
+	initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 7, [&](const int val){ decay = val;});
     initdata->rack->registerParamAndCC(initdata, "fm_amt", 8, [&](const int val){ fm_amt = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay", 9, [&](const int val){ decay = val;});
-    initdata->rack->registerParamAndCC(initdata, "spy", 10, [&](const int val){ spy = val;});
-
+    initdata->rack->registerParamAndCC(initdata, "spy", 9, [&](const int val){ spy = val;});
+	initdata->rack->registerParamAndCC(initdata, "accent", 10, [&](const int val){ accent = val;});
+    
     this->enabled = false;
 }
 

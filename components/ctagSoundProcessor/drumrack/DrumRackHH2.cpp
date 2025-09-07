@@ -10,12 +10,12 @@ using namespace CTAG::SP;
 void DrumRackHH2::Init(const DrumRackInitData *initdata) {
     hh2.Init();
 
-    initdata->rack->registerParamAndCC(initdata, "accent", 6, [&](const int val){ accent = val;});
-    initdata->rack->registerParamAndCC(initdata, "f0", 7, [&](const int val){ f0 = val;});
-    initdata->rack->registerParamAndCC(initdata, "tone", 8, [&](const int val){ tone = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay", 9, [&](const int val){ decay = val;});
-    initdata->rack->registerParamAndCC(initdata, "noise", 10, [&](const int val){ noise = val;});
-
+    initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 7, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 8, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "noise", 9, [&](const int val){ noise = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 10, [&](const int val){ accent = val;});
+    
     this->enabled = false;
 }
 
