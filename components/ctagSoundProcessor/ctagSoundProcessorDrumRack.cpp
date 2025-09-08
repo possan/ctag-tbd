@@ -50,10 +50,10 @@ void ctagSoundProcessorDrumRack::preprocessFX1(const ProcessData& data) {
     MK_FLT_PAR_ABS_NOCV(fWidth, fx1_width, 4095.f, 1.f)
     bool bSync = fx1_sync;
     bool bSyncTrig {false};
-    if(trig_fx1_sync != -1) bSyncTrig = data.trig[trig_fx1_sync] == 1 ? false : true;
+    // if(trig_fx1_sync != -1) bSyncTrig = data.trig[trig_fx1_sync] == 1 ? false : true;
     if(!bSync){
         fDelayTime = fx1_time_ms;
-        if(cv_fx1_time_ms != -1) fDelayTime = fabsf(data.cv[cv_fx1_time_ms]) * 2000.f;
+        // if(cv_fx1_time_ms != -1) fDelayTime = fabsf(data.cv[cv_fx1_time_ms]) * 2000.f;
     }
 
     fBase = 20.f * stmlib::SemitonesToRatio(fBase * 120.f);
@@ -123,7 +123,7 @@ void ctagSoundProcessorDrumRack::renderMasterOutput(const ProcessData& data) {
         fCompMUPGain = chunkware_simple::dB2lin(fCompMUPGain);
         fCompMUPGain_pre = fCompMUPGain;
     }
-    MK_FLT_PAR_ABS_PAN(fCompMix, c_mix, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_PAN_NOCV(fCompMix, c_mix, 4095.f, 1.f)
     MK_FLT_PAR_ABS_NOCV(fCompDlyLevel, c_dly_level, 4095.f, 2.f)
     fCompDlyLevel *= fCompDlyLevel;
     MK_FLT_PAR_ABS_NOCV(fCompRevLevel, c_rev_level, 4095.f, 2.f)
@@ -854,60 +854,50 @@ void ctagSoundProcessorDrumRack::knowYourself(){
     // sectionCpp0
 
     pMapPar.emplace("fx1_time_ms", [&](const int val){ fx1_time_ms = val;});
-	// pMapCv.emplace("fx1_time_ms", [&](const int val){ cv_fx1_time_ms = val;});
-	// pMapCC.emplace("fx1_time_ms", [&](const int val){ cc_fx1_time_ms = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 20), "fx1_time_ms");
 
     pMapPar.emplace("fx1_sync", [&](const int val){ fx1_sync = val;});
-	// pMapTrig.emplace("fx1_sync", [&](const int val){ trig_fx1_sync = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 21), "fx1_sync");
 
     pMapPar.emplace("fx1_freeze", [&](const int val){ fx1_freeze = val;});
-	// pMapTrig.emplace("fx1_freeze", [&](const int val){ trig_fx1_freeze = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 22), "fx1_freeze");
 
     pMapPar.emplace("fx1_tape_digital", [&](const int val){ fx1_tape_digital = val;});
-	// pMapTrig.emplace("fx1_tape_digital", [&](const int val){ trig_fx1_tape_digital = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 23), "fx1_tape_digital");
 
     pMapPar.emplace("fx1_st_width", [&](const int val){ fx1_st_width = val;});
-	// pMapCv.emplace("fx1_st_width", [&](const int val){ cv_fx1_st_width = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 24), "fx1_st_width");
 
     pMapPar.emplace("fx1_fx_send", [&](const int val){ fx1_fx_send = val;});
-	// pMapCv.emplace("fx1_fx_send", [&](const int val){ cv_fx1_fx_send = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 25), "fx1_fx_send");
 
     pMapPar.emplace("fx1_feedback", [&](const int val){ fx1_feedback = val;});
-	// pMapCv.emplace("fx1_feedback", [&](const int val){ cv_fx1_feedback = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 26), "fx1_feedback");
 
     pMapPar.emplace("fx1_base", [&](const int val){ fx1_base = val;});
-	// pMapCv.emplace("fx1_base", [&](const int val){ cv_fx1_base = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 27), "fx1_base");
 
     pMapPar.emplace("fx1_width", [&](const int val){ fx1_width = val;});
-	// pMapCv.emplace("fx1_width", [&](const int val){ cv_fx1_width = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 28), "fx1_width");
 
     pMapPar.emplace("fx1_amount", [&](const int val){ fx1_amount = val;});
-	// pMapCv.emplace("fx1_amount", [&](const int val){ cv_fx1_amount = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 29), "fx1_amount");
 
+
+
     pMapPar.emplace("fx2_time", [&](const int val){ fx2_time = val;});
-	// pMapCv.emplace("fx2_time", [&](const int val){ cv_fx2_time = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 40), "fx2_time");
 
     pMapPar.emplace("fx2_lp", [&](const int val){ fx2_lp = val;});
-	// pMapCv.emplace("fx2_lp", [&](const int val){ cv_fx2_lp = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 41), "fx2_lp");
 
     pMapPar.emplace("fx2_amount", [&](const int val){ fx2_amount = val;});
-	// pMapCv.emplace("fx2_amount", [&](const int val){ cv_fx2_amount = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 42), "fx2_amount");
 
+
+
+
     pMapPar.emplace("c_thres", [&](const int val){ c_thres = val;});
-	// pMapCv.emplace("c_thres", [&](const int val){ cv_c_thres = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 60), "c_thres");
 
     pMapPar.emplace("c_ratio", [&](const int val){ c_ratio = val;});
@@ -942,6 +932,8 @@ void ctagSoundProcessorDrumRack::knowYourself(){
 	// pMapCv.emplace("c_rev_level", [&](const int val){ cv_c_rev_level = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 68), "c_rev_level");
 
+
+
     pMapPar.emplace("sum_mute", [&](const int val){ sum_mute = val;});
 	// pMapTrig.emplace("sum_mute", [&](const int val){ trig_sum_mute = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 80), "sum_mute");
@@ -949,6 +941,8 @@ void ctagSoundProcessorDrumRack::knowYourself(){
     pMapPar.emplace("sum_lev", [&](const int val){ sum_lev = val;});
 	// pMapCv.emplace("sum_lev", [&](const int val){ cv_sum_lev = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 81), "sum_lev");
+
+
 
     isStereo = true;
 	id = "DrumRack";
