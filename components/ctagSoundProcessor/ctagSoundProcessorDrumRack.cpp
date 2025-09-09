@@ -1,7 +1,7 @@
 #include "ctagSoundProcessorDrumRack.hpp"
 #include "braids/quantizer_scales.h"
 #include "esp_system.h"
-#include "freertos/FreeRTOS.h"
+// #include "freertos/FreeRTOS.h"
 
 using namespace CTAG::SP;
 

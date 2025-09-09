@@ -139,7 +139,7 @@ namespace CTAG::SP::HELPERS {
         totalSize = 0;
         numberSlices = 0;
         headerSize = 0;
-        ESP_LOGI("SROM", "Sample rom at 0x%"PRIx32" bytes", (long)CONFIG_SAMPLE_ROM_START_ADDRESS);
+        ESP_LOGI("SROM", "Sample rom at 0x%" PRIx32 " bytes", (long)CONFIG_SAMPLE_ROM_START_ADDRESS);
         //spi_flash_read(CONFIG_SAMPLE_ROM_START_ADDRESS, &deadface, 4);
         esp_flash_read(nullptr, &deadface, CONFIG_SAMPLE_ROM_START_ADDRESS, 4);
         if (deadface != 0xdeadface) {

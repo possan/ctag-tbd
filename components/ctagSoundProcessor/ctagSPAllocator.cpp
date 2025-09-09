@@ -63,7 +63,7 @@ void *ctagSPAllocator::Allocate(std::size_t const &size) {
     ESP_LOGI("ctagSPAllocator", "Allocate: allocating %d bytes", size);
     ptr = heap_caps_calloc(1, size+256, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT | MALLOC_CAP_EXEC);
     // ptr = malloc(size + 256);
-    ESP_LOGI("ctagSPAllocator", "Allocate: ptr=0x%"PRIu32, (uint32_t)ptr);
+    ESP_LOGI("ctagSPAllocator", "Allocate: ptr=0x%" PRIu32, (uint32_t)ptr);
 
     // ptr = heap_caps_calloc(1, size, MALLOC_CAP_32BIT | MALLOC_CAP_SPIRAM);
     // if(allocationType == AllocationType::CH0){
