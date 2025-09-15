@@ -815,7 +815,9 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     //     }
     // } while (it != pMapCC.end());
 
-#ifndef SIMULATOR
+#ifdef TBD_SIM
+    // do not load a preset 
+#else
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
 #endif
