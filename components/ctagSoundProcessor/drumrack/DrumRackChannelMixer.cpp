@@ -11,9 +11,6 @@ using namespace CTAG::SP;
 void DrumRackChannelMixer::Init(const DrumRackInitData *initdata) {
 	cc_base = initdata->cc_base;
 
-	// initdata->rack->registerParamAndCC(initdata, "mute", [&](const int val){ mix_mute = val;});
-	// initdata->rack->registerTrig(initdata->prefix, "mute", [&](const int val){ trig_mix_mute = val;});
-
 	initdata->rack->registerParamAndCC(initdata, "device", 0, [&](const int val){ mix_device = val;});
 	initdata->rack->registerParamAndCC(initdata, "lev", 1, [&](const int val){ mix_lev = val;});
 	initdata->rack->registerParamAndCC(initdata, "pan", 2, [&](const int val){ mix_pan = val;});
@@ -25,22 +22,20 @@ void DrumRackChannelMixer::Init(const DrumRackInitData *initdata) {
 }
 
 void DrumRackChannelMixer::PreProcess(const DrumRackProcessData &data) {
-    // MK_BOOL_PAR_NOCV(bMute, mix_mute)
     MK_FLT_PAR_ABS_NOCV(fDev, mix_device, 4095.f, 4095.f);
-    MK_FLT_PAR_ABS_PAN_NOCV(fPan, mix_pan, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(fPan, mix_pan, 4095.f, 1.f)
     MK_FLT_PAR_ABS_NOCV(fLev, mix_lev, 4095.f, 2.f); fLev *= fLev;
     MK_FLT_PAR_ABS_NOCV(fFX1Send, mix_fx1, 4095.f, maxFXSendLevelDly); fFX1Send *= fFX1Send;
     MK_FLT_PAR_ABS_NOCV(fFX2Send, mix_fx2, 4095.f, maxFXSendLevelRev); fFX2Send *= fFX2Send;
 
-    // this->enabled = true // (/*!bMute &&*/ fLev > minVolume);
-	// int idev = 	(int)fDev;
+    this->enabled = fLev > minVolume;
 
 	if (this->mix_device != this->device) {
 		// ESP_LOGI("DrumRackChannelMixer", "Device changed from %d to %d", this->device, (int)this->mix_device);
 		this->device = this->mix_device;
 	}
 
-	this->pan = fPan;
+	this->pan = fPan * 2.0f - 1.0f;
 	this->level = fLev;
 	this->send1 = fFX1Send;
 	this->send2 = fFX2Send;
