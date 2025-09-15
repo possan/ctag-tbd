@@ -10,8 +10,12 @@ using namespace CTAG::SP;
 #define maxFXSendLevelRev 1.5f
 
 void ctagSoundProcessorDrumRack::mixRenderOutputMono(float *source, float level, float pan, float fx1, float fx2) {
-    float mL = (1.0f - pan) * level;
-    float mR = pan * level;
+    float mL = 1.0f - pan;
+    float mR = 1.0f + pan;
+    CONSTRAIN(mL, 0.0f, 1.0f)
+    CONSTRAIN(mR, 0.0f, 1.0f)
+    mL *= level;
+    mR *= level;
     float sL1 = mL * fx1;
     float sR1 = mR * fx1;
     float sL2 = mL * fx2;
@@ -28,12 +32,16 @@ void ctagSoundProcessorDrumRack::mixRenderOutputMono(float *source, float level,
 }
 
 void ctagSoundProcessorDrumRack::mixRenderOutputStereo(float *source, float level, float pan, float fx1, float fx2) {
-    float mL = (1.0f - pan) * level;
-    float mR = pan * level;
+    float mL = 1.0f - pan;
+    float mR = 1.0f + pan;
+    CONSTRAIN(mL, 0.0f, 1.0f)
+    CONSTRAIN(mR, 0.0f, 1.0f)
+    mL *= level;
+    mR *= level;
     float sL1 = mL * fx1;
     float sR1 = mR * fx1;
     float sL2 = mL * fx2;
-    float sR = mR * fx2;
+    float sR2 = mR * fx2;
 
     for (int i = 0; i < bufSz; i++) {
         combined_out[i*2+0] += source[i*2+0] * mL;
@@ -41,7 +49,7 @@ void ctagSoundProcessorDrumRack::mixRenderOutputStereo(float *source, float leve
         send1_out[i*2+0] += source[i*2+0] * sL1;
         send1_out[i*2+1] += source[i*2+1] * sR1;
         send2_out[i*2+0] += source[i*2+0] * sL2;
-        send2_out[i*2+1] += source[i*2+1] * sR;
+        send2_out[i*2+1] += source[i*2+1] * sR2;
     }
 }
 

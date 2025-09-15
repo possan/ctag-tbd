@@ -35,7 +35,11 @@ void DrumRackChannelMixer::PreProcess(const DrumRackProcessData &data) {
 		this->device = this->mix_device;
 	}
 
-	this->pan = fPan * 2.0f - 1.0f;
+	float _pan = (fPan * 2.0f) - 1.0f;
+	if (_pan != this->pan) {
+		// ESP_LOGI("DrumRackChannelMixer", "Pan changed from %f to %f", this->pan, _pan);
+		this->pan = _pan;
+	}
 	this->level = fLev;
 	this->send1 = fFX1Send;
 	this->send2 = fFX2Send;
