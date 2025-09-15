@@ -807,8 +807,10 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     //     }
     // } while (it != pMapCC.end());
 
+#ifndef SIMULATOR
     model = std::make_unique<ctagSPDataModel>(id, isStereo);
     LoadPreset(0);
+#endif
 
     // delay
     delayBuffer_l = static_cast<float*>(heap_caps_malloc(delayBufferSizeMax * sizeof(float), MALLOC_CAP_SPIRAM));
