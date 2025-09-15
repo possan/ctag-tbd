@@ -51,10 +51,10 @@ void ctagSoundProcessorDrumRack::preprocessFX1(const ProcessData& data) {
     bool bSync = fx1_sync;
     bool bSyncTrig {false};
     // if(trig_fx1_sync != -1) bSyncTrig = data.trig[trig_fx1_sync] == 1 ? false : true;
-    if(!bSync){
-        fDelayTime = fx1_time_ms;
-        // if(cv_fx1_time_ms != -1) fDelayTime = fabsf(data.cv[cv_fx1_time_ms]) * 2000.f;
-    }
+    // if(!bSync){
+    fDelayTime = fx1_time_ms / 10.0f; // TODO: Better calculation here
+    // if(cv_fx1_time_ms != -1) fDelayTime = fabsf(data.cv[cv_fx1_time_ms]) * 2000.f;
+    // }
 
     fBase = 20.f * stmlib::SemitonesToRatio(fBase * 120.f);
     fWidth = 20.f * stmlib::SemitonesToRatio(fWidth * 120.f);
@@ -70,17 +70,17 @@ void ctagSoundProcessorDrumRack::preprocessFX1(const ProcessData& data) {
     hp_r.copy_f(hp_l);
 
     // sync mechanism
-    if(bSyncTrig != pre_sync){
-        pre_sync = bSyncTrig;
-        if(bSyncTrig && bSync){
-            int delta = timer - pre_timer;
-            if(std::abs(delta) > 1){
-                fDelayTime = static_cast<float>(timer) * 32.f / 44.1f;
-            }
-            pre_timer = timer;
-            timer = 0;
-        }
-    }
+    // if(bSyncTrig != pre_sync){
+    //     pre_sync = bSyncTrig;
+    //     if(bSyncTrig && bSync){
+    //         int delta = timer - pre_timer;
+    //         if(std::abs(delta) > 1){
+    //             fDelayTime = static_cast<float>(timer) * 32.f / 44.1f;
+    //         }
+    //         pre_timer = timer;
+    //         timer = 0;
+    //     }
+    // }
     timer++;
 }
 
