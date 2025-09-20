@@ -955,6 +955,10 @@ void ctagSoundProcessorDrumRack::knowYourself(){
     pMapCC.emplace(CC_TO_MAP_KEY(13, 81), "sum_lev");
 
 
+    pMapPar.emplace("global_bpm", [&](const int val){ global_bpm = val;});
+	// pMapCv.emplace("sum_lev", [&](const int val){ cv_sum_lev = val;});
+    pMapCC.emplace(CC_TO_MAP_KEY(13, 100), "global_bpm");
+
 
     isStereo = true;
 	id = "DrumRack";
