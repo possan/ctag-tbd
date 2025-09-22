@@ -10,12 +10,12 @@ using namespace CTAG::SP;
 #define maxFXSendLevelRev 1.5f
 
 void ctagSoundProcessorDrumRack::mixRenderOutputMono(float *source, float level, float pan, float fx1, float fx2) {
-    float mL = 1.0f - pan;
-    float mR = 1.0f + pan;
-    CONSTRAIN(mL, 0.0f, 1.0f)
-    CONSTRAIN(mR, 0.0f, 1.0f)
-    mL *= level;
-    mR *= level;
+    float mL = (1.0f - pan) * level;
+    float mR = (1.0f + pan) * level;
+
+    CONSTRAIN(mL, 0.0f, 1.f);
+    CONSTRAIN(mR, 0.0f, 1.f);
+
     float sL1 = mL * fx1;
     float sR1 = mR * fx1;
     float sL2 = mL * fx2;
@@ -32,12 +32,12 @@ void ctagSoundProcessorDrumRack::mixRenderOutputMono(float *source, float level,
 }
 
 void ctagSoundProcessorDrumRack::mixRenderOutputStereo(float *source, float level, float pan, float fx1, float fx2) {
-    float mL = 1.0f - pan;
-    float mR = 1.0f + pan;
-    CONSTRAIN(mL, 0.0f, 1.0f)
-    CONSTRAIN(mR, 0.0f, 1.0f)
-    mL *= level;
-    mR *= level;
+    float mL = (1.0f - pan) * level;
+    float mR = (1.0f + pan) * level;
+
+    CONSTRAIN(mL, 0.0f, 1.f);
+    CONSTRAIN(mR, 0.0f, 1.f);
+
     float sL1 = mL * fx1;
     float sR1 = mR * fx1;
     float sL2 = mL * fx2;
@@ -54,13 +54,37 @@ void ctagSoundProcessorDrumRack::mixRenderOutputStereo(float *source, float leve
 }
 
 void ctagSoundProcessorDrumRack::preprocessFX1(const ProcessData& data) {
+
+    int global_bpm_lo2 = global_bpm_lo / 32;
+    int global_bpm_hi2 = global_bpm_hi / 32;
+    int scaledbpm = global_bpm_lo2 + (global_bpm_hi2 << 7);
+    if (scaledbpm < 32) scaledbpm = 32;
+    if (scaledbpm != last_scaledbpm ) {
+        last_scaledbpm = scaledbpm;
+        printf("Scaled BPM set to %d\n", scaledbpm);
+		last_msPerBeat = 60000.0f / (float)scaledbpm;
+    }
+
+    // fDelayTime = fx1_time_ms / 10.0f; // TODO: Better calculation here
+    float dt = fx1_time_ms / 32.0f; // 0-127
+    dt *= last_msPerBeat;
+    dt /= 8.0; // 8 per "1/16th note"
+    dt *= 44100.0f;
+    dt /= 1000.0f;
+    CONSTRAIN(dt, 4.0f, 88200.f);
+    int idt = (int)dt;
+    if (idt != delaySamples) {
+        delaySamples = idt;
+        printf("Delay time set to %d samples (scaled BPM: %d)\n", idt, scaledbpm);
+    }
+
     MK_FLT_PAR_ABS_NOCV(fBase, fx1_base, 4095.f, 1.f)
     MK_FLT_PAR_ABS_NOCV(fWidth, fx1_width, 4095.f, 1.f)
     bool bSync = fx1_sync;
     bool bSyncTrig {false};
     // if(trig_fx1_sync != -1) bSyncTrig = data.trig[trig_fx1_sync] == 1 ? false : true;
     // if(!bSync){
-    fDelayTime = fx1_time_ms / 10.0f; // TODO: Better calculation here
+
     // if(cv_fx1_time_ms != -1) fDelayTime = fabsf(data.cv[cv_fx1_time_ms]) * 2000.f;
     // }
 
@@ -178,9 +202,12 @@ void ctagSoundProcessorDrumRack::renderMasterOutput(const ProcessData& data) {
     float rev_buf_l[BUF_SZ], rev_buf_r[BUF_SZ];
 
     // delay
-    CONSTRAIN(fDelayTime, 0.0001, 2000.f)
-    float ofs = fDelayTime * 44.1f;
+    // CONSTRAIN(delaySamples, 4.0f, 88200.f);
+    float ofs = delaySamples;
     if(fabsf(ofs - delayOffset) < 16) ofs = delayOffset;
+    // if (obs < 16) {
+    //     obs = 16;
+    // }
     for(int i=0; i<bufSz; i++){
         // Calculate the delay offset in samples
         if(delayOffset != ofs){
@@ -689,11 +716,6 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     DrumRackInitData dri;
     dri.rack = this;
 
-    // dri.allocator = [blockPtr, blockSize](std::size_t size) -> void* {
-    //     void *ptr = static_cast<float*>(heap_caps_malloc(size, MALLOC_CAP_SPIRAM));
-    //     return ptr;
-    // };
-
     dri.midi_channel = 9;
     dri.cc_base = 0;
     dri.prefix = "ch1_"; ch1.Init(&dri);
@@ -955,9 +977,15 @@ void ctagSoundProcessorDrumRack::knowYourself(){
     pMapCC.emplace(CC_TO_MAP_KEY(13, 81), "sum_lev");
 
 
-    pMapPar.emplace("global_bpm", [&](const int val){ global_bpm = val;});
+
+
+    pMapPar.emplace("global_bpm_lo", [&](const int val){ global_bpm_lo = val;});
+    // pMapCv.emplace("sum_lev", [&](const int val){ cv_sum_lev = val;});
+    pMapCC.emplace(CC_TO_MAP_KEY(13, 100), "global_bpm_lo");
+
+    pMapPar.emplace("global_bpm_hi", [&](const int val){ global_bpm_hi = val;});
 	// pMapCv.emplace("sum_lev", [&](const int val){ cv_sum_lev = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 100), "global_bpm");
+    pMapCC.emplace(CC_TO_MAP_KEY(13, 101), "global_bpm_hi");
 
 
     isStereo = true;

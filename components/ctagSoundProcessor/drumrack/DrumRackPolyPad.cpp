@@ -168,8 +168,8 @@ void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
         //     maxD = 40.f;
         //     maxR = 40.f;
         // } else {
-        maxA = 10.f;
-        maxD = 10.f;
+        maxA = 2.f;
+        maxD = 2.f;
         maxR = 10.f;
         // }
         params.attack = static_cast<float>(pp_attack) * maxA / 4095.f;

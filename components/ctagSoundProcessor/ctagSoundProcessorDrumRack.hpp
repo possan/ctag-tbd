@@ -152,11 +152,14 @@ namespace CTAG {
             float duck {0.f};
             float delayTime_ms {0.0f};
             bool pre_sync {false};
-            float fDelayTime {0.0f};
+            // float fDelayTime {0.0f};
+            float delaySamples {32};
             float fSyncTimeStamp {0.0f};
             int32_t timer {0}, pre_timer {0};
             stmlib::OnePole lp_l, hp_l;
             stmlib::OnePole lp_r, hp_r;
+			int last_scaledbpm { 1200 };
+			float last_msPerBeat { 500.0f };
 
             // reverb
             float *reverbBuffer;
@@ -197,7 +200,8 @@ namespace CTAG {
 	atomic<int32_t> sum_lev; //, cv_sum_lev;
 	atomic<int32_t> fx1_amount; //, cv_fx1_amount;
 	atomic<int32_t> fx2_amount; //, cv_fx2_amount;
-	atomic<int32_t> global_bpm;
+	atomic<int32_t> global_bpm_hi;
+	atomic<int32_t> global_bpm_lo;
 	// sectionHpp
         };
     }
