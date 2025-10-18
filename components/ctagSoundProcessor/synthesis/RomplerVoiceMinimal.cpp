@@ -71,7 +71,7 @@ namespace CTAG::SYNTHESIS {
         }
 
         // pitch sample if time stretch is off
-        if (!timeStretch) {
+        if (!timeStretch){
             phaseIncrement *= pitchFactor;
         }
 
