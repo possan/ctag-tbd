@@ -62,4 +62,6 @@ private:
 	atomic<int16_t> s1_ft; //, cv_s1_ft;
 	atomic<int16_t> s1_fc; //, cv_s1_fc;
 	atomic<int16_t> s1_fq; //, cv_s1_fq;
+	atomic<int16_t> s1_tsmode;
+	atomic<int16_t> s1_tsamount;
 };

@@ -27,6 +27,9 @@ void DrumRackRompler::Init(const DrumRackInitData *initdata) {
     initdata->rack->registerParamAndCC(initdata, "lp_pos", 20, [&](const int val){ s1_lp_pos = val;});
     initdata->rack->registerParamAndCC(initdata, "eg2fm", 21, [&](const int val){ s1_eg2fm = val;});
 
+    initdata->rack->registerParamAndCC(initdata, "tsmode", 22, [&](const int val){ s1_tsmode = val;});
+    initdata->rack->registerParamAndCC(initdata, "tsamount", 23, [&](const int val){ s1_tsamount = val;});
+
     s1_lp = 0;
     s1_lp_pp = 0;
 
@@ -101,6 +104,22 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     rompler.params.resonance = fS1Reso;
     MK_INT_PAR_ABS_NOCV(iS1FType, s1_ft, 4.f)
     CONSTRAIN(iS1FType, 0, 3);
+    // timestretch stuff
+
+    MK_INT_PAR_ABS_NOCV(bTSMode, s1_tsmode, 2.0f) // 0 = off, 1 = low quality, 2 = smooth
+    rompler.params.timeStretchEnable = bTSMode > 0;
+    if (bTSMode == 1) {
+        rompler.params.timeStretchQuality = CTAG::SYNTHESIS::RomplerVoiceMinimal::Params::TSQuality::Smooth;
+    } else {
+        rompler.params.timeStretchQuality = CTAG::SYNTHESIS::RomplerVoiceMinimal::Params::TSQuality::Low;
+    }
+
+    MK_FLT_PAR_ABS_NOCV(fTSAmount, s1_tsamount, 4095.f, 10.f)
+    if (fTSAmount < 0.f)
+        fTSAmount = 1.0f + fTSAmount * 0.75f; // 0.75 = (1.0 - 0.25)
+    else
+        fTSAmount = 1.0f + fTSAmount * 3.0f; // 3.0 = (4.0 - 1.0)
+    rompler.params.timeStretch = fTSAmount;
 
     // MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
     rompler.params.gate = midi_trig;
@@ -135,6 +154,6 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     trig_prev = midi_trig;
     midi_trig = false;
 
-    rompler.params.filterType = static_cast<CTAG::SYNTHESIS::RomplerVoiceMinimal::FilterType>(iS1FType);
+    rompler.params.filterType = static_cast<CTAG::SYNTHESIS::RomplerVoiceMinimal::Params::FilterType>(iS1FType);
     rompler.Process(s1_out, BUF_SZ);
 };
