@@ -118,7 +118,7 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     // MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
     rompler.params.gate = midi_trig;
     if (midi_trig && !trig_prev) {
-        printf("S1 sl=%ld ps=%1.1f pitch=%1.1f, ts=%d>%1.1f\n",
+        printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f\n",
             rompler.params.slice,
             rompler.params.playbackSpeed,
             rompler.params.pitch,
