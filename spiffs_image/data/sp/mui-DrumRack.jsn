@@ -1018,6 +1018,20 @@
           "type": "int",
           "min": 0,
           "max": 4095
+        },
+        {
+          "id": "ch7_smp_tsmode",
+          "name": "Timestretch mode",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch7_smp_tsamount",
+          "name": "Timestretch Amount",
+          "type": "int",
+          "min": 0,
+          "max": 4095
         }
       ]
     },
@@ -1188,6 +1202,20 @@
         {
           "id": "ch8_smp_fq",
           "name": "Filter Q",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch8_smp_tsmode",
+          "name": "Timestretch mode",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch8_smp_tsamount",
+          "name": "Timestretch Amount",
           "type": "int",
           "min": 0,
           "max": 4095
@@ -2377,6 +2405,20 @@
           "type": "int",
           "min": 0,
           "max": 4095
+        },
+        {
+          "id": "ch13_smp_tsmode",
+          "name": "Timestretch mode",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch13_smp_tsamount",
+          "name": "Timestretch Amount",
+          "type": "int",
+          "min": 0,
+          "max": 4095
         }
       ]
     },
@@ -2562,6 +2604,20 @@
         {
           "id": "ch14_smp_fq",
           "name": "Filter Q",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_tsmode",
+          "name": "Timestretch mode",
+          "type": "int",
+          "min": 0,
+          "max": 4095
+        },
+        {
+          "id": "ch14_smp_tsamount",
+          "name": "Timestretch Amount",
           "type": "int",
           "min": 0,
           "max": 4095

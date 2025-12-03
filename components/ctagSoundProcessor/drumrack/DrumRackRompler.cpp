@@ -20,7 +20,7 @@ void DrumRackRompler::Init(const DrumRackInitData *initdata) {
     initdata->rack->registerParamAndCC(initdata, "atk", 14, [&](const int val){ s1_atk = val;});
     initdata->rack->registerParamAndCC(initdata, "dcy", 15, [&](const int val){ s1_dcy = val;});
     initdata->rack->registerParamAndCC(initdata, "speed", 16, [&](const int val){ s1_speed = val;});
-    // initdata->rack->registerParamAndCC(initdata, "pitch", 17, [&](const int val){ s1_pitch = val;});
+    initdata->rack->registerParamAndCC(initdata, "pitch", 17, [&](const int val){ s1_pitch = val;});
     
     initdata->rack->registerParamAndCC(initdata, "lp", 18, [&](const int val){ s1_lp = val;});
     initdata->rack->registerParamAndCC(initdata, "lp_pp", 19, [&](const int val){ s1_lp_pp = val;});
@@ -61,15 +61,17 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
         return;
     }
 
-    float fS1Speed = (s1_speed - 0) / 2048.f;
-    // if (cv_s1_speed != -1) fS1Speed += data.cv[cv_s1_speed] * 2.f;
-    CONSTRAIN(fS1Speed, 0.f, 2.f)
+    MK_FLT_PAR_ABS_NOCV(fS1Speed, s1_speed, 4095.f, 4.f)
+    fS1Speed -= 2.0f;
+    CONSTRAIN(fS1Speed, -2.f, 2.f)
     rompler.params.playbackSpeed = fS1Speed;
-    // float fS1Pitch = s1_pitch;
-    // if (cv_s1_pitch != -1){
-    //     fS1Pitch += data.cv[cv_s1_pitch] * 12.f * 5.f;
-    // }
-    rompler.params.pitch = midi_note;
+
+    MK_INT_PAR_ABS_NOCV(iS1Pitch, s1_pitch, 127.f) // midi cc
+    if (use_pitch_control) {
+        rompler.params.pitch = iS1Pitch;
+    } else {
+        rompler.params.pitch = midi_note;
+    }
 
     uint32_t firstNonWtSlice = data.firstNonWtSlice; // sampleRom.GetFirstNonWaveTableSlice();
     MK_INT_PAR_ABS_NOCV(iS1Bank, s1_bank, 32.f)
@@ -108,28 +110,22 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
 
     MK_INT_PAR_ABS_NOCV(bTSMode, s1_tsmode, 2.0f) // 0 = off, 1 = low quality, 2 = smooth
     rompler.params.timeStretchEnable = bTSMode > 0;
-    if (bTSMode == 1) {
-        rompler.params.timeStretchQuality = CTAG::SYNTHESIS::RomplerVoiceMinimal::Params::TSQuality::Smooth;
-    } else {
-        rompler.params.timeStretchQuality = CTAG::SYNTHESIS::RomplerVoiceMinimal::Params::TSQuality::Low;
-    }
 
-    MK_FLT_PAR_ABS_NOCV(fTSAmount, s1_tsamount, 4095.f, 10.f)
-    if (fTSAmount < 0.f)
-        fTSAmount = 1.0f + fTSAmount * 0.75f; // 0.75 = (1.0 - 0.25)
-    else
-        fTSAmount = 1.0f + fTSAmount * 3.0f; // 3.0 = (4.0 - 1.0)
-    rompler.params.timeStretch = fTSAmount;
+    MK_FLT_PAR_ABS_NOCV(fTSAmount, s1_tsamount, 4095.f, 1.f)
+    float fTS1Amount = 0.005f + fTSAmount * 0.995f;
+    rompler.params.timeStretchWindowSize = fTS1Amount;
 
     // MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
     rompler.params.gate = midi_trig;
     if (midi_trig && !trig_prev) {
-        // printf("S1 %ld %1.1f %1.1f\n",
-        //     rompler.params.slice,
-        //     rompler.params.playbackSpeed,
-        //     rompler.params.pitch);
+        printf("S1 sl=%ld ps=%1.1f pitch=%1.1f, ts=%d>%1.1f\n",
+            rompler.params.slice,
+            rompler.params.playbackSpeed,
+            rompler.params.pitch,
+            rompler.params.timeStretchEnable,
+            rompler.params.timeStretchWindowSize);
 
-        // printf("S1 %ld %1.1f %1.1f %1.1f %1.1f\n",
+        // printf("S1 slice=%ld ps=%1.1f pitch=%1.1f %1.1f %1.1f\n",
         //     rompler.params.slice,
         //     rompler.params.playbackSpeed,
         //     rompler.params.pitch,

@@ -24,6 +24,7 @@ respective component folders / files if different from this license.
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_cpu.h"
+#include "esp_timer.h"
 #include "stdint.h"
 #include "string.h"
 #include "codec.hpp"

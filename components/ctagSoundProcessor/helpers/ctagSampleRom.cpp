@@ -53,7 +53,7 @@ namespace CTAG::SP::HELPERS {
     bool ctagSampleRom::readFromSD = false;
 
     ctagSampleRom::ctagSampleRom() {
-        //ESP_LOGE("SR", "nConsumers %ld", nConsumers.load());
+        //ESP_LOGE("SR", "nConsumers %li", nConsumers.load());
         nConsumers++;
         if(nConsumers == 1){
             RefreshDataStructure();
@@ -162,7 +162,7 @@ namespace CTAG::SP::HELPERS {
     }
 
     ctagSampleRom::~ctagSampleRom() {
-        //ESP_LOGE("SR", "nConsumers %ld", nConsumers.load());
+        //ESP_LOGE("SR", "nConsumers %li", nConsumers.load());
         nConsumers--;
 
         if (nConsumers > 0) return;
@@ -225,11 +225,11 @@ namespace CTAG::SP::HELPERS {
         //spi_flash_read(CONFIG_SAMPLE_ROM_START_ADDRESS + 4, &totalSize, 4);
         esp_flash_read(nullptr,&totalSize, CONFIG_SAMPLE_ROM_START_ADDRESS + 4, 4);
         headerSize += 4;
-        ESP_LOGD("SROM", "Total sample data size %ld bytes", totalSize);
+        ESP_LOGD("SROM", "Total sample data size %li bytes", totalSize);
         //spi_flash_read(CONFIG_SAMPLE_ROM_START_ADDRESS + 8, &numberSlices, 4);
         esp_flash_read(nullptr, &numberSlices, CONFIG_SAMPLE_ROM_START_ADDRESS + 8, 4);
         headerSize += 4;
-        ESP_LOGD("SROM", "Number slices %ld", numberSlices);
+        ESP_LOGD("SROM", "Number slices %li", numberSlices);
         // alloc memory
         if (sliceOffsets != nullptr) {heap_caps_free(sliceOffsets); sliceOffsets = nullptr;}
         sliceOffsets = (uint32_t *) heap_caps_malloc(numberSlices * sizeof(uint32_t), MALLOC_CAP_SPIRAM);
@@ -245,7 +245,7 @@ namespace CTAG::SP::HELPERS {
             sliceSizes[i] = sliceOffsets[i] - lastOffset;
             lastOffset = sliceOffsets[i];
             sliceOffsets[i] -= sliceSizes[i];
-            ESP_LOGD("SROM", "Slice size %ld, offset %ld", sliceSizes[i], sliceOffsets[i]);
+            ESP_LOGD("SROM", "Slice size %li, offset %li", sliceSizes[i], sliceOffsets[i]);
         }
         // get first non Wt Slice
         for (int i = 0; i < numberSlices; i++) {
@@ -288,7 +288,7 @@ namespace CTAG::SP::HELPERS {
             // init with zeros
             memset(ptrSPIRAM, 0, MAX_ALLOC_BYTES_PSRAM);
             maxSizeBytes = heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
-            ESP_LOGI("SR", "Overall bytes for wt+sample %" PRIu32 ", allocated in PSRAM %d, largest block free in PSRAM %zu", totalSize, MAX_ALLOC_BYTES_PSRAM, maxSizeBytes);
+            ESP_LOGI("SR", "Overall bytes for wt+sample %" PRIu32 ", allocated in PSRAM %" PRIu32 ", largest block free in PSRAM %zu", totalSize, MAX_ALLOC_BYTES_PSRAM, maxSizeBytes);
         }
 
         // generate offsets and sizes, start with wavetables, sizes and offsets are words (due to 16 bit samples)
@@ -320,7 +320,7 @@ namespace CTAG::SP::HELPERS {
         for (uint32_t i = 0; i < slices_wt; i++) {
             std::string filename = sample_rom_model.GetFilenameForWTSlice(i);
             if (filename == "") {
-                ESP_LOGE("SROM", "No filename for slice %ld", i);
+                ESP_LOGE("SROM", "No filename for slice %li", i);
                 continue;
             }
             if (!std::filesystem::exists(filename)) {
@@ -338,10 +338,10 @@ namespace CTAG::SP::HELPERS {
             uint32_t ofs = sliceOffsets[i*64];
             size_t nRead = fread(&ptrSPIRAM[ofs], 2, nSamples, f);
             if (nRead != nSamples) {
-                ESP_LOGE("SROM", "Could not read all samples from file %s, read %zu of %" PRIu32, filename.c_str(), nRead,
+                ESP_LOGE("SROM", "Could not read all samples from file %s, read %zu of %li", filename.c_str(), nRead,
                          nSamples);
             } else {
-                ESP_LOGI("SROM", "Loaded file %s, read %zu samples", filename.c_str(), nRead);
+                ESP_LOGI("SROM", "Loaded file %s, read %li samples", filename.c_str(), nRead);
             }
             fclose(f);
         }
@@ -351,7 +351,7 @@ namespace CTAG::SP::HELPERS {
             uint32_t j = i + firstNonWtSlice;
             std::string filename = sample_rom_model.GetFilenameForSampleSlice(i);
             if (filename == "") {
-                ESP_LOGE("SROM", "No filename for slice %ld", j);
+                ESP_LOGE("SROM", "No filename for slice %li", j);
                 continue;
             }
             if (!std::filesystem::exists(filename)) {
@@ -390,7 +390,7 @@ namespace CTAG::SP::HELPERS {
         if (ptrSPIRAM == nullptr) { heap_caps_free(ptrSPIRAM); ptrSPIRAM = nullptr; }
         ptrSPIRAM = (int16_t *)heap_caps_malloc(maxSizeBytes, MALLOC_CAP_SPIRAM);
         if(ptrSPIRAM == nullptr) return;
-        ESP_LOGI("SR", "Buffering %zu bytes in SPIRAM", maxSizeBytes);
+        ESP_LOGI("SR", "Buffering %d bytes in SPIRAM", maxSizeBytes);
         // figure out how many slices can be buffered
         uint32_t maxSizeWords = maxSizeBytes / 2;
         nSlicesBuffered = 0;
@@ -400,7 +400,7 @@ namespace CTAG::SP::HELPERS {
             totalSizeWords += sliceSizes[i];
             nSlicesBuffered++;
         }
-        ESP_LOGI("SR", "Buffering %ld slices of %ld, consuming %ld bytes", nSlicesBuffered, numberSlices, totalSizeWords*2);
+        ESP_LOGI("SR", "Buffering %li slices of %li, consuming %li bytes", nSlicesBuffered, numberSlices, totalSizeWords*2);
         Read(ptrSPIRAM, 0, totalSizeWords);
     }
 }

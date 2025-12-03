@@ -989,6 +989,7 @@
                     "current": 0,
                     "cv": -1
                 },
+
                 {
                     "id": "ch7_smp_fc",
                     "current": 2047,
@@ -999,6 +1000,17 @@
                     "current": 2047,
                     "cv": -1
                 },
+                {
+                    "id": "ch7_smp_tsmode",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch7_smp_tsamount",
+                    "current": 2047,
+                    "cv": -1
+                },
+
                 {
                     "id": "ch8_smp_gate",
                     "current": 0,
@@ -1085,6 +1097,17 @@
                     "cv": -1
                 },
                 {
+                    "id": "ch8_smp_tsmode",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch8_smp_tsamount",
+                    "current": 2047,
+                    "cv": -1
+                },
+
+                {
                     "id": "ch13_smp_gate",
                     "current": 0,
                     "trig": -1
@@ -1170,6 +1193,17 @@
                     "cv": -1
                 },
                 {
+                    "id": "ch13_smp_tsmode",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch13_smp_tsamount",
+                    "current": 2047,
+                    "cv": -1
+                },
+
+                {
                     "id": "ch14_smp_gate",
                     "current": 0,
                     "trig": -1
@@ -1251,6 +1285,16 @@
                 },
                 {
                     "id": "ch14_smp_fq",
+                    "current": 2047,
+                    "cv": -1
+                },
+                {
+                    "id": "ch14_smp_tsmode",
+                    "current": 0,
+                    "cv": -1
+                },
+                {
+                    "id": "ch14_smp_tsamount",
                     "current": 2047,
                     "cv": -1
                 },

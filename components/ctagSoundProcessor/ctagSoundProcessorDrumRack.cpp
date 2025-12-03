@@ -708,7 +708,6 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
 
     ESP_LOGI("ctagSoundProcessorDrumRack", "Before know yourself");
     knowYourself();
-
     ESP_LOGI("ctagSoundProcessorDrumRack", "After know yourself");
 
     framecounter = 0;
@@ -754,11 +753,13 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     dri.cc_base = 0;
     dri.prefix = "ch7_"; ch7.Init(&dri);
     dri.prefix = "ch7_smp_"; ch7_ro.Init(&dri);
+    ch7_ro.use_pitch_control = true;
 
     dri.midi_channel = 12;
     dri.cc_base = 0;
     dri.prefix = "ch8_"; ch8.Init(&dri);
     dri.prefix = "ch8_smp_"; ch8_ro.Init(&dri);
+    ch8_ro.use_pitch_control = true;
 
     dri.midi_channel = 0;
     dri.cc_base = 0;
@@ -785,11 +786,13 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     dri.cc_base = 0;
     dri.prefix = "ch13_"; ch13.Init(&dri);
     dri.prefix = "ch13_smp_"; ch13_ro.Init(&dri);
+    ch13_ro.use_pitch_control = false;
 
     dri.midi_channel = 5;
     dri.cc_base = 0;
     dri.prefix = "ch14_"; ch14.Init(&dri);
     dri.prefix = "ch14_smp_"; ch14_ro.Init(&dri);
+    ch14_ro.use_pitch_control = false;
 
     dri.midi_channel = 6;
     dri.cc_base = 0;

@@ -39,7 +39,7 @@ namespace CTAG {
         private:
             virtual void knowYourself() override;
             RomplerVoice romplers[2];
-            float out[BUF_SZ];
+            float out[32];
             bool preGate = false;
             bool bGate2 = false;
             bool preGateLatch = false;
