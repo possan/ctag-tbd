@@ -35,7 +35,6 @@ public:
     void Init(const DrumRackInitData *initdata);
 	bool enabled;
     float s1_out[BUF_SZ];
-	bool use_pitch_control;
 
 	void handleMidiNoteOn(uint8_t note, uint8_t vel);
 	void handleMidiNoteOff(uint8_t note, uint8_t vel);
@@ -65,4 +64,5 @@ private:
 	atomic<int16_t> s1_fq; //, cv_s1_fq;
 	atomic<int16_t> s1_tsmode;
 	atomic<int16_t> s1_tsamount;
+	atomic<int16_t> s1_tssteps;
 };

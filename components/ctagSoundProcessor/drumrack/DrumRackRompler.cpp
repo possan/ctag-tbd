@@ -29,6 +29,7 @@ void DrumRackRompler::Init(const DrumRackInitData *initdata) {
 
     initdata->rack->registerParamAndCC(initdata, "tsmode", 22, [&](const int val){ s1_tsmode = val;});
     initdata->rack->registerParamAndCC(initdata, "tsamount", 23, [&](const int val){ s1_tsamount = val;});
+    initdata->rack->registerParamAndCC(initdata, "tssteps", 24, [&](const int val){ s1_tssteps = val;});
 
     s1_lp = 0;
     s1_lp_pp = 0;
@@ -61,17 +62,12 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
         return;
     }
 
-    MK_FLT_PAR_ABS_NOCV(fS1Speed, s1_speed, 4095.f, 4.f)
-    fS1Speed -= 2.0f;
-    CONSTRAIN(fS1Speed, -2.f, 2.f)
-    rompler.params.playbackSpeed = fS1Speed;
+    MK_INT_PAR_ABS_NOCV(bTSMode, s1_tsmode, 2.0f)
+    rompler.params.timeStretchEnable = bTSMode > 0;
 
-    MK_INT_PAR_ABS_NOCV(iS1Pitch, s1_pitch, 127.f) // midi cc
-    if (use_pitch_control) {
-        rompler.params.pitch = iS1Pitch;
-    } else {
-        rompler.params.pitch = midi_note;
-    }
+    // timestretch target length
+    MK_INT_PAR_ABS_NOCV(iTSSteps, s1_tssteps, 127.f)
+    CONSTRAIN(iTSSteps, 1, 127)
 
     uint32_t firstNonWtSlice = data.firstNonWtSlice; // sampleRom.GetFirstNonWaveTableSlice();
     MK_INT_PAR_ABS_NOCV(iS1Bank, s1_bank, 32.f)
@@ -80,7 +76,24 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     CONSTRAIN(iS1Slice, 0, 31)
     iS1Slice = iS1Bank * 32 + iS1Slice + firstNonWtSlice;
     rompler.params.slice = iS1Slice;
-    MK_FLT_PAR_ABS_NOCV(fS1Start, s1_start, 4095.f, 1.f)
+   
+    MK_FLT_PAR_ABS_NOCV(fS1Speed, s1_speed, 4095.f, 2.f)
+    // fS1Speed -= 2.0f;
+    CONSTRAIN(fS1Speed, 0.f, 2.f)
+    if (!rompler.params.timeStretchEnable) {
+        rompler.params.playbackSpeed = fS1Speed;
+        // base on loop length / track length
+        // rompler.params.playbackSpeed = 1.0;
+    }
+
+    MK_INT_PAR_ABS_NOCV(iS1Pitch, s1_pitch, 127.f) // midi cc
+    if (rompler.params.timeStretchEnable) {
+        rompler.params.pitch = iS1Pitch / 10.0;
+    } else { 
+        rompler.params.pitch = midi_note;
+    }
+
+     MK_FLT_PAR_ABS_NOCV(fS1Start, s1_start, 4095.f, 1.f)
     rompler.params.startOffsetRelative = fS1Start;
     MK_FLT_PAR_ABS_NOCV(fS1Length, s1_end, 4095.f, 1.f)
     rompler.params.lengthRelative = fS1Length;
@@ -108,8 +121,6 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     CONSTRAIN(iS1FType, 0, 3);
     // timestretch stuff
 
-    MK_INT_PAR_ABS_NOCV(bTSMode, s1_tsmode, 2.0f) // 0 = off, 1 = low quality, 2 = smooth
-    rompler.params.timeStretchEnable = bTSMode > 0;
 
     MK_FLT_PAR_ABS_NOCV(fTSAmount, s1_tsamount, 4095.f, 1.f)
     float fTS1Amount = 0.005f + fTSAmount * 0.995f;
@@ -118,12 +129,31 @@ void DrumRackRompler::Process(const DrumRackProcessData &data) {
     // MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
     rompler.params.gate = midi_trig;
     if (midi_trig && !trig_prev) {
-        printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f\n",
+
+
+        uint32_t sliceLength = 0;
+        uint32_t stepsLengthMs = 0;
+        uint32_t sliceLengthMs = 0;
+
+        rompler.params.playbackSpeed = 1.0;
+        if (data.sampleRom->HasSlice(rompler.params.slice)) {
+            sliceLength = data.sampleRom->GetSliceSize(rompler.params.slice);
+            stepsLengthMs = iTSSteps * data.msPerBeat / 4;
+            sliceLengthMs = (sliceLength * 1000) / 44100;
+            rompler.params.playbackSpeed = (float)sliceLengthMs / (float)stepsLengthMs;
+        }
+
+        printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f, slicelen=%ld,msperbeat=%ld,steps=%d,slicelenms=%ld\n",
             rompler.params.slice,
             rompler.params.playbackSpeed,
             rompler.params.pitch,
             rompler.params.timeStretchEnable,
-            rompler.params.timeStretchWindowSize);
+            rompler.params.timeStretchWindowSize,
+            sliceLength,
+            data.msPerBeat,
+            iTSSteps,
+            sliceLengthMs
+        );
 
         // printf("S1 slice=%ld ps=%1.1f pitch=%1.1f %1.1f %1.1f\n",
         //     rompler.params.slice,

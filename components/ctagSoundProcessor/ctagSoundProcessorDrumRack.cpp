@@ -54,15 +54,15 @@ void ctagSoundProcessorDrumRack::mixRenderOutputStereo(float *source, float leve
 }
 
 void ctagSoundProcessorDrumRack::preprocessFX1(const ProcessData& data) {
-
     int global_bpm_lo2 = global_bpm_lo / 32;
     int global_bpm_hi2 = global_bpm_hi / 32;
     int scaledbpm = global_bpm_lo2 + (global_bpm_hi2 << 7);
     if (scaledbpm < 32) scaledbpm = 32;
-    if (scaledbpm != last_scaledbpm ) {
+    if (scaledbpm != last_scaledbpm) {
         last_scaledbpm = scaledbpm;
-        printf("Scaled BPM set to %d\n", scaledbpm);
-		last_msPerBeat = 60000.0f / (float)scaledbpm;
+        printf("Scaled BPM set to %1.1f (lo %d, hi %d)\n",
+            (float)scaledbpm/10.0f, global_bpm_lo2, global_bpm_hi2);
+		last_msPerBeat = 60000.0f / ((float)(scaledbpm) / 10.0f);
     }
 
     // fDelayTime = fx1_time_ms / 10.0f; // TODO: Better calculation here
@@ -84,7 +84,6 @@ void ctagSoundProcessorDrumRack::preprocessFX1(const ProcessData& data) {
     bool bSyncTrig {false};
     // if(trig_fx1_sync != -1) bSyncTrig = data.trig[trig_fx1_sync] == 1 ? false : true;
     // if(!bSync){
-
     // if(cv_fx1_time_ms != -1) fDelayTime = fabsf(data.cv[cv_fx1_time_ms]) * 2000.f;
     // }
 
@@ -291,6 +290,7 @@ void ctagSoundProcessorDrumRack::Process(const ProcessData& data){
 	idata.trig = data.trig;
     idata.firstNonWtSlice = sampleRom.GetFirstNonWaveTableSlice();
     idata.sampleRom = &sampleRom;
+    idata.msPerBeat = last_msPerBeat;
 
     // process input first
 
@@ -753,13 +753,11 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     dri.cc_base = 0;
     dri.prefix = "ch7_"; ch7.Init(&dri);
     dri.prefix = "ch7_smp_"; ch7_ro.Init(&dri);
-    ch7_ro.use_pitch_control = true;
 
     dri.midi_channel = 12;
     dri.cc_base = 0;
     dri.prefix = "ch8_"; ch8.Init(&dri);
     dri.prefix = "ch8_smp_"; ch8_ro.Init(&dri);
-    ch8_ro.use_pitch_control = true;
 
     dri.midi_channel = 0;
     dri.cc_base = 0;
@@ -786,13 +784,11 @@ void ctagSoundProcessorDrumRack::Init(std::size_t blockSize, void* blockPtr){
     dri.cc_base = 0;
     dri.prefix = "ch13_"; ch13.Init(&dri);
     dri.prefix = "ch13_smp_"; ch13_ro.Init(&dri);
-    ch13_ro.use_pitch_control = false;
 
     dri.midi_channel = 5;
     dri.cc_base = 0;
     dri.prefix = "ch14_"; ch14.Init(&dri);
     dri.prefix = "ch14_smp_"; ch14_ro.Init(&dri);
-    ch14_ro.use_pitch_control = false;
 
     dri.midi_channel = 6;
     dri.cc_base = 0;

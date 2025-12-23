@@ -21,6 +21,7 @@ namespace CTAG {
             uint8_t *trig;
             uint32_t firstNonWtSlice;
             HELPERS::ctagSampleRom *sampleRom;
+            uint32_t msPerBeat;
         };
 
         struct DrumRackInitData {
