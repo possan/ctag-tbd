@@ -43,9 +43,12 @@ respective component folders / files if different from this license.
 #include "freeverb3/efilter.hpp"
 #include "stmlib/dsp/dsp.h"
 #include "rp2350_spi_stream.hpp"
+// ableton link
+#include "link.hpp"
 
 #define MAX(x, y) ((x)>(y)) ? (x) : (y)
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
+
 #define BUF_SZ 32
 //#define NOISE_GATE_LEVEL_CLOSE 0.000065f
 #define NOISE_GATE_LEVEL_CLOSE 0.0001f
@@ -508,6 +511,10 @@ void SoundProcessorManager::StartSoundProcessor() {
     NET::Network::Up();
     REST::RestServer::StartRestServer();
     SPIAPI::SpiAPI::StartSpiAPI();
+
+    // Ableton Link
+    CTAG::LINK::link::Init();
+
 #elif CONFIG_SERIAL_UI
     SAPI::SerialAPI::StartSerialAPI();
 #endif
