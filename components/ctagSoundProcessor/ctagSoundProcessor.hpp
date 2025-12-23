@@ -77,6 +77,7 @@ namespace CTAG {
             float *buf;
             float *cv;
             uint8_t *trig;
+            uint8_t *midibytes;
         };
 
         class ctagSoundProcessor {

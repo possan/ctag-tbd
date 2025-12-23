@@ -26,14 +26,15 @@ respective component folders / files if different from this license.
 #include "adc.hpp"
 
 #include "rp2350_spi_stream.hpp"
-#define BUF_SZ (N_CVS*4 + N_TRIGS)
+#define BUF_SZ (N_CVS*4 + N_TRIGS + N_MIDIBYTES)
 
 uint8_t *CTAG::CTRL::Control::buf_ptr = nullptr; // buffer pointer for current cv + trig data
 
-IRAM_ATTR void CTAG::CTRL::Control::Update(uint8_t **trigs, float **cvs, uint32_t ledStatus) {
+IRAM_ATTR void CTAG::CTRL::Control::Update(uint8_t **trigs, float **cvs, uint8_t **midibytes, uint32_t ledStatus) {
     CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(&buf_ptr, BUF_SZ, ledStatus);
     *cvs = (float*) buf_ptr;
     *trigs = &buf_ptr[N_CVS*4];
+    *midibytes = &buf_ptr[N_CVS*4 + N_TRIGS];
 }
 
 void CTAG::CTRL::Control::SetCVChannelBiPolar(const bool &v0, const bool &v1, const bool &v2, const bool &v3) {
