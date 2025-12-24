@@ -281,14 +281,14 @@ namespace CTAG::SP::HELPERS {
         assert(MAX_ALLOC_BYTES_PSRAM >= totalSize);
         if(ptrSPIRAM == nullptr){
             size_t maxSizeBytes = heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
-            ESP_LOGI("SR", "Max Bytes free in PSRAM: %zu", maxSizeBytes);
+            ESP_LOGI("SR", "Max Bytes free in PSRAM: %li", maxSizeBytes);
             assert(maxSizeBytes >= MAX_ALLOC_BYTES_PSRAM); // check if sample data fits in PSRAM
             ptrSPIRAM = (int16_t *)heap_caps_malloc(MAX_ALLOC_BYTES_PSRAM, MALLOC_CAP_SPIRAM);
             assert(ptrSPIRAM != nullptr);
             // init with zeros
             memset(ptrSPIRAM, 0, MAX_ALLOC_BYTES_PSRAM);
             maxSizeBytes = heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
-            ESP_LOGI("SR", "Overall bytes for wt+sample %" PRIu32 ", allocated in PSRAM %" PRIu32 ", largest block free in PSRAM %zu", totalSize, MAX_ALLOC_BYTES_PSRAM, maxSizeBytes);
+            ESP_LOGI("SR", "Overall bytes for wt+sample %li, allocated in PSRAM %li, largest block free in PSRAM %li", totalSize, MAX_ALLOC_BYTES_PSRAM, maxSizeBytes);
         }
 
         // generate offsets and sizes, start with wavetables, sizes and offsets are words (due to 16 bit samples)
@@ -338,7 +338,7 @@ namespace CTAG::SP::HELPERS {
             uint32_t ofs = sliceOffsets[i*64];
             size_t nRead = fread(&ptrSPIRAM[ofs], 2, nSamples, f);
             if (nRead != nSamples) {
-                ESP_LOGE("SROM", "Could not read all samples from file %s, read %zu of %li", filename.c_str(), nRead,
+                ESP_LOGE("SROM", "Could not read all samples from file %s, read %li of %li", filename.c_str(), nRead,
                          nSamples);
             } else {
                 ESP_LOGI("SROM", "Loaded file %s, read %li samples", filename.c_str(), nRead);
@@ -369,10 +369,10 @@ namespace CTAG::SP::HELPERS {
             uint32_t ofs = sliceOffsets[j];
             size_t nRead = fread(&ptrSPIRAM[ofs], 2, nSamples, f);
             if (nRead != nSamples) {
-                ESP_LOGE("SROM", "Could not read all samples from file %s, read %zu of %" PRIu32, filename.c_str(), nRead,
+                ESP_LOGE("SROM", "Could not read all samples from file %s, read %li of %li", filename.c_str(), nRead,
                          nSamples);
             } else {
-                ESP_LOGI("SROM", "Loaded file %s, read %zu samples", filename.c_str(), nRead);
+                ESP_LOGI("SROM", "Loaded file %s, read %li samples", filename.c_str(), nRead);
             }
             fclose(f);
         }
