@@ -14,9 +14,9 @@ using namespace std;
 
 namespace CTAG {
     namespace SP {
-        class ctagSoundProcessorDrumRack;
+        class ctagSoundProcessorPicoSeqRack;
 
-        struct DrumRackProcessData {
+        struct PicoSeqRackProcessData {
             float *cv;
             uint8_t *trig;
             uint32_t firstNonWtSlice;
@@ -24,11 +24,11 @@ namespace CTAG {
             uint32_t msPerBeat;
         };
 
-        struct DrumRackInitData {
+        struct PickSeqRackInitData {
             const char *prefix;
             int midi_channel;
             int cc_base;
-            ctagSoundProcessorDrumRack *rack;
+            ctagSoundProcessorPicoSeqRack *rack;
         };
     }
 }

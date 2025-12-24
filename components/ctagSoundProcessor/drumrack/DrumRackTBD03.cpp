@@ -1,6 +1,6 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackTBD03.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
@@ -8,7 +8,7 @@ using namespace CTAG::SP;
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackTBD03::Init(const DrumRackInitData *initdata) {
+void DrumRackTBD03::Init(const PickSeqRackInitData *initdata) {
     td3_pirkle_zdf_boost.Init();
     td3_karlson.Init();
     td3_blaukraut.Init();
@@ -64,7 +64,7 @@ void DrumRackTBD03::handleMidiNoteOff(uint8_t note, uint8_t vel) {
     // printf("TBDD3 Note off %d %d\n", note, vel);
 }
 
-void DrumRackTBD03::Process(const DrumRackProcessData &data) {
+void DrumRackTBD03::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(td3_out, BUF_SZ, 0.f);
 
     if (!this->enabled) {

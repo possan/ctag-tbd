@@ -30,8 +30,8 @@ using namespace CTAG::SP;
 
 class DrumRackPolyPad {
 public:
-    void Process(const DrumRackProcessData &data);
-    void Init(const DrumRackInitData *initdata);
+    void Process(const PicoSeqRackProcessData &data);
+    void Init(const PickSeqRackInitData *initdata);
 	bool enabled;
     // float pp_out[BUF_SZ];
     float pp_out_stereo[BUF_SZ * 2];

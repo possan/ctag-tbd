@@ -7,7 +7,7 @@ using namespace CTAG::SP;
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackFxMaster::Init(const DrumRackInitData *initdata) {
+void DrumRackFxMaster::Init(const PickSeqRackInitData *initdata) {
      
 }
 
@@ -16,7 +16,7 @@ void DrumRackFxMaster::Init(const DrumRackInitData *initdata) {
 //     printf("FxMaster CC %d %d\n", control, value);
 // }
 
-void DrumRackFxMaster::Process(const DrumRackProcessData &data) {
+void DrumRackFxMaster::Process(const PicoSeqRackProcessData &data) {
 	 
 
     // mixRenderOutputMono(td3_out, fTD3Lev, fTD3Pan, fTD3FX1Send, fTD3FX2Send);

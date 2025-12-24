@@ -1,6 +1,6 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackInput.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
@@ -8,7 +8,7 @@ using namespace CTAG::SP;
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackInput::Init(const DrumRackInitData *initdata) {
+void DrumRackInput::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
@@ -17,7 +17,7 @@ void DrumRackInput::Init(const DrumRackInitData *initdata) {
 //     printf("Input CC %d %d\n", control, value);
 // }
 
-void DrumRackInput::Process(const DrumRackProcessData &data) {
+void DrumRackInput::Process(const PicoSeqRackProcessData &data) {
     if (!this->enabled) {
         return;
     }

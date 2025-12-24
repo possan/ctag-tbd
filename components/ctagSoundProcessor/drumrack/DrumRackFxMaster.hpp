@@ -31,8 +31,8 @@ using namespace CTAG::SP;
 
 class DrumRackFxMaster {
 public:
-    void Process(const DrumRackProcessData &data);
-    void Init(const DrumRackInitData *initdata);
+    void Process(const PicoSeqRackProcessData &data);
+    void Init(const PickSeqRackInitData *initdata);
 
 	// void handleMidiCC(uint8_t control, uint8_t value);
 

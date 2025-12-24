@@ -1,13 +1,13 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackASD.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackASD::Init(const DrumRackInitData *initdata) {
+void DrumRackASD::Init(const PickSeqRackInitData *initdata) {
     asd.Init();
 
     initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
@@ -29,7 +29,7 @@ void DrumRackASD::handleMidiNoteOn() {
 //     printf("ASD CC %d %d\n", control, value);
 // }
 
-void DrumRackASD::Process(const DrumRackProcessData &data) {
+void DrumRackASD::Process(const PicoSeqRackProcessData &data) {
     // MK_BOOL_PAR_NOCV(_trig, trigger)
     bool _trig = false;
     if (this->midi_trig) {

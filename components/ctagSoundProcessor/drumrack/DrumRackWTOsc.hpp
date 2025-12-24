@@ -32,8 +32,8 @@ using namespace CTAG::SP;
 
 class DrumRackWTOsc {
 public:
-    void Process(const DrumRackProcessData &data);
-    void Init(const DrumRackInitData *initdata);
+    void Process(const PicoSeqRackProcessData &data);
+    void Init(const PickSeqRackInitData *initdata);
 	bool enabled;
     float out[BUF_SZ];
 

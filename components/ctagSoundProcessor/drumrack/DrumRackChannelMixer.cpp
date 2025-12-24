@@ -1,6 +1,6 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackChannelMixer.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
@@ -8,7 +8,7 @@ using namespace CTAG::SP;
 #define maxFXSendLevelDly 2.f
 #define maxFXSendLevelRev 1.5f
 
-void DrumRackChannelMixer::Init(const DrumRackInitData *initdata) {
+void DrumRackChannelMixer::Init(const PickSeqRackInitData *initdata) {
 	cc_base = initdata->cc_base;
 
 	initdata->rack->registerParamAndCC(initdata, "device", 0, [&](const int val){ mix_device = val;});
@@ -21,7 +21,7 @@ void DrumRackChannelMixer::Init(const DrumRackInitData *initdata) {
 	this->device = -1;
 }
 
-void DrumRackChannelMixer::PreProcess(const DrumRackProcessData &data) {
+void DrumRackChannelMixer::PreProcess(const PicoSeqRackProcessData &data) {
     MK_FLT_PAR_ABS_NOCV(fDev, mix_device, 4095.f, 4095.f);
     MK_FLT_PAR_ABS_NOCV(fPan, mix_pan, 4095.f, 1.f)
     MK_FLT_PAR_ABS_NOCV(fLev, mix_lev, 4095.f, 2.f); fLev *= fLev;

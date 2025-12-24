@@ -1,13 +1,13 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackHH2.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackHH2::Init(const DrumRackInitData *initdata) {
+void DrumRackHH2::Init(const PickSeqRackInitData *initdata) {
     hh2.Init();
 
     initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
@@ -29,7 +29,7 @@ void DrumRackHH2::handleMidiNoteOn() {
 //     printf("HH2 CC %d %d\n", control, value);
 // }
 
-void DrumRackHH2::Process(const DrumRackProcessData &data) {
+void DrumRackHH2::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);
 
     // MK_BOOL_PAR_NOCV(_trig, trigger)

@@ -1,6 +1,6 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackClap.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
@@ -8,7 +8,7 @@ using namespace CTAG::SP;
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackClap::Init(const DrumRackInitData *initdata) {
+void DrumRackClap::Init(const PickSeqRackInitData *initdata) {
     cl.Init();
 
     initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
@@ -30,7 +30,7 @@ void DrumRackClap::handleMidiNoteOn() {
 //     printf("Clap CC %d %d\n", control, value);
 // }
 
-void DrumRackClap::Process(const DrumRackProcessData &data) {
+void DrumRackClap::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);
 
     if (!this->enabled) {

@@ -1,13 +1,13 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackHH1.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackHH1::Init(const DrumRackInitData *initdata) {
+void DrumRackHH1::Init(const PickSeqRackInitData *initdata) {
     hh1.Init();
 
     initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ hh1_f0 = val;});
@@ -29,7 +29,7 @@ void DrumRackHH1::handleMidiNoteOn() {
 //     printf("HH1 CC %d %d\n", control, value);
 // }
 
-void DrumRackHH1::Process(const DrumRackProcessData &data) {
+void DrumRackHH1::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);
 
     if (!this->enabled) {

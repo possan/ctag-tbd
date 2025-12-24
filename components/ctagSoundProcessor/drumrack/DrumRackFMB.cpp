@@ -1,6 +1,6 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackFMB.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
@@ -8,7 +8,7 @@ using namespace CTAG::SP;
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackFMB::Init(const DrumRackInitData *initdata) {
+void DrumRackFMB::Init(const PickSeqRackInitData *initdata) {
     fmb.Init();
 
     initdata->rack->registerParamAndCC(initdata, "f_b", 6, [&](const int val){ f_b = val;});
@@ -35,7 +35,7 @@ void DrumRackFMB::handleMidiNoteOn() {
 //     printf("FMB CC %d %d\n", control, value);
 // }
 
-void DrumRackFMB::Process(const DrumRackProcessData &data) {
+void DrumRackFMB::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);
 
     // MK_BOOL_PAR_NOCV(_trig, trigger)

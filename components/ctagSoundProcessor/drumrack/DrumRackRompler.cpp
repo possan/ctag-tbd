@@ -1,10 +1,10 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackRompler.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
-void DrumRackRompler::Init(const DrumRackInitData *initdata) {
+void DrumRackRompler::Init(const PickSeqRackInitData *initdata) {
     rompler.Init(44100.f);
 
     initdata->rack->registerParamAndCC(initdata, "bank", 6, [&](const int val){ s1_bank = val;});
@@ -55,7 +55,7 @@ void DrumRackRompler::handleMidiNoteOff(uint8_t note, uint8_t vel) {
 //     printf("Rompler CC %d %d\n", control, value);
 // }
 
-void DrumRackRompler::Process(const DrumRackProcessData &data) {
+void DrumRackRompler::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(s1_out, BUF_SZ, 0.f);
 
     if (!this->enabled) {

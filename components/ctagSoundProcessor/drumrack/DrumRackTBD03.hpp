@@ -31,8 +31,8 @@ using namespace CTAG::SP;
 
 class DrumRackTBD03 {
 public:
-    void Process(const DrumRackProcessData &data);
-    void Init(const DrumRackInitData *initdata);
+    void Process(const PicoSeqRackProcessData &data);
+    void Init(const PickSeqRackInitData *initdata);
 	bool enabled;
     float td3_out[BUF_SZ];
 

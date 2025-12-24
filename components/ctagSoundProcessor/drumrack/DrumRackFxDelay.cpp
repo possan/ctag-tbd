@@ -7,7 +7,7 @@ using namespace CTAG::SP;
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackFxDelay::Init(const DrumRackInitData *initdata) {
+void DrumRackFxDelay::Init(const PickSeqRackInitData *initdata) {
      
 }
 
@@ -16,7 +16,7 @@ void DrumRackFxDelay::Init(const DrumRackInitData *initdata) {
 //     printf("FxDelay CC %d %d\n", control, value);
 // }
 
-void DrumRackFxDelay::Process(const DrumRackProcessData &data) {
+void DrumRackFxDelay::Process(const PicoSeqRackProcessData &data) {
 	 
 
     // mixRenderOutputMono(td3_out, fTD3Lev, fTD3Pan, fTD3FX1Send, fTD3FX2Send);

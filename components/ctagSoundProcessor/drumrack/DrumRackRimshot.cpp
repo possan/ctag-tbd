@@ -1,6 +1,6 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackRimshot.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 
 using namespace CTAG::SP;
 
@@ -8,7 +8,7 @@ using namespace CTAG::SP;
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackRimshot::Init(const DrumRackInitData *initdata) {
+void DrumRackRimshot::Init(const PickSeqRackInitData *initdata) {
     rs.Init();
 
     initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
@@ -30,7 +30,7 @@ void DrumRackRimshot::handleMidiNoteOn() {
 //     printf("Rimshot CC %d %d\n", control, value);
 // }
 
-void DrumRackRimshot::Process(const DrumRackProcessData &data) {
+void DrumRackRimshot::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(rs_out, BUF_SZ, 0.f);
 
     if (!this->enabled) {

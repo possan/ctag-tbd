@@ -1,6 +1,6 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackMO.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 #include "braids/quantizer_scales.h"
 
 using namespace CTAG::SP;
@@ -9,7 +9,7 @@ using namespace CTAG::SP;
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackMO::Init(const DrumRackInitData *initdata) {
+void DrumRackMO::Init(const PickSeqRackInitData *initdata) {
     mo_osc.Init();
     mo_osc.set_pitch(100);
     mo_osc.set_shape(braids::MacroOscillatorShape::MACRO_OSC_SHAPE_CSAW);
@@ -60,7 +60,7 @@ void DrumRackMO::handleMidiNoteOff(uint8_t note, uint8_t vel) {
 //     printf("MO CC %d, %d\n", control, value);
 // }
 
-void DrumRackMO::Process(const DrumRackProcessData &data) {
+void DrumRackMO::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(mo_out, BUF_SZ, 0.f);
 
     if (!this->enabled) {

@@ -57,8 +57,8 @@ namespace CTAG {
             virtual ~ctagSoundProcessorPicoSeqRack();
 
 	        void registerParam(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
-			void registerParam(const DrumRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter);
-			void registerParamAndCC(const DrumRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter);
+			void registerParam(const PickSeqRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter);
+			void registerParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter);
 
             void handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel);
             void handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel);

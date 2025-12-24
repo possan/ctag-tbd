@@ -31,8 +31,8 @@ using namespace CTAG::SP;
 
 class DrumRackChannelMixer {
 public:
-	void PreProcess(const DrumRackProcessData &data);
-	void Init(const DrumRackInitData *initdata);
+	void PreProcess(const PicoSeqRackProcessData &data);
+	void Init(const PickSeqRackInitData *initdata);
 	bool enabled;
 	int device;
 	float level;

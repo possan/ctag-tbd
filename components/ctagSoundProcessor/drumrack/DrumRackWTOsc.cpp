@@ -1,6 +1,6 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackWTOsc.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 #include "helpers/ctagNumUtil.hpp"
 #include "plaits/dsp/engine/engine.h"
 #include "braids/quantizer_scales.h"
@@ -10,7 +10,7 @@ using namespace CTAG::SP;
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
-void DrumRackWTOsc::Init(const DrumRackInitData *initdata) {
+void DrumRackWTOsc::Init(const PickSeqRackInitData *initdata) {
     lfo.SetSampleRate(44100.f / BUF_SZ);
     lfo.SetFrequency(1.f);
 
@@ -80,7 +80,7 @@ void DrumRackWTOsc::handleMidiNoteOff(uint8_t note, uint8_t vel) {
 //     printf("WTOsc CC %d %d\n", control, value);
 // }
 
-void DrumRackWTOsc::Process(const DrumRackProcessData &data) {
+void DrumRackWTOsc::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);
 
     if (!this->enabled) {

@@ -1,11 +1,11 @@
 #include "DrumRackSynth.hpp"
 #include "DrumRackPolyPad.hpp"
-#include "../ctagSoundProcessorDrumRack.hpp"
+#include "../ctagSoundProcessorPicoSeqRack.hpp"
 #include "braids/quantizer_scales.h"
 
 using namespace CTAG::SP;
 
-void DrumRackPolyPad::Init(const DrumRackInitData *initdata) {
+void DrumRackPolyPad::Init(const PickSeqRackInitData *initdata) {
     // uint8_t *privatedata = initdata->allocator(1000);
 
     for(auto &s:pp_v_voices){
@@ -64,7 +64,7 @@ void DrumRackPolyPad::handleMidiNoteOff(uint8_t note, uint8_t vel) {
 //     printf("PolyPad CC %d, %d\n", control, value);
 // }
 
-void DrumRackPolyPad::Process(const DrumRackProcessData &data) {
+void DrumRackPolyPad::Process(const PicoSeqRackProcessData &data) {
     // std::fill_n(pp_out, BUF_SZ, 0.f);
     std::fill_n(pp_out_stereo, BUF_SZ * 2, 0.f);
 

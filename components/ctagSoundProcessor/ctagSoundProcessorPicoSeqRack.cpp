@@ -287,7 +287,7 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     std::fill_n(send1_out, bufSz * 2, 0.f);
     std::fill_n(send2_out, bufSz * 2, 0.f);
 
-	struct DrumRackProcessData idata;
+	struct PicoSeqRackProcessData idata;
 	idata.cv = data.cv;
 	idata.trig = data.trig;
     idata.firstNonWtSlice = sampleRom.GetFirstNonWaveTableSlice();
@@ -489,7 +489,7 @@ void ctagSoundProcessorPicoSeqRack::registerParam(const char *prefix, const char
     pMapPar.emplace(fullId, setter);
 }
 
-void ctagSoundProcessorPicoSeqRack::registerParamAndCC(const DrumRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter){
+void ctagSoundProcessorPicoSeqRack::registerParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter){
     string fullId = string(initdata->prefix) + string(suffix);
     pMapPar.emplace(fullId, setter);
     if (cc != -1) {
@@ -497,7 +497,7 @@ void ctagSoundProcessorPicoSeqRack::registerParamAndCC(const DrumRackInitData *i
     }
 }
 
-void ctagSoundProcessorPicoSeqRack::registerParam(const DrumRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter){
+void ctagSoundProcessorPicoSeqRack::registerParam(const PickSeqRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter){
     string fullId = string(initdata->prefix) + string(suffix);
     pMapPar.emplace(fullId, setter);
 }
@@ -714,7 +714,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
 
     framecounter = 0;
 
-    DrumRackInitData dri;
+    PickSeqRackInitData dri;
     dri.rack = this;
 
     dri.midi_channel = 9;
