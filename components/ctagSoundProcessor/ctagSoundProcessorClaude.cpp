@@ -109,7 +109,7 @@ void ctagSoundProcessorClaude::Process(const ProcessData &data) {
     }
     p->reverb = fReverb;
 
-    processor.Process(data.buf, BUF_SZ);
+    processor.Process(data.buf, 32);
 
 }
 

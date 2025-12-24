@@ -45,7 +45,7 @@ namespace CTAG {
             braids::SignatureWaveshaper ws;
             braids::Quantizer quantizer;
             CTAG::SP::HELPERS::ctagADEnv envelope;
-            const uint8_t sync[BUF_SZ] = {0};
+            const uint8_t sync[32] = {0};
             bool prevTrigger = false;
             const uint16_t bit_reduction_masks[7] = {
                     0xc000,

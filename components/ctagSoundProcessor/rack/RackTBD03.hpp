@@ -34,7 +34,7 @@ public:
     void Process(const PicoSeqRackProcessData &data);
     void Init(const PickSeqRackInitData *initdata);
 	bool enabled;
-    float td3_out[BUF_SZ];
+    float td3_out[32];
 
 	void handleMidiNoteOn(uint8_t note, uint8_t vel);
 	void handleMidiNoteOff(uint8_t note, uint8_t vel);
@@ -49,7 +49,7 @@ private:
     ctagADEnv td3_adVCA, td3_adVCF;
     braids::MacroOscillator td3_osc;
     braids::SignatureWaveshaper td3_ws;
-    uint8_t td3_sync[BUF_SZ] = {0};
+    uint8_t td3_sync[32] = {0};
     bool td3_pre_trig = false;
     bool td3_isAccent = false;
     float td3_pre_eg_val = 0.f;

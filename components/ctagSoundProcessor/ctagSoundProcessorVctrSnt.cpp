@@ -397,7 +397,7 @@ void ctagSoundProcessorVctrSnt::Process(const ProcessData &data) {
         CONSTRAIN(f_ScanWavTblA, 0.f, 1.f)
     }
     // --- Render A: Calc wave and apply filter ---
-    float out_A[BUF_SZ] = {0.f};
+    float out_A[32] = {0.f};
     if (isWaveTableGood_A) {
         wt_osc_A.Render(f_freq_A, f_VolWT_A, f_ScanWavTblA, wavetables_A, out_A, bufSz);
         if (t_SubOscPWM_A)   // PWM modulated square-wave as sub-oscillator?
@@ -508,7 +508,7 @@ void ctagSoundProcessorVctrSnt::Process(const ProcessData &data) {
         CONSTRAIN(f_ScanWavTblC, 0.f, 1.f)
     }
     // --- Render C: Calc wave and apply filter ---
-    float out_C[BUF_SZ] = {0.f};
+    float out_C[32] = {0.f};
     if (isWaveTableGood_C) {
         wt_osc_C.Render(f_freq_C, f_VolWT_C, f_ScanWavTblC, wavetables_C, out_C, bufSz);
         if (t_SubOscPWM_C)   // PWM modulated square-wave as sub-oscillator?

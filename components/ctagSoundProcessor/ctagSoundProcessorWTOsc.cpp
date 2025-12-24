@@ -136,7 +136,7 @@ void ctagSoundProcessorWTOsc::Process(const ProcessData &data) {
     pre_fWt = fWt;
 
     // calc wave and apply filter
-    float out[BUF_SZ] = {0.f};
+    float out[32] = {0.f};
     if(isWaveTableGood){
         oscillator.Render(trigger, f0, fAM, fWt, wavetables, out, bufSz);
 

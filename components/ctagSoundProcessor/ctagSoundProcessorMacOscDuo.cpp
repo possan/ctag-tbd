@@ -188,8 +188,8 @@ void ctagSoundProcessorMacOscDuo::Process(const ProcessData &data) {
     }
 
     // render audio data
-    int16_t buffer1[BUF_SZ];
-    int16_t buffer2[BUF_SZ];
+    int16_t buffer1[32];
+    int16_t buffer2[32];
     osc[0].Render(sync1, buffer1, bufSz);
     osc[1].Render(sync2, buffer2, bufSz);
 

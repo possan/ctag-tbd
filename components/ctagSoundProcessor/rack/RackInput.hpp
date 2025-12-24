@@ -34,7 +34,7 @@ public:
     void Process(const PicoSeqRackProcessData &data);
     void Init(const PickSeqRackInitData *initdata);
 	bool enabled;
-    float in_out[BUF_SZ * 2];
+    float out[BUF_SZ * 2];
  
 	// void handleMidiCC(uint8_t control, uint8_t value);
 

@@ -56,7 +56,7 @@ namespace CTAG {
             ctagADEnv adVCA, adVCF;
             braids::MacroOscillator osc;
             braids::SignatureWaveshaper ws;
-            uint8_t sync[BUF_SZ] = {0};
+            uint8_t sync[32] = {0};
             bool pre_trig = false;
             bool isAccent = false;
             float pre_eg_val = 0.f;

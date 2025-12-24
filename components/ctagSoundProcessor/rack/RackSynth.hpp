@@ -12,6 +12,8 @@
 
 using namespace std;
 
+#define BUF_SZ 32
+
 namespace CTAG {
     namespace SP {
         class ctagSoundProcessorPicoSeqRack;

@@ -201,7 +201,7 @@ void ctagSoundProcessorWTOscDuo::Process(const ProcessData &data) {
     pre_fWt_2 = fWt_2;
 
     // calc wave and apply filter
-    float out_1[BUF_SZ] = {0.f};
+    float out_1[32] = {0.f};
     if (isWaveTableGood) {
         oscillator_1.Render(trigger1, f_1, fAM_1, fWt_1, wavetables, out_1, bufSz);
 
@@ -219,7 +219,7 @@ void ctagSoundProcessorWTOscDuo::Process(const ProcessData &data) {
         }
     }
     // calc wave and apply filter
-    float out_2[BUF_SZ] = {0.f};
+    float out_2[32] = {0.f};
     if (isWaveTableGood) {
         oscillator_2.Render(trigger2, f_2, fAM_2, fWt_2, wavetables, out_2, bufSz);
 

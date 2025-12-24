@@ -25,7 +25,6 @@ respective component folders / files if different from this license.
 #include "stmlib/utils/random.h"
 #include <esp_random.h>
 
-
 void CTAG::SP::ChordSynth::NoteOff() {
     adsr.Gate(false);
 }
@@ -41,13 +40,13 @@ void CTAG::SP::ChordSynth::SetResonance(const uint32_t &resonance) {
 }
 
 void  CTAG::SP::ChordSynth::Process(float *buf, const uint32_t &ofs) {
-    memset(buffer, 0, BUF_SZ * 2);
+    memset(buffer, 0, 32 * 2);
 
     // vibrato and render buffer
     for (int i=0;i<params_.nnotes;i++) {
         v_osc[i].SetPitch(
                 params_.pitch + scale[i] * 128 + static_cast<int16_t>(lfo1.Process() * params_.lfo1_amt * 128.f));
-        v_osc[i].Render(buffer, BUF_SZ);
+        v_osc[i].Render(buffer, 32);
     }
 
     // apply filter with lfo and eg
@@ -58,11 +57,11 @@ void  CTAG::SP::ChordSynth::Process(float *buf, const uint32_t &ofs) {
     CONSTRAIN(ffreq, 0, 16383)
 
     svf.set_frequency(static_cast<uint16_t>(ffreq));
-    for (int i = 0; i < BUF_SZ; i++) {
+    for (int i = 0; i < 32; i++) {
         buffer[i] = svf.Process(buffer[i]);
     }
 
-    for (int i = 0; i < BUF_SZ; i++) {
+    for (int i = 0; i < 32; i++) {
         buf[i * 2 + ofs] += static_cast<float>(buffer[i] >> 1) / 32767.f * eg;
     }
 }
@@ -101,14 +100,14 @@ void CTAG::SP::ChordSynth::Hold() {
 void CTAG::SP::ChordSynth::Init(const CTAG::SP::ChordSynth::ChordParams &params) {
     params_ = params;
     stmlib::Random::Seed(esp_random());
-    lfo1.SetSampleRate(44100.f / (float)BUF_SZ);
+    lfo1.SetSampleRate(44100.f / 32.f);
     lfo1.SetFrequencyPhase(params.lfo1_freq, 6.2f * stmlib::Random::GetFloat());
-    lfo2.SetSampleRate(44100.f / (float)BUF_SZ);
+    lfo2.SetSampleRate(44100.f / 32.f);
     if (params.lfo2_random_phase)
         lfo2.SetFrequencyPhase(params.lfo2_freq, 6.2f * stmlib::Random::GetFloat());
     else
         lfo2.SetFrequencyPhase(params.lfo2_freq, 3.1415f);
-    adsr.SetSampleRate(44100.f / (float)BUF_SZ);
+    adsr.SetSampleRate(44100.f / 32.f);
     adsr.SetAttack(params.attack);
     adsr.SetDecay(params.decay);
     adsr.SetSustain(params.sustain);

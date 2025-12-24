@@ -57,7 +57,7 @@ void ctagSoundProcessorFBDlyLine::Process(const ProcessData &data) {
     dlyLine.SetDryWet(fDryWet);
     dlyLine.SetLength((uint32_t) fLength);
     dlyLine.SetFeedback(fb);
-    dlyLine.Process(data.buf, this->processCh, 2, BUF_SZ * 2);
+    dlyLine.Process(data.buf, this->processCh, 2, 32 * 2);
 
     fLevel = (float) level / 4095.f;
     if (cv_level != -1) {

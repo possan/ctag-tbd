@@ -30,7 +30,7 @@ using namespace CTAG::SP;
 
 void ctagSoundProcessorAntique::Process(const ProcessData &data) {
     // dry buffer
-    float dry[BUF_SZ];
+    float dry[32];
     // input shaping
     MK_FLT_PAR_ABS(fInputLevel, inplevel, 4095.f, 1.f)
     fInputLevel *= fInputLevel;
@@ -48,13 +48,13 @@ void ctagSoundProcessorAntique::Process(const ProcessData &data) {
     MK_INT_PAR_ABS(iHumShape, humshape, 32767.f)
     MK_INT_PAR_ABS(iHumAgression, humagr, 30)
     iHumAgression++;
-    int16_t ibuf[BUF_SZ];
-    const uint8_t sync[BUF_SZ] {0};
+    int16_t ibuf[32];
+    const uint8_t sync[32] {0};
     humm.set_shape(braids::AnalogOscillatorShape::OSC_SHAPE_TRIANGLE_FOLD);
     humm.set_parameter(iHumShape);
     humm.set_aux_parameter(0);
     humm.set_pitch(1000 + iHumFreq);
-    humm.Render(sync, ibuf, nullptr, BUF_SZ);
+    humm.Render(sync, ibuf, nullptr, 32);
 
     // hiss
     MK_FLT_PAR_ABS_MIN_MAX(fHissFreq, hissf, 4095.f, 20.f, 20000.f)

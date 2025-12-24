@@ -80,8 +80,8 @@ namespace CTAG {
 
             // --- Sample Oscillators B and D ---
             RomplerVoice romplers[2];
-            float sample_buf_B[BUF_SZ];
-            float sample_buf_D[BUF_SZ];
+            float sample_buf_B[32];
+            float sample_buf_D[32];
             uint32_t wtSliceOffset = 0;
             ctagSampleRom sampleRom;
 

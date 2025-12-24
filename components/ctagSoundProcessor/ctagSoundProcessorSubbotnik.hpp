@@ -44,11 +44,11 @@ namespace CTAG {
 
             // --- Braids related stuff ---
             braids::MacroOscillator osc_A;
-            int16_t buffer_A[BUF_SZ];
-            const uint8_t sync_A[BUF_SZ] = {0};
+            int16_t buffer_A[32];
+            const uint8_t sync_A[32] = {0};
             braids::MacroOscillator osc_B;
-            int16_t buffer_B[BUF_SZ];
-            const uint8_t sync_B[BUF_SZ] = {0};
+            int16_t buffer_B[32];
+            const uint8_t sync_B[32] = {0};
 
             const int critical_shapes[CRITICAL_SHAPES_NUM] = {22,23,24,25,32,33};   // This is a list of shapes that cause high CPU load, if both Oscillators are active we force the filter to SVF to save load
             inline bool shape_is_critical(int my_shape) { for(int i=0; i<CRITICAL_SHAPES_NUM; i++) if(my_shape==critical_shapes[i]) return(true); return false;}; // rescale incoming data to bool

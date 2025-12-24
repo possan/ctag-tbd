@@ -66,7 +66,7 @@ void CTAG::SYNTHESIS::Rimshot::Process(float* out, uint32_t size){
     hp.set_f_q<stmlib::FREQUENCY_DIRTY>(params.f0*2.f, params.reso_hp);
 
     env.SetDecay(params.decay);
-    for(int i=0;i<BUF_SZ;i++){
+    for(int i=0;i<32;i++){
         float pulse = 0.0f;
         if (pulse_remaining_samples_) {
             --pulse_remaining_samples_;

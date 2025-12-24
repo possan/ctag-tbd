@@ -34,7 +34,7 @@ public:
     void Process(const PicoSeqRackProcessData &data);
     void Init(const PickSeqRackInitData *initdata);
 	bool enabled;
-    float mo_out[BUF_SZ];
+    float mo_out[32];
 
 	void handleMidiNoteOn(uint8_t note, uint8_t vel);
 	void handleMidiNoteOff(uint8_t note, uint8_t vel);
@@ -45,7 +45,7 @@ private:
 	braids::SignatureWaveshaper mo_ws;
 	braids::Quantizer mo_quantizer;
 	CTAG::SP::HELPERS::ctagADEnv mo_envelope;
-	const uint8_t mo_sync[BUF_SZ] = {0};
+	const uint8_t mo_sync[32] = {0};
 	bool mo_prevTrigger = false;
 	const uint16_t mo_bit_reduction_masks[7] = {
 			0xc000,

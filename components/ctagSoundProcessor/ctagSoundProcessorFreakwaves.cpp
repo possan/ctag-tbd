@@ -714,9 +714,9 @@ void ctagSoundProcessorFreakwaves::Process(const ProcessData &data) {
     dlyLine.SetFeedback(f_DelayFeedback);
 
     // === Main DSP output loop[s] ===
-    float wave_osc_buf[BUF_SZ] = {0.f}; // Beware: for Plaits Wavetable rendering the buffer must be "empty"!
-    float wave_osc_buf_c[BUF_SZ] = {0.f}; // Seperate output for OSC C is selected via GUI
-    float delay_buf[BUF_SZ] = {0.f};    // Delaybuffer
+    float wave_osc_buf[32] = {0.f}; // Beware: for Plaits Wavetable rendering the buffer must be "empty"!
+    float wave_osc_buf_c[32] = {0.f}; // Seperate output for OSC C is selected via GUI
+    float delay_buf[32] = {0.f};    // Delaybuffer
 
     // --- Process oscillators and apply MGs and EGs to them if required ---
     if (isWaveTableGood_A)
@@ -739,7 +739,7 @@ void ctagSoundProcessorFreakwaves::Process(const ProcessData &data) {
 
     // --- Additional data and processing for resonator ---
     f_ResonatorFreq /= 44100.f;
-    float reso_buf[BUF_SZ]{0};
+    float reso_buf[32]{0};
     if (t_AddDelayAfterResonator) {
         float external_signal_wet = 0.f;
         float oscillators_signal = 0.f;

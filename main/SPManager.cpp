@@ -46,7 +46,7 @@ respective component folders / files if different from this license.
 
 #define MAX(x, y) ((x)>(y)) ? (x) : (y)
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
-#define BUF_SZ 64
+#define BUF_SZ 32
 //#define NOISE_GATE_LEVEL_CLOSE 0.000065f
 #define NOISE_GATE_LEVEL_CLOSE 0.0001f
 #define NOISE_GATE_LEVEL_OPEN 0.0003f
@@ -59,7 +59,7 @@ using namespace CTAG::DRIVERS;
 #define NG_BOTH 1
 #define NG_LEFT 2
 #define NG_RIGHT 3
-#define CPU_MAX_ALLOWED_CYCLES 450000 // just guessing...
+#define CPU_MAX_ALLOWED_CYCLES 261224 // is 32/44100kHz * 360MHz
 
 // global variable, spiffs base directory
 namespace CTAG {
