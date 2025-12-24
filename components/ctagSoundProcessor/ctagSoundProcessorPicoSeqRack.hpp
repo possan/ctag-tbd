@@ -45,6 +45,46 @@
 #include "rack/RackFxMaster.hpp"
 #include "rack/RackChannelMixer.hpp"
 
+
+
+
+
+
+#define BUF_SZ 32
+
+#define MK_BOOL_PAR_NOCV(outname, inname) \
+    bool outname = inname;
+
+#define MK_FLT_PAR_ABS_NOCV(outname, inname, norm, scale) \
+    float outname = inname / norm * scale;
+
+#define MK_FLT_PAR_ABS_ADD_NOCV(outname, inname, norm, scale) \
+    float outname = inname / norm * scale;
+
+#define MK_FLT_PAR_ABS_SFT_NOCV(outname, inname, norm, scale) \
+    float outname = inname / norm * scale;
+
+#define MK_FLT_PAR_NOCV(outname, inname, norm, scale) \
+    float outname = inname / norm * scale;
+
+#define MK_INT_PAR_ABS_NOCV(outname, inname, scale) \
+    int outname = inname * scale / 4096;
+
+#define MK_INT_PAR_NOCV(outname, inname, scale) \
+    int outname = inname;
+
+#define MK_FLT_PAR_ABS_MIN_MAX_NOCV(outname, inname, norm, out_min, out_max) \
+    float outname = inname/norm * (out_max-out_min)+out_min;
+
+#define MK_FLT_PAR_ABS_PAN_NOCV(outname, inname, norm, scale)  \
+    float outname = (inname/norm+1.f)/2.f * scale;
+
+#define CC_TO_MAP_KEY(ch, cc) (((ch) * 256) + (cc))
+
+
+
+
+
 namespace CTAG {
     namespace SP {
         typedef void (DrumRackParameterSetter)(const int value);
