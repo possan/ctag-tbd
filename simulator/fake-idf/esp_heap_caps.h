@@ -23,7 +23,6 @@ respective component folders / files if different from this license.
 #define MALLOC_CAP_8BIT 2
 #define MALLOC_CAP_SPIRAM 4
 #define MALLOC_CAP_DEFAULT 8
-#define MALLOC_CAP_EXEC 64
 
 #ifdef __cplusplus
 extern "C"

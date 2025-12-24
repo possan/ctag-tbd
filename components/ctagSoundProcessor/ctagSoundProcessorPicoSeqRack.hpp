@@ -111,6 +111,8 @@ namespace CTAG {
         private:
             virtual void knowYourself() override;
 
+            map<const int, string> pMapCC;
+
 			// rack components
 			RackChannelMixer ch1;
 			RackDBD ch1_db;

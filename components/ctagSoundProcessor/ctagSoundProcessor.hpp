@@ -228,7 +228,6 @@ namespace CTAG {
             map<string, function<void(const int)>> pMapPar;
             map<string, function<void(const int)>> pMapCv;
             map<string, function<void(const int)>> pMapTrig;
-            map<const int, string> pMapCC;
         };
     }
 }
