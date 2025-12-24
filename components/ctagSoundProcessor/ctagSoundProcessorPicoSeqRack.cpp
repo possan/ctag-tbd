@@ -990,6 +990,6 @@ void ctagSoundProcessorPicoSeqRack::knowYourself(){
 
 
     isStereo = true;
-	id = "DrumRack";
+	id = "PicoSeqRack";
 	// sectionCpp0
 }
