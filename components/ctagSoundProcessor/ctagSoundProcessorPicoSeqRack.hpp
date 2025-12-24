@@ -100,6 +100,7 @@ namespace CTAG {
 			void registerParam(const PickSeqRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter);
 			void registerParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter);
 
+			void parseIncomingMidiMessages(const uint8_t *buf, const size_t len);
             void handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel);
             void handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel);
             void handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value);

@@ -277,6 +277,9 @@ void ctagSoundProcessorPicoSeqRack::renderMasterOutput(const ProcessData& data) 
 
 void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     framecounter ++;
+
+    // data.
+
     // memset(combined_out, 0, bufSz * 2 * sizeof(float));
     // memset(send1_out, 0, bufSz * 2 * sizeof(float));
     // memset(send2_out, 0, bufSz * 2 * sizeof(float));
@@ -992,4 +995,108 @@ void ctagSoundProcessorPicoSeqRack::knowYourself(){
     isStereo = true;
 	id = "PicoSeqRack";
 	// sectionCpp0
+}
+
+
+void ctagSoundProcessorPicoSeqRack::parseIncomingMidiMessages(const uint8_t *buf, const size_t len) {
+    // for now, just forward all midi data to control class
+    // CTRL::Control::ParseMidiMessages(buf, len);
+
+    int left = len;
+    int o = 0;
+
+    while(left > 3) {
+        uint8_t b0 = buf[o++];
+        left --;
+
+        if (b0 == 0) {
+            // probably end of event stream
+            return;
+        }
+
+        uint8_t channel = (b0 & 0x0F);
+        uint8_t cmd = (b0 & 0xF0);
+
+        switch(cmd) {
+            case 0x80: // note off
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiNoteOff(channel, b1, b2);
+                break;
+            }
+            case 0x90: // note on
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiNoteOn(channel, b1, b2);
+                break;
+            }
+            case 0xA0: // aftertouch
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiAftertouch(channel, b1, b2);
+                break;
+            }
+            case 0xB0: // control change
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiControlChange(channel, b1, b2);
+                break;
+            }
+            case 0xC0: // program change
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++]; // not used?
+                left -= 2;
+                handleMidiPatchChange(channel, b1);
+                break;
+            }
+            case 0xE0: // pitch bend
+            {
+                if (left < 2) return; // not enough data
+
+                uint8_t b1 = buf[o++];
+                uint8_t b2 = buf[o++];
+                left -= 2;
+                handleMidiPitchBend(channel, b2 * 128 + b1);
+                break;
+            }
+            case 0xF0: // system common / real time
+                // TODO handle sysex, clock, start, stop, continue, ...
+                switch(b0) {
+                    case 0xF0: // sysex start
+                        return; // just ignore and bail out for now
+
+                    case 0xF8: // timing clock
+                    case 0xFA: // start
+                    case 0xFB: // continue
+                    case 0xFC: // stop
+                    case 0xFE: // active sensing
+                    case 0xFF: // system reset
+                        // ignore for now
+                        break;
+                }
+                break; // fail for now
+            default:
+                // for anything else, just stop parsing.
+                return;
+        }
+    }
 }
