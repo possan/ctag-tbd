@@ -5,128 +5,25 @@
 #include "plaits/dsp/drums/synthetic_bass_drum.h"
 #include "plaits/dsp/drums/synthetic_snare_drum.h"
 #include "plaits/dsp/drums/hi_hat.h"
-#include "braids/analog_oscillator.h"
-#include "braids/signature_waveshaper.h"
-#include "braids/macro_oscillator.h"
-#include "braids/settings.h"
-#include "braids/quantizer.h"
-#include "filters/ctagDiodeLadderFilter.hpp"
-#include "filters/ctagDiodeLadderFilter2.hpp"
-#include "filters/ctagDiodeLadderFilter3.hpp"
-#include "filters/ctagDiodeLadderFilter4.hpp"
-#include "filters/ctagDiodeLadderFilter5.hpp"
-#include "filters/ctagFilterBase.hpp"
 #include "synthesis/RomplerVoiceMinimal.hpp"
 #include "synthesis/Clap.hpp"
 #include "synthesis/Rimshot.hpp"
 #include "synthesis/FmKick.hpp"
 #include "helpers/ctagSampleRom.hpp"
-#include "helpers/ctagADEnv.hpp"
 #include "SimpleComp/SimpleComp.h"
 #include "mifx/reverb.h"
-#include "polypad/ChordSynth.hpp"
-#include "drumrack/DrumRackDBD.hpp"
-#include "drumrack/DrumRackABD.hpp"
-#include "drumrack/DrumRackDSD.hpp"
-#include "drumrack/DrumRackASD.hpp"
-#include "drumrack/DrumRackHH1.hpp"
-#include "drumrack/DrumRackHH2.hpp"
-#include "drumrack/DrumRackFMB.hpp"
-#include "drumrack/DrumRackRimshot.hpp"
-#include "drumrack/DrumRackClap.hpp"
-#include "drumrack/DrumRackRompler.hpp"
-#include "drumrack/DrumRackTBD03.hpp"
-#include "drumrack/DrumRackPolyPad.hpp"
-#include "drumrack/DrumRackMO.hpp"
-#include "drumrack/DrumRackWTOsc.hpp"
-#include "drumrack/DrumRackInput.hpp"
-#include "drumrack/DrumRackFxDelay.hpp"
-#include "drumrack/DrumRackFxReverb.hpp"
-#include "drumrack/DrumRackFxMaster.hpp"
-#include "drumrack/DrumRackChannelMixer.hpp"
 
 namespace CTAG {
     namespace SP {
-        typedef void (DrumRackParameterSetter)(const int value);
-
-		class ctagSoundProcessorDrumRack : public ctagSoundProcessor {
+        class ctagSoundProcessorDrumRack : public ctagSoundProcessor {
         public:
             virtual void Process(const ProcessData &) override;
             // no ctor, use Init() instead, is called from factory after successful creation
             virtual void Init(std::size_t blockSize, void *blockPtr) override;
             virtual ~ctagSoundProcessorDrumRack();
 
-	        void registerParam(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter);
-			void registerParam(const DrumRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter);
-			void registerParamAndCC(const DrumRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter);
-
-            void handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel);
-            void handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel);
-            void handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value);
-            void handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel);
-            void handleMidiPatchChange(const uint8_t channel, const uint8_t patch);
-            void handleMidiPitchBend(const uint8_t channel, const uint16_t bend);
-
         private:
             virtual void knowYourself() override;
-
-			// rack components
-			DrumRackChannelMixer ch1;
-			DrumRackDBD ch1_db;
-			DrumRackABD ch1_ab;
-
-			DrumRackChannelMixer ch2;
-			DrumRackFMB ch2_fmb1;
-			DrumRackFMB ch2_fmb2;
-
-			DrumRackChannelMixer ch3;
-			DrumRackDSD ch3_ds;
-			DrumRackASD ch3_as;
-
-			DrumRackChannelMixer ch4;
-			DrumRackHH1 ch4_hh1;
-			DrumRackHH2 ch4_hh2;
-
-			DrumRackChannelMixer ch5;
-			DrumRackRimshot ch5_rs;
-
-			DrumRackChannelMixer ch6;
-			DrumRackClap ch6_cl;
-
-			DrumRackRompler ch7_ro;
-			DrumRackChannelMixer ch7;
-
-			DrumRackRompler ch8_ro;
-			DrumRackChannelMixer ch8;
-
-			DrumRackTBD03 ch9_td3;
-			DrumRackChannelMixer ch9;
-
-			DrumRackTBD03 ch10_td3;
-			DrumRackChannelMixer ch10;
-
-			DrumRackMO ch11_mo;
-			DrumRackChannelMixer ch11;
-
-			DrumRackWTOsc ch12_wtosc;
-			DrumRackMO ch12_mo;
-			DrumRackChannelMixer ch12;
-
-			DrumRackChannelMixer ch13;
-			DrumRackRompler ch13_ro;
-
-			DrumRackChannelMixer ch14;
-			DrumRackRompler ch14_ro;
-
-			DrumRackChannelMixer ch15;
-			DrumRackPolyPad ch15_pp;
-
-			DrumRackInput ch16_in;
-			DrumRackChannelMixer ch16;
-
-			// DrumRackFxReverb fx_reverb;
-			// DrumRackFxDelay fx_delay;
-			// DrumRackFxMaster fx_master;
 
             // compressor
             chunkware_simple::SimpleComp sumCompressor;
@@ -134,14 +31,18 @@ namespace CTAG {
             float side_l {0.f};
             float side_r {0.f};
 
-			void mixRenderOutputMono(float *source, float level, float pan, float fx1, float fx2);
-			void mixRenderOutputStereo(float *source, float level, float pan, float fx1, float fx2);
+            // plaits drum models
+            plaits::AnalogBassDrum abd;
+            plaits::AnalogSnareDrum asd;
+            plaits::SyntheticBassDrum dbd;
+            plaits::SyntheticSnareDrum dsd;
+            plaits::HiHat<plaits::SquareNoise, plaits::SwingVCA, true, false> hh1;
+            plaits::HiHat<plaits::RingModNoise, plaits::LinearVCA, false, true> hh2;
 
-			void preprocessFX1(const ProcessData& data);
-			void preprocessFX2(const ProcessData& data);
-			void preprocessMaster(const ProcessData& data);
-
-			void renderMasterOutput(const ProcessData& data);
+        	// own drum models
+        	CTAG::SYNTHESIS::Clap cl;
+        	CTAG::SYNTHESIS::Rimshot rs;
+            CTAG::SYNTHESIS::FmKick fmb;
 
             // delay
             float *delayBuffer_l, *delayBuffer_r;
@@ -152,56 +53,279 @@ namespace CTAG {
             float duck {0.f};
             float delayTime_ms {0.0f};
             bool pre_sync {false};
-            // float fDelayTime {0.0f};
-            float delaySamples {32};
+            float fDelayTime {0.0f};
             float fSyncTimeStamp {0.0f};
             int32_t timer {0}, pre_timer {0};
             stmlib::OnePole lp_l, hp_l;
             stmlib::OnePole lp_r, hp_r;
-			int last_scaledbpm { 1200 };
-			float last_msPerBeat { 500.0f };
 
             // reverb
-            float *reverbBuffer;
             mifx::Reverb reverb;
-			int framecounter;
 
-        	float combined_out[BUF_SZ*2];
-        	float send1_out[BUF_SZ*2];
-        	float send2_out[BUF_SZ*2];
 
-            // romplers
+            float abd_out[32];
+            float asd_out[32];
+            float dbd_out[32];
+            float dsd_out[32];
+            float hh1_out[32];
+            float hh2_out[32];
+        	float rs_out[32];
+        	float cl_out[32];
+            float fmb_out[32];
+            float temp1_[32];
+            float temp2_[32];
+            float s1_out[32];
+            float s2_out[32];
+        	float s3_out[32];
+        	float s4_out[32];
+        	float silence[32];
+        	float *data_ptrs[13] = {silence, silence, silence, silence, silence, silence, silence, silence, silence, silence, silence, silence, silence};
+
+            bool abd_trig_prev {false};
+            bool asd_trig_prev {false};
+            bool dbd_trig_prev {false};
+            bool dsd_trig_prev {false};
+            bool hh1_trig_prev {false};
+            bool hh2_trig_prev {false};
+        	bool rs_trig_prev {false};
+        	bool cl_trig_prev {false};
+            bool fmb_trig_prev {false};
+
+            // rompler
+            CTAG::SYNTHESIS::RomplerVoiceMinimal rompler[4];
             CTAG::SP::HELPERS::ctagSampleRom sampleRom;
+
 
             // private attributes could go here
             // autogenerated code here
             // sectionHpp
-	atomic<int32_t> fx1_time_ms; //, cv_fx1_time_ms;
-	atomic<int32_t> fx1_sync; //, trig_fx1_sync;
-	atomic<int32_t> fx1_freeze; //, trig_fx1_freeze;
-	atomic<int32_t> fx1_tape_digital; //, trig_fx1_tape_digital;
-	atomic<int32_t> fx1_st_width; //, cv_fx1_st_width;
-	atomic<int32_t> fx1_fx_send; //, cv_fx1_fx_send;
-	atomic<int32_t> fx1_feedback; //, cv_fx1_feedback;
-	atomic<int32_t> fx1_base; //, cv_fx1_base;
-	atomic<int32_t> fx1_width; //, cv_fx1_width;
-	atomic<int32_t> fx2_time; //, cv_fx2_time;
-	atomic<int32_t> fx2_lp; //, cv_fx2_lp;
-	atomic<int32_t> c_thres; //, cv_c_thres;
-	atomic<int32_t> c_ratio; //, cv_c_ratio;
-	atomic<int32_t> c_atk; //, cv_c_atk;
-	atomic<int32_t> c_rel; //, cv_c_rel;
-	atomic<int32_t> c_lpf; //, trig_c_lpf;
-	atomic<int32_t> c_gain; //, cv_c_gain;
-	atomic<int32_t> c_mix; //, cv_c_mix;
-	atomic<int32_t> c_dly_level; //, cv_c_dly_level;
-	atomic<int32_t> c_rev_level; //, cv_c_rev_level;
-	atomic<int32_t> sum_mute; //, trig_sum_mute;
-	atomic<int32_t> sum_lev; //, cv_sum_lev;
-	atomic<int32_t> fx1_amount; //, cv_fx1_amount;
-	atomic<int32_t> fx2_amount; //, cv_fx2_amount;
-	atomic<int32_t> global_bpm_hi;
-	atomic<int32_t> global_bpm_lo;
+	atomic<int32_t> ab_trigger, trig_ab_trigger;
+	atomic<int32_t> ab_mute, trig_ab_mute;
+	atomic<int32_t> ab_lev, cv_ab_lev;
+	atomic<int32_t> ab_pan, cv_ab_pan;
+	atomic<int32_t> ab_fx1, cv_ab_fx1;
+	atomic<int32_t> ab_fx2, cv_ab_fx2;
+	atomic<int32_t> ab_accent, cv_ab_accent;
+	atomic<int32_t> ab_f0, cv_ab_f0;
+	atomic<int32_t> ab_tone, cv_ab_tone;
+	atomic<int32_t> ab_decay, cv_ab_decay;
+	atomic<int32_t> ab_a_fm, cv_ab_a_fm;
+	atomic<int32_t> ab_s_fm, cv_ab_s_fm;
+	atomic<int32_t> db_trigger, trig_db_trigger;
+	atomic<int32_t> db_mute, trig_db_mute;
+	atomic<int32_t> db_lev, cv_db_lev;
+	atomic<int32_t> db_pan, cv_db_pan;
+	atomic<int32_t> db_fx1, cv_db_fx1;
+	atomic<int32_t> db_fx2, cv_db_fx2;
+	atomic<int32_t> db_accent, cv_db_accent;
+	atomic<int32_t> db_f0, cv_db_f0;
+	atomic<int32_t> db_tone, cv_db_tone;
+	atomic<int32_t> db_decay, cv_db_decay;
+	atomic<int32_t> db_dirty, cv_db_dirty;
+	atomic<int32_t> db_fm_env, cv_db_fm_env;
+	atomic<int32_t> db_fm_dcy, cv_db_fm_dcy;
+	atomic<int32_t> fmb_trigger, trig_fmb_trigger;
+	atomic<int32_t> fmb_mute, trig_fmb_mute;
+	atomic<int32_t> fmb_lev, cv_fmb_lev;
+	atomic<int32_t> fmb_pan, cv_fmb_pan;
+	atomic<int32_t> fmb_fx1, cv_fmb_fx1;
+	atomic<int32_t> fmb_fx2, cv_fmb_fx2;
+	atomic<int32_t> fmb_use_ratio_mode, trig_fmb_use_ratio_mode;
+	atomic<int32_t> fmb_mod_env_sync, trig_fmb_mod_env_sync;
+	atomic<int32_t> fmb_f_b, cv_fmb_f_b;
+	atomic<int32_t> fmb_d_b, cv_fmb_d_b;
+	atomic<int32_t> fmb_f_m, cv_fmb_f_m;
+	atomic<int32_t> fmb_I, cv_fmb_I;
+	atomic<int32_t> fmb_d_m, cv_fmb_d_m;
+	atomic<int32_t> fmb_b_m, cv_fmb_b_m;
+	atomic<int32_t> fmb_A_f, cv_fmb_A_f;
+	atomic<int32_t> fmb_d_f, cv_fmb_d_f;
+	atomic<int32_t> as_trigger, trig_as_trigger;
+	atomic<int32_t> as_mute, trig_as_mute;
+	atomic<int32_t> as_lev, cv_as_lev;
+	atomic<int32_t> as_pan, cv_as_pan;
+	atomic<int32_t> as_fx1, cv_as_fx1;
+	atomic<int32_t> as_fx2, cv_as_fx2;
+	atomic<int32_t> as_accent, cv_as_accent;
+	atomic<int32_t> as_f0, cv_as_f0;
+	atomic<int32_t> as_tone, cv_as_tone;
+	atomic<int32_t> as_decay, cv_as_decay;
+	atomic<int32_t> as_a_spy, cv_as_a_spy;
+	atomic<int32_t> ds_trigger, trig_ds_trigger;
+	atomic<int32_t> ds_mute, trig_ds_mute;
+	atomic<int32_t> ds_lev, cv_ds_lev;
+	atomic<int32_t> ds_pan, cv_ds_pan;
+	atomic<int32_t> ds_fx1, cv_ds_fx1;
+	atomic<int32_t> ds_fx2, cv_ds_fx2;
+	atomic<int32_t> ds_accent, cv_ds_accent;
+	atomic<int32_t> ds_f0, cv_ds_f0;
+	atomic<int32_t> ds_fm_amt, cv_ds_fm_amt;
+	atomic<int32_t> ds_decay, cv_ds_decay;
+	atomic<int32_t> ds_spy, cv_ds_spy;
+	atomic<int32_t> hh1_trigger, trig_hh1_trigger;
+	atomic<int32_t> hh1_mute, trig_hh1_mute;
+	atomic<int32_t> hh1_lev, cv_hh1_lev;
+	atomic<int32_t> hh1_pan, cv_hh1_pan;
+	atomic<int32_t> hh1_fx1, cv_hh1_fx1;
+	atomic<int32_t> hh1_fx2, cv_hh1_fx2;
+	atomic<int32_t> hh1_accent, cv_hh1_accent;
+	atomic<int32_t> hh1_f0, cv_hh1_f0;
+	atomic<int32_t> hh1_tone, cv_hh1_tone;
+	atomic<int32_t> hh1_decay, cv_hh1_decay;
+	atomic<int32_t> hh1_noise, cv_hh1_noise;
+	atomic<int32_t> hh2_trigger, trig_hh2_trigger;
+	atomic<int32_t> hh2_mute, trig_hh2_mute;
+	atomic<int32_t> hh2_lev, cv_hh2_lev;
+	atomic<int32_t> hh2_pan, cv_hh2_pan;
+	atomic<int32_t> hh2_fx1, cv_hh2_fx1;
+	atomic<int32_t> hh2_fx2, cv_hh2_fx2;
+	atomic<int32_t> hh2_accent, cv_hh2_accent;
+	atomic<int32_t> hh2_f0, cv_hh2_f0;
+	atomic<int32_t> hh2_tone, cv_hh2_tone;
+	atomic<int32_t> hh2_decay, cv_hh2_decay;
+	atomic<int32_t> hh2_noise, cv_hh2_noise;
+	atomic<int32_t> rs_trigger, trig_rs_trigger;
+	atomic<int32_t> rs_mute, trig_rs_mute;
+	atomic<int32_t> rs_lev, cv_rs_lev;
+	atomic<int32_t> rs_pan, cv_rs_pan;
+	atomic<int32_t> rs_fx1, cv_rs_fx1;
+	atomic<int32_t> rs_fx2, cv_rs_fx2;
+	atomic<int32_t> rs_accent, cv_rs_accent;
+	atomic<int32_t> rs_f0, cv_rs_f0;
+	atomic<int32_t> rs_tone, cv_rs_tone;
+	atomic<int32_t> rs_decay, cv_rs_decay;
+	atomic<int32_t> rs_noise, cv_rs_noise;
+	atomic<int32_t> cl_trigger, trig_cl_trigger;
+	atomic<int32_t> cl_mute, trig_cl_mute;
+	atomic<int32_t> cl_lev, cv_cl_lev;
+	atomic<int32_t> cl_pan, cv_cl_pan;
+	atomic<int32_t> cl_fx1, cv_cl_fx1;
+	atomic<int32_t> cl_fx2, cv_cl_fx2;
+	atomic<int32_t> cl_f0, cv_cl_f0;
+	atomic<int32_t> cl_tone, cv_cl_tone;
+	atomic<int32_t> cl_decay, cv_cl_decay;
+	atomic<int32_t> cl_scale, cv_cl_scale;
+	atomic<int32_t> cl_transient, cv_cl_transient;
+	atomic<int32_t> s1_gate, trig_s1_gate;
+	atomic<int32_t> s1_mute, trig_s1_mute;
+	atomic<int32_t> s1_lev, cv_s1_lev;
+	atomic<int32_t> s1_pan, cv_s1_pan;
+	atomic<int32_t> s1_fx1, cv_s1_fx1;
+	atomic<int32_t> s1_fx2, cv_s1_fx2;
+	atomic<int32_t> s1_speed, cv_s1_speed;
+	atomic<int32_t> s1_pitch, cv_s1_pitch;
+	atomic<int32_t> s1_ts, trig_s1_ts;
+	atomic<int32_t> s1_ts_amount, cv_s1_ts_amount;
+	atomic<int32_t> s1_bank, cv_s1_bank;
+	atomic<int32_t> s1_slice, cv_s1_slice;
+	atomic<int32_t> s1_start, cv_s1_start;
+	atomic<int32_t> s1_end, cv_s1_end;
+	atomic<int32_t> s1_lp, trig_s1_lp;
+	atomic<int32_t> s1_lp_pp, trig_s1_lp_pp;
+	atomic<int32_t> s1_lp_pos, cv_s1_lp_pos;
+	atomic<int32_t> s1_atk, cv_s1_atk;
+	atomic<int32_t> s1_dcy, cv_s1_dcy;
+	atomic<int32_t> s1_eg2fm, cv_s1_eg2fm;
+	atomic<int32_t> s1_brr, cv_s1_brr;
+	atomic<int32_t> s1_ft, cv_s1_ft;
+	atomic<int32_t> s1_fc, cv_s1_fc;
+	atomic<int32_t> s1_fq, cv_s1_fq;
+	atomic<int32_t> s2_gate, trig_s2_gate;
+	atomic<int32_t> s2_mute, trig_s2_mute;
+	atomic<int32_t> s2_lev, cv_s2_lev;
+	atomic<int32_t> s2_pan, cv_s2_pan;
+	atomic<int32_t> s2_fx1, cv_s2_fx1;
+	atomic<int32_t> s2_fx2, cv_s2_fx2;
+	atomic<int32_t> s2_speed, cv_s2_speed;
+	atomic<int32_t> s2_pitch, cv_s2_pitch;
+	atomic<int32_t> s2_ts, trig_s2_ts;
+	atomic<int32_t> s2_ts_amount, cv_s2_ts_amount;
+	atomic<int32_t> s2_bank, cv_s2_bank;
+	atomic<int32_t> s2_slice, cv_s2_slice;
+	atomic<int32_t> s2_start, cv_s2_start;
+	atomic<int32_t> s2_end, cv_s2_end;
+	atomic<int32_t> s2_lp, trig_s2_lp;
+	atomic<int32_t> s2_lp_pp, trig_s2_lp_pp;
+	atomic<int32_t> s2_lp_pos, cv_s2_lp_pos;
+	atomic<int32_t> s2_atk, cv_s2_atk;
+	atomic<int32_t> s2_dcy, cv_s2_dcy;
+	atomic<int32_t> s2_eg2fm, cv_s2_eg2fm;
+	atomic<int32_t> s2_brr, cv_s2_brr;
+	atomic<int32_t> s2_ft, cv_s2_ft;
+	atomic<int32_t> s2_fc, cv_s2_fc;
+	atomic<int32_t> s2_fq, cv_s2_fq;
+	atomic<int32_t> s3_gate, trig_s3_gate;
+	atomic<int32_t> s3_mute, trig_s3_mute;
+	atomic<int32_t> s3_lev, cv_s3_lev;
+	atomic<int32_t> s3_pan, cv_s3_pan;
+	atomic<int32_t> s3_fx1, cv_s3_fx1;
+	atomic<int32_t> s3_fx2, cv_s3_fx2;
+	atomic<int32_t> s3_speed, cv_s3_speed;
+	atomic<int32_t> s3_pitch, cv_s3_pitch;
+	atomic<int32_t> s3_ts, trig_s3_ts;
+	atomic<int32_t> s3_ts_amount, cv_s3_ts_amount;
+	atomic<int32_t> s3_bank, cv_s3_bank;
+	atomic<int32_t> s3_slice, cv_s3_slice;
+	atomic<int32_t> s3_start, cv_s3_start;
+	atomic<int32_t> s3_end, cv_s3_end;
+	atomic<int32_t> s3_lp, trig_s3_lp;
+	atomic<int32_t> s3_lp_pp, trig_s3_lp_pp;
+	atomic<int32_t> s3_lp_pos, cv_s3_lp_pos;
+	atomic<int32_t> s3_atk, cv_s3_atk;
+	atomic<int32_t> s3_dcy, cv_s3_dcy;
+	atomic<int32_t> s3_eg2fm, cv_s3_eg2fm;
+	atomic<int32_t> s3_brr, cv_s3_brr;
+	atomic<int32_t> s3_ft, cv_s3_ft;
+	atomic<int32_t> s3_fc, cv_s3_fc;
+	atomic<int32_t> s3_fq, cv_s3_fq;
+	atomic<int32_t> s4_gate, trig_s4_gate;
+	atomic<int32_t> s4_mute, trig_s4_mute;
+	atomic<int32_t> s4_lev, cv_s4_lev;
+	atomic<int32_t> s4_pan, cv_s4_pan;
+	atomic<int32_t> s4_fx1, cv_s4_fx1;
+	atomic<int32_t> s4_fx2, cv_s4_fx2;
+	atomic<int32_t> s4_speed, cv_s4_speed;
+	atomic<int32_t> s4_pitch, cv_s4_pitch;
+	atomic<int32_t> s4_ts, trig_s4_ts;
+	atomic<int32_t> s4_ts_amount, cv_s4_ts_amount;
+	atomic<int32_t> s4_bank, cv_s4_bank;
+	atomic<int32_t> s4_slice, cv_s4_slice;
+	atomic<int32_t> s4_start, cv_s4_start;
+	atomic<int32_t> s4_end, cv_s4_end;
+	atomic<int32_t> s4_lp, trig_s4_lp;
+	atomic<int32_t> s4_lp_pp, trig_s4_lp_pp;
+	atomic<int32_t> s4_lp_pos, cv_s4_lp_pos;
+	atomic<int32_t> s4_atk, cv_s4_atk;
+	atomic<int32_t> s4_dcy, cv_s4_dcy;
+	atomic<int32_t> s4_eg2fm, cv_s4_eg2fm;
+	atomic<int32_t> s4_brr, cv_s4_brr;
+	atomic<int32_t> s4_ft, cv_s4_ft;
+	atomic<int32_t> s4_fc, cv_s4_fc;
+	atomic<int32_t> s4_fq, cv_s4_fq;
+	atomic<int32_t> fx1_time_ms, cv_fx1_time_ms;
+	atomic<int32_t> fx1_sync, trig_fx1_sync;
+	atomic<int32_t> fx1_freeze, trig_fx1_freeze;
+	atomic<int32_t> fx1_tape_digital, trig_fx1_tape_digital;
+	atomic<int32_t> fx1_st_width, cv_fx1_st_width;
+	atomic<int32_t> fx1_fx_send, cv_fx1_fx_send;
+	atomic<int32_t> fx1_feedback, cv_fx1_feedback;
+	atomic<int32_t> fx1_base, cv_fx1_base;
+	atomic<int32_t> fx1_width, cv_fx1_width;
+	atomic<int32_t> fx2_time, cv_fx2_time;
+	atomic<int32_t> fx2_lp, cv_fx2_lp;
+	atomic<int32_t> c_thres, cv_c_thres;
+	atomic<int32_t> c_ratio, cv_c_ratio;
+	atomic<int32_t> c_atk, cv_c_atk;
+	atomic<int32_t> c_rel, cv_c_rel;
+	atomic<int32_t> c_lpf, trig_c_lpf;
+	atomic<int32_t> c_gain, cv_c_gain;
+	atomic<int32_t> c_mix, cv_c_mix;
+	atomic<int32_t> c_dly_level, cv_c_dly_level;
+	atomic<int32_t> c_rev_level, cv_c_rev_level;
+	atomic<int32_t> sum_mute, trig_sum_mute;
+	atomic<int32_t> sum_lev, cv_sum_lev;
+	atomic<int32_t> fx1_amount, cv_fx1_amount;
+	atomic<int32_t> fx2_amount, cv_fx2_amount;
 	// sectionHpp
         };
     }
