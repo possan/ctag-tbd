@@ -4,10 +4,6 @@
 
 using namespace CTAG::SP;
 
-// const float minVolume {0.000001f};
-#define td3_kAccentDecay 0.5f
-#define td3_kAccentVCAFactor 1.5f
-
 void RackRimshot::Init(const PickSeqRackInitData *initdata) {
     rs.Init();
 
@@ -20,15 +16,9 @@ void RackRimshot::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
-void RackRimshot::handleMidiNoteOn() {
+void RackRimshot::trigger() {
     midi_trig = true;
-    // printf("Rimshot note on\n");
 }
-
-// void RackRimshot::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("Rimshot CC %d %d\n", control, value);
-// }
 
 void RackRimshot::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(rs_out, BUF_SZ, 0.f);

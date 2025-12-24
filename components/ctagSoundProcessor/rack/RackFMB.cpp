@@ -4,10 +4,6 @@
 
 using namespace CTAG::SP;
 
-// const float minVolume {0.000001f};
-#define td3_kAccentDecay 0.5f
-#define td3_kAccentVCAFactor 1.5f
-
 void RackFMB::Init(const PickSeqRackInitData *initdata) {
     fmb.Init();
 
@@ -25,15 +21,9 @@ void RackFMB::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
-void RackFMB::handleMidiNoteOn() {
+void RackFMB::trigger() {
     midi_trig = true;
-    // printf("FMB note on\n");
 }
-
-// void RackFMB::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("FMB CC %d %d\n", control, value);
-// }
 
 void RackFMB::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);

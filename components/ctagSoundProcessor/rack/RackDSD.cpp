@@ -4,10 +4,6 @@
 
 using namespace CTAG::SP;
 
-// const float minVolume {0.000001f};
-#define td3_kAccentDecay 0.5f
-#define td3_kAccentVCAFactor 1.5f
-
 void RackDSD::Init(const PickSeqRackInitData *initdata) {
     dsd.Init();
 
@@ -20,15 +16,9 @@ void RackDSD::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
-void RackDSD::handleMidiNoteOn() {
+void RackDSD::trigger() {
     midi_trig = true;
-    // printf("DSD note on\n");
 }
-
-// void RackDSD::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("DSD CC %d %d\n", control, value);
-// }
 
 void RackDSD::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);

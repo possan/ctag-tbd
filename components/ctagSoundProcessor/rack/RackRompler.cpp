@@ -37,23 +37,15 @@ void RackRompler::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
-void RackRompler::handleMidiNoteOn(uint8_t note, uint8_t vel) {
+void RackRompler::noteOn(uint8_t note, uint8_t vel) {
     midi_trig = true;
     midi_note = note;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
-    // printf("rompler note on %d, %d (%f hz)\n", note, vel, midi_freq);
 }
 
-void RackRompler::handleMidiNoteOff(uint8_t note, uint8_t vel) {
+void RackRompler::noteOff(uint8_t note, uint8_t vel) {
     // TODO: Implement
-    // midi_trig = false;
-    // printf("Rompler Note off %d %d\n", note, vel);
 }
-
-// void RackRompler::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("Rompler CC %d %d\n", control, value);
-// }
 
 void RackRompler::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(s1_out, BUF_SZ, 0.f);

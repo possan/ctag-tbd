@@ -41,24 +41,17 @@ void RackMO::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
-void RackMO::handleMidiNoteOn(uint8_t note, uint8_t vel) {
+void RackMO::noteOn(uint8_t note, uint8_t vel) {
     // TODO: Implement
     midi_trig = true;
     midi_note = note;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
     mo_pitch = note << 7; //  midi_freq * 128.0f; //   * 12.f * 5.f * 128.f  * 100.f; // 1/100 Hz per semitone
-    // printf("MO note on %d, %d (%f hz)\n", note, vel, midi_freq);
 }
 
-void RackMO::handleMidiNoteOff(uint8_t note, uint8_t vel) {
+void RackMO::noteOff(uint8_t note, uint8_t vel) {
     // TODO: Implement
-    // printf("MO note off %d, %d\n", note, vel);
 }
-
-// void RackMO::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("MO CC %d, %d\n", control, value);
-// }
 
 void RackMO::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(mo_out, BUF_SZ, 0.f);

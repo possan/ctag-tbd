@@ -4,7 +4,6 @@
 
 using namespace CTAG::SP;
 
-// const float minVolume {0.000001f};
 #define td3_kAccentDecay 0.5f
 #define td3_kAccentVCAFactor 1.5f
 
@@ -53,15 +52,13 @@ void RackTBD03::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
-void RackTBD03::handleMidiNoteOn(uint8_t note, uint8_t vel) {
+void RackTBD03::noteOn(uint8_t note, uint8_t vel) {
     midi_trig = true;
     midi_note = note;
     // midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
-    // printf("TBDD3 Note on %d %d\n", note, vel);
 }
 
-void RackTBD03::handleMidiNoteOff(uint8_t note, uint8_t vel) {
-    // printf("TBDD3 Note off %d %d\n", note, vel);
+void RackTBD03::noteOff(uint8_t note, uint8_t vel) {
 }
 
 void RackTBD03::Process(const PicoSeqRackProcessData &data) {

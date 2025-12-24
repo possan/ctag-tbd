@@ -4,9 +4,6 @@
 
 using namespace CTAG::SP;
 
-#define td3_kAccentDecay 0.5f
-#define td3_kAccentVCAFactor 1.5f
-
 void RackHH2::Init(const PickSeqRackInitData *initdata) {
     hh2.Init();
 
@@ -19,15 +16,9 @@ void RackHH2::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
-void RackHH2::handleMidiNoteOn() {
+void RackHH2::trigger() {
     midi_trig = true;
-    // printf("H/H2 note on\n");
 }
-
-// void RackHH2::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("HH2 CC %d %d\n", control, value);
-// }
 
 void RackHH2::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);

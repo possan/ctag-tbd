@@ -4,9 +4,6 @@
 
 using namespace CTAG::SP;
 
-#define td3_kAccentDecay 0.5f
-#define td3_kAccentVCAFactor 1.5f
-
 void RackABD::Init(const PickSeqRackInitData *initdata) {
     abd.Init();
 
@@ -20,15 +17,9 @@ void RackABD::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
-void RackABD::handleMidiNoteOn() {
+void RackABD::trigger() {
     midi_trig = true;
-    // printf("ABD note on\n");
 }
-
-// void RackABD::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("ABD CC %d %d\n", control, value);
-// }
 
 void RackABD::Process(const PicoSeqRackProcessData &data) {
     // MK_BOOL_PAR_NOCV(_trig, trigger)

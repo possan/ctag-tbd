@@ -60,25 +60,16 @@ void RackWTOsc::Init(const PickSeqRackInitData *initdata) {
     // initdata->rack->registerParamAndCC(initdata, "pitch", 9, [&](const int val){ pitch = val;});
 }
 
-void RackWTOsc::handleMidiNoteOn(uint8_t note, uint8_t vel) {
-    // TODO: Implement
+void RackWTOsc::noteOn(uint8_t note, uint8_t vel) {
     midi_trig = true;
     midi_note = note;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
     pitch = note * 128.0f;
-    // printf("WTOsc Note on %d %d (%f hz)\n", note, vel, midi_freq);
 }
 
-void RackWTOsc::handleMidiNoteOff(uint8_t note, uint8_t vel) {
-    // TODO: Implement
+void RackWTOsc::noteOff(uint8_t note, uint8_t vel) {
     midi_trig = false;
-    // printf("WTOsc Note off %d %d\n", note, vel);
 }
-
-// void DrumRackWTOsc::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("WTOsc CC %d %d\n", control, value);
-// }
 
 void RackWTOsc::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);

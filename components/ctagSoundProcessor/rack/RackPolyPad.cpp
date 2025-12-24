@@ -46,23 +46,16 @@ void RackPolyPad::Init(const PickSeqRackInitData *initdata) {
     // pp_preNCVoices = 99;
 };
 
-void RackPolyPad::handleMidiNoteOn(uint8_t note, uint8_t vel) {
+void RackPolyPad::noteOn(uint8_t note, uint8_t vel) {
     // TODO: Implement
     midi_trig = true;
     midi_note = note;
     midi_freq = 440.f * powf(2.f, (note - 69) / 12.f);
-    // printf("PolyPad note on %d, %d (%f hz)\n", note, vel, midi_freq);
 }
 
-void RackPolyPad::handleMidiNoteOff(uint8_t note, uint8_t vel) {
+void RackPolyPad::noteOff(uint8_t note, uint8_t vel) {
     // TODO: Implement
-    // printf("PolyPad note off %d, %d\n", note, vel);
 }
-
-// void RackPolyPad::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("PolyPad CC %d, %d\n", control, value);
-// }
 
 void RackPolyPad::Process(const PicoSeqRackProcessData &data) {
     // std::fill_n(pp_out, BUF_SZ, 0.f);

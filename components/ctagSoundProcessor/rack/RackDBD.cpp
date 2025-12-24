@@ -4,10 +4,6 @@
 
 using namespace CTAG::SP;
 
-// const float minVolume {0.000001f};
-#define td3_kAccentDecay 0.5f
-#define td3_kAccentVCAFactor 1.5f
-
 void RackDBD::Init(const PickSeqRackInitData *initdata) {
     dbd.Init();
 
@@ -22,15 +18,9 @@ void RackDBD::Init(const PickSeqRackInitData *initdata) {
     this->enabled = false;
 }
 
-void RackDBD::handleMidiNoteOn() {
+void RackDBD::trigger() {
     midi_trig = true;
-    // printf("DBD note on\n");
 }
-
-// void RackDBD::handleMidiCC(uint8_t control, uint8_t value) {
-//     // TODO: Implement
-//     printf("DBD CC %d %d\n", control, value);
-// }
 
 void RackDBD::Process(const PicoSeqRackProcessData &data) {
     std::fill_n(out, BUF_SZ, 0.f);

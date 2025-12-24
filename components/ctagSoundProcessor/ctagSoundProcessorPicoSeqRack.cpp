@@ -510,46 +510,46 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t channel, con
 
     if (channel == 0) {
         if (ch9_td3.enabled) {
-            ch9_td3.handleMidiNoteOff(note, 0);
+            ch9_td3.noteOff(note, 0);
         }
     }
 
     if (channel == 1) {
         if (ch10_td3.enabled) {
-            ch10_td3.handleMidiNoteOff(note, 0);
+            ch10_td3.noteOff(note, 0);
         }
     }
 
     if (channel == 2) {
         if (ch11_mo.enabled) {
-            ch11_mo.handleMidiNoteOff(note, 0);
+            ch11_mo.noteOff(note, 0);
         }
     }
 
     if (channel == 3) {
         if (ch12_mo.enabled) {
-            ch12_mo.handleMidiNoteOff(note, 0);
+            ch12_mo.noteOff(note, 0);
         }
         if (ch12_wtosc.enabled) {
-            ch12_wtosc.handleMidiNoteOff(note, 0);
+            ch12_wtosc.noteOff(note, 0);
         }
     }
 
     if (channel == 4) {
         if (ch13_ro.enabled) {
-            ch13_ro.handleMidiNoteOff(note, 0);
+            ch13_ro.noteOff(note, 0);
         }
     }
 
     if (channel == 5) {
         if (ch14_ro.enabled) {
-            ch14_ro.handleMidiNoteOff(note, 0);
+            ch14_ro.noteOff(note, 0);
         }
     }
 
     if (channel == 6) {
         if (ch15_pp.enabled) {
-            ch15_pp.handleMidiNoteOff(note, 0);
+            ch15_pp.noteOff(note, 0);
         }
     }
 
@@ -558,11 +558,11 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t channel, con
     }
 
     if (channel == 11) {
-        ch7_ro.handleMidiNoteOff(note, 0);
+        ch7_ro.noteOff(note, 0);
     }
 
     if (channel == 12) {
-        ch8_ro.handleMidiNoteOff(note, 0);
+        ch8_ro.noteOff(note, 0);
     }
 };
 
@@ -571,46 +571,46 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, cons
 
     if (channel == 0) {
         if (ch9_td3.enabled) {
-            ch9_td3.handleMidiNoteOn(note, vel);
+            ch9_td3.noteOn(note, vel);
         }
     }
 
     if (channel == 1) {
         if (ch10_td3.enabled) {
-            ch10_td3.handleMidiNoteOn(note, vel);
+            ch10_td3.noteOn(note, vel);
         }
     }
 
     if (channel == 2) {
         if (ch11_mo.enabled) {
-            ch11_mo.handleMidiNoteOn(note, vel);
+            ch11_mo.noteOn(note, vel);
         }
     }
 
     if (channel == 3) {
         if (ch12_mo.enabled) {
-            ch12_mo.handleMidiNoteOn(note, vel);
+            ch12_mo.noteOn(note, vel);
         }
         if (ch12_wtosc.enabled) {
-            ch12_wtosc.handleMidiNoteOn(note, vel);
+            ch12_wtosc.noteOn(note, vel);
         }
     }
 
     if (channel == 4) {
         if (ch13_ro.enabled) {
-            ch13_ro.handleMidiNoteOn(note, vel);
+            ch13_ro.noteOn(note, vel);
         }
     }
 
     if (channel == 5) {
         if (ch14_ro.enabled) {
-            ch14_ro.handleMidiNoteOn(note, vel);
+            ch14_ro.noteOn(note, vel);
         }
     }
 
     if (channel == 6) {
         if (ch15_pp.enabled) {
-            ch15_pp.handleMidiNoteOn(note, vel);
+            ch15_pp.noteOn(note, vel);
         }
     }
 
@@ -623,54 +623,54 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, cons
 
         if (note == 36) { // kick 1
             if (ch1_ab.enabled) {
-                ch1_ab.handleMidiNoteOn();
+                ch1_ab.trigger();
             }
             if (ch1_db.enabled) {
-                ch1_db.handleMidiNoteOn();
+                ch1_db.trigger();
             }
         }
         else if (note == 37) { // kick 2
             if (ch2_fmb1.enabled) {
-                ch2_fmb1.handleMidiNoteOn();
+                ch2_fmb1.trigger();
             }
         }
         else if (note == 38) { // snare
             if (ch3_as.enabled) {
-                ch3_as.handleMidiNoteOn();
+                ch3_as.trigger();
             }
             if (ch3_ds.enabled) {
-                ch3_ds.handleMidiNoteOn();
+                ch3_ds.trigger();
             }
         }
         else if (note == 39) { // hat
             if (ch4_hh1.enabled) {
-                ch4_hh1.handleMidiNoteOn();
+                ch4_hh1.trigger();
             }
             if (ch4_hh2.enabled) {
-                ch4_hh2.handleMidiNoteOn();
+                ch4_hh2.trigger();
             }
         }
         else if (note == 40) { // rs
             if (ch5_rs.enabled) {
-                ch5_rs.handleMidiNoteOn();
+                ch5_rs.trigger();
             }
         }
         else if (note == 41) { // clap
             if (ch6_cl.enabled) {
-                ch6_cl.handleMidiNoteOn();
+                ch6_cl.trigger();
             }
         }
     }
 
     if (channel == 11) {
         if (ch7_ro.enabled) {
-            ch7_ro.handleMidiNoteOn(note, 127);
+            ch7_ro.noteOn(note, 127);
         }
     }
 
     if (channel == 12) {
         if (ch8_ro.enabled) {
-            ch8_ro.handleMidiNoteOn(note, 127);
+            ch8_ro.noteOn(note, 127);
         }
     }
 };
