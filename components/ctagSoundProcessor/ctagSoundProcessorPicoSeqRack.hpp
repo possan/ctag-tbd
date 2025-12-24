@@ -25,25 +25,25 @@
 #include "SimpleComp/SimpleComp.h"
 #include "mifx/reverb.h"
 #include "polypad/ChordSynth.hpp"
-#include "drumrack/DrumRackDBD.hpp"
-#include "drumrack/DrumRackABD.hpp"
-#include "drumrack/DrumRackDSD.hpp"
-#include "drumrack/DrumRackASD.hpp"
-#include "drumrack/DrumRackHH1.hpp"
-#include "drumrack/DrumRackHH2.hpp"
-#include "drumrack/DrumRackFMB.hpp"
-#include "drumrack/DrumRackRimshot.hpp"
-#include "drumrack/DrumRackClap.hpp"
-#include "drumrack/DrumRackRompler.hpp"
-#include "drumrack/DrumRackTBD03.hpp"
-#include "drumrack/DrumRackPolyPad.hpp"
-#include "drumrack/DrumRackMO.hpp"
-#include "drumrack/DrumRackWTOsc.hpp"
-#include "drumrack/DrumRackInput.hpp"
-#include "drumrack/DrumRackFxDelay.hpp"
-#include "drumrack/DrumRackFxReverb.hpp"
-#include "drumrack/DrumRackFxMaster.hpp"
-#include "drumrack/DrumRackChannelMixer.hpp"
+#include "rack/RackDBD.hpp"
+#include "rack/RackABD.hpp"
+#include "rack/RackDSD.hpp"
+#include "rack/RackASD.hpp"
+#include "rack/RackHH1.hpp"
+#include "rack/RackHH2.hpp"
+#include "rack/RackFMB.hpp"
+#include "rack/RackRimshot.hpp"
+#include "rack/RackClap.hpp"
+#include "rack/RackRompler.hpp"
+#include "rack/RackTBD03.hpp"
+#include "rack/RackPolyPad.hpp"
+#include "rack/RackMO.hpp"
+#include "rack/RackWTOsc.hpp"
+#include "rack/RackInput.hpp"
+#include "rack/RackFxDelay.hpp"
+#include "rack/RackFxReverb.hpp"
+#include "rack/RackFxMaster.hpp"
+#include "rack/RackChannelMixer.hpp"
 
 namespace CTAG {
     namespace SP {
@@ -71,62 +71,62 @@ namespace CTAG {
             virtual void knowYourself() override;
 
 			// rack components
-			DrumRackChannelMixer ch1;
-			DrumRackDBD ch1_db;
-			DrumRackABD ch1_ab;
+			RackChannelMixer ch1;
+			RackDBD ch1_db;
+			RackABD ch1_ab;
 
-			DrumRackChannelMixer ch2;
-			DrumRackFMB ch2_fmb1;
-			DrumRackFMB ch2_fmb2;
+			RackChannelMixer ch2;
+			RackFMB ch2_fmb1;
+			RackFMB ch2_fmb2;
 
-			DrumRackChannelMixer ch3;
-			DrumRackDSD ch3_ds;
-			DrumRackASD ch3_as;
+			RackChannelMixer ch3;
+			RackDSD ch3_ds;
+			RackASD ch3_as;
 
-			DrumRackChannelMixer ch4;
-			DrumRackHH1 ch4_hh1;
-			DrumRackHH2 ch4_hh2;
+			RackChannelMixer ch4;
+			RackHH1 ch4_hh1;
+			RackHH2 ch4_hh2;
 
-			DrumRackChannelMixer ch5;
-			DrumRackRimshot ch5_rs;
+			RackChannelMixer ch5;
+			RackRimshot ch5_rs;
 
-			DrumRackChannelMixer ch6;
-			DrumRackClap ch6_cl;
+			RackChannelMixer ch6;
+			RackClap ch6_cl;
 
-			DrumRackRompler ch7_ro;
-			DrumRackChannelMixer ch7;
+			RackRompler ch7_ro;
+			RackChannelMixer ch7;
 
-			DrumRackRompler ch8_ro;
-			DrumRackChannelMixer ch8;
+			RackRompler ch8_ro;
+			RackChannelMixer ch8;
 
-			DrumRackTBD03 ch9_td3;
-			DrumRackChannelMixer ch9;
+			RackTBD03 ch9_td3;
+			RackChannelMixer ch9;
 
-			DrumRackTBD03 ch10_td3;
-			DrumRackChannelMixer ch10;
+			RackTBD03 ch10_td3;
+			RackChannelMixer ch10;
 
-			DrumRackMO ch11_mo;
-			DrumRackChannelMixer ch11;
+			RackMO ch11_mo;
+			RackChannelMixer ch11;
 
-			DrumRackWTOsc ch12_wtosc;
-			DrumRackMO ch12_mo;
-			DrumRackChannelMixer ch12;
+			RackWTOsc ch12_wtosc;
+			RackMO ch12_mo;
+			RackChannelMixer ch12;
 
-			DrumRackChannelMixer ch13;
-			DrumRackRompler ch13_ro;
+			RackChannelMixer ch13;
+			RackRompler ch13_ro;
 
-			DrumRackChannelMixer ch14;
-			DrumRackRompler ch14_ro;
+			RackChannelMixer ch14;
+			RackRompler ch14_ro;
 
-			DrumRackChannelMixer ch15;
-			DrumRackPolyPad ch15_pp;
+			RackChannelMixer ch15;
+			RackPolyPad ch15_pp;
 
-			DrumRackInput ch16_in;
-			DrumRackChannelMixer ch16;
+			RackInput ch16_in;
+			RackChannelMixer ch16;
 
-			// DrumRackFxReverb fx_reverb;
-			// DrumRackFxDelay fx_delay;
-			// DrumRackFxMaster fx_master;
+			// RackFxReverb fx_reverb;
+			// RackFxDelay fx_delay;
+			// RackFxMaster fx_master;
 
             // compressor
             chunkware_simple::SimpleComp sumCompressor;

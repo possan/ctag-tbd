@@ -66,8 +66,8 @@ file(GLOB SRCS_FILES
         memory/*.c
         SimpleComp/*.h
         SimpleComp/*.cpp
-        drumrack/*.hpp
-        drumrack/*.cpp
+        rack/*.hpp
+        rack/*.cpp
         ${CMAKE_BINARY_DIR}/gen_include/*.hpp
         )
 
