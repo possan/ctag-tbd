@@ -30,7 +30,7 @@ respective component folders / files if different from this license.
 
 using namespace std;
 
-#define BUF_SZ 32
+#define BUF_SZ 64
 
 namespace CTAG {
     namespace SP {

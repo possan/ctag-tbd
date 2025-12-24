@@ -21,6 +21,8 @@ respective component folders / files if different from this license.
 
 #pragma once
 
+#define BUF_SZ 64
+
 #include "DrumModel.hpp"
 #include "stmlib/dsp/filter.h"
 #include "helpers/ctagADEnv.hpp"

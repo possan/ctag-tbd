@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-#define BUF_SZ 32
-
 namespace CTAG::SYNTHESIS{
     class DrumModel {
     public:
