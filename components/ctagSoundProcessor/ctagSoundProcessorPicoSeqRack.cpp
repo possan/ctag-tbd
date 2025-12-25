@@ -303,7 +303,7 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     if (ch16.enabled) {
         ch16_in.enabled = ch16.enabled && ch16.device == 0;
         // ch16_in.Process(idata); - it does nothing...
-        if (ch1_db.enabled) {
+        if (ch16_in.enabled) {
             mixRenderOutputStereo(data.buf, ch16.level, ch16.pan, ch16.send1, ch16.send2);
         }
     }
