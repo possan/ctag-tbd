@@ -21,10 +21,6 @@ respective component folders / files if different from this license.
 ***************/
 
 #include "Control.hpp"
-#include "Calibration.hpp"
-#include "gpio.hpp"
-#include "adc.hpp"
-
 #include "rp2350_spi_stream.hpp"
 #define BUF_SZ (N_CVS*4 + N_TRIGS + N_MIDIBYTES)
 
@@ -62,14 +58,6 @@ IRAM_ATTR void CTAG::CTRL::Control::Update(uint8_t *trigs, float *cvs, uint8_t *
         //         midibytes[7]);
         // }
     }
-}
-
-void CTAG::CTRL::Control::SetCVChannelBiPolar(const bool &v0, const bool &v1, const bool &v2, const bool &v3) {
-    // ifdefs to exclude this from BBA and MK2 are in Calibration.hpp
-    CTAG::CAL::Calibration::ConfigCVChannels(v0 ? CTAG::CAL::CVConfig::CVBipolar : CTAG::CAL::CVConfig::CVUnipolar,
-                                             v1 ? CTAG::CAL::CVConfig::CVBipolar : CTAG::CAL::CVConfig::CVUnipolar,
-                                             v2 ? CTAG::CAL::CVConfig::CVBipolar : CTAG::CAL::CVConfig::CVUnipolar,
-                                             v3 ? CTAG::CAL::CVConfig::CVBipolar : CTAG::CAL::CVConfig::CVUnipolar);
 }
 
 void CTAG::CTRL::Control::Init() {
