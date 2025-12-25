@@ -80,14 +80,8 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     int64_t before;
     bool isStereoCH0 = false;
     esp_cpu_cycle_count_t start, diff;
-    uint8_t trigs[N_TRIGS];
-    float cvs[N_CVS];
-    uint8_t midibuffer[N_MIDIBYTES];
 
     std::fill_n(fbuf, BUF_SZ * 2, 0.f);
-    std::fill_n(cvs, N_CVS, 0.f);
-    std::fill_n(trigs, N_TRIGS, 1);
-    std::fill_n(midibuffer, N_MIDIBYTES, 0);
 
     fv3::dccut_f in_dccutl, in_dccutr;
     in_dccutl.setCutOnFreq(3.7f, 44100.f);
@@ -95,9 +89,9 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
     SP::ProcessData pd;
     pd.buf = fbuf;
-    pd.cv = (float *)&cvs;
-    pd.trig = (uint8_t *)&trigs;
-    pd.midibytes = (uint8_t *)&midibuffer;
+    pd.cv = nullptr;
+    pd.trig = nullptr;
+    pd.midibytes = nullptr;
 
     // generate linear ramp ]0,1[ squared
     for (uint32_t i = 0; i < BUF_SZ; i++) {
@@ -109,7 +103,11 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     while (runAudioTask) {
 
         // update data from ADCs and GPIOs for real-time control
-        CTAG::CTRL::Control::Update(pd.trig, pd.cv, pd.midibytes, ledStatusUI);
+        // CTAG::CTRL::Control::Update(pd.trig, pd.cv, pd.midibytes, ledStatusUI);
+        CTAG::CTRL::Control::Update(&pd.controlData, ledStatusUI);
+        pd.cv = (float*) pd.controlData;
+        pd.trig = (uint8_t*) pd.controlData + N_CVS * sizeof(float);
+        pd.midibytes = (uint8_t*) pd.controlData + N_CVS * sizeof(float) + N_TRIGS * sizeof(uint8_t);
 
         // get normalized raw data from CODEC
         DRIVERS::Codec::ReadBuffer(fbuf, BUF_SZ);

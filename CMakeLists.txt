@@ -16,8 +16,9 @@ project(ctag-tbd)
 #idf_build_set_property(COMPILE_OPTIONS -Wno-unused-local-typedefs -ffast-math APPEND) # -ffast-math -fno-finite-math-only https://stackoverflow.com/questions/22931147/stdisinf-does-not-work-with-ffast-math-how-to-check-for-infinity
 idf_build_set_property(COMPILE_DEFINITIONS -DRAPIDJSON_ALLOCATOR_DEFAULT_CHUNK_CAPACITY=4096 APPEND)
 idf_build_set_property(COMPILE_DEFINITIONS -DRAPIDJSON_HAS_STDSTRING=1 APPEND)
-idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=240 APPEND)
-idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=60 APPEND)
+idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=10 APPEND)
+idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=10 APPEND)
+idf_build_set_property(COMPILE_DEFINITIONS -DN_MIDIBYTES=960 APPEND)
 set(TBD_HW "DADA")
 
 # generate include definitions for hw + fw version

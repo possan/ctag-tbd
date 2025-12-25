@@ -5,7 +5,7 @@ A project conceived within the Creative Technologies Arbeitsgruppe of
 Kiel University of Applied Sciences: https://www.creative-technologies.de
 
 (c) 2020 by Robert Manzke. All rights reserved.
-(c) 2023 MIDI-Message-Parser aka 'bba_update()' by Mathias Brüssel. 
+(c) 2023 MIDI-Message-Parser aka 'bba_update()' by Mathias Brüssel.
 
 The CTAG TBD software is licensed under the GNU General Public License
 (GPL 3.0), available here: https://www.gnu.org/licenses/gpl-3.0.txt
@@ -22,45 +22,14 @@ respective component folders / files if different from this license.
 
 #include "Control.hpp"
 #include "rp2350_spi_stream.hpp"
-#define BUF_SZ (N_CVS*4 + N_TRIGS + N_MIDIBYTES)
 
 uint8_t *CTAG::CTRL::Control::buf_ptr = nullptr; // buffer pointer for current cv + trig data
 uint16_t updatecounter = 0;
 
-IRAM_ATTR void CTAG::CTRL::Control::Update(uint8_t *trigs, float *cvs, uint8_t *midibytes, uint32_t ledStatus) {
-    // TODO: What if we don't read?
-    memset(midibytes, 0, N_MIDIBYTES);
-
-    if (CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(&buf_ptr, BUF_SZ, ledStatus)) {
-        updatecounter ++;
-
-        memcpy(cvs, buf_ptr, N_CVS * 4);
-        memcpy(trigs, &buf_ptr[N_CVS * 4], N_TRIGS);
-        memcpy(midibytes, &buf_ptr[N_CVS * 4 + N_TRIGS], N_MIDIBYTES);
-
-        // if (updatecounter % 3000 == 0) {
-        //     ESP_LOGI("Control", "Got SPI update %d%d%d%d%d%d%d%d %02X%02X%02X%02X%02X%02X%02X%02X",
-        //         trigs[0],
-        //         trigs[1],
-        //         trigs[2],
-        //         trigs[3],
-        //         trigs[4],
-        //         trigs[5],
-        //         trigs[6],
-        //         trigs[7],
-        //         midibytes[0],
-        //         midibytes[1],
-        //         midibytes[2],
-        //         midibytes[3],
-        //         midibytes[4],
-        //         midibytes[5],
-        //         midibytes[6],
-        //         midibytes[7]);
-        // }
-    }
+IRAM_ATTR void CTAG::CTRL::Control::Update(void **data, uint32_t ledStatus) {
+    CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(data, ledStatus);
 }
 
 void CTAG::CTRL::Control::Init() {
-    ESP_LOGI("Control", "Initializing control! %d CVs, %d Trigs, %d Midi bytes", N_CVS, N_TRIGS, N_MIDIBYTES);
     buf_ptr = DRIVERS::rp2350_spi_stream::Init();
 }
