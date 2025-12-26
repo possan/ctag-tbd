@@ -34,7 +34,7 @@ respective component folders / files if different from this license.
 
 #define MK_FLT_PAR_ABS_ADD(outname, inname, norm, scale) \
     float outname = inname / norm * scale;\
-    if(cv_##inname != -1) outname += fabsf(data.cv[cv_##inname]) * scale;
+    if(cv_##inname != -1) outname += fabsf(data.cv[cv_##inname]) * scale;    
 
 #define MK_FLT_PAR_ABS_SFT(outname, inname, norm, scale) \
     float outname = inname / norm * scale;\
@@ -51,14 +51,15 @@ respective component folders / files if different from this license.
 #define MK_INT_PAR(outname, inname, scale) \
     int outname = inname;\
     if(cv_##inname != -1) outname = static_cast<int>(data.cv[cv_##inname] * scale);
-
-#define MK_FLT_PAR_ABS_MIN_MAX(outname, inname, norm, out_min, out_max) \
+    
+ #define MK_FLT_PAR_ABS_MIN_MAX(outname, inname, norm, out_min, out_max) \
     float outname = inname/norm * (out_max-out_min)+out_min; \
-    if(cv_##inname != -1) outname = fabsf(data.cv[cv_##inname]) * (out_max-out_min)+out_min;
+    if(cv_##inname != -1) outname = fabsf(data.cv[cv_##inname]) * (out_max-out_min)+out_min;   
 
 #define MK_FLT_PAR_ABS_PAN(outname, inname, norm, scale)  \
     float outname = (inname/norm+1.f)/2.f * scale; \
-    if(cv_##inname != -1) outname = fabsf(data.cv[cv_##inname]) * scale;
+    if(cv_##inname != -1) outname = fabsf(data.cv[cv_##inname]) * scale; 
+
 
 #include <stdint.h>
 #include <string>
@@ -76,7 +77,6 @@ namespace CTAG {
             float *buf;
             float *cv;
             uint8_t *trig;
-            uint8_t *midibytes;
         };
 
         class ctagSoundProcessor {
@@ -88,15 +88,16 @@ namespace CTAG {
 
             virtual ~ctagSoundProcessor() {};
 
-            // void* operator new (std::size_t size) {
-            //     return ctagSPAllocator::Allocate(size);
-            // }
-            // void operator delete (void *ptr) noexcept {
-            //     // arena allocator will just reset the arena
-            // }
-            // void* operator new[] (std::size_t size) = delete;
-            // void* operator new[] (std::size_t size, const std::nothrow_t& tag) = delete;
-            // void operator delete[] (void *ptr) noexcept = delete;
+            void* operator new (std::size_t size) {
+                return ctagSPAllocator::Allocate(size);
+            }
+
+            void operator delete (void *ptr) noexcept {
+                // arena allocator will just reset the arena
+            }
+            void* operator new[] (std::size_t size) = delete;
+            void* operator new[] (std::size_t size, const std::nothrow_t& tag) = delete;
+            void operator delete[] (void *ptr) noexcept = delete;
 
             int GetAudioBufferSize() { return bufSz; }
 
