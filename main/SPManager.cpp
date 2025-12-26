@@ -524,7 +524,7 @@ void SoundProcessorManager::StartSoundProcessor() {
 #endif
     // create audio thread
     runAudioTask = 1;
-    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 40000, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 0);
+    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 80000, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 0);
     xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 0);
 
 #if defined(CONFIG_TBD_PLATFORM_MK2) || defined(CONFIG_TBD_PLATFORM_AEM) || defined(CONFIG_TBD_PLATFORM_BBA)
