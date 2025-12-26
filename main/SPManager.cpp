@@ -488,12 +488,9 @@ void SoundProcessorManager::StartSoundProcessor() {
                             &ledTaskH, 0);
     // create audio thread
     runAudioTask = 1;
-    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 80000, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 0);
+    ESP_LOGI("SPManager", "Init: Max stack %d", uxTaskGetStackHighWaterMark(NULL));
+    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 10000, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 0);
     xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 0);
-
-#if defined(CONFIG_TBD_PLATFORM_MK2) || defined(CONFIG_TBD_PLATFORM_AEM) || defined(CONFIG_TBD_PLATFORM_BBA)
-    //FAV::Favorites::StartUI();
-#endif
 
     // Do not load last processor at start up
     SetSoundProcessorChannel(0, "Void");

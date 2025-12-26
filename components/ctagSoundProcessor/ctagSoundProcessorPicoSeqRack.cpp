@@ -299,14 +299,14 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     // process input first
 
-    ch16.PreProcess(idata);
-    if (ch16.enabled) {
-        ch16_in.enabled = ch16.enabled && ch16.device == 0;
-        // ch16_in.Process(idata); - it does nothing...
-        if (ch16_in.enabled) {
-            mixRenderOutputStereo(data.buf, ch16.level, ch16.pan, ch16.send1, ch16.send2);
-        }
-    }
+    // ch16.PreProcess(idata);
+    // if (ch16.enabled) {
+    //     ch16_in.enabled = ch16.enabled && ch16.device == 0;
+    //     // ch16_in.Process(idata); - it does nothing...
+    //     if (ch16_in.enabled) {
+    //         mixRenderOutputStereo(data.buf, ch16.level, ch16.pan, ch16.send1, ch16.send2);
+    //     }
+    // }
 
     ch1.PreProcess(idata);
     if (ch1.enabled) {
@@ -323,155 +323,155 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
-    ch2.PreProcess(idata);
-    if (ch2.enabled) {
-        ch2_fmb1.enabled = ch2.enabled && ch2.device == 0;
-        ch2_fmb1.Process(idata);
-        if (ch2_fmb1.enabled) {
-            mixRenderOutputMono(ch2_fmb1.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
-        }
+    // ch2.PreProcess(idata);
+    // if (ch2.enabled) {
+    //     ch2_fmb1.enabled = ch2.enabled && ch2.device == 0;
+    //     ch2_fmb1.Process(idata);
+    //     if (ch2_fmb1.enabled) {
+    //         mixRenderOutputMono(ch2_fmb1.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
+    //     }
 
-        ch2_fmb2.enabled = ch2.enabled && ch2.device == 1;
-        ch2_fmb2.Process(idata);
-        if (ch2_fmb2.enabled) {
-            mixRenderOutputMono(ch2_fmb2.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
-        }
-    }
+    //     ch2_fmb2.enabled = ch2.enabled && ch2.device == 1;
+    //     ch2_fmb2.Process(idata);
+    //     if (ch2_fmb2.enabled) {
+    //         mixRenderOutputMono(ch2_fmb2.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
+    //     }
+    // }
 
-    ch3.PreProcess(idata);
-    if (ch3.enabled) {
-        ch3_ds.enabled = ch3.enabled && ch3.device == 0;
-        ch3_ds.Process(idata);
-        if (ch3_ds.enabled) {
-            mixRenderOutputMono(ch3_ds.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
-        }
+    // ch3.PreProcess(idata);
+    // if (ch3.enabled) {
+    //     ch3_ds.enabled = ch3.enabled && ch3.device == 0;
+    //     ch3_ds.Process(idata);
+    //     if (ch3_ds.enabled) {
+    //         mixRenderOutputMono(ch3_ds.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
+    //     }
 
-        ch3_as.enabled = ch3.enabled && ch3.device == 1;
-        ch3_as.Process(idata);
-        if (ch3_as.enabled) {
-            mixRenderOutputMono(ch3_as.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
-        }
-    }
+    //     ch3_as.enabled = ch3.enabled && ch3.device == 1;
+    //     ch3_as.Process(idata);
+    //     if (ch3_as.enabled) {
+    //         mixRenderOutputMono(ch3_as.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
+    //     }
+    // }
 
-    ch4.PreProcess(idata);
-    if (ch4.enabled) {
-        ch4_hh1.enabled = ch4.enabled && ch4.device == 0;
-        ch4_hh1.Process(idata);
-        if (ch4_hh1.enabled) {
-            mixRenderOutputMono(ch4_hh1.out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
-        }
+    // ch4.PreProcess(idata);
+    // if (ch4.enabled) {
+    //     ch4_hh1.enabled = ch4.enabled && ch4.device == 0;
+    //     ch4_hh1.Process(idata);
+    //     if (ch4_hh1.enabled) {
+    //         mixRenderOutputMono(ch4_hh1.out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
+    //     }
 
-        ch4_hh2.enabled = ch4.enabled && ch4.device == 1;
-        ch4_hh2.Process(idata);
-        if (ch4_hh2.enabled) {
-            mixRenderOutputMono(ch4_hh2.out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
-        }
-    }
+    //     ch4_hh2.enabled = ch4.enabled && ch4.device == 1;
+    //     ch4_hh2.Process(idata);
+    //     if (ch4_hh2.enabled) {
+    //         mixRenderOutputMono(ch4_hh2.out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
+    //     }
+    // }
 
-    ch5.PreProcess(idata);
-    if (ch5.enabled) {
-        ch5_rs.enabled = ch5.enabled && ch5.device == 0;
-        ch5_rs.Process(idata);
-        if (ch5_rs.enabled) {
-            mixRenderOutputMono(ch5_rs.rs_out, ch5.level, ch5.pan, ch5.send1, ch5.send2);
-        }
-    }
+    // ch5.PreProcess(idata);
+    // if (ch5.enabled) {
+    //     ch5_rs.enabled = ch5.enabled && ch5.device == 0;
+    //     ch5_rs.Process(idata);
+    //     if (ch5_rs.enabled) {
+    //         mixRenderOutputMono(ch5_rs.rs_out, ch5.level, ch5.pan, ch5.send1, ch5.send2);
+    //     }
+    // }
 
-    ch6.PreProcess(idata);
-    if (ch6.enabled) {
-        ch6_cl.enabled = ch6.enabled && ch6.device == 0;
-        ch6_cl.Process(idata);
-        if (ch6_cl.enabled) {
-            mixRenderOutputMono(ch6_cl.out, ch6.level, ch6.pan, ch6.send1, ch6.send2);
-        }
-    }
+    // ch6.PreProcess(idata);
+    // if (ch6.enabled) {
+    //     ch6_cl.enabled = ch6.enabled && ch6.device == 0;
+    //     ch6_cl.Process(idata);
+    //     if (ch6_cl.enabled) {
+    //         mixRenderOutputMono(ch6_cl.out, ch6.level, ch6.pan, ch6.send1, ch6.send2);
+    //     }
+    // }
 
-    ch7.PreProcess(idata);
-    if (ch7.enabled) {
-        ch7_ro.enabled = ch7.enabled && ch7.device == 0;
-        ch7_ro.Process(idata);
-        if (ch7_ro.enabled) {
-            mixRenderOutputMono(ch7_ro.s1_out, ch7.level, ch7.pan, ch7.send1, ch7.send2);
-        }
-    }
+    // ch7.PreProcess(idata);
+    // if (ch7.enabled) {
+    //     ch7_ro.enabled = ch7.enabled && ch7.device == 0;
+    //     ch7_ro.Process(idata);
+    //     if (ch7_ro.enabled) {
+    //         mixRenderOutputMono(ch7_ro.s1_out, ch7.level, ch7.pan, ch7.send1, ch7.send2);
+    //     }
+    // }
 
-    ch8.PreProcess(idata);
-    if (ch8.enabled) {
-        ch8_ro.enabled = ch8.enabled && ch8.device == 0;
-        ch8_ro.Process(idata);
-        if (ch8_ro.enabled) {
-            mixRenderOutputMono(ch8_ro.s1_out, ch8.level, ch8.pan, ch8.send1, ch8.send2);
-        }
-    }
+    // ch8.PreProcess(idata);
+    // if (ch8.enabled) {
+    //     ch8_ro.enabled = ch8.enabled && ch8.device == 0;
+    //     ch8_ro.Process(idata);
+    //     if (ch8_ro.enabled) {
+    //         mixRenderOutputMono(ch8_ro.s1_out, ch8.level, ch8.pan, ch8.send1, ch8.send2);
+    //     }
+    // }
 
-    ch9.PreProcess(idata);
-    if (ch9.enabled) {
-        ch9_td3.enabled = ch9.enabled && ch9.device == 0;
-        ch9_td3.Process(idata);
-        if (ch9_td3.enabled) {
-            mixRenderOutputMono(ch9_td3.td3_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
-        }
-    }
+    // ch9.PreProcess(idata);
+    // if (ch9.enabled) {
+    //     ch9_td3.enabled = ch9.enabled && ch9.device == 0;
+    //     ch9_td3.Process(idata);
+    //     if (ch9_td3.enabled) {
+    //         mixRenderOutputMono(ch9_td3.td3_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
+    //     }
+    // }
 
-    ch10.PreProcess(idata);
-    if (ch10.enabled) {
-        ch10_td3.enabled = ch10.enabled && ch10.device == 0;
-        ch10_td3.Process(idata);
-        if (ch10_td3.enabled) {
-            mixRenderOutputMono(ch10_td3.td3_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
-        }
-    }
+    // ch10.PreProcess(idata);
+    // if (ch10.enabled) {
+    //     ch10_td3.enabled = ch10.enabled && ch10.device == 0;
+    //     ch10_td3.Process(idata);
+    //     if (ch10_td3.enabled) {
+    //         mixRenderOutputMono(ch10_td3.td3_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
+    //     }
+    // }
 
-    ch11.PreProcess(idata);
-    if (ch11.enabled) {
-        ch11_mo.enabled = ch11.enabled && ch11.device == 0;
-        ch11_mo.Process(idata);
-        if (ch11_mo.enabled) {
-            mixRenderOutputMono(ch11_mo.mo_out, ch11.level, ch11.pan, ch11.send1, ch11.send2);
-        }
-    }
+    // ch11.PreProcess(idata);
+    // if (ch11.enabled) {
+    //     ch11_mo.enabled = ch11.enabled && ch11.device == 0;
+    //     ch11_mo.Process(idata);
+    //     if (ch11_mo.enabled) {
+    //         mixRenderOutputMono(ch11_mo.mo_out, ch11.level, ch11.pan, ch11.send1, ch11.send2);
+    //     }
+    // }
 
-    ch12.PreProcess(idata);
-    if (ch12.enabled) {
-        ch12_wtosc.enabled = ch12.enabled && ch12.device == 0;
-        ch12_wtosc.Process(idata);
-        if (ch12_wtosc.enabled) {
-            mixRenderOutputMono(ch12_wtosc.out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
-        }
+    // ch12.PreProcess(idata);
+    // if (ch12.enabled) {
+    //     ch12_wtosc.enabled = ch12.enabled && ch12.device == 0;
+    //     ch12_wtosc.Process(idata);
+    //     if (ch12_wtosc.enabled) {
+    //         mixRenderOutputMono(ch12_wtosc.out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
+    //     }
 
-        ch12_mo.enabled = ch12.enabled && ch12.device == 1;
-        ch12_mo.Process(idata);
-        if (ch12_mo.enabled) {
-            mixRenderOutputMono(ch12_mo.mo_out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
-        }
-    }
+    //     ch12_mo.enabled = ch12.enabled && ch12.device == 1;
+    //     ch12_mo.Process(idata);
+    //     if (ch12_mo.enabled) {
+    //         mixRenderOutputMono(ch12_mo.mo_out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
+    //     }
+    // }
 
-    ch13.PreProcess(idata);
-    if (ch13.enabled) {
-        ch13_ro.enabled = ch13.enabled && ch13.device == 0;
-        ch13_ro.Process(idata);
-        if (ch13_ro.enabled) {
-            mixRenderOutputMono(ch13_ro.s1_out, ch13.level, ch13.pan, ch13.send1, ch13.send2);
-        }
-    }
+    // ch13.PreProcess(idata);
+    // if (ch13.enabled) {
+    //     ch13_ro.enabled = ch13.enabled && ch13.device == 0;
+    //     ch13_ro.Process(idata);
+    //     if (ch13_ro.enabled) {
+    //         mixRenderOutputMono(ch13_ro.s1_out, ch13.level, ch13.pan, ch13.send1, ch13.send2);
+    //     }
+    // }
 
-    ch14.PreProcess(idata);
-    if (ch14.enabled) {
-        ch14_ro.enabled = ch14.enabled && ch14.device == 0;
-        ch14_ro.Process(idata);
-        if (ch14_ro.enabled) {
-            mixRenderOutputMono(ch14_ro.s1_out, ch14.level, ch14.pan, ch14.send1, ch14.send2);
-        }
-    }
+    // ch14.PreProcess(idata);
+    // if (ch14.enabled) {
+    //     ch14_ro.enabled = ch14.enabled && ch14.device == 0;
+    //     ch14_ro.Process(idata);
+    //     if (ch14_ro.enabled) {
+    //         mixRenderOutputMono(ch14_ro.s1_out, ch14.level, ch14.pan, ch14.send1, ch14.send2);
+    //     }
+    // }
 
-    ch15.PreProcess(idata);
-    if (ch15.enabled) {
-        ch15_pp.enabled = ch15.enabled && ch15.device == 0;
-        ch15_pp.Process(idata);
-        if (ch15_pp.enabled) {
-            mixRenderOutputStereo(ch15_pp.pp_out_stereo, ch15.level, ch15.pan, ch15.send1, ch15.send2);
-        }
-    }
+    // ch15.PreProcess(idata);
+    // if (ch15.enabled) {
+    //     ch15_pp.enabled = ch15.enabled && ch15.device == 0;
+    //     ch15_pp.Process(idata);
+    //     if (ch15_pp.enabled) {
+    //         mixRenderOutputStereo(ch15_pp.pp_out_stereo, ch15.level, ch15.pan, ch15.send1, ch15.send2);
+    //     }
+    // }
 
     // Process effects
     preprocessFX1(data); // delay
@@ -508,111 +508,111 @@ void ctagSoundProcessorPicoSeqRack::registerParam(const PickSeqRackInitData *ini
 void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel) {
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: note off %d, %d, %d", channel, note, vel);
 
-    if (channel == 0) {
-        if (ch9_td3.enabled) {
-            ch9_td3.noteOff(note, 0);
-        }
-    }
+    // if (channel == 0) {
+    //     if (ch9_td3.enabled) {
+    //         ch9_td3.noteOff(note, 0);
+    //     }
+    // }
 
-    if (channel == 1) {
-        if (ch10_td3.enabled) {
-            ch10_td3.noteOff(note, 0);
-        }
-    }
+    // if (channel == 1) {
+    //     if (ch10_td3.enabled) {
+    //         ch10_td3.noteOff(note, 0);
+    //     }
+    // }
 
-    if (channel == 2) {
-        if (ch11_mo.enabled) {
-            ch11_mo.noteOff(note, 0);
-        }
-    }
+    // if (channel == 2) {
+    //     if (ch11_mo.enabled) {
+    //         ch11_mo.noteOff(note, 0);
+    //     }
+    // }
 
-    if (channel == 3) {
-        if (ch12_mo.enabled) {
-            ch12_mo.noteOff(note, 0);
-        }
-        if (ch12_wtosc.enabled) {
-            ch12_wtosc.noteOff(note, 0);
-        }
-    }
+    // if (channel == 3) {
+    //     if (ch12_mo.enabled) {
+    //         ch12_mo.noteOff(note, 0);
+    //     }
+    //     if (ch12_wtosc.enabled) {
+    //         ch12_wtosc.noteOff(note, 0);
+    //     }
+    // }
 
-    if (channel == 4) {
-        if (ch13_ro.enabled) {
-            ch13_ro.noteOff(note, 0);
-        }
-    }
+    // if (channel == 4) {
+    //     if (ch13_ro.enabled) {
+    //         ch13_ro.noteOff(note, 0);
+    //     }
+    // }
 
-    if (channel == 5) {
-        if (ch14_ro.enabled) {
-            ch14_ro.noteOff(note, 0);
-        }
-    }
+    // if (channel == 5) {
+    //     if (ch14_ro.enabled) {
+    //         ch14_ro.noteOff(note, 0);
+    //     }
+    // }
 
-    if (channel == 6) {
-        if (ch15_pp.enabled) {
-            ch15_pp.noteOff(note, 0);
-        }
-    }
+    // if (channel == 6) {
+    //     if (ch15_pp.enabled) {
+    //         ch15_pp.noteOff(note, 0);
+    //     }
+    // }
 
     if (channel == 9) {
         // most drum rack doesn't care about note offs'
     }
 
-    if (channel == 11) {
-        ch7_ro.noteOff(note, 0);
-    }
+    // if (channel == 11) {
+    //     ch7_ro.noteOff(note, 0);
+    // }
 
-    if (channel == 12) {
-        ch8_ro.noteOff(note, 0);
-    }
+    // if (channel == 12) {
+    //     ch8_ro.noteOff(note, 0);
+    // }
 };
 
 void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel) {
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: note on %d, %d, %d", channel, note, vel);
 
-    if (channel == 0) {
-        if (ch9_td3.enabled) {
-            ch9_td3.noteOn(note, vel);
-        }
-    }
+    // if (channel == 0) {
+    //     if (ch9_td3.enabled) {
+    //         ch9_td3.noteOn(note, vel);
+    //     }
+    // }
 
-    if (channel == 1) {
-        if (ch10_td3.enabled) {
-            ch10_td3.noteOn(note, vel);
-        }
-    }
+    // if (channel == 1) {
+    //     if (ch10_td3.enabled) {
+    //         ch10_td3.noteOn(note, vel);
+    //     }
+    // }
 
-    if (channel == 2) {
-        if (ch11_mo.enabled) {
-            ch11_mo.noteOn(note, vel);
-        }
-    }
+    // if (channel == 2) {
+    //     if (ch11_mo.enabled) {
+    //         ch11_mo.noteOn(note, vel);
+    //     }
+    // }
 
-    if (channel == 3) {
-        if (ch12_mo.enabled) {
-            ch12_mo.noteOn(note, vel);
-        }
-        if (ch12_wtosc.enabled) {
-            ch12_wtosc.noteOn(note, vel);
-        }
-    }
+    // if (channel == 3) {
+    //     if (ch12_mo.enabled) {
+    //         ch12_mo.noteOn(note, vel);
+    //     }
+    //     if (ch12_wtosc.enabled) {
+    //         ch12_wtosc.noteOn(note, vel);
+    //     }
+    // }
 
-    if (channel == 4) {
-        if (ch13_ro.enabled) {
-            ch13_ro.noteOn(note, vel);
-        }
-    }
+    // if (channel == 4) {
+    //     if (ch13_ro.enabled) {
+    //         ch13_ro.noteOn(note, vel);
+    //     }
+    // }
 
-    if (channel == 5) {
-        if (ch14_ro.enabled) {
-            ch14_ro.noteOn(note, vel);
-        }
-    }
+    // if (channel == 5) {
+    //     if (ch14_ro.enabled) {
+    //         ch14_ro.noteOn(note, vel);
+    //     }
+    // }
 
-    if (channel == 6) {
-        if (ch15_pp.enabled) {
-            ch15_pp.noteOn(note, vel);
-        }
-    }
+    // if (channel == 6) {
+    //     if (ch15_pp.enabled) {
+    //         ch15_pp.noteOn(note, vel);
+    //     }
+    // }
 
     if (channel == 7) {
         // ch16 has no notes
@@ -629,50 +629,50 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, cons
                 ch1_db.trigger();
             }
         }
-        else if (note == 37) { // kick 2
-            if (ch2_fmb1.enabled) {
-                ch2_fmb1.trigger();
-            }
-        }
-        else if (note == 38) { // snare
-            if (ch3_as.enabled) {
-                ch3_as.trigger();
-            }
-            if (ch3_ds.enabled) {
-                ch3_ds.trigger();
-            }
-        }
-        else if (note == 39) { // hat
-            if (ch4_hh1.enabled) {
-                ch4_hh1.trigger();
-            }
-            if (ch4_hh2.enabled) {
-                ch4_hh2.trigger();
-            }
-        }
-        else if (note == 40) { // rs
-            if (ch5_rs.enabled) {
-                ch5_rs.trigger();
-            }
-        }
-        else if (note == 41) { // clap
-            if (ch6_cl.enabled) {
-                ch6_cl.trigger();
-            }
-        }
+        // else if (note == 37) { // kick 2
+        //     if (ch2_fmb1.enabled) {
+        //         ch2_fmb1.trigger();
+        //     }
+        // }
+        // else if (note == 38) { // snare
+        //     if (ch3_as.enabled) {
+        //         ch3_as.trigger();
+        //     }
+        //     if (ch3_ds.enabled) {
+        //         ch3_ds.trigger();
+        //     }
+        // }
+        // else if (note == 39) { // hat
+        //     if (ch4_hh1.enabled) {
+        //         ch4_hh1.trigger();
+        //     }
+        //     if (ch4_hh2.enabled) {
+        //         ch4_hh2.trigger();
+        //     }
+        // }
+        // else if (note == 40) { // rs
+        //     if (ch5_rs.enabled) {
+        //         ch5_rs.trigger();
+        //     }
+        // }
+        // else if (note == 41) { // clap
+        //     if (ch6_cl.enabled) {
+        //         ch6_cl.trigger();
+        //     }
+        // }
     }
 
-    if (channel == 11) {
-        if (ch7_ro.enabled) {
-            ch7_ro.noteOn(note, 127);
-        }
-    }
+    // if (channel == 11) {
+    //     if (ch7_ro.enabled) {
+    //         ch7_ro.noteOn(note, 127);
+    //     }
+    // }
 
-    if (channel == 12) {
-        if (ch8_ro.enabled) {
-            ch8_ro.noteOn(note, 127);
-        }
-    }
+    // if (channel == 12) {
+    //     if (ch8_ro.enabled) {
+    //         ch8_ro.noteOn(note, 127);
+    //     }
+    // }
 };
 
 void ctagSoundProcessorPicoSeqRack::handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel) {
@@ -726,84 +726,84 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch1_db_"; ch1_db.Init(&dri);
     dri.prefix = "ch1_ab_"; ch1_ab.Init(&dri);
 
-    dri.midi_channel = 9;
-    dri.cc_base = 20;
-    dri.prefix = "ch2_"; ch2.Init(&dri);
-    dri.prefix = "ch2_fmb1_"; ch2_fmb1.Init(&dri);
-    dri.prefix = "ch2_fmb2_"; ch2_fmb2.Init(&dri);
+    // dri.midi_channel = 9;
+    // dri.cc_base = 20;
+    // dri.prefix = "ch2_"; ch2.Init(&dri);
+    // dri.prefix = "ch2_fmb1_"; ch2_fmb1.Init(&dri);
+    // dri.prefix = "ch2_fbm2_"; ch2_fmb2.Init(&dri);
 
-    dri.midi_channel = 9;
-    dri.cc_base = 40;
-    dri.prefix = "ch3_"; ch3.Init(&dri);
-    dri.prefix = "ch3_ds_"; ch3_ds.Init(&dri);
-    dri.prefix = "ch3_as_"; ch3_as.Init(&dri);
+    // dri.midi_channel = 9;
+    // dri.cc_base = 40;
+    // dri.prefix = "ch3_"; ch3.Init(&dri);
+    // dri.prefix = "ch3_ds_"; ch3_ds.Init(&dri);
+    // dri.prefix = "ch3_as_"; ch3_as.Init(&dri);
 
-    dri.midi_channel = 9;
-    dri.cc_base = 60;
-    dri.prefix = "ch4_"; ch4.Init(&dri);
-    dri.prefix = "ch4_hh1_"; ch4_hh1.Init(&dri);
-    dri.prefix = "ch4_hh2_"; ch4_hh2.Init(&dri);
+    // dri.midi_channel = 9;
+    // dri.cc_base = 60;
+    // dri.prefix = "ch4_"; ch4.Init(&dri);
+    // dri.prefix = "ch4_hh1_"; ch4_hh1.Init(&dri);
+    // dri.prefix = "ch4_hh2_"; ch4_hh2.Init(&dri);
 
-    dri.midi_channel = 9;
-    dri.cc_base = 80;
-    dri.prefix = "ch5_"; ch5.Init(&dri);
-    dri.prefix = "ch5_rs_"; ch5_rs.Init(&dri);
+    // dri.midi_channel = 9;
+    // dri.cc_base = 80;
+    // dri.prefix = "ch5_"; ch5.Init(&dri);
+    // dri.prefix = "ch5_rs_"; ch5_rs.Init(&dri);
 
-    dri.midi_channel = 9;
-    dri.cc_base = 100;
-    dri.prefix = "ch6_"; ch6.Init(&dri);
-    dri.prefix = "ch6_cl_"; ch6_cl.Init(&dri);
+    // dri.midi_channel = 9;
+    // dri.cc_base = 100;
+    // dri.prefix = "ch6_"; ch6.Init(&dri);
+    // dri.prefix = "ch6_cl_"; ch6_cl.Init(&dri);
 
-    dri.midi_channel = 11;
-    dri.cc_base = 0;
-    dri.prefix = "ch7_"; ch7.Init(&dri);
-    dri.prefix = "ch7_smp_"; ch7_ro.Init(&dri);
+    // dri.midi_channel = 11;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch7_"; ch7.Init(&dri);
+    // dri.prefix = "ch7_smp_"; ch7_ro.Init(&dri);
 
-    dri.midi_channel = 12;
-    dri.cc_base = 0;
-    dri.prefix = "ch8_"; ch8.Init(&dri);
-    dri.prefix = "ch8_smp_"; ch8_ro.Init(&dri);
+    // dri.midi_channel = 12;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch8_"; ch8.Init(&dri);
+    // dri.prefix = "ch8_smp_"; ch8_ro.Init(&dri);
 
-    dri.midi_channel = 0;
-    dri.cc_base = 0;
-    dri.prefix = "ch9_"; ch9.Init(&dri);
-    dri.prefix = "ch9_tbd03_"; ch9_td3.Init(&dri);
+    // dri.midi_channel = 0;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch9_"; ch9.Init(&dri);
+    // dri.prefix = "ch9_tbd03_"; ch9_td3.Init(&dri);
 
-    dri.midi_channel = 1;
-    dri.cc_base = 0;
-    dri.prefix = "ch10_"; ch10.Init(&dri);
-    dri.prefix = "ch10_tbd03_"; ch10_td3.Init(&dri);
+    // dri.midi_channel = 1;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch10_"; ch10.Init(&dri);
+    // dri.prefix = "ch10_tbd03_"; ch10_td3.Init(&dri);
 
-    dri.midi_channel = 2;
-    dri.cc_base = 0;
-    dri.prefix = "ch11_"; ch11.Init(&dri);
-    dri.prefix = "ch11_mo_"; ch11_mo.Init(&dri);
+    // dri.midi_channel = 2;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch11_"; ch11.Init(&dri);
+    // dri.prefix = "ch11_mo_"; ch11_mo.Init(&dri);
 
-    dri.midi_channel = 3;
-    dri.cc_base = 0;
-    dri.prefix = "ch12_"; ch12.Init(&dri);
-    dri.prefix = "ch12_wtosc_"; ch12_wtosc.Init(&dri);
-    dri.prefix = "ch12_mo_"; ch12_mo.Init(&dri);
+    // dri.midi_channel = 3;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch12_"; ch12.Init(&dri);
+    // dri.prefix = "ch12_wtosc_"; ch12_wtosc.Init(&dri);
+    // dri.prefix = "ch12_mo_"; ch12_mo.Init(&dri);
 
-    dri.midi_channel = 4;
-    dri.cc_base = 0;
-    dri.prefix = "ch13_"; ch13.Init(&dri);
-    dri.prefix = "ch13_smp_"; ch13_ro.Init(&dri);
+    // dri.midi_channel = 4;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch13_"; ch13.Init(&dri);
+    // dri.prefix = "ch13_smp_"; ch13_ro.Init(&dri);
 
-    dri.midi_channel = 5;
-    dri.cc_base = 0;
-    dri.prefix = "ch14_"; ch14.Init(&dri);
-    dri.prefix = "ch14_smp_"; ch14_ro.Init(&dri);
+    // dri.midi_channel = 5;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch14_"; ch14.Init(&dri);
+    // dri.prefix = "ch14_smp_"; ch14_ro.Init(&dri);
 
-    dri.midi_channel = 6;
-    dri.cc_base = 0;
-    dri.prefix = "ch15_"; ch15.Init(&dri);
-    dri.prefix = "ch15_pp_"; ch15_pp.Init(&dri);
+    // dri.midi_channel = 6;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch15_"; ch15.Init(&dri);
+    // dri.prefix = "ch15_pp_"; ch15_pp.Init(&dri);
 
-    dri.midi_channel = 7;
-    dri.cc_base = 0;
-    dri.prefix = "ch16_"; ch16.Init(&dri);
-    dri.prefix = "ch16_in_"; ch16_in.Init(&dri); // audio input, no prefix
+    // dri.midi_channel = 7;
+    // dri.cc_base = 0;
+    // dri.prefix = "ch16_"; ch16.Init(&dri);
+    // dri.prefix = "ch16_in_"; ch16_in.Init(&dri); // audio input, no prefix
 
     // dri.prefix = "fx1_";
     // fx_delay.Init(&dri);
@@ -875,9 +875,6 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     reverb.set_amount(1.f);
     reverb.set_lp(0.5f);
     reverb.set_time(0.4f);
-
-    // preload samples
-    sampleRom.BufferInSPIRAM();
 
     // init compressor
     sumCompressor.setSampleRate(44100.f);

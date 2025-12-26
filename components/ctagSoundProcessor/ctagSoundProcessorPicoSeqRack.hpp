@@ -118,54 +118,54 @@ namespace CTAG {
 			RackDBD ch1_db;
 			RackABD ch1_ab;
 
-			RackChannelMixer ch2;
-			RackFMB ch2_fmb1;
-			RackFMB ch2_fmb2;
+			// RackChannelMixer ch2;
+			// RackFMB ch2_fmb1;
+			// RackFMB ch2_fmb2;
 
-			RackChannelMixer ch3;
-			RackDSD ch3_ds;
-			RackASD ch3_as;
+			// RackChannelMixer ch3;
+			// RackDSD ch3_ds;
+			// RackASD ch3_as;
 
-			RackChannelMixer ch4;
-			RackHH1 ch4_hh1;
-			RackHH2 ch4_hh2;
+			// RackChannelMixer ch4;
+			// RackHH1 ch4_hh1;
+			// RackHH2 ch4_hh2;
 
-			RackChannelMixer ch5;
-			RackRimshot ch5_rs;
+			// RackChannelMixer ch5;
+			// RackRimshot ch5_rs;
 
-			RackChannelMixer ch6;
-			RackClap ch6_cl;
+			// RackChannelMixer ch6;
+			// RackClap ch6_cl;
 
-			RackRompler ch7_ro;
-			RackChannelMixer ch7;
+			// RackRompler ch7_ro;
+			// RackChannelMixer ch7;
 
-			RackRompler ch8_ro;
-			RackChannelMixer ch8;
+			// RackRompler ch8_ro;
+			// RackChannelMixer ch8;
 
-			RackTBD03 ch9_td3;
-			RackChannelMixer ch9;
+			// RackTBD03 ch9_td3;
+			// RackChannelMixer ch9;
 
-			RackTBD03 ch10_td3;
-			RackChannelMixer ch10;
+			// RackTBD03 ch10_td3;
+			// RackChannelMixer ch10;
 
-			RackMO ch11_mo;
-			RackChannelMixer ch11;
+			// RackMO ch11_mo;
+			// RackChannelMixer ch11;
 
-			RackWTOsc ch12_wtosc;
-			RackMO ch12_mo;
-			RackChannelMixer ch12;
+			// RackWTOsc ch12_wtosc;
+			// RackMO ch12_mo;
+			// RackChannelMixer ch12;
 
-			RackChannelMixer ch13;
-			RackRompler ch13_ro;
+			// RackChannelMixer ch13;
+			// RackRompler ch13_ro;
 
-			RackChannelMixer ch14;
-			RackRompler ch14_ro;
+			// RackChannelMixer ch14;
+			// RackRompler ch14_ro;
 
-			RackChannelMixer ch15;
-			RackPolyPad ch15_pp;
+			// RackChannelMixer ch15;
+			// RackPolyPad ch15_pp;
 
-			RackInput ch16_in;
-			RackChannelMixer ch16;
+			// RackInput ch16_in;
+			// RackChannelMixer ch16;
 
 			// RackFxReverb fx_reverb;
 			// RackFxDelay fx_delay;

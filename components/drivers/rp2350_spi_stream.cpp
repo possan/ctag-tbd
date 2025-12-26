@@ -178,7 +178,7 @@ uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
 }
 
 IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void **dst, uint32_t ledStatus) {
-    static_assert(STREAM_BUFFER_SIZE_ > N_CVS * sizeof(float) + N_TRIGS + 2, "Buffer too small for spi real-time stream data!");
+    static_assert(STREAM_BUFFER_SIZE_ > N_CVS * sizeof(float) + N_TRIGS + 2 + N_MIDIBYTES, "Buffer too small for spi real-time stream data!");
     // pack led status for current frame
     uint8_t* tx_buf = (uint8_t*) transaction[currentTransaction].tx_buffer;
     uint32_t *led = (uint32_t*) &tx_buf[BUF_OFFSET_LED];
@@ -197,6 +197,7 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void **dst
     // queue transaction of transceive
     esp_err_t ret;
     ret = spi_slave_queue_trans(RCV_HOST, &transaction[currentTransaction], 0);
+    ESP_LOGD("rp2350_spi_stream", "spi_slave_queue_trans result: %s", esp_err_to_name(ret));
     if (ESP_OK != ret) {
         // ESP_LOGD("rp2350_spi_stream", "Failed to queue transaction: %s", esp_err_to_name(ret));
         transferErrorCount++;
