@@ -38,7 +38,6 @@ respective component folders / files if different from this license.
 #include <math.h>
 #include "helpers/ctagFastMath.hpp"
 #include "helpers/ctagSampleRom.hpp"
-#include "freeverb3/efilter.hpp"
 #include "stmlib/dsp/dsp.h"
 #include "rp2350_spi_stream.hpp"
 // ableton link
@@ -72,12 +71,6 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     bool isStereoCH0 = false;
     esp_cpu_cycle_count_t start, diff;
 
-    std::fill_n(fbuf, BUF_SZ * 2, 0.f);
-
-    fv3::dccut_f in_dccutl, in_dccutr;
-    in_dccutl.setCutOnFreq(3.7f, 44100.f);
-    in_dccutr.setCutOnFreq(3.7f, 44100.f);
-
     SP::ProcessData pd;
     pd.buf = fbuf;
     pd.cv = nullptr;
@@ -94,12 +87,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     while (runAudioTask) {
 
         // update data from ADCs and GPIOs for real-time control
-<<<<<<< HEAD
-        // CTAG::CTRL::Control::Update(pd.trig, pd.cv, pd.midibytes, ledStatusUI);
-        CTAG::CTRL::Control::Update(&pd.controlData, ledStatusUI);
-=======
         CTAG::CTRL::Control::Update(&pd.controlData, ledStatus);
->>>>>>> a6689a31 (removed obsolete noise gate option)
         pd.cv = (float*) pd.controlData;
         pd.trig = (uint8_t*) pd.controlData + N_CVS * sizeof(float);
         pd.midibytes = (uint8_t*) pd.controlData + N_CVS * sizeof(float) + N_TRIGS * sizeof(uint8_t);
@@ -113,19 +101,10 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         start = esp_cpu_get_cycle_count();
         before = esp_timer_get_time();
 
-        // In peak detection
-        // dc cut input
-        float maxl = 0.f, maxr = 0.f;
+        // In peak detection, dc cut is done in codec
         float max = 0.f;
-        for (uint32_t i = 0; i < BUF_SZ; i++) {
-            //fbuf[i * 2] = in_dccutl(fbuf[i * 2]);
-            float val = fabsf(fbuf[i * 2]);
-            if (val > maxl) maxl = val;
-            //fbuf[i * 2 + 1] = in_dccutr(fbuf[i * 2 + 1]);
-            val = fabsf(fbuf[i * 2 + 1]);
-            if (val > maxr) maxr = val;
-        }
-        max = maxl >= maxr ? maxl : maxr;
+        // just take first sample of block for level meter
+        max = fabsf(fbuf[0] + fbuf[1]) / 2.f;
         peakIn = 0.95f * peakIn + 0.05f * max;
 
         // led indicator, green for input
