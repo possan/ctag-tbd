@@ -478,6 +478,17 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     }
 
     renderMasterOutput(data);
+
+    // if audio somehow ends up in NaN, reset buffers...
+    if (data.buf[0] != data.buf[0]) {
+        std::fill_n(data.buf, bufSz * 2, 0.f);
+        std::fill_n(combined_out, bufSz * 2, 0.f);
+        std::fill_n(send1_out, bufSz * 2, 0.f);
+        std::fill_n(send2_out, bufSz * 2, 0.f);
+        std::fill_n(delayBuffer_l, delayBufferSizeMax, 0.f);
+        std::fill_n(delayBuffer_r, delayBufferSizeMax, 0.f);
+        std::fill_n(reverbBuffer, 32768, 0.f);
+    }
 }
 
 void ctagSoundProcessorPicoSeqRack::registerParam(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter){
@@ -499,7 +510,7 @@ void ctagSoundProcessorPicoSeqRack::registerParam(const PickSeqRackInitData *ini
 }
 
 void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel) {
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: note off %d, %d, %d", channel, note, vel);
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: note off %d, %d, %d", channel, note, vel);
 
     if (channel == 0) {
         if (ch9_td3.enabled) {
@@ -560,7 +571,7 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t channel, con
 };
 
 void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel) {
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: note on %d, %d, %d", channel, note, vel);
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: note on %d, %d, %d", channel, note, vel);
 
     if (channel == 0) {
         if (ch9_td3.enabled) {

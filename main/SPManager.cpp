@@ -52,7 +52,7 @@ using namespace CTAG;
 using namespace CTAG::AUDIO;
 using namespace CTAG::DRIVERS;
 
-#define CPU_MAX_ALLOWED_CYCLES 261224 // is 32/44100kHz * 360MHz
+#define CPU_MAX_ALLOWED_CYCLES 300000 // 261224 // is 32/44100kHz * 360MHz
 
 // global variable, spiffs base directory
 namespace CTAG {
@@ -61,6 +61,7 @@ namespace CTAG {
     }
 }
 
+volatile uint32_t SoundProcessorManager::slowProcessCounter = 0;
 
 // audio real-time task
 void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
@@ -214,16 +215,19 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
         // get cpu cycles for audio task and tone led
         diff = esp_cpu_get_cycle_count() - start;
-        if(diff > CPU_MAX_ALLOWED_CYCLES) ledData = 0xB39134; // orange code for cpu overflow
+        int64_t diff2 = esp_timer_get_time() - before;
+        if(diff > CPU_MAX_ALLOWED_CYCLES) {
+            slowProcessCounter ++;
+            // ledData = 0xB39134; // orange code for cpu overflow
+        }
         ledStatus = ledData;
 
-        int64_t diff2 = esp_timer_get_time() - before;
 
-        // write raw float data back to CODEC
+        // write raw float data back to CODCE
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
         if (framecounter % 2900 == 0) {
-            printf("Audio task cycles %d, micros %d\n", (int)diff, (int)diff2);
+            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...]\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ]);
         }
 
         framecounter ++;
