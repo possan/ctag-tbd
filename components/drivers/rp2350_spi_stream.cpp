@@ -57,6 +57,7 @@ DMA_ATTR static uint8_t *sendBuf2;
 uint32_t CTAG::DRIVERS::rp2350_spi_stream::transferErrorCount = 0;
 uint32_t CTAG::DRIVERS::rp2350_spi_stream::transferSuccessCount = 0;
 uint32_t CTAG::DRIVERS::rp2350_spi_stream::parseErrorCount = 0;
+uint32_t CTAG::DRIVERS::rp2350_spi_stream::queueErrorCount = 0;
 
 /*
 QueueHandle_t debug_queue = nullptr;
@@ -82,6 +83,7 @@ IRAM_ATTR static void spi_post_trans_cb(spi_slave_transaction_t *trans){
 uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
     transferErrorCount = 0;
     transferSuccessCount = 0;
+    queueErrorCount = 0;
     parseErrorCount = 0;
 
     //Configuration for the SPI bus
@@ -197,10 +199,9 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void **dst
     // queue transaction of transceive
     esp_err_t ret;
     ret = spi_slave_queue_trans(RCV_HOST, &transaction[currentTransaction], 0);
-    ESP_LOGD("rp2350_spi_stream", "spi_slave_queue_trans result: %s", esp_err_to_name(ret));
     if (ESP_OK != ret) {
         // ESP_LOGD("rp2350_spi_stream", "Failed to queue transaction: %s", esp_err_to_name(ret));
-        transferErrorCount++;
+        queueErrorCount++;
         return 0; // Failed to queue transaction
     }
     currentTransaction = (currentTransaction + 1) % 3; // switch to next transaction buffer

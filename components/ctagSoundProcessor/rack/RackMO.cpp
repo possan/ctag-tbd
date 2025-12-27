@@ -71,11 +71,7 @@ void RackMO::Process(const PicoSeqRackProcessData &data) {
     // }
     mo_envelope.SetAttack(a);
     mo_envelope.SetDecay(d);
-    if (trig_mo_loopEG != -1) {
-        mo_envelope.SetLoop(data.trig[trig_mo_loopEG] == 1 ? false : true);
-    } else {
-        mo_envelope.SetLoop(mo_loopEG);
-    }
+    mo_envelope.SetLoop(mo_loopEG);
     int32_t ad_value = static_cast<uint32_t>(mo_envelope.Process() * 65535.f);
 
     // shape

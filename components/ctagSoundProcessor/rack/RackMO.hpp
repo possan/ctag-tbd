@@ -50,7 +50,7 @@ private:
 	atomic<int16_t> mo_fm_amt;
 	atomic<int16_t> mo_p0_amt;
 	atomic<int16_t> mo_p1_amt;
-	atomic<int16_t> mo_loopEG, trig_mo_loopEG;
+	atomic<int16_t> mo_loopEG;
 	atomic<int16_t> mo_attack;
 	atomic<int16_t> mo_decay;
 };
