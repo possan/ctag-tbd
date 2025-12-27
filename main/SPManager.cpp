@@ -48,18 +48,11 @@ respective component folders / files if different from this license.
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
 
 #define BUF_SZ 32
-//#define NOISE_GATE_LEVEL_CLOSE 0.000065f
-#define NOISE_GATE_LEVEL_CLOSE 0.0001f
-#define NOISE_GATE_LEVEL_OPEN 0.0003f
 
 using namespace CTAG;
 using namespace CTAG::AUDIO;
 using namespace CTAG::DRIVERS;
 
-#define NG_OPEN 0
-#define NG_BOTH 1
-#define NG_LEFT 2
-#define NG_RIGHT 3
 #define CPU_MAX_ALLOWED_CYCLES 261224 // is 32/44100kHz * 360MHz
 
 // global variable, spiffs base directory
@@ -74,8 +67,6 @@ namespace CTAG {
 void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     float fbuf[BUF_SZ * 2];
     float peakIn = 0.f, peakOut = 0.f;
-    float peakL = 0.f, peakR = 0.f;
-    int ngState = NG_OPEN;
     float lramp[BUF_SZ];
     int64_t before;
     bool isStereoCH0 = false;
@@ -103,8 +94,12 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     while (runAudioTask) {
 
         // update data from ADCs and GPIOs for real-time control
+<<<<<<< HEAD
         // CTAG::CTRL::Control::Update(pd.trig, pd.cv, pd.midibytes, ledStatusUI);
         CTAG::CTRL::Control::Update(&pd.controlData, ledStatusUI);
+=======
+        CTAG::CTRL::Control::Update(&pd.controlData, ledStatus);
+>>>>>>> a6689a31 (removed obsolete noise gate option)
         pd.cv = (float*) pd.controlData;
         pd.trig = (uint8_t*) pd.controlData + N_CVS * sizeof(float);
         pd.midibytes = (uint8_t*) pd.controlData + N_CVS * sizeof(float) + N_TRIGS * sizeof(uint8_t);
@@ -118,8 +113,30 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         start = esp_cpu_get_cycle_count();
         before = esp_timer_get_time();
 
+        // In peak detection
+        // dc cut input
+        float maxl = 0.f, maxr = 0.f;
+        float max = 0.f;
+        for (uint32_t i = 0; i < BUF_SZ; i++) {
+            //fbuf[i * 2] = in_dccutl(fbuf[i * 2]);
+            float val = fabsf(fbuf[i * 2]);
+            if (val > maxl) maxl = val;
+            //fbuf[i * 2 + 1] = in_dccutr(fbuf[i * 2 + 1]);
+            val = fabsf(fbuf[i * 2 + 1]);
+            if (val > maxr) maxr = val;
+        }
+        max = maxl >= maxr ? maxl : maxr;
+        peakIn = 0.95f * peakIn + 0.05f * max;
+
+        // led indicator, green for input
+        max = 255.f + 3.2f * CTAG::SP::HELPERS::fast_dBV(peakIn); // cut away at approx -80dB
         uint32_t ledData = 0;
-    
+        //ESP_LOGI("SP", "Max %.9f %f", peakIn, max);
+        if (max > 0) {
+            ledData = ((uint32_t) max);
+            ledData <<= 8; // green
+        }
+
         // sound processors
         // vTaskSuspendAll();
         
@@ -412,8 +429,6 @@ std::unique_ptr<SPManagerDataModel> SoundProcessorManager::model;
 DRAM_ATTR SemaphoreHandle_t SoundProcessorManager::processMutex;
 atomic<uint32_t> SoundProcessorManager::ledBlink;
 atomic<uint32_t> SoundProcessorManager::ledStatus;
-atomic<uint32_t> SoundProcessorManager::ledStatusUI {0};
-atomic<uint32_t> SoundProcessorManager::noiseGateCfg;
 atomic<uint32_t> SoundProcessorManager::ch01Daisy;
 atomic<uint32_t> SoundProcessorManager::toStereoCH0;
 atomic<uint32_t> SoundProcessorManager::toStereoCH1;
@@ -544,20 +559,6 @@ void SoundProcessorManager::SetConfigurationFromJSON(const string &data) {
 void SoundProcessorManager::updateConfiguration() {
     ledBlink = 3;
 
-    // noise gate configuration
-    if (model->GetConfigurationData("ng_config").compare("off") == 0) {
-        noiseGateCfg = 0;
-    } else if (model->GetConfigurationData("ng_config").compare("dual") == 0) {
-        DRIVERS::Codec::RecalibDCOffset();
-        noiseGateCfg = 1;
-    } else if (model->GetConfigurationData("ng_config").compare("ch0") == 0) {
-        DRIVERS::Codec::RecalibDCOffset();
-        noiseGateCfg = 2;
-    } else if (model->GetConfigurationData("ng_config").compare("ch1") == 0) {
-        DRIVERS::Codec::RecalibDCOffset();
-        noiseGateCfg = 3;
-    }
-
     // ch01 daisy
     if (model->GetConfigurationData("ch01_daisy").compare("off") == 0) {
         ch01Daisy = 0;
@@ -618,7 +619,6 @@ void SoundProcessorManager::led_task(void *pvParams) {
             b = 255;
         }
         DRIVERS::LedRGB::SetLedRGB(r, g, b);
-        ledStatusUI = r << 16 | g << 8 | b; // update UI with current led status, to be sent to rp2350 periphery
         if (ledBlink > 1 && ledBlink < 42) ledBlink--; // >= 42 led blink doesn't stop
         if (ledBlink == 42) ledBlink = 44;
         vTaskDelay(50 / portTICK_PERIOD_MS); // 50ms refresh rate for led
