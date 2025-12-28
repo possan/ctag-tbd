@@ -27,6 +27,7 @@ namespace CTAG{
         struct link_session_data_t{
             // --- Link Active ---
             bool linkActive;
+            bool isPlaying;
             uint32_t numPeers;
 
             // --- Tempo / structure ---
@@ -36,9 +37,6 @@ namespace CTAG{
             // --- Musical position ---
             double beat;      // absolute beat position
             double phase;     // beat phase [0..1)
-
-            // --- Transport state ---
-            bool isPlaying;
         };
         class link{
         public:
@@ -52,7 +50,8 @@ namespace CTAG{
             static void GetLinkSessionData(link_session_data_t *data);
             // possibly blocking, thread safe
             static void SetLinkTempo(float bpm);
-            static void SetLinkPlaying(bool playing);
+            // possibly blocking, thread safe
+            static void SetLinkStartStop(bool isPlaying);
         };
     } // LINK
 } // CTAG

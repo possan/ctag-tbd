@@ -62,6 +62,7 @@ namespace CTAG{
             ableton_link = new ableton::Link(120.0);
             ableton_link->enableStartStopSync(true);
             ableton_link->enable(true);
+            ableton_link->enableStartStopSync(true);
 #ifdef CONFIG_ABLETON_LINK_DEBUG
             xTaskCreatePinnedToCore(link_print_task, "link_print_task", 4096, ableton_link, 1, NULL, 0);
 #endif
@@ -71,8 +72,8 @@ namespace CTAG{
 
         void link::DeInit(){
 #ifdef CONFIG_ABLETON_LINK
+            ableton_link->enableStartStopSync(false);
             ableton_link->enable(false);
-            ableton_link->enableStartStopSync(true);
             delete ableton_link;
             ableton_link = nullptr;
             ESP_LOGI("Ableton Link", "Disabled");
@@ -89,7 +90,8 @@ IRAM_ATTR void link::GetLinkRtSessionData(link_session_data_t* data){
             }
             const auto state = ableton_link->captureAudioSessionState();
             const auto time = ableton_link->clock().micros();
-            data->linkActive = true;
+            data->linkActive = ableton_link->isEnabled();
+            data->isPlaying = state.isPlaying();
             data->numPeers = ableton_link->numPeers();
             data->tempo = static_cast<float>(state.tempo());
             data->quantum = 4.0f;
@@ -131,15 +133,13 @@ IRAM_ATTR void link::GetLinkRtSessionData(link_session_data_t* data){
 #endif
         }
 
-
-        void link::SetLinkPlaying(bool playing){
+        void link::SetLinkStartStop(bool isPlaying){
 #ifdef CONFIG_ABLETON_LINK
             auto state = ableton_link->captureAppSessionState();
             const auto now = ableton_link->clock().micros();
-            state.setIsPlaying(playing, now);
+            state.setIsPlaying(isPlaying, now);
             ableton_link->commitAppSessionState(state);
 #endif
         }
-
     } // LINK
 } // CTAG
