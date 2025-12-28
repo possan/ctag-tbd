@@ -7,11 +7,11 @@ using namespace CTAG::SP;
 void RackASD::Init(const PickSeqRackInitData *initdata) {
     asd.Init();
 
-    initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
-    initdata->rack->registerParamAndCC(initdata, "tone", 7, [&](const int val){ tone = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay", 8, [&](const int val){ decay = val;});
-    initdata->rack->registerParamAndCC(initdata, "a_spy", 9, [&](const int val){ a_spy = val;});
-    initdata->rack->registerParamAndCC(initdata, "accent", 10, [&](const int val){ accent = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "a_spy", 11, [&](const int val){ a_spy = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 12, [&](const int val){ accent = val;});
 
     this->enabled = false;
 }

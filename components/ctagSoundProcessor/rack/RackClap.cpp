@@ -7,11 +7,11 @@ using namespace CTAG::SP;
 void RackClap::Init(const PickSeqRackInitData *initdata) {
     cl.Init();
 
-    initdata->rack->registerParamAndCC(initdata, "f0", 6, [&](const int val){ f0 = val;});
-    initdata->rack->registerParamAndCC(initdata, "tone", 7, [&](const int val){ tone = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay", 8, [&](const int val){ decay = val;});
-    initdata->rack->registerParamAndCC(initdata, "scale", 9, [&](const int val){ scale = val;});
-    initdata->rack->registerParamAndCC(initdata, "transient", 10, [&](const int val){ transient = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "scale", 11, [&](const int val){ scale = val;});
+    initdata->rack->registerParamAndCC(initdata, "transient", 12, [&](const int val){ transient = val;});
 
     this->enabled = false;
 }

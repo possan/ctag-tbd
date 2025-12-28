@@ -13,29 +13,29 @@ void RackPolyPad::Init(const PickSeqRackInitData *initdata) {
     }
     pp_quantizer.Init();
 
-    initdata->rack->registerParamAndCC(initdata, "chord", 6, [&](const int val) { pp_chord = val; });
-    initdata->rack->registerParamAndCC(initdata, "inversion", 7, [&](const int val) { pp_inversion = val; });
-    initdata->rack->registerParamAndCC(initdata, "detune", 8, [&](const int val) { pp_detune = val; });
+    initdata->rack->registerParamAndCC(initdata, "chord", 8, [&](const int val) { pp_chord = val; });
+    initdata->rack->registerParamAndCC(initdata, "inversion", 9, [&](const int val) { pp_inversion = val; });
+    initdata->rack->registerParamAndCC(initdata, "detune", 10, [&](const int val) { pp_detune = val; });
     // initdata->rack->registerParamAndCC(initdata, "pitch", 9, [&](const int val) { pp_pitch = val; });
 
-    initdata->rack->registerParamAndCC(initdata, "cutoff", 10, [&](const int val) { pp_cutoff = val; });
-    initdata->rack->registerParamAndCC(initdata, "resonance", 11, [&](const int val) { pp_resonance = val; });
-    initdata->rack->registerParamAndCC(initdata, "filter_type", 12, [&](const int val) { pp_filter_type = val; });
-    initdata->rack->registerParamAndCC(initdata, "q_scale", 13, [&](const int val) { pp_q_scale = val; });
+    initdata->rack->registerParamAndCC(initdata, "cutoff", 11, [&](const int val) { pp_cutoff = val; });
+    initdata->rack->registerParamAndCC(initdata, "resonance", 12, [&](const int val) { pp_resonance = val; });
+    initdata->rack->registerParamAndCC(initdata, "filter_type", 13, [&](const int val) { pp_filter_type = val; });
+    initdata->rack->registerParamAndCC(initdata, "q_scale", 14, [&](const int val) { pp_q_scale = val; });
 
-    initdata->rack->registerParamAndCC(initdata, "attack", 14, [&](const int val) { pp_attack = val; });
-    initdata->rack->registerParamAndCC(initdata, "decay", 15, [&](const int val) { pp_decay = val; });
-    initdata->rack->registerParamAndCC(initdata, "sustain", 16, [&](const int val) { pp_sustain = val; });
-    initdata->rack->registerParamAndCC(initdata, "release", 17, [&](const int val) { pp_release = val; });
+    initdata->rack->registerParamAndCC(initdata, "attack", 15, [&](const int val) { pp_attack = val; });
+    initdata->rack->registerParamAndCC(initdata, "decay", 16, [&](const int val) { pp_decay = val; });
+    initdata->rack->registerParamAndCC(initdata, "sustain", 17, [&](const int val) { pp_sustain = val; });
+    initdata->rack->registerParamAndCC(initdata, "release", 18, [&](const int val) { pp_release = val; });
 
-    initdata->rack->registerParamAndCC(initdata, "lfo1_freq", 18, [&](const int val) { pp_lfo1_freq = val; });
-    initdata->rack->registerParamAndCC(initdata, "lfo1_amt", 19, [&](const int val) { pp_lfo1_amt = val; });
-    initdata->rack->registerParamAndCC(initdata, "lfo2_freq", 20, [&](const int val) { pp_lfo2_freq = val; });
-    initdata->rack->registerParamAndCC(initdata, "lfo2_amt", 21, [&](const int val) { pp_lfo2_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "lfo1_freq", 19, [&](const int val) { pp_lfo1_freq = val; });
+    initdata->rack->registerParamAndCC(initdata, "lfo1_amt", 20, [&](const int val) { pp_lfo1_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "lfo2_freq", 21, [&](const int val) { pp_lfo2_freq = val; });
+    initdata->rack->registerParamAndCC(initdata, "lfo2_amt", 22, [&](const int val) { pp_lfo2_amt = val; });
 
-    initdata->rack->registerParamAndCC(initdata, "eg_filt_amt", 22, [&](const int val) { pp_eg_filt_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "eg_filt_amt", 23, [&](const int val) { pp_eg_filt_amt = val; }); // not used
     // initdata->rack->registerParamAndCC(initdata, "eg_slow_fast", 23, [&](const int val) { pp_eg_slow_fast = val; });
-    initdata->rack->registerParamAndCC(initdata, "lfo2_rphase", 24, [&](const int val) { pp_lfo2_rphase = val; });
+    initdata->rack->registerParamAndCC(initdata, "lfo2_rphase", 24, [&](const int val) { pp_lfo2_rphase = val; }); // not used
 
     initdata->rack->registerParamAndCC(initdata, "nnotes", 25, [&](const int val) { pp_nnotes = val; });
     // initdata->rack->registerParamAndCC(initdata, "ncvoices", 26, [&](const int val) { pp_ncvoices = val; });

@@ -7,29 +7,29 @@ using namespace CTAG::SP;
 void RackRompler::Init(const PickSeqRackInitData *initdata) {
     rompler.Init(44100.f);
 
-    initdata->rack->registerParamAndCC(initdata, "bank", 6, [&](const int val){ s1_bank = val;});
-    initdata->rack->registerParamAndCC(initdata, "slice", 7, [&](const int val){ s1_slice = val;});
-    initdata->rack->registerParamAndCC(initdata, "start", 8, [&](const int val){ s1_start = val;});
-    initdata->rack->registerParamAndCC(initdata, "end", 9, [&](const int val){ s1_end = val;});
+    initdata->rack->registerParamAndCC(initdata, "bank", 8, [&](const int val){ s1_bank = val;});
+    initdata->rack->registerParamAndCC(initdata, "slice", 9, [&](const int val){ s1_slice = val;});
+    initdata->rack->registerParamAndCC(initdata, "start", 10, [&](const int val){ s1_start = val;});
+    initdata->rack->registerParamAndCC(initdata, "end", 11, [&](const int val){ s1_end = val;});
     
-    initdata->rack->registerParamAndCC(initdata, "fc", 10, [&](const int val){ s1_fc = val;});
-    initdata->rack->registerParamAndCC(initdata, "fq", 11, [&](const int val){ s1_fq = val;});
-    initdata->rack->registerParamAndCC(initdata, "ft", 12, [&](const int val){ s1_ft = val;});
-    initdata->rack->registerParamAndCC(initdata, "brr", 13, [&](const int val){ s1_brr = val;});
+    initdata->rack->registerParamAndCC(initdata, "fc", 12, [&](const int val){ s1_fc = val;});
+    initdata->rack->registerParamAndCC(initdata, "fq", 13, [&](const int val){ s1_fq = val;});
+    initdata->rack->registerParamAndCC(initdata, "ft", 14, [&](const int val){ s1_ft = val;});
+    initdata->rack->registerParamAndCC(initdata, "brr", 15, [&](const int val){ s1_brr = val;});
     
-    initdata->rack->registerParamAndCC(initdata, "atk", 14, [&](const int val){ s1_atk = val;});
-    initdata->rack->registerParamAndCC(initdata, "dcy", 15, [&](const int val){ s1_dcy = val;});
-    initdata->rack->registerParamAndCC(initdata, "speed", 16, [&](const int val){ s1_speed = val;});
-    initdata->rack->registerParamAndCC(initdata, "pitch", 17, [&](const int val){ s1_pitch = val;});
+    initdata->rack->registerParamAndCC(initdata, "atk", 16, [&](const int val){ s1_atk = val;});
+    initdata->rack->registerParamAndCC(initdata, "dcy", 17, [&](const int val){ s1_dcy = val;});
+    initdata->rack->registerParamAndCC(initdata, "speed", 18, [&](const int val){ s1_speed = val;});
+    initdata->rack->registerParamAndCC(initdata, "pitch", 19, [&](const int val){ s1_pitch = val;});
     
-    initdata->rack->registerParamAndCC(initdata, "lp", 18, [&](const int val){ s1_lp = val;});
-    initdata->rack->registerParamAndCC(initdata, "lp_pp", 19, [&](const int val){ s1_lp_pp = val;});
-    initdata->rack->registerParamAndCC(initdata, "lp_pos", 20, [&](const int val){ s1_lp_pos = val;});
-    initdata->rack->registerParamAndCC(initdata, "eg2fm", 21, [&](const int val){ s1_eg2fm = val;});
+    initdata->rack->registerParamAndCC(initdata, "lp", 20, [&](const int val){ s1_lp = val;});
+    initdata->rack->registerParamAndCC(initdata, "lp_pp", 21, [&](const int val){ s1_lp_pp = val;});
+    initdata->rack->registerParamAndCC(initdata, "lp_pos", 22, [&](const int val){ s1_lp_pos = val;});
+    initdata->rack->registerParamAndCC(initdata, "eg2fm", 23, [&](const int val){ s1_eg2fm = val;});
 
-    initdata->rack->registerParamAndCC(initdata, "tsmode", 22, [&](const int val){ s1_tsmode = val;});
-    initdata->rack->registerParamAndCC(initdata, "tsamount", 23, [&](const int val){ s1_tsamount = val;});
-    initdata->rack->registerParamAndCC(initdata, "tssteps", 24, [&](const int val){ s1_tssteps = val;});
+    initdata->rack->registerParamAndCC(initdata, "tsmode", 24, [&](const int val){ s1_tsmode = val;});
+    initdata->rack->registerParamAndCC(initdata, "tsamount", 25, [&](const int val){ s1_tsamount = val;});
+    initdata->rack->registerParamAndCC(initdata, "tssteps", 26, [&](const int val){ s1_tssteps = val;});
 
     s1_lp = 0;
     s1_lp_pp = 0;

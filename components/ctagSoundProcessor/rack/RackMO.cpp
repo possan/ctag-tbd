@@ -20,22 +20,22 @@ void RackMO::Init(const PickSeqRackInitData *initdata) {
     mo_quantizer.Init();
 
     
-    initdata->rack->registerParamAndCC(initdata, "shape", 6, [&](const int val) { mo_shape = val; });
-    initdata->rack->registerParamAndCC(initdata, "param_0", 7, [&](const int val) { mo_param_0 = val; });
-    initdata->rack->registerParamAndCC(initdata, "param_1", 8, [&](const int val) { mo_param_1 = val; });
-    initdata->rack->registerParamAndCC(initdata, "waveshaping", 9, [&](const int val) { mo_waveshaping = val; });
+    initdata->rack->registerParamAndCC(initdata, "shape", 8, [&](const int val) { mo_shape = val; });
+    initdata->rack->registerParamAndCC(initdata, "param_0", 9, [&](const int val) { mo_param_0 = val; });
+    initdata->rack->registerParamAndCC(initdata, "param_1", 10, [&](const int val) { mo_param_1 = val; });
+    initdata->rack->registerParamAndCC(initdata, "waveshaping", 11, [&](const int val) { mo_waveshaping = val; });
     
-    initdata->rack->registerParamAndCC(initdata, "p0_amt", 10, [&](const int val) { mo_p0_amt = val; });
-    initdata->rack->registerParamAndCC(initdata, "p1_amt", 11, [&](const int val) { mo_p1_amt = val; });
-    initdata->rack->registerParamAndCC(initdata, "fm_amt", 12, [&](const int val) { mo_fm_amt = val; });
-    initdata->rack->registerParamAndCC(initdata, "q_scale", 13, [&](const int val) { mo_q_scale = val; });
+    initdata->rack->registerParamAndCC(initdata, "p0_amt", 12, [&](const int val) { mo_p0_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "p1_amt", 13, [&](const int val) { mo_p1_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "fm_amt", 14, [&](const int val) { mo_fm_amt = val; });
+    initdata->rack->registerParamAndCC(initdata, "q_scale", 15, [&](const int val) { mo_q_scale = val; });
     
-    initdata->rack->registerParamAndCC(initdata, "attack", 14, [&](const int val) { mo_attack = val; });
-    initdata->rack->registerParamAndCC(initdata, "decay", 15, [&](const int val) { mo_decay = val; });
-    initdata->rack->registerParamAndCC(initdata, "loopEG", 16, [&](const int val) { mo_loopEG = val; });
+    initdata->rack->registerParamAndCC(initdata, "attack", 16, [&](const int val) { mo_attack = val; });
+    initdata->rack->registerParamAndCC(initdata, "decay", 17, [&](const int val) { mo_decay = val; });
+    initdata->rack->registerParamAndCC(initdata, "loopEG", 18, [&](const int val) { mo_loopEG = val; });
     
-    initdata->rack->registerParamAndCC(initdata, "decimation", 17, [&](const int val) { mo_decimation = val; });
-    initdata->rack->registerParamAndCC(initdata, "bit_reduction", 18, [&](const int val) { mo_bit_reduction = val; });
+    initdata->rack->registerParamAndCC(initdata, "decimation", 19, [&](const int val) { mo_decimation = val; });
+    initdata->rack->registerParamAndCC(initdata, "bit_reduction", 20, [&](const int val) { mo_bit_reduction = val; });
     // initdata->rack->registerParamAndCC(initdata, "pitch", 19, [&](const int val) { mo_pitch = val; });
 
     this->enabled = false;
