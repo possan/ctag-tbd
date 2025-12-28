@@ -33,7 +33,7 @@ namespace CTAG{
             Control() = delete;
             static void Init();
             // fetches next control data and transmits ledStatus to subsystem
-            IRAM_ATTR static void Update(void **data, uint32_t ledStatus);
+            IRAM_ATTR static int Update(void *sendbuffer, void *receivebuffer);
         private:
             DRAM_ATTR static uint8_t *buf_ptr; // buffer pointer for current cv + trig data
         };

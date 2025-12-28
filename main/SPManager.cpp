@@ -42,6 +42,7 @@ respective component folders / files if different from this license.
 #include "rp2350_spi_stream.hpp"
 // ableton link
 #include "link.hpp"
+#include "SpiProtocol.h"
 
 #define MAX(x, y) ((x)>(y)) ? (x) : (y)
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
@@ -65,16 +66,29 @@ volatile uint32_t SoundProcessorManager::slowProcessCounter = 0;
 
 // audio real-time task
 void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
+    float finput[BUF_SZ * 2];
     float fbuf[BUF_SZ * 2];
+    float finput2[BUF_SZ * 2];
+    float fbuf2[BUF_SZ * 2];
     float peakIn = 0.f, peakOut = 0.f;
     float lramp[BUF_SZ];
     int64_t before;
     bool isStereoCH0 = false;
     esp_cpu_cycle_count_t start, diff;
 
+    bool spi_resp_prepared = false;
+    p4_spi_response spi_resp;
+    memset(&spi_resp, 0, sizeof(p4_spi_response));
+
+    p4_spi_request spi_req;
+    memset(&spi_req, 0, sizeof(p4_spi_request));
+
     SP::ProcessData pd;
     pd.controlData = nullptr;
+    pd.cv = nullptr;
+    pd.trig = nullptr;
     pd.buf = fbuf;
+    pd.sequencer_tempo = 12000;
 
     // generate linear ramp ]0,1[ squared
     for (uint32_t i = 0; i < BUF_SZ; i++) {
@@ -85,20 +99,56 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     int framecounter = 0;
     while (runAudioTask) {
 
-        // update data from ADCs and GPIOs for real-time control
-        CTAG::CTRL::Control::Update(&pd.controlData, ledStatus);
-        if (pd.controlData != nullptr) {
-            pd.cv = (float*) pd.controlData;
-            pd.trig = (uint8_t*) pd.controlData + N_CVS * sizeof(float);
-            pd.midibytes = (uint8_t*) pd.controlData + N_CVS * sizeof(float) + N_TRIGS * sizeof(uint8_t);
-        } else {
-            pd.cv = nullptr;
-            pd.trig = nullptr;
-            pd.midibytes = nullptr;
+        if (!spi_resp_prepared) {
+            spi_resp_prepared = true;
+
+            memset(&spi_resp, 0, sizeof(p4_spi_response));
+
+            // pack ableton link data
+            LINK::link_session_data_t *link_data = (LINK::link_session_data_t*) &spi_resp.link_data;
+            LINK::link::GetLinkRtSessionData(link_data);
+
+            // pack midi data from USB device midi
+            uint8_t *midi_ptr = (uint8_t*) &spi_resp.usb_midi;
+            uint32_t *midi_len = (uint32_t*) &spi_resp.usb_midi_length;
+            *midi_len = tusb::Read(midi_ptr, P4_SPI_RESPONSE_USB_MIDI_DATA_SIZE);
+
+            // add some waveforms
+            for(int i=0; i<128; i++) {
+                spi_resp.input_waveform[i] = 128;
+                spi_resp.output_waveform[i] = 128;
+            }
+            for(int i=0; i<BUF_SZ * 2; i++) {
+                spi_resp.input_waveform[i] = (int)(finput2[i] * 127.0f + 128.f);
+                spi_resp.output_waveform[i] = (int)(fbuf2[i] * 127.0f + 128.f);
+            }
+
+            // and the led color
+            spi_resp.led_color = ledStatus;
+            spi_resp.frame_counter = framecounter;
+            spi_resp.magic = 0xDEADBEEF;
+            spi_resp.magic2 = 0xDEADBEEF;
+            spi_resp.reserved[0] = 0x55;
+            spi_resp.reserved[1] = 0xAA;
         }
 
-        // get normalized raw data from CODEC
-        DRIVERS::Codec::ReadBuffer(fbuf, BUF_SZ);
+        if (spi_resp_prepared) {
+            // update data from ADCs and GPIOs for real-time control
+            int spi_success = CTAG::CTRL::Control::Update(&spi_resp, &spi_req);
+            pd.midibytes = nullptr;
+            if (spi_success) {
+                spi_resp_prepared = false;
+                // make another request next time...
+                // check spi_req.magic?
+                pd.midibytes = (uint8_t*) &spi_req.synth_mididata;
+                pd.sequencer_tempo = spi_req.sequencer_tempo;
+            }
+        }
+
+        // get normalized raw data from CODEC 
+        DRIVERS::Codec::ReadBuffer(finput, BUF_SZ);
+        memcpy(finput2, finput, BUF_SZ * 2 * sizeof(float));
+        memcpy(fbuf, finput, BUF_SZ * 2 * sizeof(float));
 
         taskYIELD();
 
@@ -222,12 +272,13 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         }
         ledStatus = ledData;
 
+        memcpy(fbuf2, fbuf, BUF_SZ * 2 * sizeof(float));
 
         // write raw float data back to CODCE
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
         if (framecounter % 2900 == 0) {
-            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...]\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ]);
+            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo);
         }
 
         framecounter ++;

@@ -27,12 +27,8 @@ void RackHH1::Process(const PicoSeqRackProcessData &data) {
         return;
     }
 
-    // MK_BOOL_PAR_NOCV(_trig, hh1_trigger)
     bool _trig = midi_trig;
     if (_trig != trig_prev) {
-        if (_trig) {
-            printf("HH1\n");
-        }
         trig_prev = _trig;
     }
     midi_trig = false;

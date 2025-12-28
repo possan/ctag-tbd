@@ -179,22 +179,12 @@ uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
     return &rcvBuf0[2]; // skip watermark bytes
 }
 
-IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void **dst, uint32_t ledStatus) {
-    static_assert(STREAM_BUFFER_SIZE_ > N_CVS * sizeof(float) + N_TRIGS + 2 + N_MIDIBYTES, "Buffer too small for spi real-time stream data!");
-    // pack led status for current frame
+IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *sendbuffer, void *receivebuffer) {
     uint8_t* tx_buf = (uint8_t*) transaction[currentTransaction].tx_buffer;
-    uint32_t *led = (uint32_t*) &tx_buf[BUF_OFFSET_LED];
-    *led = ledStatus;
 
-    // pack ableton link data
-    LINK::link_session_data_t *link_data = (LINK::link_session_data_t*) &tx_buf[BUF_OFFSET_ABLETON_LINK_DATA];
-    LINK::link::GetLinkRtSessionData(link_data);
-
-    // pack midi data from USB device midi
-    uint32_t *midi_len = (uint32_t*) &tx_buf[BUF_OFFSET_MIDI_LENGTH]; // amount of midi bytes to package
-    uint8_t *midi_buf = (uint8_t*) &tx_buf[BUF_OFFSET_MIDI_DATA];
-    const uint32_t buf_size = STREAM_BUFFER_SIZE_ - BUF_OFFSET_MIDI_DATA; // 2 bytes for fingerprint, 4 bytes for led status, 4 bytes for midi length
-    *midi_len = tusb::Read(midi_buf, buf_size);
+    tx_buf[0] = 0xCA;
+    tx_buf[1] = 0xFE;
+    memcpy(tx_buf+2, sendbuffer, STREAM_BUFFER_SIZE_ - 2);
 
     // queue transaction of transceive
     esp_err_t ret;
@@ -218,17 +208,17 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void **dst
     // grab received buffer
     uint8_t* ret_buf = (uint8_t*)ret_trans->rx_buffer;
 
-    // check watermark for valid transaction, if not *dst remains unchanged on previous buffer
+        // check watermark for valid transaction, if not *dst remains unchanged on previous buffer
     if (ret_buf[0] != 0xCA || ret_buf[1] != 0xFE) {
-        // ESP_LOGE("rp2350_spi_stream", "Invalid transaction received (%d bits), expected CA FE, got [%02X %02X] %02X %02X %02X %02X",
-        //    ret_trans->length,
-        //    ret_buf[0], ret_buf[1], ret_buf[2], ret_buf[3], ret_buf[4], ret_buf[5]);
+        //     // ESP_LOGE("rp2350_spi_stream", "Invalid transaction received (%d bits), expected CA FE, got [%02X %02X] %02X %02X %02X %02X",
+        //     //    ret_trans->length,
+        //     //    ret_buf[0], ret_buf[1], ret_buf[2], ret_buf[3], ret_buf[4], ret_buf[5]);
         parseErrorCount++;
         return 0; // Invalid transaction
     }
 
     // data was valid, return new buffer pointer
-    *dst = &ret_buf[2];
+    memcpy(receivebuffer, ret_buf + 2, STREAM_BUFFER_SIZE_ - 2);
     transferSuccessCount++;
 
     /*

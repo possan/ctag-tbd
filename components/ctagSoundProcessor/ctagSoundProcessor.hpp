@@ -79,6 +79,7 @@ namespace CTAG {
             float *cv;
             uint8_t *trig;
             uint8_t *midibytes;
+            uint32_t sequencer_tempo; // bpm * 100
         };
 
         class ctagSoundProcessor {

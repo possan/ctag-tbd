@@ -60,6 +60,7 @@ namespace CTAG{
 #ifdef CONFIG_ABLETON_LINK
             if(ableton_link) return;
             ableton_link = new ableton::Link(120.0);
+            ableton_link->enableStartStopSync(true);
             ableton_link->enable(true);
 #ifdef CONFIG_ABLETON_LINK_DEBUG
             xTaskCreatePinnedToCore(link_print_task, "link_print_task", 4096, ableton_link, 1, NULL, 0);
