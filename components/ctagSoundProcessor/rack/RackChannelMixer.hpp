@@ -15,6 +15,7 @@ public:
 	float send1;
 	float send2;
 	int cc_base;
+	int track_length;
 
 private:
 	atomic<int16_t> mix_lev;

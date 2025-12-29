@@ -243,8 +243,6 @@ namespace CTAG {
 			atomic<int32_t> sum_lev;
 			atomic<int32_t> fx1_amount;
 			atomic<int32_t> fx2_amount;
-			atomic<int32_t> global_bpm_hi;
-			atomic<int32_t> global_bpm_lo;
 			// sectionHpp
         };
     }

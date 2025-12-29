@@ -22,6 +22,8 @@ namespace CTAG {
             uint32_t firstNonWtSlice;
             HELPERS::ctagSampleRom *sampleRom;
             uint32_t msPerBeat;
+            uint32_t tempo; // BPM * 100
+            uint8_t quantum;
         };
 
         struct PickSeqRackInitData {

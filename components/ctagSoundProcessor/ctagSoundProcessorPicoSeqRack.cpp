@@ -54,14 +54,15 @@ void ctagSoundProcessorPicoSeqRack::mixRenderOutputStereo(float *source, float l
 }
 
 void ctagSoundProcessorPicoSeqRack::preprocessFX1(const ProcessData& data) {
-    int global_bpm_lo2 = global_bpm_lo / 32;
-    int global_bpm_hi2 = global_bpm_hi / 32;
-    int scaledbpm = global_bpm_lo2 + (global_bpm_hi2 << 7);
+    // int global_bpm_lo2 = global_bpm_lo / 32;
+    // int global_bpm_hi2 = global_bpm_hi / 32;
+    // int scaledbpm = global_bpm_lo2 + (global_bpm_hi2 << 7);
+    int scaledbpm = data.sequencer_tempo / 10;
     if (scaledbpm < 32) scaledbpm = 32;
     if (scaledbpm != last_scaledbpm) {
         last_scaledbpm = scaledbpm;
-        printf("Scaled BPM set to %1.1f (lo %d, hi %d)\n",
-            (float)scaledbpm/10.0f, global_bpm_lo2, global_bpm_hi2);
+        printf("Scaled BPM set to %1.1f\n",
+            (float)scaledbpm/10.0f);
 		last_msPerBeat = 60000.0f / ((float)(scaledbpm) / 10.0f);
     }
 
@@ -288,6 +289,8 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 	struct PicoSeqRackProcessData idata;
     idata.firstNonWtSlice = sampleRom.GetFirstNonWaveTableSlice();
     idata.sampleRom = &sampleRom;
+    idata.tempo = data.sequencer_tempo;
+    idata.quantum = data.sequencer_quantum;
     idata.msPerBeat = last_msPerBeat;
 
     // process input first
@@ -382,6 +385,7 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     ch7.PreProcess(idata);
     if (ch7.enabled) {
         ch7_ro.enabled = ch7.enabled && ch7.device == 0;
+        ch7_ro.track_length = ch7.track_length;
         ch7_ro.Process(idata);
         if (ch7_ro.enabled) {
             mixRenderOutputMono(ch7_ro.s1_out, ch7.level, ch7.pan, ch7.send1, ch7.send2);
@@ -391,6 +395,7 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     ch8.PreProcess(idata);
     if (ch8.enabled) {
         ch8_ro.enabled = ch8.enabled && ch8.device == 0;
+        ch8_ro.track_length = ch8.track_length;
         ch8_ro.Process(idata);
         if (ch8_ro.enabled) {
             mixRenderOutputMono(ch8_ro.s1_out, ch8.level, ch8.pan, ch8.send1, ch8.send2);
@@ -442,6 +447,7 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     ch13.PreProcess(idata);
     if (ch13.enabled) {
         ch13_ro.enabled = ch13.enabled && ch13.device == 0;
+        ch13_ro.track_length = ch13.track_length;
         ch13_ro.Process(idata);
         if (ch13_ro.enabled) {
             mixRenderOutputMono(ch13_ro.s1_out, ch13.level, ch13.pan, ch13.send1, ch13.send2);
@@ -451,6 +457,7 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     ch14.PreProcess(idata);
     if (ch14.enabled) {
         ch14_ro.enabled = ch14.enabled && ch14.device == 0;
+        ch14_ro.track_length = ch14.track_length;
         ch14_ro.Process(idata);
         if (ch14_ro.enabled) {
             mixRenderOutputMono(ch14_ro.s1_out, ch14.level, ch14.pan, ch14.send1, ch14.send2);
@@ -971,14 +978,6 @@ void ctagSoundProcessorPicoSeqRack::knowYourself(){
     pMapPar.emplace("sum_lev", [&](const int val){ sum_lev = val;});
     pMapCC.emplace(CC_TO_MAP_KEY(13, 81), "sum_lev");
 
-
-
-
-    pMapPar.emplace("global_bpm_lo", [&](const int val){ global_bpm_lo = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 100), "global_bpm_lo");
-
-    pMapPar.emplace("global_bpm_hi", [&](const int val){ global_bpm_hi = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 101), "global_bpm_hi");
 
 
     isStereo = true;

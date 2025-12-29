@@ -16,9 +16,11 @@ void RackChannelMixer::Init(const PickSeqRackInitData *initdata) {
 	initdata->rack->registerParamAndCC(initdata, "pan", 2, [&](const int val){ mix_pan = val;});
 	initdata->rack->registerParamAndCC(initdata, "fx1", 3, [&](const int val){ mix_fx1 = val;});
 	initdata->rack->registerParamAndCC(initdata, "fx2", 4, [&](const int val){ mix_fx2 = val;});
+	initdata->rack->registerParamAndCC(initdata, "tracklength", 5, [&](const int val){ track_length = val;});
 
 	this->enabled = true;
 	this->device = -1;
+	this->track_length = 16;
 }
 
 void RackChannelMixer::PreProcess(const PicoSeqRackProcessData &data) {

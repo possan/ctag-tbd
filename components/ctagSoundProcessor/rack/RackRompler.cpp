@@ -68,7 +68,7 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     CONSTRAIN(iS1Slice, 0, 31)
     iS1Slice = iS1Bank * 32 + iS1Slice + firstNonWtSlice;
     rompler.params.slice = iS1Slice;
-   
+
     MK_FLT_PAR_ABS_NOCV(fS1Speed, s1_speed, 4095.f, 2.f)
     // fS1Speed -= 2.0f;
     CONSTRAIN(fS1Speed, 0.f, 2.f)
@@ -135,7 +135,7 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
             rompler.params.playbackSpeed = (float)sliceLengthMs / (float)stepsLengthMs;
         }
 
-        printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f, slicelen=%ld,msperbeat=%ld,steps=%d,slicelenms=%ld\n",
+        printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f, slicelen=%ld,msperbeat=%ld,steps=%d,slicelenms=%ld, tempo=%ld,tracklen=%d\n",
             rompler.params.slice,
             rompler.params.playbackSpeed,
             rompler.params.pitch,
@@ -144,7 +144,9 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
             sliceLength,
             data.msPerBeat,
             iTSSteps,
-            sliceLengthMs
+            sliceLengthMs,
+            data.tempo,
+            track_length
         );
 
         // printf("S1 slice=%ld ps=%1.1f pitch=%1.1f %1.1f %1.1f\n",
