@@ -830,7 +830,7 @@ void ctagSoundProcessorPicoSeqRack::handleMidiAftertouch(const uint8_t channel, 
 void ctagSoundProcessorPicoSeqRack::handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value) {
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: CC %d, %d, %d", channel, control, value);
 
-    int cv_value = value * 4096 / 128;
+    int cv_value = ((int)value * 4096) / 128;
     int key = CC_TO_MAP_KEY(channel, control);
     auto it = pMapCC.find(key);
     if (it != pMapCC.end()) {

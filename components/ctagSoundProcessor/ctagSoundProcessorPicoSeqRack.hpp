@@ -71,7 +71,7 @@
     int outname = inname * scale / 4096;
 
 #define MK_INT_PAR_NOCV(outname, inname, scale) \
-    int outname = inname;
+    int outname = inname * scale / 4096;
 
 #define MK_FLT_PAR_ABS_MIN_MAX_NOCV(outname, inname, norm, out_min, out_max) \
     float outname = inname/norm * (out_max-out_min)+out_min;

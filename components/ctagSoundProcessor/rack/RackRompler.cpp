@@ -29,7 +29,6 @@ void RackRompler::Init(const PickSeqRackInitData *initdata) {
 
     initdata->rack->registerParamAndCC(initdata, "tsmode", 24, [&](const int val){ s1_tsmode = val;});
     initdata->rack->registerParamAndCC(initdata, "tsamount", 25, [&](const int val){ s1_tsamount = val;});
-    initdata->rack->registerParamAndCC(initdata, "tssteps", 26, [&](const int val){ s1_tssteps = val;});
 
     s1_lp = 0;
     s1_lp_pp = 0;
@@ -58,8 +57,7 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     rompler.params.timeStretchEnable = bTSMode > 0;
 
     // timestretch target length
-    MK_INT_PAR_ABS_NOCV(iTSSteps, s1_tssteps, 127.f)
-    CONSTRAIN(iTSSteps, 1, 127)
+    MK_INT_PAR_NOCV(ts_track_length, track_length, 128);
 
     uint32_t firstNonWtSlice = data.firstNonWtSlice; // sampleRom.GetFirstNonWaveTableSlice();
     MK_INT_PAR_ABS_NOCV(iS1Bank, s1_bank, 32.f)
@@ -121,8 +119,6 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     // MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
     rompler.params.gate = midi_trig;
     if (midi_trig && !trig_prev) {
-
-
         uint32_t sliceLength = 0;
         uint32_t stepsLengthMs = 0;
         uint32_t sliceLengthMs = 0;
@@ -130,7 +126,7 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
         rompler.params.playbackSpeed = 1.0;
         if (data.sampleRom->HasSlice(rompler.params.slice)) {
             sliceLength = data.sampleRom->GetSliceSize(rompler.params.slice);
-            stepsLengthMs = iTSSteps * data.msPerBeat / 4;
+            stepsLengthMs = ts_track_length * data.msPerBeat / 4;
             sliceLengthMs = (sliceLength * 1000) / 44100;
             rompler.params.playbackSpeed = (float)sliceLengthMs / (float)stepsLengthMs;
         }
@@ -143,10 +139,10 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
             rompler.params.timeStretchWindowSize,
             sliceLength,
             data.msPerBeat,
-            iTSSteps,
+            ts_track_length,
             sliceLengthMs,
             data.tempo,
-            track_length
+            ts_track_length
         );
 
         // printf("S1 slice=%ld ps=%1.1f pitch=%1.1f %1.1f %1.1f\n",
