@@ -117,59 +117,80 @@ namespace CTAG {
 			RackChannelMixer ch1;
 			RackDBD ch1_db;
 			RackABD ch1_ab;
+			uint32_t ch1_render_time;
 
 			RackChannelMixer ch2;
 			RackFMB ch2_fmb1;
 			RackFMB ch2_fmb2;
+			uint32_t ch2_render_time;
 
 			RackChannelMixer ch3;
 			RackDSD ch3_ds;
 			RackASD ch3_as;
+			uint32_t ch3_render_time;
 
 			RackChannelMixer ch4;
 			RackHH1 ch4_hh1;
 			RackHH2 ch4_hh2;
+			uint32_t ch4_render_time;
 
 			RackChannelMixer ch5;
 			RackRimshot ch5_rs;
+			uint32_t ch5_render_time;
 
 			RackChannelMixer ch6;
 			RackClap ch6_cl;
+			uint32_t ch6_render_time;
 
 			RackRompler ch7_ro;
 			RackChannelMixer ch7;
+			uint32_t ch7_render_time;
 
 			RackRompler ch8_ro;
 			RackChannelMixer ch8;
+			uint32_t ch8_render_time;
 
 			RackTBD03 ch9_td3;
 			RackChannelMixer ch9;
+			uint32_t ch9_render_time;
 
 			RackTBD03 ch10_td3;
 			RackChannelMixer ch10;
+			uint32_t ch10_render_time;
 
 			RackMO ch11_mo;
 			RackChannelMixer ch11;
+			uint32_t ch11_render_time;
 
 			RackWTOsc ch12_wtosc;
 			RackMO ch12_mo;
 			RackChannelMixer ch12;
+			uint32_t ch12_render_time;
 
 			RackChannelMixer ch13;
 			RackRompler ch13_ro;
+			uint32_t ch13_render_time;
 
 			RackChannelMixer ch14;
 			RackRompler ch14_ro;
+			uint32_t ch14_render_time;
 
 			RackChannelMixer ch15;
 			RackPolyPad ch15_pp;
+			uint32_t ch15_render_time;
 
 			RackInput ch16_in;
 			RackChannelMixer ch16;
+			uint32_t ch16_render_time;
 
 			RackFxReverb fx_reverb;
+			uint32_t fx_reverb_render_time;
+
 			RackFxDelay fx_delay;
+			uint32_t fx_delay_render_time;
+
 			RackFxMaster fx_master;
+			uint32_t fx_master_render_time;
 
             // compressor
             chunkware_simple::SimpleComp sumCompressor;

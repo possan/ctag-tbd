@@ -1,6 +1,9 @@
 #include "ctagSoundProcessorPicoSeqRack.hpp"
 #include "braids/quantizer_scales.h"
 #include "esp_system.h"
+#include "esp_log.h"
+#include "esp_cpu.h"
+#include "esp_timer.h"
 // #include "freertos/FreeRTOS.h"
 
 using namespace CTAG::SP;
@@ -295,6 +298,8 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     // process input first
 
+
+    int16_t T2 = esp_timer_get_time();
     // ch16.PreProcess(idata);
     // if (ch16.enabled) {
     //     ch16_in.enabled = ch16.enabled && ch16.device == 0;
@@ -303,6 +308,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     //         mixRenderOutputStereo(data.buf, ch16.level, ch16.pan, ch16.send1, ch16.send2);
     //     }
     // }
+
+    int16_t T = esp_timer_get_time();
+    ch16_render_time = T2 - T;
 
     ch1.PreProcess(idata);
     if (ch1.enabled) {
@@ -319,6 +327,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
+    T2 = esp_timer_get_time();
+    ch1_render_time = T2 - T;
+
     ch2.PreProcess(idata);
     if (ch2.enabled) {
         ch2_fmb1.enabled = ch2.enabled && ch2.device == 0;
@@ -333,6 +344,10 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
             mixRenderOutputMono(ch2_fmb2.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
         }
     }
+
+    T = esp_timer_get_time();
+    ch2_render_time = T - T2;
+
 
     ch3.PreProcess(idata);
     if (ch3.enabled) {
@@ -349,6 +364,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
+    T2 = esp_timer_get_time();
+    ch3_render_time = T2 - T;
+
     ch4.PreProcess(idata);
     if (ch4.enabled) {
         ch4_hh1.enabled = ch4.enabled && ch4.device == 0;
@@ -364,6 +382,10 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
+    T = esp_timer_get_time();
+    ch4_render_time = T - T2;
+
+
     ch5.PreProcess(idata);
     if (ch5.enabled) {
         ch5_rs.enabled = ch5.enabled && ch5.device == 0;
@@ -373,6 +395,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
+    T2 = esp_timer_get_time();
+    ch5_render_time = T2 - T;
+
     ch6.PreProcess(idata);
     if (ch6.enabled) {
         ch6_cl.enabled = ch6.enabled && ch6.device == 0;
@@ -381,6 +406,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
             mixRenderOutputMono(ch6_cl.out, ch6.level, ch6.pan, ch6.send1, ch6.send2);
         }
     }
+
+    T = esp_timer_get_time();
+    ch6_render_time = T - T2;
 
     ch7.PreProcess(idata);
     if (ch7.enabled) {
@@ -392,6 +420,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
+    T2 = esp_timer_get_time();
+    ch7_render_time = T2 - T;
+
     ch8.PreProcess(idata);
     if (ch8.enabled) {
         ch8_ro.enabled = ch8.enabled && ch8.device == 0;
@@ -402,23 +433,34 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
+    T = esp_timer_get_time();
+    ch8_render_time = T - T2;
+
+
+
     ch9.PreProcess(idata);
-    if (ch9.enabled) {
-        ch9_td3.enabled = ch9.enabled && ch9.device == 0;
-        ch9_td3.Process(idata);
-        if (ch9_td3.enabled) {
-            mixRenderOutputMono(ch9_td3.td3_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
-        }
-    }
+    // if (ch9.enabled) {
+    //     ch9_td3.enabled = ch9.enabled && ch9.device == 0;
+    //     ch9_td3.Process(idata);
+    //     if (ch9_td3.enabled) {
+    //         mixRenderOutputMono(ch9_td3.td3_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
+    //     }
+    // }
+
+    T2 = esp_timer_get_time();
+    ch9_render_time = T2 - T;
 
     ch10.PreProcess(idata);
-    if (ch10.enabled) {
-        ch10_td3.enabled = ch10.enabled && ch10.device == 0;
-        ch10_td3.Process(idata);
-        if (ch10_td3.enabled) {
-            mixRenderOutputMono(ch10_td3.td3_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
-        }
-    }
+    // if (ch10.enabled) {
+    //     ch10_td3.enabled = ch10.enabled && ch10.device == 0;
+    //     ch10_td3.Process(idata);
+    //     if (ch10_td3.enabled) {
+    //         mixRenderOutputMono(ch10_td3.td3_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
+    //     }
+    // }
+
+    T = esp_timer_get_time();
+    ch10_render_time = T - T2;
 
     ch11.PreProcess(idata);
     if (ch11.enabled) {
@@ -428,6 +470,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
             mixRenderOutputMono(ch11_mo.mo_out, ch11.level, ch11.pan, ch11.send1, ch11.send2);
         }
     }
+
+    T2 = esp_timer_get_time();
+    ch11_render_time = T2 - T;
 
     ch12.PreProcess(idata);
     if (ch12.enabled) {
@@ -444,6 +489,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
+    T = esp_timer_get_time();
+    ch12_render_time = T - T2;
+
     ch13.PreProcess(idata);
     if (ch13.enabled) {
         ch13_ro.enabled = ch13.enabled && ch13.device == 0;
@@ -453,6 +501,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
             mixRenderOutputMono(ch13_ro.s1_out, ch13.level, ch13.pan, ch13.send1, ch13.send2);
         }
     }
+
+    T2 = esp_timer_get_time();
+    ch13_render_time = T2 - T;
 
     ch14.PreProcess(idata);
     if (ch14.enabled) {
@@ -464,6 +515,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
+    T = esp_timer_get_time();
+    ch14_render_time = T - T2;
+
     ch15.PreProcess(idata);
     if (ch15.enabled) {
         ch15_pp.enabled = ch15.enabled && ch15.device == 0;
@@ -473,16 +527,32 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         }
     }
 
+    T2 = esp_timer_get_time();
+    ch15_render_time = T2 - T;
+
     // Process effects
     preprocessFX1(data); // delay
+
+    T = esp_timer_get_time(); 
+    fx_delay_render_time = T - T2; 
+    
     preprocessFX2(data); // reverb
+
+    T2 = esp_timer_get_time();
+    fx_reverb_render_time = T2 - T;
+
     preprocessMaster(data); // sum compressor
+
+    T = esp_timer_get_time(); 
+    fx_master_render_time = T - T2;
 
     MK_BOOL_PAR_NOCV(bSumMute, sum_mute)
     if (bSumMute){
         memset(data.buf, 0, bufSz * 2 * sizeof(float));
         return;
     }
+
+    T = esp_timer_get_time();
 
     renderMasterOutput(data);
 
@@ -495,6 +565,15 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         std::fill_n(delayBuffer_l, delayBufferSizeMax, 0.f);
         std::fill_n(delayBuffer_r, delayBufferSizeMax, 0.f);
         std::fill_n(reverbBuffer, 32768, 0.f);
+    }
+
+    if (framecounter % 2000 == 0) {
+        printf("PicoSeqRack CPU times (us): Ch1:%d Ch2:%d Ch3:%d Ch4:%d Ch5:%d Ch6:%d Ch7:%d Ch8:%d Ch9:%d Ch10:%d Ch11:%d Ch12:%d Ch13:%d Ch14:%d Ch15:%d Ch16:%d FX1:%d FX2:%d Master:%d\n",
+        (int)ch1_render_time, (int)ch2_render_time, (int)ch3_render_time, (int)ch4_render_time,
+        (int)ch5_render_time, (int)ch6_render_time, (int)ch7_render_time, (int)ch8_render_time,
+        (int)ch9_render_time, (int)ch10_render_time, (int)ch11_render_time, (int)ch12_render_time,
+        (int)ch13_render_time, (int)ch14_render_time, (int)ch15_render_time, (int)ch16_render_time,
+        (int)fx_delay_render_time, (int)fx_reverb_render_time, (int)fx_master_render_time);
     }
 }
 
@@ -736,94 +815,113 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch1_"; ch1.Init(&dri);
     dri.prefix = "ch1_db_"; ch1_db.Init(&dri);
     dri.prefix = "ch1_ab_"; ch1_ab.Init(&dri);
+    ch1_render_time = 0;
 
     dri.midi_channel = 9;
     dri.cc_base = 20;
     dri.prefix = "ch2_"; ch2.Init(&dri);
     dri.prefix = "ch2_fmb1_"; ch2_fmb1.Init(&dri);
     dri.prefix = "ch2_fbm2_"; ch2_fmb2.Init(&dri);
+    ch2_render_time = 0;
 
     dri.midi_channel = 9;
     dri.cc_base = 40;
     dri.prefix = "ch3_"; ch3.Init(&dri);
     dri.prefix = "ch3_ds_"; ch3_ds.Init(&dri);
     dri.prefix = "ch3_as_"; ch3_as.Init(&dri);
+    ch3_render_time = 0;
 
     dri.midi_channel = 9;
     dri.cc_base = 60;
     dri.prefix = "ch4_"; ch4.Init(&dri);
     dri.prefix = "ch4_hh1_"; ch4_hh1.Init(&dri);
     dri.prefix = "ch4_hh2_"; ch4_hh2.Init(&dri);
+    ch4_render_time = 0;
 
     dri.midi_channel = 9;
     dri.cc_base = 80;
     dri.prefix = "ch5_"; ch5.Init(&dri);
     dri.prefix = "ch5_rs_"; ch5_rs.Init(&dri);
+    ch5_render_time = 0;
 
     dri.midi_channel = 9;
     dri.cc_base = 100;
     dri.prefix = "ch6_"; ch6.Init(&dri);
     dri.prefix = "ch6_cl_"; ch6_cl.Init(&dri);
+    ch6_render_time = 0;
 
     dri.midi_channel = 11;
     dri.cc_base = 0;
     dri.prefix = "ch7_"; ch7.Init(&dri);
     dri.prefix = "ch7_smp_"; ch7_ro.Init(&dri);
+    ch7_render_time = 0;
 
     dri.midi_channel = 12;
     dri.cc_base = 0;
     dri.prefix = "ch8_"; ch8.Init(&dri);
     dri.prefix = "ch8_smp_"; ch8_ro.Init(&dri);
+    ch8_render_time = 0;
 
     dri.midi_channel = 0;
     dri.cc_base = 0;
     dri.prefix = "ch9_"; ch9.Init(&dri);
     dri.prefix = "ch9_tbd03_"; ch9_td3.Init(&dri);
+    ch9_render_time = 0;
 
     dri.midi_channel = 1;
     dri.cc_base = 0;
     dri.prefix = "ch10_"; ch10.Init(&dri);
     dri.prefix = "ch10_tbd03_"; ch10_td3.Init(&dri);
+    ch10_render_time = 0;
 
     dri.midi_channel = 2;
     dri.cc_base = 0;
     dri.prefix = "ch11_"; ch11.Init(&dri);
     dri.prefix = "ch11_mo_"; ch11_mo.Init(&dri);
+    ch11_render_time = 0;
 
     dri.midi_channel = 3;
     dri.cc_base = 0;
     dri.prefix = "ch12_"; ch12.Init(&dri);
     dri.prefix = "ch12_wtosc_"; ch12_wtosc.Init(&dri);
     dri.prefix = "ch12_mo_"; ch12_mo.Init(&dri);
+    ch12_render_time = 0;
 
     dri.midi_channel = 4;
     dri.cc_base = 0;
     dri.prefix = "ch13_"; ch13.Init(&dri);
     dri.prefix = "ch13_smp_"; ch13_ro.Init(&dri);
+    ch13_render_time = 0;
 
     dri.midi_channel = 5;
     dri.cc_base = 0;
     dri.prefix = "ch14_"; ch14.Init(&dri);
     dri.prefix = "ch14_smp_"; ch14_ro.Init(&dri);
+    ch14_render_time = 0;
 
     dri.midi_channel = 6;
     dri.cc_base = 0;
     dri.prefix = "ch15_"; ch15.Init(&dri);
     dri.prefix = "ch15_pp_"; ch15_pp.Init(&dri);
+    ch15_render_time = 0;
 
     dri.midi_channel = 7;
     dri.cc_base = 0;
     dri.prefix = "ch16_"; ch16.Init(&dri);
     dri.prefix = "ch16_in_"; ch16_in.Init(&dri); // audio input, no prefix
+    ch16_render_time = 0;
 
     dri.prefix = "fx1_";
     fx_delay.Init(&dri);
+    fx_delay_render_time = 0;
 
     dri.prefix = "fx2_";
     fx_reverb.Init(&dri);
+    fx_reverb_render_time = 0;
 
     dri.prefix = "mmm_";
     fx_master.Init(&dri);
+    fx_master_render_time = 0;
 
 
     // print out some stats.
