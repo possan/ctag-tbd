@@ -63,6 +63,8 @@ namespace CTAG {
 }
 
 volatile uint32_t SoundProcessorManager::slowProcessCounter = 0;
+volatile uint32_t SoundProcessorManager::sentSynthMidiBytes = 0;
+volatile uint32_t SoundProcessorManager::receivedUsbDeviceMidiBytes = 0;
 
 // audio real-time task
 void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
@@ -89,6 +91,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     pd.trig = nullptr;
     pd.buf = fbuf;
     pd.sequencer_tempo = 12000;
+    pd.midi_bytes_length = 0;
 
     // generate linear ramp ]0,1[ squared
     for (uint32_t i = 0; i < BUF_SZ; i++) {
@@ -109,9 +112,14 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
             LINK::link::GetLinkRtSessionData(link_data);
 
             // pack midi data from USB device midi
-            uint8_t *midi_ptr = (uint8_t*) &spi_resp.usb_midi;
-            uint32_t *midi_len = (uint32_t*) &spi_resp.usb_midi_length;
+            uint8_t *midi_ptr = (uint8_t*) &spi_resp.usb_device_midi;
+            uint32_t *midi_len = (uint32_t*) &spi_resp.usb_device_midi_length;
             *midi_len = tusb::Read(midi_ptr, P4_SPI_RESPONSE_USB_MIDI_DATA_SIZE);
+            if (*midi_len > 0) {
+                printf("Received %d bytes of USB device midi data: %02X %02X %02X %02X...\n",
+                    (int)(*midi_len), midi_ptr[0], midi_ptr[1], midi_ptr[2], midi_ptr[3]);
+            }
+            receivedUsbDeviceMidiBytes += *midi_len;
 
             // add some waveforms
             for(int i=0; i<128; i++) {
@@ -135,13 +143,20 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         if (spi_resp_prepared) {
             // update data from ADCs and GPIOs for real-time control
             int spi_success = CTAG::CTRL::Control::Update(&spi_resp, &spi_req);
-            pd.midibytes = nullptr;
-            if (spi_success) {
+            if (spi_success > 0) {
                 spi_resp_prepared = false;
                 // make another request next time...
                 // check spi_req.magic?
-                pd.midibytes = (uint8_t*) &spi_req.synth_mididata;
+                memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
+                memcpy(&pd.midi_bytes, (uint8_t*) &spi_req.synth_midi, spi_req.synth_midi_length);
+
+                if (spi_req.synth_midi_length > 1) {
+                    printf("Received %d bytes of synth midi data: %02X %02X %02X %02X %02X %02X %02X %02X...\n",
+                        (int)(spi_req.synth_midi_length), spi_req.synth_midi[0], spi_req.synth_midi[1], spi_req.synth_midi[2], spi_req.synth_midi[3], spi_req.synth_midi[4], spi_req.synth_midi[5], spi_req.synth_midi[6], spi_req.synth_midi[7]);
+                }
+                pd.midi_bytes_length = spi_req.synth_midi_length;
                 pd.sequencer_tempo = spi_req.sequencer_tempo;
+                sentSynthMidiBytes += spi_req.synth_midi_length;
             }
         }
 
@@ -187,6 +202,10 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                 }
                 if (sp[1] != nullptr) sp[1]->Process(pd); // 0 is not a stereo processor
             }
+
+            memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
+            pd.midi_bytes_length = 0;
+
             xSemaphoreGive(processMutex);
         } else {
             // mute audio
@@ -278,7 +297,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
         if (framecounter % 2900 == 0) {
-            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo);
+            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes);
         }
 
         framecounter ++;

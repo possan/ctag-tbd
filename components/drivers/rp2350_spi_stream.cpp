@@ -41,11 +41,6 @@ respective component folders / files if different from this license.
 #define GPIO_SCLK GPIO_NUM_30
 #define GPIO_CS GPIO_NUM_28
 
-#define BUF_OFFSET_LED 2 // two bytes for led status
-#define BUF_OFFSET_ABLETON_LINK_DATA (BUF_OFFSET_LED + 4) // 4 bytes for led data
-#define BUF_OFFSET_MIDI_LENGTH (BUF_OFFSET_ABLETON_LINK_DATA + sizeof(CTAG::LINK::link_session_data_t)) //  bytes for link data
-#define BUF_OFFSET_MIDI_DATA (BUF_OFFSET_MIDI_LENGTH + 4) // 4 bytes for midi length
-
 DRAM_ATTR spi_slave_transaction_t CTAG::DRIVERS::rp2350_spi_stream::transaction[3];
 DRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::currentTransaction;
 DMA_ATTR static uint8_t *rcvBuf0;
@@ -169,13 +164,6 @@ uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
 
     currentTransaction = 0;
 
-    // check size of remaining dynamic midi buffer
-    assert(BUF_OFFSET_MIDI_DATA <= STREAM_BUFFER_SIZE_ / 2); // at least half of buffer for midi data
-    /*
-    debug_queue = xQueueCreate(20, sizeof(int));
-    xTaskCreatePinnedToCore(debug_thread, "debug_thread", 2048, NULL, 5, NULL, 0);
-    */
-
     return &rcvBuf0[2]; // skip watermark bytes
 }
 
@@ -184,7 +172,7 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *send
 
     tx_buf[0] = 0xCA;
     tx_buf[1] = 0xFE;
-    memcpy(tx_buf+2, sendbuffer, STREAM_BUFFER_SIZE_ - 2);
+    memcpy(tx_buf + 2, sendbuffer, STREAM_BUFFER_SIZE_ - 2);
 
     // queue transaction of transceive
     esp_err_t ret;
@@ -208,17 +196,17 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *send
     // grab received buffer
     uint8_t* ret_buf = (uint8_t*)ret_trans->rx_buffer;
 
-        // check watermark for valid transaction, if not *dst remains unchanged on previous buffer
+    // check watermark for valid transaction, if not *dst remains unchanged on previous buffer
     if (ret_buf[0] != 0xCA || ret_buf[1] != 0xFE) {
-        //     // ESP_LOGE("rp2350_spi_stream", "Invalid transaction received (%d bits), expected CA FE, got [%02X %02X] %02X %02X %02X %02X",
-        //     //    ret_trans->length,
-        //     //    ret_buf[0], ret_buf[1], ret_buf[2], ret_buf[3], ret_buf[4], ret_buf[5]);
+        // ESP_LOGE("rp2350_spi_stream", "Invalid transaction received (%d bits), expected CA FE, got [%02X %02X] %02X %02X %02X %02X",
+        //     ret_trans->length, ret_buf[0], ret_buf[1], ret_buf[2], ret_buf[3], ret_buf[4], ret_buf[5]);
         parseErrorCount++;
         return 0; // Invalid transaction
     }
 
     // data was valid, return new buffer pointer
     memcpy(receivebuffer, ret_buf + 2, STREAM_BUFFER_SIZE_ - 2);
+    memset(ret_buf, 0, STREAM_BUFFER_SIZE_); // clear received buffer after processing
     transferSuccessCount++;
 
     /*

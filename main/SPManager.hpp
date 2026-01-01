@@ -120,6 +120,8 @@ namespace CTAG {
             static atomic<uint32_t> ch0_outputSoftClip;
             static atomic<uint32_t> ch1_outputSoftClip;
             static volatile uint32_t slowProcessCounter;
+            static volatile uint32_t sentSynthMidiBytes;
+            static volatile uint32_t receivedUsbDeviceMidiBytes;
         };
     }
 }

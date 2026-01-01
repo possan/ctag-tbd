@@ -78,7 +78,8 @@ namespace CTAG {
             void *controlData; // use this for plugin specific control data, points at beginning of spi transaction buffer
             float *cv;
             uint8_t *trig;
-            uint8_t *midibytes;
+            uint8_t midi_bytes[400];
+            uint32_t midi_bytes_length;
             uint32_t sequencer_tempo; // bpm * 100
             uint8_t sequencer_quantum;
         };

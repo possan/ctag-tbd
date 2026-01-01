@@ -283,7 +283,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     framecounter ++;
 
     // TODO: process midi in data.midibytes here
-    parseIncomingMidiMessages(data.midibytes, N_MIDIBYTES);
+    if (data.midi_bytes_length > 0) {
+        parseIncomingMidiMessages(data.midi_bytes, data.midi_bytes_length);
+    }
 
     std::fill_n(combined_out, bufSz * 2, 0.f);
     std::fill_n(send1_out, bufSz * 2, 0.f);
@@ -1143,9 +1145,9 @@ void ctagSoundProcessorPicoSeqRack::knowYourself(){
 
 
 void ctagSoundProcessorPicoSeqRack::parseIncomingMidiMessages(const uint8_t *buf, const size_t len) {
-    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "parseIncomingMidiMessages: 0x%x, %d", buf, len);
-    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "parseIncomingMidiMessages: %02X %02X %02X %02X %02X %02X %02X %02X %02X (%d)",
-    //     buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7], buf[8], len);
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack",
+    //     "parseIncomingMidiMessages: %02X %02X %02X %02X %02X %02X %02X %02X %02X (%d)",
+    //         buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7], buf[8], len);
 
     if (buf == nullptr || len < 1)  {
         return;
@@ -1154,7 +1156,7 @@ void ctagSoundProcessorPicoSeqRack::parseIncomingMidiMessages(const uint8_t *buf
     int left = len;
     int o = 0;
 
-    while(left > 3) {
+    while(left > 0) {
         uint8_t b0 = buf[o++];
         left --;
 
@@ -1184,7 +1186,12 @@ void ctagSoundProcessorPicoSeqRack::parseIncomingMidiMessages(const uint8_t *buf
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-                handleMidiNoteOn(channel, b1, b2);
+
+                if (b2 > 0) {
+                    handleMidiNoteOn(channel, b1, b2);
+                } else {
+                    handleMidiNoteOff(channel, b1, b2);
+                }
                 break;
             }
             case 0xA0: // aftertouch
