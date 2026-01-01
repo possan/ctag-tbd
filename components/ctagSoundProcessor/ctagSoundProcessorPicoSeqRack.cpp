@@ -441,25 +441,25 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
 
     ch9.PreProcess(idata);
-    // if (ch9.enabled) {
-    //     ch9_td3.enabled = ch9.enabled && ch9.device == 0;
-    //     ch9_td3.Process(idata);
-    //     if (ch9_td3.enabled) {
-    //         mixRenderOutputMono(ch9_td3.td3_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
-    //     }
-    // }
+    if (ch9.enabled) {
+        ch9_td3.enabled = ch9.enabled && ch9.device == 0;
+        ch9_td3.Process(idata);
+        if (ch9_td3.enabled) {
+            mixRenderOutputMono(ch9_td3.td3_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
+        }
+    }
 
     T2 = esp_timer_get_time();
     ch9_render_time = T2 - T;
 
     ch10.PreProcess(idata);
-    // if (ch10.enabled) {
-    //     ch10_td3.enabled = ch10.enabled && ch10.device == 0;
-    //     ch10_td3.Process(idata);
-    //     if (ch10_td3.enabled) {
-    //         mixRenderOutputMono(ch10_td3.td3_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
-    //     }
-    // }
+    if (ch10.enabled) {
+        ch10_td3.enabled = ch10.enabled && ch10.device == 0;
+        ch10_td3.Process(idata);
+        if (ch10_td3.enabled) {
+            mixRenderOutputMono(ch10_td3.td3_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
+        }
+    }
 
     T = esp_timer_get_time();
     ch10_render_time = T - T2;
