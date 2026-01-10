@@ -115,10 +115,10 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
             uint8_t *midi_ptr = (uint8_t*) &spi_resp.usb_device_midi;
             uint32_t *midi_len = (uint32_t*) &spi_resp.usb_device_midi_length;
             *midi_len = tusb::Read(midi_ptr, P4_SPI_RESPONSE_USB_MIDI_DATA_SIZE);
-            if (*midi_len > 0) {
-                printf("Received %d bytes of USB device midi data: %02X %02X %02X %02X...\n",
-                    (int)(*midi_len), midi_ptr[0], midi_ptr[1], midi_ptr[2], midi_ptr[3]);
-            }
+            // if (*midi_len > 0) {
+            //     printf("Received %d bytes of USB device midi data: %02X %02X %02X %02X...\n",
+            //         (int)(*midi_len), midi_ptr[0], midi_ptr[1], midi_ptr[2], midi_ptr[3]);
+            // }
             receivedUsbDeviceMidiBytes += *midi_len;
 
             // add some waveforms
@@ -156,10 +156,10 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                     memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
                     memcpy(&pd.midi_bytes, (uint8_t*) &spi_req_ptr->synth_midi, spi_req_ptr->synth_midi_length);
 
-                    if (spi_req_ptr->synth_midi_length > 1) {
-                        printf("Received %d bytes of synth midi data: %02X %02X %02X %02X %02X %02X %02X %02X...\n",
-                            (int)(spi_req_ptr->synth_midi_length), spi_req_ptr->synth_midi[0], spi_req_ptr->synth_midi[1], spi_req_ptr->synth_midi[2], spi_req_ptr->synth_midi[3], spi_req_ptr->synth_midi[4], spi_req_ptr->synth_midi[5], spi_req_ptr->synth_midi[6], spi_req_ptr->synth_midi[7]);
-                    }
+                    // if (spi_req_ptr->synth_midi_length > 1) {
+                    //     printf("Received %d bytes of synth midi data: %02X %02X %02X %02X %02X %02X %02X %02X...\n",
+                    //         (int)(spi_req_ptr->synth_midi_length), spi_req_ptr->synth_midi[0], spi_req_ptr->synth_midi[1], spi_req_ptr->synth_midi[2], spi_req_ptr->synth_midi[3], spi_req_ptr->synth_midi[4], spi_req_ptr->synth_midi[5], spi_req_ptr->synth_midi[6], spi_req_ptr->synth_midi[7]);
+                    // }
                     pd.midi_bytes_length = spi_req_ptr->synth_midi_length;
                     // printf("SPI Request tempo %ld\n", spi_req.sequencer_tempo);
                     pd.sequencer_tempo = spi_req_ptr->sequencer_tempo;
