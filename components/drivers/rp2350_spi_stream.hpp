@@ -34,7 +34,7 @@ namespace CTAG {
             // Initialize the SPI stream, returns pointer to the buffer
             static uint8_t* Init();
             // returns effective length of buffer, first arg is pointer to buffer, second arg is led status, which is sent to subsystem
-            static uint32_t GetCurrentBuffer(void *sendbuffer, void *receivebuffer);
+            static uint32_t GetCurrentBuffer(void *sendbuffer, void **receivebuffer);
             static uint32_t GetBufferSize() {return STREAM_BUFFER_SIZE_ - 2;}
             static uint32_t queueErrorCount;
             static uint32_t transferErrorCount;

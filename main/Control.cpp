@@ -26,7 +26,7 @@ respective component folders / files if different from this license.
 uint8_t *CTAG::CTRL::Control::buf_ptr = nullptr; // buffer pointer for current cv + trig data
 uint16_t updatecounter = 0;
 
-IRAM_ATTR int CTAG::CTRL::Control::Update(void *sendbuffer, void *receivebuffer) {
+IRAM_ATTR int CTAG::CTRL::Control::Update(void *sendbuffer, void **receivebuffer) {
     return CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(sendbuffer, receivebuffer);
 }
 

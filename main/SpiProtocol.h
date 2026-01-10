@@ -15,7 +15,9 @@ struct p4_spi_request {
     // offset 328
     uint32_t sequencer_tempo; // bpm * 100
     // offset 332
-    uint8_t reserved[690];
+    uint32_t magic2;
+    // offset 336
+    uint8_t reserved[686];
     // offset 1022
 };
 

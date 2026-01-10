@@ -167,7 +167,7 @@ uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
     return &rcvBuf0[2]; // skip watermark bytes
 }
 
-IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *sendbuffer, void *receivebuffer) {
+IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *sendbuffer, void **receivebuffer) {
     uint8_t* tx_buf = (uint8_t*) transaction[currentTransaction].tx_buffer;
 
     tx_buf[0] = 0xCA;
@@ -210,8 +210,9 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *send
     }
 
     // data was valid, return new buffer pointer
-    memcpy(receivebuffer, ret_buf + 2, STREAM_BUFFER_SIZE_ - 2);
-    memset(ret_buf, 0, STREAM_BUFFER_SIZE_); // clear received buffer after processing
+    *receivebuffer = ret_buf + 2;
+    // memcpy(receivebuffer, ret_buf + 2, STREAM_BUFFER_SIZE_ - 2);
+    // memset(ret_buf, 0, STREAM_BUFFER_SIZE_); // clear received buffer after processing
     transferSuccessCount++;
 
     /*
