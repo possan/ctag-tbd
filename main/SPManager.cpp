@@ -65,6 +65,7 @@ namespace CTAG {
 volatile uint32_t SoundProcessorManager::slowProcessCounter = 0;
 volatile uint32_t SoundProcessorManager::sentSynthMidiBytes = 0;
 volatile uint32_t SoundProcessorManager::receivedUsbDeviceMidiBytes = 0;
+volatile uint32_t SoundProcessorManager::requestCounterErrors = 0;
 
 // audio real-time task
 void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
@@ -77,6 +78,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     int64_t before;
     bool isStereoCH0 = false;
     esp_cpu_cycle_count_t start, diff;
+    uint32_t lastReplyCounter = 42;
 
     bool spi_resp_prepared = false;
     p4_spi_response spi_resp;
@@ -99,6 +101,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         lramp[i] *= lramp[i];
     }
 
+    int responsecounter = 0;
     int framecounter = 0;
     while (runAudioTask) {
 
@@ -133,7 +136,8 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
             // and the led color
             spi_resp.led_color = ledStatus;
-            spi_resp.frame_counter = framecounter;
+            spi_resp.response_counter = responsecounter;
+            responsecounter ++;
             spi_resp.magic = 0xDEADBEEF;
             spi_resp.magic2 = 0xDEADBEEF;
             spi_resp.reserved[0] = 0x55;
@@ -144,7 +148,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
             // update data from ADCs and GPIOs for real-time control
             p4_spi_request *spi_req_ptr = nullptr;
             int spi_success = CTAG::CTRL::Control::Update(&spi_resp, (void **)&spi_req_ptr);
-            if (spi_success > 0) {
+            if (spi_success > 0 && spi_req_ptr != nullptr) {
                 // check magic values
                 if (spi_req_ptr->magic != 0xFEEDC0DE || spi_req_ptr->magic2 != 0xDEADC0DE) {
                     // invalid response, drop it
@@ -164,6 +168,12 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                     // printf("SPI Request tempo %ld\n", spi_req.sequencer_tempo);
                     pd.sequencer_tempo = spi_req_ptr->sequencer_tempo;
                     sentSynthMidiBytes += spi_req_ptr->synth_midi_length;
+
+                    if (spi_req_ptr->request_counter != lastReplyCounter + 1) {
+                        // printf("possible SPI transfer errors, got request counter %ld, expected %ld\n", spi_req_ptr->request_counter, lastReplyCounter + 1);
+                        requestCounterErrors ++;
+                    }
+                    lastReplyCounter = spi_req_ptr->request_counter;
                 }
             }
         }
@@ -305,7 +315,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
         if (framecounter % 2900 == 0) {
-            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes);
+            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, requestCounterErrors %d\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
         }
 
         framecounter ++;

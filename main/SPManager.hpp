@@ -122,6 +122,7 @@ namespace CTAG {
             static volatile uint32_t slowProcessCounter;
             static volatile uint32_t sentSynthMidiBytes;
             static volatile uint32_t receivedUsbDeviceMidiBytes;
+            static volatile uint32_t requestCounterErrors;
         };
     }
 }

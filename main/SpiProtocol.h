@@ -15,9 +15,11 @@ struct p4_spi_request {
     // offset 328
     uint32_t sequencer_tempo; // bpm * 100
     // offset 332
-    uint32_t magic2;
+    uint32_t request_counter;
     // offset 336
-    uint8_t reserved[686];
+    uint32_t magic2;
+    // offset 340
+    uint8_t reserved[682];
     // offset 1022
 };
 
@@ -40,7 +42,7 @@ struct p4_spi_response {
     // offset 648
     uint32_t led_color;
     // offset 652
-    uint32_t frame_counter;
+    uint32_t response_counter;
     // offset 656
     uint32_t magic2;
     // offset 660
