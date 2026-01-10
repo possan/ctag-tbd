@@ -55,10 +55,10 @@ using namespace CTAG::DRIVERS;
 #define CPU_MAX_ALLOWED_CYCLES 300000 // 261224 // is 32/44100kHz * 360MHz
 #define SPI_TRANSACTION_TIMEOUT_US 3000000
 
-// global variable, spiffs base directory
+// global variable, sdcard base directory
 namespace CTAG {
     namespace RESOURCES {
-        std::string spiffsRoot {"/spiffs"};
+        std::string sdcardRoot {"/sdcard"};
     }
 }
 
