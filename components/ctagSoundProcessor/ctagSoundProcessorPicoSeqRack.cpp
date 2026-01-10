@@ -60,11 +60,13 @@ void ctagSoundProcessorPicoSeqRack::preprocessFX1(const ProcessData& data) {
     // int global_bpm_lo2 = global_bpm_lo / 32;
     // int global_bpm_hi2 = global_bpm_hi / 32;
     // int scaledbpm = global_bpm_lo2 + (global_bpm_hi2 << 7);
-    int scaledbpm = data.sequencer_tempo / 10;
-    if (scaledbpm < 32) scaledbpm = 32;
+    int scaledbpm = data.sequencer_tempo;
     if (scaledbpm != last_scaledbpm) {
         last_scaledbpm = scaledbpm;
-        printf("Scaled BPM set to %1.1f\n",
+        scaledbpm = scaledbpm / 10;
+        if (scaledbpm < 32) scaledbpm = 32;
+        printf("Scaled BPM (%ld) set to %1.1f\n",
+            data.sequencer_tempo,
             (float)scaledbpm/10.0f);
 		last_msPerBeat = 60000.0f / ((float)(scaledbpm) / 10.0f);
     }

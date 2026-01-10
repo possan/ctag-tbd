@@ -144,19 +144,26 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
             // update data from ADCs and GPIOs for real-time control
             int spi_success = CTAG::CTRL::Control::Update(&spi_resp, &spi_req);
             if (spi_success > 0) {
-                spi_resp_prepared = false;
-                // make another request next time...
-                // check spi_req.magic?
-                memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
-                memcpy(&pd.midi_bytes, (uint8_t*) &spi_req.synth_midi, spi_req.synth_midi_length);
+                // check magic values
+                if (spi_req.magic != 0xFEEDC0DE) {
+                    // invalid response, drop it
+                    ESP_LOGE("SPM", "Invalid SPI request magic values: %08X",
+                        spi_req.magic);
+                } else {
+                    spi_resp_prepared = false;
+                    // make another request next time...
+                    // check spi_req.magic?
+                    memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
+                    memcpy(&pd.midi_bytes, (uint8_t*) &spi_req.synth_midi, spi_req.synth_midi_length);
 
-                if (spi_req.synth_midi_length > 1) {
-                    printf("Received %d bytes of synth midi data: %02X %02X %02X %02X %02X %02X %02X %02X...\n",
-                        (int)(spi_req.synth_midi_length), spi_req.synth_midi[0], spi_req.synth_midi[1], spi_req.synth_midi[2], spi_req.synth_midi[3], spi_req.synth_midi[4], spi_req.synth_midi[5], spi_req.synth_midi[6], spi_req.synth_midi[7]);
+                    if (spi_req.synth_midi_length > 1) {
+                        printf("Received %d bytes of synth midi data: %02X %02X %02X %02X %02X %02X %02X %02X...\n",
+                            (int)(spi_req.synth_midi_length), spi_req.synth_midi[0], spi_req.synth_midi[1], spi_req.synth_midi[2], spi_req.synth_midi[3], spi_req.synth_midi[4], spi_req.synth_midi[5], spi_req.synth_midi[6], spi_req.synth_midi[7]);
+                    }
+                    pd.midi_bytes_length = spi_req.synth_midi_length;
+                    pd.sequencer_tempo = spi_req.sequencer_tempo;
+                    sentSynthMidiBytes += spi_req.synth_midi_length;
                 }
-                pd.midi_bytes_length = spi_req.synth_midi_length;
-                pd.sequencer_tempo = spi_req.sequencer_tempo;
-                sentSynthMidiBytes += spi_req.synth_midi_length;
             }
         }
 

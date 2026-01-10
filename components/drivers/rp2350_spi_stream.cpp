@@ -195,6 +195,11 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *send
 
     // grab received buffer
     uint8_t* ret_buf = (uint8_t*)ret_trans->rx_buffer;
+    if (ret_trans->length != STREAM_BUFFER_SIZE_ * 8 ) { // size is in bits
+        transferErrorCount++;
+        ESP_LOGE("rp2350_spi_stream", "Failed receive length (%d)", ret_trans->length);
+        return 0;
+    };
 
     // check watermark for valid transaction, if not *dst remains unchanged on previous buffer
     if (ret_buf[0] != 0xCA || ret_buf[1] != 0xFE) {
