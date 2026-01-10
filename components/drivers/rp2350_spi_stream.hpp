@@ -41,7 +41,7 @@ namespace CTAG {
             static uint32_t transferSuccessCount;
             static uint32_t parseErrorCount;
         private:
-            static const uint32_t STREAM_BUFFER_SIZE_ {1024}; // midi data buffer with header
+            static const uint32_t STREAM_BUFFER_SIZE_ {512}; // midi data buffer with header
             static spi_slave_transaction_t transaction[3];
             static uint32_t currentTransaction;
             static uint32_t buf_sz_dynamic; // remaining dynamic size of buffer after default data fields (watermark, ableton ...)

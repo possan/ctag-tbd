@@ -139,7 +139,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
             spi_resp.response_counter = responsecounter;
             responsecounter ++;
             spi_resp.magic = 0xDEADBEEF;
-            spi_resp.magic2 = 0xDEADBEEF;
+            spi_resp.magic2 = 0xFEED;
             spi_resp.reserved[0] = 0x55;
             spi_resp.reserved[1] = 0xAA;
         }
@@ -315,7 +315,8 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
         if (framecounter % 2900 == 0) {
-            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, requestCounterErrors %d\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
+            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
+            requestCounterErrors = 0;
         }
 
         framecounter ++;
