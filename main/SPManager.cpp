@@ -41,6 +41,7 @@ respective component folders / files if different from this license.
 // ableton link
 #include "link.hpp"
 #include "SpiProtocol.h"
+#include "SpiProtocolHelper.hpp"
 
 #define MAX(x, y) ((x)>(y)) ? (x) : (y)
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
@@ -52,6 +53,7 @@ using namespace CTAG::AUDIO;
 using namespace CTAG::DRIVERS;
 
 #define CPU_MAX_ALLOWED_CYCLES 300000 // 261224 // is 32/44100kHz * 360MHz
+#define SPI_TRANSACTION_TIMEOUT_US 3000000
 
 // global variable, spiffs base directory
 namespace CTAG {
@@ -75,14 +77,8 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     int64_t before;
     bool isStereoCH0 = false;
     esp_cpu_cycle_count_t start, diff;
-    uint32_t lastReplyCounter = 42;
 
-    bool spi_resp_prepared = false;
-    p4_spi_response spi_resp;
-    memset(&spi_resp, 0, sizeof(p4_spi_response));
-
-    // p4_spi_request spi_req;
-    // memset(&spi_req, 0, sizeof(p4_spi_request));
+    SpiProtocolHelper protocol;
 
     SP::ProcessData pd;
     pd.controlData = nullptr;
@@ -93,80 +89,158 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     pd.midi_bytes_length = 0;
     memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
 
+    int64_t nextspitime = 0;
+    int64_t nextspireceivedeadline = 0;
+
     int responsecounter = 0;
     int framecounter = 0;
     while (runAudioTask) {
+        //
+        // Prepare a response.
+        //
+        int64_t now = esp_timer_get_time();
 
-        if (!spi_resp_prepared) {
-            spi_resp_prepared = true;
+        if (protocol.shouldPrepareNextResponse()) {
+            // printf("protocol: preparing next response (seq %d)\n", protocol.nextResponseSequenceCounter);
 
-            memset(&spi_resp, 0, sizeof(p4_spi_response));
+            uint8_t *sendbuffer = nullptr;
+            CTAG::DRIVERS::rp2350_spi_stream::GetSendBuffer((void **)&sendbuffer);
 
-            // pack ableton link data
-            LINK::link_session_data_t *link_data = (LINK::link_session_data_t*) &spi_resp.link_data;
-            LINK::link::GetLinkRtSessionData(link_data);
+            if (sendbuffer != nullptr) {
+                // printf("protocol: got write buffer\n");
 
-            // pack midi data from USB device midi
-            uint8_t *midi_ptr = (uint8_t*) &spi_resp.usb_device_midi;
-            uint32_t *midi_len = (uint32_t*) &spi_resp.usb_device_midi_length;
-            *midi_len = tusb::Read(midi_ptr, P4_SPI_RESPONSE_USB_MIDI_DATA_SIZE);
-            if (*midi_len > 0) {
-                printf("Received %d bytes of USB device midi data: %02X %02X %02X %02X...\n",
-                    (int)(*midi_len), midi_ptr[0], midi_ptr[1], midi_ptr[2], midi_ptr[3]);
+                p4_spi_response_header *send_header = (p4_spi_response_header *)sendbuffer;
+                p4_spi_response2 *send_response =
+                    (p4_spi_response2 *)(sendbuffer + P4_SPI_RESPONSE_HEADER_SIZE);
+
+                //
+                // prepare next response
+                //
+
+                // pack ableton link data
+                LINK::link_session_data_t *link_data = (LINK::link_session_data_t*)&send_response->link_data;
+                LINK::link::GetLinkRtSessionData(link_data);
+
+                // pack midi data from USB device midi
+                uint8_t *midi_ptr = (uint8_t*) &send_response->usb_device_midi;
+                uint32_t *midi_len = (uint32_t*) &send_response->usb_device_midi_length;
+                *midi_len = tusb::Read(midi_ptr, P4_SPI_RESPONSE_USB_MIDI_DATA_SIZE);
+                // if (*midi_len > 0) {
+                //     printf("Received %d bytes of USB device midi data: %02X %02X %02X %02X...\n",
+                //         (int)(*midi_len), midi_ptr[0], midi_ptr[1], midi_ptr[2], midi_ptr[3]);
+                // }
+                receivedUsbDeviceMidiBytes += *midi_len;
+
+                // add some waveforms
+                for(int i=0; i<128; i++) {
+                    send_response->input_waveform[i] = 128;
+                    send_response->output_waveform[i] = 128;
+                }
+                for(int i=0; i<BUF_SZ * 2; i++) {
+                    send_response->input_waveform[i] = (int)(finput2[i] * 127.0f + 128.f);
+                    send_response->output_waveform[i] = (int)(fbuf2[i] * 127.0f + 128.f);
+                }
+
+                // and the led color
+                send_response->led_color = ledStatus;
+                responsecounter ++;
+                send_response->magic = 0xDEADBEEF;
+                send_response->magic2 = 0xFEED;
+                protocol.markNextResponsePrepared(
+                    (p4_spi_response_header*) send_header,
+                    (p4_spi_response2*) send_response);
+                // printf("protocol: next response prepared\n");
+            } else {
+                printf("protocol: no write buffer available\n");
             }
-            receivedUsbDeviceMidiBytes += *midi_len;
-
-            // add some waveforms
-            for(int i=0; i<128; i++) {
-                spi_resp.input_waveform[i] = 128;
-                spi_resp.output_waveform[i] = 128;
-            }
-            for(int i=0; i<BUF_SZ * 2; i++) {
-                spi_resp.input_waveform[i] = (int)(finput2[i] * 127.0f + 128.f);
-                spi_resp.output_waveform[i] = (int)(fbuf2[i] * 127.0f + 128.f);
-            }
-
-            // and the led color
-            spi_resp.led_color = ledStatus;
-            spi_resp.response_counter = responsecounter;
-            responsecounter ++;
-            spi_resp.magic = 0xDEADBEEF;
-            spi_resp.magic2 = 0xFEED;
-            spi_resp.reserved[0] = 0x55;
-            spi_resp.reserved[1] = 0xAA;
+        } else {
+            // printf("protocol: no need to prepare next response\n");
         }
 
-        if (spi_resp_prepared) {
-            // update data from ADCs and GPIOs for real-time control
-            p4_spi_request *spi_req_ptr = nullptr;
-            int spi_success = CTAG::CTRL::Control::Update(&spi_resp, (void **)&spi_req_ptr);
-            if (spi_success > 0 && spi_req_ptr != nullptr) {
-                // check magic values
-                if (spi_req_ptr->magic != 0xFEEDC0DE || spi_req_ptr->magic2 != 0xDEADC0DE) {
-                    // invalid response, drop it
-                    ESP_LOGE("SPM", "Invalid SPI request magic values: %08X", spi_req_ptr->magic, spi_req_ptr->magic2);
-                } else {
-                    spi_resp_prepared = false;
-                    // make another request next time...
-                    // check spi_req.magic?
-                    memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
-                    memcpy(&pd.midi_bytes, (uint8_t*) &spi_req_ptr->synth_midi, spi_req_ptr->synth_midi_length);
+        if (protocol.shouldSendPreparedResponse()) {
+            // printf("protocol: queue response\n");
+            uint8_t *sendbuffer = nullptr;
+            CTAG::DRIVERS::rp2350_spi_stream::GetSendBuffer((void **)&sendbuffer);
+            if (sendbuffer != nullptr) {
+                p4_spi_response_header *send_header = (p4_spi_response_header *)sendbuffer;
+                p4_spi_response2 *send_response =
+                    (p4_spi_response2 *)(sendbuffer + P4_SPI_RESPONSE_HEADER_SIZE);
+                protocol.updateResponseBeforeSending(send_header, send_response);
+                CTAG::DRIVERS::rp2350_spi_stream::QueueBuffer((void *)sendbuffer);
+                protocol.queuedPreparedResponse();
+                nextspireceivedeadline = now + SPI_TRANSACTION_TIMEOUT_US;
+            }
+        } else {
+            // printf("protocol: should not send response.\n");
+        }
 
-                    if (spi_req_ptr->synth_midi_length > 1) {
-                        printf("Received %d bytes of synth midi data: %02X %02X %02X %02X %02X %02X %02X %02X...\n",
-                            (int)(spi_req_ptr->synth_midi_length), spi_req_ptr->synth_midi[0], spi_req_ptr->synth_midi[1], spi_req_ptr->synth_midi[2], spi_req_ptr->synth_midi[3], spi_req_ptr->synth_midi[4], spi_req_ptr->synth_midi[5], spi_req_ptr->synth_midi[6], spi_req_ptr->synth_midi[7]);
-                    }
-                    pd.midi_bytes_length = spi_req_ptr->synth_midi_length;
-                    // printf("SPI Request tempo %ld\n", spi_req.sequencer_tempo);
-                    pd.sequencer_tempo = spi_req_ptr->sequencer_tempo;
-                    sentSynthMidiBytes += spi_req_ptr->synth_midi_length;
+        //
+        // check if current spi transaction is done
+        //
 
-                    if (spi_req_ptr->request_counter != lastReplyCounter + 1) {
-                        // printf("possible SPI transfer errors, got request counter %ld, expected %ld\n", spi_req_ptr->request_counter, lastReplyCounter + 1);
-                        requestCounterErrors ++;
-                    }
-                    lastReplyCounter = spi_req_ptr->request_counter;
-                }
+        uint8_t *spi_request_ptr = nullptr;
+        if (CTAG::DRIVERS::rp2350_spi_stream::GetReceivedBuffer((void **)&spi_request_ptr)) {
+            p4_spi_request_header *spi_req_header = (p4_spi_request_header *)spi_request_ptr;
+            p4_spi_request2 *spi_req =
+                (p4_spi_request2 *)(spi_request_ptr + P4_SPI_REQUEST_HEADER_SIZE);
+
+            if (protocol.validateRequestPacket(spi_req_header, spi_req)) {
+                // printf("protocol: received transaction. (seq %d)\n", spi_req_header->request_sequence_counter);
+
+                // for(int k=0; k<8; k++) {
+                //     printf("  %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                //         spi_request_ptr[8 * k + 0],
+                //         spi_request_ptr[8 * k + 1],
+                //         spi_request_ptr[8 * k + 2],
+                //         spi_request_ptr[8 * k + 3],
+                //         spi_request_ptr[8 * k + 4],
+                //         spi_request_ptr[8 * k + 5],
+                //         spi_request_ptr[8 * k + 6],
+                //         spi_request_ptr[8 * k + 7]);
+                // }
+
+                // request is valid
+                // if (spi_req->synth_midi_length > 1) {
+                //     printf("got %d midi bytes, seq %d\n", (int)spi_req->synth_midi_length, spi_req_header->request_sequence_counter);
+                // }
+
+                pd.controlData = (void *)1; // run processing...
+                memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
+                memcpy(&pd.midi_bytes, (uint8_t*) &spi_req->synth_midi, spi_req->synth_midi_length);
+                pd.midi_bytes_length = spi_req->synth_midi_length;
+                // if (spi_req->synth_midi_length > 1) {
+                //     printf("Received %d bytes of synth midi data: %02X %02X %02X %02X %02X %02X %02X %02X...\n",
+                //         (int)(spi_req->synth_midi_length),
+                //         spi_req->synth_midi[0],
+                //         spi_req->synth_midi[1],
+                //         spi_req->synth_midi[2],
+                //         spi_req->synth_midi[3],
+                //         spi_req->synth_midi[4],
+                //         spi_req->synth_midi[5],
+                //         spi_req->synth_midi[6],
+                //         spi_req->synth_midi[7]);
+                // }
+                // printf("SPI Request tempo %ld\n", spi_req.sequencer_tempo);
+                pd.sequencer_tempo = spi_req->sequencer_tempo;
+                sentSynthMidiBytes += spi_req->synth_midi_length;
+
+                uint8_t expNext = protocol.getNextSequence(protocol.lastSeenRequestCounter);
+                if (spi_req_header->request_sequence_counter != expNext) {
+                    printf("expected sequence %d but got %d, did we miss a packet?\n", expNext, spi_req_header->request_sequence_counter);
+                };
+
+                protocol.markRequestSeen(spi_req_header->request_sequence_counter);
+            } else {
+                printf("protocol: packet invalid\n");
+            }
+        } else {
+            // printf("protocol: did not receive packet\n");
+
+            // check timeout...
+            if (now > nextspireceivedeadline) {
+                printf("SPI receive timeout.\n");
+                protocol.markRequestSeen(0);
+                nextspireceivedeadline = now + SPI_TRANSACTION_TIMEOUT_US;
             }
         }
 
@@ -368,7 +442,7 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
 
-             // create new plugin
+    // create new plugin
     ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::CH0;
     if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
     if(model->IsStereo(id)) aType = ctagSPAllocator::AllocationType::STEREO;
@@ -376,7 +450,6 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     model->SetActivePluginID(id, chan);
     sp[chan]->LoadPreset(model->GetActivePatchNum(chan));
     // xSemaphoreGive(processMutex);
-
 
     ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),

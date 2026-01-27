@@ -1147,9 +1147,11 @@ void ctagSoundProcessorPicoSeqRack::knowYourself(){
 
 
 void ctagSoundProcessorPicoSeqRack::parseIncomingMidiMessages(const uint8_t *buf, const size_t len) {
-    // ESP_LOGI("ctagSoundProcessorPicoSeqRack",
-    //     "parseIncomingMidiMessages: %02X %02X %02X %02X %02X %02X %02X %02X %02X (%d)",
-    //         buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7], buf[8], len);
+    // if (len > 0) {
+    //     ESP_LOGI("ctagSoundProcessorPicoSeqRack",
+    //         "parseIncomingMidiMessages: %02X %02X %02X %02X %02X %02X %02X %02X %02X (%d)",
+    //             buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7], buf[8], len);
+    // }
 
     if (buf == nullptr || len < 1)  {
         return;

@@ -49,6 +49,7 @@ DMA_ATTR static uint8_t *rcvBuf2;
 DMA_ATTR static uint8_t *sendBuf0;
 DMA_ATTR static uint8_t *sendBuf1;
 DMA_ATTR static uint8_t *sendBuf2;
+bool CTAG::DRIVERS::rp2350_spi_stream::receiving = false;
 uint32_t CTAG::DRIVERS::rp2350_spi_stream::transferErrorCount = 0;
 uint32_t CTAG::DRIVERS::rp2350_spi_stream::transferSuccessCount = 0;
 uint32_t CTAG::DRIVERS::rp2350_spi_stream::parseErrorCount = 0;
@@ -168,6 +169,66 @@ uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
 }
 
 IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *sendbuffer, void **receivebuffer) {
+    // uint8_t* tx_buf = (uint8_t*) transaction[currentTransaction].tx_buffer;
+
+    // tx_buf[0] = 0xCA;
+    // tx_buf[1] = 0xFE;
+    // memcpy(tx_buf + 2, sendbuffer, STREAM_BUFFER_SIZE_ - 2);
+
+    // // queue transaction of transceive
+    // esp_err_t ret;
+    // ret = spi_slave_queue_trans(RCV_HOST, &transaction[currentTransaction], 0);
+    // if (ESP_OK != ret) {
+    //     // ESP_LOGD("rp2350_spi_stream", "Failed to queue transaction: %s", esp_err_to_name(ret));
+    //     queueErrorCount++;
+    //     return 0; // Failed to queue transaction
+    // }
+    // currentTransaction = (currentTransaction + 1) % 3; // switch to next transaction buffer
+
+    // // get result of last transaction
+    // spi_slave_transaction_t* ret_trans;
+    // ret = spi_slave_get_trans_result(RCV_HOST, &ret_trans, 0);
+    // if (ESP_OK != ret) {
+    //     transferErrorCount++;
+    //     // ESP_LOGE("rp2350_spi_stream", "Failed receive transaction: %s", esp_err_to_name(ret));
+    //     return 0;
+    // }
+
+    // // grab received buffer
+    // uint8_t* ret_buf = (uint8_t*)ret_trans->rx_buffer;
+    // if (ret_trans->length != STREAM_BUFFER_SIZE_ * 8 ) { // size is in bits
+    //     transferErrorCount++;
+    //     ESP_LOGE("rp2350_spi_stream", "Failed receive length (%d)", ret_trans->length);
+    //     return 0;
+    // };
+
+    // // check watermark for valid transaction, if not *dst remains unchanged on previous buffer
+    // if (ret_buf[0] != 0xCA || ret_buf[1] != 0xFE) {
+    //     // ESP_LOGE("rp2350_spi_stream", "Invalid transaction received (%d bits), expected CA FE, got [%02X %02X] %02X %02X %02X %02X",
+    //     //     ret_trans->length, ret_buf[0], ret_buf[1], ret_buf[2], ret_buf[3], ret_buf[4], ret_buf[5]);
+    //     parseErrorCount++;
+    //     return 0; // Invalid transaction
+    // }
+
+    // // data was valid, return new buffer pointer
+    // *receivebuffer = ret_buf + 2;
+    // // memcpy(receivebuffer, ret_buf + 2, STREAM_BUFFER_SIZE_ - 2);
+    // // memset(ret_buf, 0, STREAM_BUFFER_SIZE_); // clear received buffer after processing
+    // transferSuccessCount++;
+
+    // /*
+    // static int val = 0;
+    // if (ret_buf[2+N_CVS*4] != val) {
+    //     val = ret_buf[2+N_CVS*4];
+    //     xQueueSend(debug_queue, &val, 0);
+    // }
+    // */
+
+    // return STREAM_BUFFER_SIZE_ - 2;
+    return 0;
+}
+
+IRAM_ATTR bool CTAG::DRIVERS::rp2350_spi_stream::QueueBuffer(void *sendbuffer) {
     uint8_t* tx_buf = (uint8_t*) transaction[currentTransaction].tx_buffer;
 
     tx_buf[0] = 0xCA;
@@ -180,13 +241,85 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *send
     if (ESP_OK != ret) {
         // ESP_LOGD("rp2350_spi_stream", "Failed to queue transaction: %s", esp_err_to_name(ret));
         queueErrorCount++;
-        return 0; // Failed to queue transaction
+        return false; // Failed to queue transaction
     }
-    currentTransaction = (currentTransaction + 1) % 3; // switch to next transaction buffer
+
+    // currentTransaction = (currentTransaction + 1) % 3; // switch to next transaction buffer
+
+    // // get result of last transaction
+    // spi_slave_transaction_t* ret_trans;
+    // ret = spi_slave_get_trans_result(RCV_HOST, &ret_trans, 0);
+    // if (ESP_OK != ret) {
+    //     transferErrorCount++;
+    //     // ESP_LOGE("rp2350_spi_stream", "Failed receive transaction: %s", esp_err_to_name(ret));
+    //     return 0;
+    // }
+
+    // // grab received buffer
+    // uint8_t* ret_buf = (uint8_t*)ret_trans->rx_buffer;
+    // if (ret_trans->length != STREAM_BUFFER_SIZE_ * 8 ) { // size is in bits
+    //     transferErrorCount++;
+    //     ESP_LOGE("rp2350_spi_stream", "Failed receive length (%d)", ret_trans->length);
+    //     return 0;
+    // };
+
+    // // check watermark for valid transaction, if not *dst remains unchanged on previous buffer
+    // if (ret_buf[0] != 0xCA || ret_buf[1] != 0xFE) {
+    //     // ESP_LOGE("rp2350_spi_stream", "Invalid transaction received (%d bits), expected CA FE, got [%02X %02X] %02X %02X %02X %02X",
+    //     //     ret_trans->length, ret_buf[0], ret_buf[1], ret_buf[2], ret_buf[3], ret_buf[4], ret_buf[5]);
+    //     parseErrorCount++;
+    //     return 0; // Invalid transaction
+    // }
+
+    // // data was valid, return new buffer pointer
+    // *receivebuffer = ret_buf + 2;
+    // // memcpy(receivebuffer, ret_buf + 2, STREAM_BUFFER_SIZE_ - 2);
+    // // memset(ret_buf, 0, STREAM_BUFFER_SIZE_); // clear received buffer after processing
+    // transferSuccessCount++;
+
+    // /*
+    // static int val = 0;
+    // if (ret_buf[2+N_CVS*4] != val) {
+    //     val = ret_buf[2+N_CVS*4];
+    //     xQueueSend(debug_queue, &val, 0);
+    // }
+    // */
+
+    // return STREAM_BUFFER_SIZE_ - 2;
+    return true;
+}
+
+
+IRAM_ATTR void CTAG::DRIVERS::rp2350_spi_stream::GetSendBuffer(void **sendbuffer) {
+    uint8_t* tx_buf = (uint8_t*) transaction[currentTransaction].tx_buffer;
+    *sendbuffer = tx_buf + 2;
+}
+
+IRAM_ATTR bool CTAG::DRIVERS::rp2350_spi_stream::GetReceivedBuffer(void **receivebuffer) {
+    *receivebuffer = nullptr;
+    uint8_t* tx_buf = (uint8_t*) transaction[currentTransaction].tx_buffer;
+
+    // tx_buf[0] = 0xCA;
+    // tx_buf[1] = 0xFE;
+    // memcpy(tx_buf + 2, sendbuffer, STREAM_BUFFER_SIZE_ - 2);
+
+    esp_err_t ret;
+    // if (!receiving) {
+    //     receiving = true;
+    //     // ESP_LOGI("rp2350_spi_stream", "GetReceivedBuffer: queueing transaction %d", currentTransaction);
+    //     // queue transaction of transceive
+    //     ret = spi_slave_queue_trans(RCV_HOST, &transaction[currentTransaction], 0);
+    //     if (ESP_OK != ret) {
+    //         // ESP_LOGD("rp2350_spi_stream", "Failed to queue transaction: %s", esp_err_to_name(ret));
+    //         queueErrorCount++;
+    //         return 0; // Failed to queue transaction
+    //     }
+    // }
 
     // get result of last transaction
     spi_slave_transaction_t* ret_trans;
     ret = spi_slave_get_trans_result(RCV_HOST, &ret_trans, 0);
+    // ESP_LOGI("rp2350_spi_stream", "GetReceivedBuffer: got transaction result %d", ret);
     if (ESP_OK != ret) {
         transferErrorCount++;
         // ESP_LOGE("rp2350_spi_stream", "Failed receive transaction: %s", esp_err_to_name(ret));
@@ -195,33 +328,26 @@ IRAM_ATTR uint32_t CTAG::DRIVERS::rp2350_spi_stream::GetCurrentBuffer(void *send
 
     // grab received buffer
     uint8_t* ret_buf = (uint8_t*)ret_trans->rx_buffer;
+    // ESP_LOGI("rp2350_spi_stream", "GetReceivedBuffer: got transaction %d, %d bytes",
+    //   currentTransaction, ret_trans->length / 8);
     if (ret_trans->length != STREAM_BUFFER_SIZE_ * 8 ) { // size is in bits
         transferErrorCount++;
         ESP_LOGE("rp2350_spi_stream", "Failed receive length (%d)", ret_trans->length);
         return 0;
     };
 
+    // got transmission, start receiving again
+    receiving = false;
+    currentTransaction = (currentTransaction + 1) % 3; // switch to next transaction buffer
+
     // check watermark for valid transaction, if not *dst remains unchanged on previous buffer
     if (ret_buf[0] != 0xCA || ret_buf[1] != 0xFE) {
-        // ESP_LOGE("rp2350_spi_stream", "Invalid transaction received (%d bits), expected CA FE, got [%02X %02X] %02X %02X %02X %02X",
-        //     ret_trans->length, ret_buf[0], ret_buf[1], ret_buf[2], ret_buf[3], ret_buf[4], ret_buf[5]);
+        ESP_LOGE("rp2350_spi_stream", "Invalid transaction received (%d bits), expected CA FE, got [%02X %02X] %02X %02X %02X %02X",
+            ret_trans->length, ret_buf[0], ret_buf[1], ret_buf[2], ret_buf[3], ret_buf[4], ret_buf[5]);
         parseErrorCount++;
         return 0; // Invalid transaction
     }
 
-    // data was valid, return new buffer pointer
     *receivebuffer = ret_buf + 2;
-    // memcpy(receivebuffer, ret_buf + 2, STREAM_BUFFER_SIZE_ - 2);
-    // memset(ret_buf, 0, STREAM_BUFFER_SIZE_); // clear received buffer after processing
-    transferSuccessCount++;
-
-    /*
-    static int val = 0;
-    if (ret_buf[2+N_CVS*4] != val) {
-        val = ret_buf[2+N_CVS*4];
-        xQueueSend(debug_queue, &val, 0);
-    }
-    */
-
-    return STREAM_BUFFER_SIZE_ - 2;
+    return true;
 }

@@ -40,6 +40,10 @@ namespace CTAG {
             static uint32_t transferErrorCount;
             static uint32_t transferSuccessCount;
             static uint32_t parseErrorCount;
+            static bool receiving;
+            static bool QueueBuffer(void *sendbuffer);
+            static void GetSendBuffer(void **sendbuffer);
+            static bool GetReceivedBuffer(void **receivebuffer);
         private:
             static const uint32_t STREAM_BUFFER_SIZE_ {512}; // midi data buffer with header
             static spi_slave_transaction_t transaction[3];
