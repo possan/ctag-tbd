@@ -321,7 +321,7 @@ IRAM_ATTR bool CTAG::DRIVERS::rp2350_spi_stream::GetReceivedBuffer(void **receiv
     ret = spi_slave_get_trans_result(RCV_HOST, &ret_trans, 0);
     // ESP_LOGI("rp2350_spi_stream", "GetReceivedBuffer: got transaction result %d", ret);
     if (ESP_OK != ret) {
-        transferErrorCount++;
+        // transferErrorCount++;
         // ESP_LOGE("rp2350_spi_stream", "Failed receive transaction: %s", esp_err_to_name(ret));
         return 0;
     }

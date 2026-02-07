@@ -230,6 +230,7 @@ namespace CTAG {
             mifx::Reverb reverb;
 			int framecounter;
 
+        	float audio_in[BUF_SZ*2];
         	float combined_out[BUF_SZ*2];
         	float send1_out[BUF_SZ*2];
         	float send2_out[BUF_SZ*2];

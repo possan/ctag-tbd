@@ -57,7 +57,7 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     rompler.params.timeStretchEnable = bTSMode > 0;
 
     // timestretch target length
-    MK_INT_PAR_NOCV(ts_track_length, track_length, 128);
+    // MK_INT_PAR_NOCV(ts_track_length, track_length, 128);
 
     uint32_t firstNonWtSlice = data.firstNonWtSlice; // sampleRom.GetFirstNonWaveTableSlice();
     MK_INT_PAR_ABS_NOCV(iS1Bank, s1_bank, 32.f)
@@ -126,12 +126,12 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
         rompler.params.playbackSpeed = 1.0;
         if (data.sampleRom->HasSlice(rompler.params.slice)) {
             sliceLength = data.sampleRom->GetSliceSize(rompler.params.slice);
-            stepsLengthMs = ts_track_length * data.msPerBeat / 4;
+            stepsLengthMs = track_length * data.msPerBeat / 4;
             sliceLengthMs = (sliceLength * 1000) / 44100;
             rompler.params.playbackSpeed = (float)sliceLengthMs / (float)stepsLengthMs;
         }
 
-        printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f, slicelen=%ld,msperbeat=%ld,steps=%d,slicelenms=%ld, tempo=%ld,tracklen=%d\n",
+        printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f, slicelen=%ld,msperbeat=%ld,slicelenms=%ld, tempo=%ld,tracklen=%d\n",
             rompler.params.slice,
             rompler.params.playbackSpeed,
             rompler.params.pitch,
@@ -139,10 +139,9 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
             rompler.params.timeStretchWindowSize,
             sliceLength,
             data.msPerBeat,
-            ts_track_length,
             sliceLengthMs,
             data.tempo,
-            ts_track_length
+            track_length
         );
 
         // printf("S1 slice=%ld ps=%1.1f pitch=%1.1f %1.1f %1.1f\n",

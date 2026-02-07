@@ -246,6 +246,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
         // get normalized raw data from CODEC
         DRIVERS::Codec::ReadBuffer(finput, BUF_SZ);
+
         memcpy(finput2, finput, BUF_SZ * 2 * sizeof(float));
         memcpy(fbuf, finput, BUF_SZ * 2 * sizeof(float));
 
@@ -395,13 +396,13 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
         memcpy(fbuf2, fbuf, BUF_SZ * 2 * sizeof(float));
 
+        // if (framecounter % 2900 == 0) {
+        //     printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
+        //     requestCounterErrors = 0;
+        // }
+
         // write raw float data back to CODCE
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
-
-        if (framecounter % 2900 == 0) {
-            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
-            requestCounterErrors = 0;
-        }
 
         framecounter ++;
     }
@@ -492,6 +493,9 @@ static void debug_task(void *pvParameters) {
              DRIVERS::rp2350_spi_stream::queueErrorCount,
              DRIVERS::rp2350_spi_stream::parseErrorCount,
              DRIVERS::rp2350_spi_stream::transferSuccessCount);
+
+    // printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
+    // requestCounterErrors = 0;
   }
 }
 

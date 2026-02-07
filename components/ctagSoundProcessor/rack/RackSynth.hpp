@@ -24,6 +24,7 @@ namespace CTAG {
             uint32_t msPerBeat;
             uint32_t tempo; // BPM * 100
             uint8_t quantum;
+            float *inputbuffer;
         };
 
         struct PickSeqRackInitData {

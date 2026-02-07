@@ -23,4 +23,5 @@ private:
 	atomic<int16_t> mix_pan;
 	atomic<int16_t> mix_fx1;
 	atomic<int16_t> mix_fx2;
+	atomic<int16_t> mix_track_length;
 };

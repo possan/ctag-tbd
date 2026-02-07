@@ -65,9 +65,9 @@ void ctagSoundProcessorPicoSeqRack::preprocessFX1(const ProcessData& data) {
         last_scaledbpm = scaledbpm;
         scaledbpm = scaledbpm / 10;
         if (scaledbpm < 32) scaledbpm = 32;
-        printf("Scaled BPM (%ld) set to %1.1f\n",
-            data.sequencer_tempo,
-            (float)scaledbpm/10.0f);
+        // printf("Scaled BPM (%ld) set to %1.1f\n",
+        //     data.sequencer_tempo,
+        //     (float)scaledbpm/10.0f);
 		last_msPerBeat = 60000.0f / ((float)(scaledbpm) / 10.0f);
     }
 
@@ -81,7 +81,7 @@ void ctagSoundProcessorPicoSeqRack::preprocessFX1(const ProcessData& data) {
     int idt = (int)dt;
     if (idt != delaySamples) {
         delaySamples = idt;
-        printf("Delay time set to %d samples (scaled BPM: %d)\n", idt, scaledbpm);
+        // printf("Delay time set to %d samples (scaled BPM: %d)\n", idt, scaledbpm);
     }
 
     MK_FLT_PAR_ABS_NOCV(fBase, fx1_base, 4095.f, 1.f)
@@ -289,6 +289,7 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         parseIncomingMidiMessages(data.midi_bytes, data.midi_bytes_length);
     }
 
+    memcpy(audio_in, data.buf, bufSz * 2 * sizeof(float));
     std::fill_n(combined_out, bufSz * 2, 0.f);
     std::fill_n(send1_out, bufSz * 2, 0.f);
     std::fill_n(send2_out, bufSz * 2, 0.f);
@@ -299,22 +300,23 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     idata.tempo = data.sequencer_tempo;
     idata.quantum = data.sequencer_quantum;
     idata.msPerBeat = last_msPerBeat;
+    idata.inputbuffer = audio_in;
 
     // process input first
 
-
     int16_t T2 = esp_timer_get_time();
-    // ch16.PreProcess(idata);
-    // if (ch16.enabled) {
-    //     ch16_in.enabled = ch16.enabled && ch16.device == 0;
-    //     // ch16_in.Process(idata); - it does nothing...
-    //     if (ch16_in.enabled) {
-    //         mixRenderOutputStereo(data.buf, ch16.level, ch16.pan, ch16.send1, ch16.send2);
-    //     }
-    // }
+    ch16.PreProcess(idata);
+    if (ch16.enabled) {
+        ch16_in.enabled = ch16.enabled && ch16.device == 0;
+        ch16_in.Process(idata); // - it does nothing...
+        if (ch16_in.enabled) {
+            mixRenderOutputStereo(ch16_in.out, ch16.level, ch16.pan, ch16.send1, ch16.send2);
+        }
+    }
+    std::fill_n(data.buf, bufSz * 2, 0.f);
 
     int16_t T = esp_timer_get_time();
-    ch16_render_time = T2 - T;
+    ch16_render_time = T - T2;
 
     ch1.PreProcess(idata);
     if (ch1.enabled) {
@@ -571,10 +573,13 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         std::fill_n(reverbBuffer, 32768, 0.f);
     }
 
-    if (framecounter % 2000 == 0) {
-        printf("PicoSeqRack CPU times (us): Ch1:%d Ch2:%d Ch3:%d Ch4:%d Ch5:%d Ch6:%d Ch7:%d Ch8:%d Ch9:%d Ch10:%d Ch11:%d Ch12:%d Ch13:%d Ch14:%d Ch15:%d Ch16:%d FX1:%d FX2:%d Master:%d\n",
+    if (framecounter % 5000 == 0) {
+        printf("PicoSeqRack CPU times (us): Ch1:%d Ch2:%d Ch3:%d Ch4:%d Ch5:%d Ch6:%d Ch7:%d Ch8:%d FX1:%d FX2:%d Master:%d\n",
         (int)ch1_render_time, (int)ch2_render_time, (int)ch3_render_time, (int)ch4_render_time,
         (int)ch5_render_time, (int)ch6_render_time, (int)ch7_render_time, (int)ch8_render_time,
+        (int)fx_delay_render_time, (int)fx_reverb_render_time, (int)fx_master_render_time);
+    } else if (framecounter % 5000 == 2500) {
+        printf("PicoSeqRack CPU times (us): Ch9:%d Ch10:%d Ch11:%d Ch12:%d Ch13:%d Ch14:%d Ch15:%d Ch16:%d FX1:%d FX2:%d Master:%d\n",
         (int)ch9_render_time, (int)ch10_render_time, (int)ch11_render_time, (int)ch12_render_time,
         (int)ch13_render_time, (int)ch14_render_time, (int)ch15_render_time, (int)ch16_render_time,
         (int)fx_delay_render_time, (int)fx_reverb_render_time, (int)fx_master_render_time);
@@ -843,8 +848,8 @@ void ctagSoundProcessorPicoSeqRack::handleMidiControlChange(const uint8_t channe
         if (it2 != pMapPar.end()) {
             (it2->second)(cv_value);
         }
-    } else {
-        printf("No CC mapping for CC %d, CH %d\n", control, channel);
+        // } else {
+        //     printf("No CC mapping for CC %d, CH %d\n", control, channel);
     }
 };
 
@@ -970,6 +975,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.midi_channel = 7;
     dri.cc_base = 0;
     dri.prefix = "ch16_"; ch16.Init(&dri);
+    ch16.level = 0;
     dri.prefix = "ch16_in_"; ch16_in.Init(&dri); // audio input, no prefix
     ch16_render_time = 0;
 
