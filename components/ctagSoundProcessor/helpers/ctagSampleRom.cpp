@@ -27,6 +27,9 @@ respective component folders / files if different from this license.
 #include "esp_heap_caps.h"
 #include <cstring>
 #include <filesystem>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 #ifdef TBD_SIM
 #define CONFIG_SAMPLE_ROM_START_ADDRESS 0
@@ -150,11 +153,11 @@ namespace CTAG::SP::HELPERS {
     }
 
     ctagSampleRom::~ctagSampleRom() {
-        //ESP_LOGE("SR", "nConsumers %li", nConsumers.load());
+        //ESP_LOGE("SROM", "nConsumers %li", nConsumers.load());
         nConsumers--;
 
         if (nConsumers > 0) return;
-        //ESP_LOGE("SR", "freeing up SR data structure");
+        //ESP_LOGE("SROM", "freeing up SR data structure");
         if (sliceOffsets != nullptr) {
             heap_caps_free(sliceOffsets);
         }
@@ -223,6 +226,11 @@ namespace CTAG::SP::HELPERS {
 
         const uint32_t maxSlices = 32 * 64 + MAX_SLICES_SAMPLES; // wavetable max 32 slices
 
+        ESP_LOGI("SROM", "Start loading files...");
+        // timestamp for performance measurement, c++ api
+        auto start = std::chrono::high_resolution_clock::now();
+
+
         // alloc memory for data structure in memory
         if (sliceOffsets == nullptr) sliceOffsets = (uint32_t *) heap_caps_malloc(maxSlices * sizeof(uint32_t), MALLOC_CAP_SPIRAM);
         assert(sliceOffsets != nullptr);
@@ -281,21 +289,22 @@ namespace CTAG::SP::HELPERS {
             }
             uint32_t dataOffset = sample_rom_model.GetDataOffsetForWTSlice(i);
             uint32_t nSamples = sample_rom_model.GetWTSliceSize(i);
-            FILE *f = fopen(filename.c_str(), "rb");
-            if (f == nullptr) {
+            int fd = open(filename.c_str(), O_RDONLY);
+            if (fd < 0) {
                 ESP_LOGE("SROM", "Could not open file %s", filename.c_str());
                 continue;
             }
-            fseek(f, dataOffset, SEEK_SET);
+            lseek(fd, dataOffset, SEEK_SET);
             uint32_t ofs = sliceOffsets[i*64];
-            size_t nRead = fread(&ptrSPIRAM[ofs], 2, nSamples, f);
+            ssize_t bytes_read = read(fd, &ptrSPIRAM[ofs], nSamples * 2);
+            size_t nRead = bytes_read / 2;
             if (nRead != nSamples) {
                 ESP_LOGE("SROM", "Could not read all samples from file %s, read %li of %li", filename.c_str(), nRead,
                          nSamples);
             } else {
-                ESP_LOGI("SROM", "Loaded file %s, read %li samples", filename.c_str(), nRead);
+                //ESP_LOGI("SROM", "Loaded file %s, read %li samples", filename.c_str(), nRead);
             }
-            fclose(f);
+            close(fd);
         }
 
         // load all sample files
@@ -312,23 +321,27 @@ namespace CTAG::SP::HELPERS {
             }
             uint32_t dataOffset = sample_rom_model.GetDataOffsetForSampleSlice(i);
             uint32_t nSamples = sample_rom_model.GetSampleSliceSize(i);
-            FILE *f = fopen(filename.c_str(), "rb");
-            if (f == nullptr) {
+            int fd = open(filename.c_str(), O_RDONLY);
+            if (fd < 0) {
                 ESP_LOGE("SROM", "Could not open file %s", filename.c_str());
                 continue;
             }
-            fseek(f, dataOffset, SEEK_SET);
+            lseek(fd, dataOffset, SEEK_SET);
             uint32_t ofs = sliceOffsets[j];
-            size_t nRead = fread(&ptrSPIRAM[ofs], 2, nSamples, f);
+            ssize_t bytes_read = read(fd, &ptrSPIRAM[ofs], nSamples * 2);
+            size_t nRead = bytes_read / 2;
             if (nRead != nSamples) {
                 ESP_LOGE("SROM", "Could not read all samples from file %s, read %li of %li", filename.c_str(), nRead,
                          nSamples);
             } else {
-                ESP_LOGI("SROM", "Loaded file %s, read %li samples", filename.c_str(), nRead);
+                //ESP_LOGI("SROM", "Loaded file %s, read %li samples", filename.c_str(), nRead);
             }
-            fclose(f);
+            close(fd);
         }
-
+            // timestamp for performance measurement, c++ api
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        ESP_LOGI("SROM", "Done loading samples, total size %li bytes, time taken %.2fs, %.2fMB/s ", totalSize, (float)duration / 1000.f, (float(totalSize) / (1024.0f * 1024.0f)) / (duration / 1000.0f));
         // everything is buffered
         nSlicesBuffered = numberSlices;
     }
