@@ -76,14 +76,14 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
         // rompler.params.playbackSpeed = 1.0;
     }
 
-    MK_INT_PAR_ABS_NOCV(iS1Pitch, s1_pitch, 127.f) // midi cc
+    MK_FLT_PAR_ABS_NOCV(iS1Pitch, s1_pitch, 4096.0f, 128.f) // midi cc
     if (rompler.params.timeStretchEnable) {
         rompler.params.pitch = iS1Pitch / 10.0;
     } else { 
         rompler.params.pitch = midi_note;
     }
 
-     MK_FLT_PAR_ABS_NOCV(fS1Start, s1_start, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(fS1Start, s1_start, 4095.f, 1.f)
     rompler.params.startOffsetRelative = fS1Start;
     MK_FLT_PAR_ABS_NOCV(fS1Length, s1_end, 4095.f, 1.f)
     rompler.params.lengthRelative = fS1Length;
@@ -113,7 +113,7 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
 
 
     MK_FLT_PAR_ABS_NOCV(fTSAmount, s1_tsamount, 4095.f, 1.f)
-    float fTS1Amount = 0.005f + fTSAmount * 0.995f;
+    float fTS1Amount = 0.001f + fTSAmount * 0.998f;
     rompler.params.timeStretchWindowSize = fTS1Amount;
 
     // MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
