@@ -34,6 +34,8 @@ respective component folders / files if different from this license.
 
 #include "link.hpp"
 
+#define MAX(x, y) ((x)>(y)) ? (x) : (y)
+
 #define RCV_HOST    SPI3_HOST // SPI2 connects to rp2350 spi1
 #define GPIO_HANDSHAKE GPIO_NUM_50 // GPIO50 is used for handshake line, P4_PICO_02 which is GPIO18 on rp2350
 #define GPIO_MOSI GPIO_NUM_23
@@ -630,33 +632,59 @@ namespace CTAG::SPIAPI{
                 break;
             case RequestType::GetSampleFileCount:
                 {
-                    CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
-                    uint8_t number = HELPERS::ctagSampleRom::GetNumberSlices()
-                    ESP_LOGI("SpiAPI", "Getting sample file count (%d)", count);
-                    CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
-                    result = transmitCString(requestType, cstring);
+                    // CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+                    uint8_t number = HELPERS::ctagSampleRom::GetNumberSlices2();
+                    ESP_LOGI("SpiAPI", "Getting sample file count (%d)", number);
+                    HELPERS::ctagSampleRom srom;
+                    int firstnonwt = srom.GetFirstNonWaveTableSlice();
+                    uint32_t total = srom.GetNumberSlices() - firstnonwt;
+                    // CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+                    char info[100] = { 0, };
+                    sprintf(info, "{\"total\":%ld}", total);
+                    result = transmitCString(requestType, info);
                 }
                 break;
             case RequestType::GetSampleFileInfo:
                 {
                     int16_t file_index = uint8_param_1 * 256 + uint8_param_0;
                     ESP_LOGI("SpiAPI", "Getting sample file %d info", file_index);
-                    CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
-                    // HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
-                    // HELPERS::ctagSampleRom::RefreshDataStructure();
-                    CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
-                    result = transmitCString(requestType, cstring);
+                    HELPERS::ctagSampleRom srom;
+                    int firstnonwt = srom.GetFirstNonWaveTableSlice();
+                    uint32_t total = srom.GetNumberSlices() - firstnonwt;
+                    int16_t slice = firstnonwt + file_index;
+                    uint32_t size = srom.GetSliceSize(slice);
+                    std::string filename = srom.GetFilenameForSampleSlice(file_index);
+                    char info[100] = { 0, };
+                    sprintf(info, "{\"index\":\"%d\",\"total\":%ld,\"slice_index\":%d,\"size\":%ld,\"filename\":\"%s\"}",
+                        file_index, total, slice, size, filename.c_str());
+                    result = transmitCString(requestType, info);
                 }
                 break;
             case RequestType::GetSampleFileWaveformPreview:
                 {
                     int16_t file_index = uint8_param_1 * 256 + uint8_param_0;
-                    ESP_LOGI("SpiAPI", "Getting sample file %d waveform preview", file_index);
-                    CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
-                    // HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
-                    // HELPERS::ctagSampleRom::RefreshDataStructure();
-                    CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
-                    result = transmitCString(requestType, cstring);
+                    HELPERS::ctagSampleRom srom;
+                    int16_t slice = srom.GetFirstNonWaveTableSlice() + file_index;
+                    uint32_t offset = srom.GetSliceOffset(slice);
+                    uint32_t size = srom.GetSliceSize(slice);
+                    ESP_LOGI("SpiAPI", "Getting sample file %d waveform preview, slice %d, size %ld, offset %ld",
+                        file_index, slice, size, offset);
+                    char sampledata[520] = { 0, };
+                    int16_t slicedata[100] = { 0, };
+                    memset(sampledata, 0, sizeof(sampledata));
+                    for(int k=0; k<256; k++) {
+                        int sliceoffset = (k * floor(size/2) / 256) * 2;
+                        srom.ReadSlice((int16_t *)&slicedata, slice, sliceoffset, 20);
+                        int16_t amp = 0;
+                        for(int j=0; j<20; j++) {
+                            amp = MAX(amp, abs(slicedata[j] / 128));
+                        }
+                        sprintf(sampledata + k * 2, "%02X", (uint8_t)amp);
+                    }
+                    char info[600] = { 0, };
+                    sprintf(info, "{\"index\":%d,\"slice_index\":%d,\"size\":%ld,\"data\":\"%s\"}",
+                        file_index, slice, size, sampledata);
+                    result = transmitCString(requestType, info);
                 }
                 break;
             }

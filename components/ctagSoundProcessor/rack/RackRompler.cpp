@@ -60,9 +60,9 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     // MK_INT_PAR_NOCV(ts_track_length, track_length, 128);
 
     uint32_t firstNonWtSlice = data.firstNonWtSlice; // sampleRom.GetFirstNonWaveTableSlice();
-    MK_INT_PAR_ABS_NOCV(iS1Bank, s1_bank, 32.f)
+    MK_INT_PAR_ABS_NOCV(iS1Bank, s1_bank, 128.f)
     CONSTRAIN(iS1Bank, 0, 31)
-    MK_INT_PAR_ABS_NOCV(iS1Slice, s1_slice, 127.f) // midi cc
+    MK_INT_PAR_ABS_NOCV(iS1Slice, s1_slice, 128.f) // midi cc
     CONSTRAIN(iS1Slice, 0, 31)
     iS1Slice = iS1Bank * 32 + iS1Slice + firstNonWtSlice;
     rompler.params.slice = iS1Slice;

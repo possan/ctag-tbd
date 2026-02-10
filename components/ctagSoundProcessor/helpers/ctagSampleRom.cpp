@@ -64,6 +64,12 @@ namespace CTAG::SP::HELPERS {
         return numberSlices;
     }
 
+    uint32_t ctagSampleRom::GetNumberSlices2() {
+        if (!ctagSampleRomModel::IsSampleRomSDValid()) return 0;
+        ctagSampleRomModel sample_rom_model;
+        return sample_rom_model.GetTotalNumberSampleSlices();
+    }
+
     uint32_t ctagSampleRom::GetSliceSize(const uint32_t slice) {
         if (slice >= numberSlices) return 0;
         return sliceSizes[slice];
@@ -167,6 +173,16 @@ namespace CTAG::SP::HELPERS {
             ptrSPIRAM = nullptr;
             nSlicesBuffered = 0;
         }
+    }
+
+    std::string ctagSampleRom::GetFilenameForWTSlice(uint32_t slice) {
+        ctagSampleRomModel sample_rom_model;
+        return sample_rom_model.GetFilenameForWTSlice(slice);
+    }
+
+    std::string ctagSampleRom::GetFilenameForSampleSlice(uint32_t slice) {
+        ctagSampleRomModel sample_rom_model;
+        return sample_rom_model.GetFilenameForSampleSlice(slice);
     }
 
     uint32_t ctagSampleRom::GetFirstNonWaveTableSlice() {
