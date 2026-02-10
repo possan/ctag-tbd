@@ -628,6 +628,37 @@ namespace CTAG::SPIAPI{
             case RequestType::SendFile:
                 result = handle_send_file();
                 break;
+            case RequestType::GetSampleFileCount:
+                {
+                    CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+                    uint8_t number = HELPERS::ctagSampleRom::GetNumberSlices()
+                    ESP_LOGI("SpiAPI", "Getting sample file count (%d)", count);
+                    CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+                    result = transmitCString(requestType, cstring);
+                }
+                break;
+            case RequestType::GetSampleFileInfo:
+                {
+                    int16_t file_index = uint8_param_1 * 256 + uint8_param_0;
+                    ESP_LOGI("SpiAPI", "Getting sample file %d info", file_index);
+                    CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+                    // HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
+                    // HELPERS::ctagSampleRom::RefreshDataStructure();
+                    CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+                    result = transmitCString(requestType, cstring);
+                }
+                break;
+            case RequestType::GetSampleFileWaveformPreview:
+                {
+                    int16_t file_index = uint8_param_1 * 256 + uint8_param_0;
+                    ESP_LOGI("SpiAPI", "Getting sample file %d waveform preview", file_index);
+                    CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+                    // HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
+                    // HELPERS::ctagSampleRom::RefreshDataStructure();
+                    CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+                    result = transmitCString(requestType, cstring);
+                }
+                break;
             }
         }
     }

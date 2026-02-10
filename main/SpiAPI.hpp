@@ -60,6 +60,9 @@ namespace CTAG::SPIAPI{
             SetAbletonLinkStartStop = 0x21, // sets Ableton Link start/stop, args [isPlaying (uint8_t, 0 = stop, 1 = start)]
             RebootToOTAX = 0x22, // reboots the device to OTAX, args [X (uint8_t)]
             SendFile = 0x23, // sends a file to the device, args [filepath (cstring), filedata (byte array)]
+            GetSampleFileCount = 0x50,
+            GetSampleFileInfo = 0x51,
+            GetSampleFileWaveformPreview = 0x52,
         };
 
         static TaskHandle_t hTask;
