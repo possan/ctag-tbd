@@ -28,8 +28,8 @@ void RackChannelMixer::Init(const PickSeqRackInitData *initdata) {
 
 void RackChannelMixer::PreProcess(const PicoSeqRackProcessData &data) {
     MK_FLT_PAR_ABS_NOCV(fDev, mix_device, 4095.f, 4095.f);
-    MK_FLT_PAR_ABS_NOCV(fPan, mix_pan, 4095.f, 1.f)
-    MK_FLT_PAR_ABS_NOCV(fLev, mix_lev, 4095.f, 2.f); fLev *= fLev;
+    MK_FLT_PAR_ABS_NOCV(fPan, mix_pan, 4096.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(fLev, mix_lev, 4096.f, 2.f); fLev *= fLev;
     MK_FLT_PAR_ABS_NOCV(fFX1Send, mix_fx1, 4095.f, maxFXSendLevelDly); fFX1Send *= fFX1Send;
     MK_FLT_PAR_ABS_NOCV(fFX2Send, mix_fx2, 4095.f, maxFXSendLevelRev); fFX2Send *= fFX2Send;
     MK_FLT_PAR_ABS_NOCV(fTrackLength, mix_track_length, 4096.f, 128.f);
@@ -37,13 +37,18 @@ void RackChannelMixer::PreProcess(const PicoSeqRackProcessData &data) {
     this->enabled = fLev > minVolume;
 
 	if (this->mix_device != this->device) {
-		// ESP_LOGI("RackChannelMixer", "Device changed from %d to %d", this->device, (int)this->mix_device);
+		ESP_LOGI("RackChannelMixer", "Device changed from %d to %d", this->device, (int)this->mix_device);
 		this->device = this->mix_device;
+	}
+
+	if (fLev != this->level) {
+		ESP_LOGI("RackChannelMixer", "Level changed from %f to %f", this->level, fLev);
+		this->level = fLev;
 	}
 
 	fPan = fPan * 2.0f - 1.0f;
 	if (fPan != this->pan) {
-		// ESP_LOGI("RackChannelMixer", "Pan changed from %f to %f", this->pan, fPan);
+		ESP_LOGI("RackChannelMixer", "Pan changed from %f to %f", this->pan, fPan);
 		this->pan = fPan;
 	}
 
@@ -54,7 +59,6 @@ void RackChannelMixer::PreProcess(const PicoSeqRackProcessData &data) {
 		this->track_length = (int)fTrackLength;
 	}
 
-	this->level = fLev;
 	this->send1 = fFX1Send;
 	this->send2 = fFX2Send;
 }

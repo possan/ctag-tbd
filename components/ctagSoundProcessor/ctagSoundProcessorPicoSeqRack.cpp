@@ -13,11 +13,14 @@ using namespace CTAG::SP;
 #define maxFXSendLevelRev 1.5f
 
 void ctagSoundProcessorPicoSeqRack::mixRenderOutputMono(float *source, float level, float pan, float fx1, float fx2) {
-    float mL = (1.0f - pan) * level;
-    float mR = (1.0f + pan) * level;
+    float mL = (1.0f - pan);
+    float mR = (1.0f + pan);
 
     CONSTRAIN(mL, 0.0f, 1.f);
     CONSTRAIN(mR, 0.0f, 1.f);
+
+    mL *= level;
+    mR *= level;
 
     float sL1 = mL * fx1;
     float sR1 = mR * fx1;
@@ -35,11 +38,14 @@ void ctagSoundProcessorPicoSeqRack::mixRenderOutputMono(float *source, float lev
 }
 
 void ctagSoundProcessorPicoSeqRack::mixRenderOutputStereo(float *source, float level, float pan, float fx1, float fx2) {
-    float mL = (1.0f - pan) * level;
-    float mR = (1.0f + pan) * level;
+    float mL = (1.0f - pan);
+    float mR = (1.0f + pan);
 
     CONSTRAIN(mL, 0.0f, 1.f);
     CONSTRAIN(mR, 0.0f, 1.f);
+
+    mL *= level;
+    mR *= level;
 
     float sL1 = mL * fx1;
     float sR1 = mR * fx1;
