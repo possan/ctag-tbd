@@ -310,7 +310,8 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     // process input first
 
-    int16_t T2 = esp_timer_get_time();
+    int64_t T2 = esp_timer_get_time();
+    int64_t Tstart = T2;
     ch16.PreProcess(idata);
     if (ch16.enabled) {
         ch16_in.enabled = ch16.enabled && ch16.device == 0;
@@ -321,7 +322,7 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     }
     std::fill_n(data.buf, bufSz * 2, 0.f);
 
-    int16_t T = esp_timer_get_time();
+    int64_t T = esp_timer_get_time();
     ch16_render_time = T - T2;
 
     ch1.PreProcess(idata);
@@ -565,6 +566,7 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     }
 
     T = esp_timer_get_time();
+    int64_t Ttotal = T - Tstart;
 
     renderMasterOutput(data);
 
@@ -580,15 +582,16 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     }
 
     if (framecounter % 5000 == 0) {
-        printf("PicoSeqRack CPU times (us): Ch1:%d Ch2:%d Ch3:%d Ch4:%d Ch5:%d Ch6:%d Ch7:%d Ch8:%d FX1:%d FX2:%d Master:%d\n",
-        (int)ch1_render_time, (int)ch2_render_time, (int)ch3_render_time, (int)ch4_render_time,
-        (int)ch5_render_time, (int)ch6_render_time, (int)ch7_render_time, (int)ch8_render_time,
-        (int)fx_delay_render_time, (int)fx_reverb_render_time, (int)fx_master_render_time);
-    } else if (framecounter % 5000 == 2500) {
-        printf("PicoSeqRack CPU times (us): Ch9:%d Ch10:%d Ch11:%d Ch12:%d Ch13:%d Ch14:%d Ch15:%d Ch16:%d FX1:%d FX2:%d Master:%d\n",
-        (int)ch9_render_time, (int)ch10_render_time, (int)ch11_render_time, (int)ch12_render_time,
-        (int)ch13_render_time, (int)ch14_render_time, (int)ch15_render_time, (int)ch16_render_time,
-        (int)fx_delay_render_time, (int)fx_reverb_render_time, (int)fx_master_render_time);
+        printf("PicoSeqRack CPU time %d uS\n", (int)Ttotal);
+        // printf("PicoSeqRack CPU times (us): Ch1:%d Ch2:%d Ch3:%d Ch4:%d Ch5:%d Ch6:%d Ch7:%d Ch8:%d FX1:%d FX2:%d Master:%d\n",
+        // (int)ch1_render_time, (int)ch2_render_time, (int)ch3_render_time, (int)ch4_render_time,
+        // (int)ch5_render_time, (int)ch6_render_time, (int)ch7_render_time, (int)ch8_render_time,
+        // (int)fx_delay_render_time, (int)fx_reverb_render_time, (int)fx_master_render_time);
+        // } else if (framecounter % 5000 == 2500) {
+        // printf("PicoSeqRack CPU times (us): Ch9:%d Ch10:%d Ch11:%d Ch12:%d Ch13:%d Ch14:%d Ch15:%d Ch16:%d FX1:%d FX2:%d Master:%d\n",
+        // (int)ch9_render_time, (int)ch10_render_time, (int)ch11_render_time, (int)ch12_render_time,
+        // (int)ch13_render_time, (int)ch14_render_time, (int)ch15_render_time, (int)ch16_render_time,
+        // (int)fx_delay_render_time, (int)fx_reverb_render_time, (int)fx_master_render_time);
     }
 }
 

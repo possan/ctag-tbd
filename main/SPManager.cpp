@@ -226,7 +226,8 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
                 uint8_t expNext = protocol.getNextSequence(protocol.lastSeenRequestCounter);
                 if (spi_req_header->request_sequence_counter != expNext) {
-                    printf("expected sequence %d but got %d, did we miss a packet?\n", expNext, spi_req_header->request_sequence_counter);
+                    // printf("expected sequence %d but got %d, did we miss a packet?\n",
+                    //     expNext, spi_req_header->request_sequence_counter);
                 };
 
                 protocol.markRequestSeen(spi_req_header->request_sequence_counter);

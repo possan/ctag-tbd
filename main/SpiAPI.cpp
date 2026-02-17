@@ -680,6 +680,7 @@ namespace CTAG::SPIAPI{
                             amp = MAX(amp, abs(slicedata[j] / 128));
                         }
                         sprintf(sampledata + k * 2, "%02X", (uint8_t)amp);
+                        vPortYield();
                     }
                     char info[600] = { 0, };
                     sprintf(info, "{\"index\":%d,\"slice_index\":%d,\"size\":%ld,\"data\":\"%s\"}",

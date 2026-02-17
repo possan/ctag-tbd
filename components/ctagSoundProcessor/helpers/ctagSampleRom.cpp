@@ -231,7 +231,7 @@ namespace CTAG::SP::HELPERS {
 
         // allocatate large block of PSRAM
         assert(MAX_ALLOC_BYTES_PSRAM >= totalSize);
-        if(ptrSPIRAM == nullptr){
+        if (ptrSPIRAM == nullptr) {
             size_t maxSizeBytes = heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
             ESP_LOGI("SR", "Max Bytes free in PSRAM: %li", maxSizeBytes);
             assert(maxSizeBytes >= MAX_ALLOC_BYTES_PSRAM); // check if sample data fits in PSRAM

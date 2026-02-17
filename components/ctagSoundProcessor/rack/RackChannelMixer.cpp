@@ -17,7 +17,7 @@ void RackChannelMixer::Init(const PickSeqRackInitData *initdata) {
 	initdata->rack->registerParamAndCC(initdata, "fx1", 3, [&](const int val){ mix_fx1 = val;});
 	initdata->rack->registerParamAndCC(initdata, "fx2", 4, [&](const int val){ mix_fx2 = val;});
 	initdata->rack->registerParamAndCC(initdata, "tracklength", 5, [&](const int val){
-		ESP_LOGI("RackChannelMixer", "Track length changed to %d", val);
+		// ESP_LOGI("RackChannelMixer", "Track length changed to %d", val);
 		mix_track_length = val;
 	});
 
