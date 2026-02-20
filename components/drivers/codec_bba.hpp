@@ -23,27 +23,19 @@ respective component folders / files if different from this license.
 #pragma once
 
 #include <cstdint>
-#include "sdkconfig.h"
-
-#ifdef CONFIG_TBD_BBA_CODEC_ES8388
-#include "es8388.hpp"
-#else
-#include "aic3254.hpp"
-#endif
 
 namespace CTAG {
     namespace DRIVERS {
 
         class Codec {
+            static void cfg_codec();
         public:
             Codec() = delete;
             static void InitCodec();
 
-            static void HighPassEnable();
+            static void ADCHighPassEnable();
 
-            static void HighPassDisable();
-
-            static void RecalibDCOffset();
+            static void ADCHighPassDisable();
 
             static void SetOutputLevels(const uint32_t left, const uint32_t right);
 
@@ -52,11 +44,6 @@ namespace CTAG {
             static void WriteBuffer(float *buf, uint32_t sz);
 
         private:
-#ifdef CONFIG_TBD_BBA_CODEC_ES8388
-            static es8388 codec;
-#else
-            static aic3254 codec;
-#endif
 
         };
     }

@@ -52,13 +52,13 @@ void SPManagerDataModel::getSoundProcessors() {
     struct dirent *ent;
     Value sparray(kArrayType);
     m.AddMember("availableProcessors", sparray, m.GetAllocator());
-    if ((dir = opendir(string(CTAG::RESOURCES::spiffsRoot + string("/data/sp")).c_str())) != NULL) {
+    if ((dir = opendir(string(CTAG::RESOURCES::sdcardRoot + string("/data/sp")).c_str())) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
             string fn(ent->d_name);
             if (fn.find("mui-") != string::npos) {
                 ESP_LOGD("SPModel", "Filename: %s", fn.c_str());
                 Document d;
-                loadJSON(d, CTAG::RESOURCES::spiffsRoot + "/data/sp/" + fn);
+                loadJSON(d, CTAG::RESOURCES::sdcardRoot + "/data/sp/" + fn);
                 Value obj(kObjectType);
                 Value id(d["id"].GetString(), d.GetAllocator());
                 Value name(d["name"].GetString(), d.GetAllocator());
@@ -109,6 +109,7 @@ void SPManagerDataModel::SetActivePatchNum(const int patchNum, const int chan) {
     string id = GetActiveProcessorID(chan);
     if (!m.HasMember("lastPatches")) return;
     if (!m["lastPatches"].IsArray()) return;
+    if (m["lastPatches"].GetArray().Size() <= chan) return;
     if (!m["lastPatches"][chan].IsArray()) return;
     for (auto &chanPatches : m["lastPatches"][chan].GetArray()) {
         if (!chanPatches.HasMember("id")) return;
@@ -126,6 +127,7 @@ int SPManagerDataModel::GetActivePatchNum(const int chan) {
     string id = GetActiveProcessorID(chan);
     if (!m.HasMember("lastPatches")) return 0;
     if (!m["lastPatches"].IsArray()) return 0;
+    if (m["lastPatches"].GetArray().Size() <= chan) return 0;
     if (!m["lastPatches"][chan].IsArray()) return 0;
     for (auto &chanPatches : m["lastPatches"][chan].GetArray()) {
         if (!chanPatches.HasMember("id")) return 0;
@@ -244,7 +246,7 @@ void SPManagerDataModel::ResetNetworkConfiguration() {
 const char *SPManagerDataModel::GetCStrJSONSoundProcessorPresets(const string &id) {
     json.Clear();
     Document d1, d2;
-    loadJSON(d1, CTAG::RESOURCES::spiffsRoot + "/data/sp/mp-" + id + ".jsn");
+    loadJSON(d1, CTAG::RESOURCES::sdcardRoot + "/data/sp/mp-" + id + ".jsn");
     d2.SetObject();
     Value s_id(kObjectType);
     s_id.SetString(id, d2.GetAllocator());
@@ -260,7 +262,7 @@ void SPManagerDataModel::SetCStrJSONSoundProcessorPreset(const char *id, const c
     Document presets;
     presets.Parse(data);
     if(presets.HasParseError()) return;
-    storeJSON(presets, string(CTAG::RESOURCES::spiffsRoot + "/data/sp/mp-" + id + ".jsn"));
+    storeJSON(presets, string(CTAG::RESOURCES::sdcardRoot + "/data/sp/mp-" + id + ".jsn"));
 }
 
 bool SPManagerDataModel::HasPluginID(const string &id) {

@@ -1,79 +1,76 @@
 menu "CTAG TBD Configuration"
-        choice TBD_PLATFORM
-            prompt "TBD Hardware Platform"
-            default TBD_PLATFORM_V2
+
+    config ABLETON_LINK
+        bool "Enable Ableton Link Support"
+        default y
+        help
+            Enable Ableton Link support for tempo synchronization over network.
+
+    config ABLETON_LINK_DEBUG
+        bool "Enable Ableton Link Debug Output"
+        default n
+        depends on ABLETON_LINK
+        help
+            Enable debug output for Ableton Link.
+
+    menu "Sample ROM Settings"
+        config MAX_ALLOC_BYTES_PSRAM_SAMPLE_DATA
+            int "Maximum PSRAM Allocation Size Sample Data"
+            default 29360128 # 28MB
+            range 8388608 31457280 # 8MB to 30MB
             help
-                Determines which TBD platform, V1 WM8731 codec, V2 WM8978 codec, STR Strämpler, BBA Black Box Audio
+                Define maximum PSRAM allocation size for sample data in ctagSampleRom.
+                Files from sd-card will be stored here.
+                All mem allocated here is not available for other uses, when ctagSampleRom is instantiated.
 
-            config TBD_PLATFORM_V2
-                bool "V2 (WM8978 + ESP ADC)"
-            config TBD_PLATFORM_V1
-                bool "V1 (WM8731 + ESP ADC)"
-            config TBD_PLATFORM_STR
-                bool "Strämpler (WM8731 + MCP3208)"
-            config TBD_PLATFORM_AEM
-                bool "AE Modular (WM8974 + ESP ADC)"
-            config TBD_PLATFORM_MK2
-                bool "MK2 (WM8978 + STM32 CVs + Trigs)"
-            config TBD_PLATFORM_BBA
-                bool "BBA (Midi)"
-            choice TBD_BBA_CODEC
-                prompt "Codec selection"
-                default TBD_BBA_CODEC_AIC3254
-                depends on TBD_PLATFORM_BBA
-                help
-                    Which codec should be used?
-
-                config TBD_BBA_CODEC_ES8388
-                    bool "Everest Semiconductor ES8388"
-                config TBD_BBA_CODEC_AIC3254
-                    bool "TI TLV320AIC3254"
-            endchoice
-
-            config TBD_TOUCH_BUTTON_THRESHOLD
-                int "Touch Button Threshold"
-                default 36000
-                depends on TBD_PLATFORM_BBA
-                range 0 50000
-                help
-                    Threshold for touch buttons.
-
-        endchoice
-
-
-        choice TBD_UI_TYPE
-            prompt "Wifi or serial UI"
-            default WIFI_UI
+        config MAX_SAMPLES_IN_SAMPLE_ROM
+            int "Maximum Number of Samples in Sample ROM"
+            default 128
+            range 32 1024 # max 32*32 addressable in web ui
             help
-                Whether to build for Wifi or Serial UI
-            config WIFI_UI
-                bool "WIFI UI"
-            config SERIAL_UI
-                bool "SERIAL UI"
-        endchoice
+                Define maximum number of samples in sample rom.
+                This limits the number of sample slots available in ctagSampleRom.
+                It is samples, i.e. files from sd-card, that are loaded into sample rom, not bytes.
+    endmenu
 
-        config SAMPLE_ROM_START_ADDRESS
-            hex "Sample ROM Start Address"
-            default 0xB00000
-            range 0x700000 0xD00000
-            help
-                Define the start of the sample ROM flash section. Has to be at end of flash, beyond last partition entries.
+    config SP_FIXED_MEM_ALLOC_SZ
+        int "Sound Processor Fixed Memory Alloc Size"
+        default 300000
+        range 113944 380000
+        help
+            Define sound processor fixed memory size allocated at startup.
+            Sound processors are allocated from this memory pool.
 
-        config SAMPLE_ROM_SIZE
-            hex "Sample ROM Size"
-            default 0x500000
-            range 0x300000 0x1500000
+    menu "Optional Tasks"
+        config TASK_REST_SERVER
+            bool "Start REST Server Task"
+            default y
             help
-                Define sample ROM flash size.
-                TBD-Platform V1: 0x500000 (ESP32)
-                TBD-Platform BBA: 0x1500000 (ESP32-S3)
+                Enable REST server task for handling HTTP requests offering TBD web-ui.
 
-        config SP_FIXED_MEM_ALLOC_SZ
-            int "Sound Processor Fixed Memory Alloc Size"
-            default 114688
-            range 113944 118784
+        config TASK_RGB_INDICATOR_LED
+            bool "Enable RGB Indicator LED Task"
+            default n
             help
-                Define sound processor fixed memory size allocated at startup.
-                Sound processors are allocated from this memory pool.
+                Drives indicator RGB LED to show system status.
+
+    endmenu
+
+    menu "Optimizations"
+        config ASSEMBLY_OPT_AUDIO_BUFFER_CODEC
+            bool "Enable Assembly Optimizations for Audio Buffer Codec"
+            default y
+            help
+                Enable assembly optimizations for audio buffer codec processing to improve performance.
+                P4 F-extension, loop unrolling, hardware loop and other optimizations are used.
+                Works only for 32 samples per buffer configuration. Small improvement.
+
+        config SD_DDR_50MHZ_MODE
+            bool "Enable SD Card DDR 50MHz Mode"
+            default n
+            help
+                Enable DDR mode at 50MHz for SD card interface to improve data transfer rates.
+                Requires compatible SD card and hardware support.
+    endmenu
 
 endmenu

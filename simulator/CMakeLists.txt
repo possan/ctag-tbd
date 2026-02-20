@@ -12,7 +12,7 @@ add_definitions(
         -DRAPIDJSON_HAS_STDSTRING=1 # rapidjson
         -DTBD_SIM=1
         -Wno-unused-local-typedefs
-        -DTEST
+        -DMUTABLE_STD_CPP
         -DCONFIG_DSP_ANSI=1
         -DN_CVS=4
         -DN_TRIGS=2
@@ -40,13 +40,13 @@ set(RTAUDIO_BUILD_STATIC_LIBS TRUE)
 add_subdirectory(rtaudio)
 
 #esp-dsp
-set(ESP_DSP_DIR "../managed_components/espressif__esp-dsp")
+set(ESP_DSP_DIR "esp-dsp")
 set(ESP_DSP_SRC_FILES  "${ESP_DSP_DIR}/modules/common/misc/dsps_pwroftwo.cpp"
         "${ESP_DSP_DIR}/modules/dotprod/float/dsps_dotprod_f32_ansi.c"
         "${ESP_DSP_DIR}/modules/dotprod/float/dsps_dotprode_f32_ansi.c"
         "${ESP_DSP_DIR}/modules/dotprod/fixed/dsps_dotprod_s16_ansi.c"
-        "${ESP_DSP_DIR}/modules/matrix/float/dspm_mult_f32_ansi.c"
-        "${ESP_DSP_DIR}/modules/matrix/fixed/dspm_mult_s16_ansi.c"
+        #"${ESP_DSP_DIR}/modules/matrix/float/dspm_mult_f32_ansi.c"
+        #"${ESP_DSP_DIR}/modules/matrix/fixed/dspm_mult_s16_ansi.c"
         "${ESP_DSP_DIR}/modules/math/mulc/float/dsps_mulc_f32_ansi.c"
         "${ESP_DSP_DIR}/modules/math/addc/float/dsps_addc_f32_ansi.c"
         "${ESP_DSP_DIR}/modules/math/add/float/dsps_add_f32_ansi.c"
@@ -177,7 +177,7 @@ target_include_directories(run_tests PRIVATE ${Boost_INCLUDE_DIR})
 # installation
 install(CODE "set(CMAKE_INSTALL_LOCAL_ONLY true)")
 install(TARGETS tbd-sim RUNTIME DESTINATION simulator/bin)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../spiffs_image DESTINATION .)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../sdcard_image DESTINATION .)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../sample_rom/sample-rom.tbd DESTINATION simulator/data)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION simulator)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/www DESTINATION simulator)

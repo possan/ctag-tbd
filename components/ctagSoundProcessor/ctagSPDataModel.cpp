@@ -31,7 +31,7 @@ respective component folders / files if different from this license.
 #ifndef TBD_SIM
 #define SPIFFS_PATH "/spiffs"
 #else
-#define SPIFFS_PATH "../../spiffs_image"
+#define SPIFFS_PATH "../../sdcard_image"
 #endif
  */
 
@@ -39,16 +39,20 @@ using namespace CTAG::SP;
 
 ctagSPDataModel::ctagSPDataModel(const string &id, const bool isStereo) {
     // acquire data from json files ui model and patch model
-    muiFileName = string(CTAG::RESOURCES::spiffsRoot + "/data/sp/mui-") + id + string(".jsn");
+    muiFileName = string(CTAG::RESOURCES::sdcardRoot + "/data/sp/mui-") + id + string(".jsn");
     //std::cout << "Reading " << muiFileName << std::endl;
     loadJSON(mui, muiFileName);
-    mpFileName = string(CTAG::RESOURCES::spiffsRoot + "/data/sp/mp-") + id + string(".jsn");
+    mpFileName = string(CTAG::RESOURCES::sdcardRoot + "/data/sp/mp-") + id + string(".jsn");
     //std::cout << "Reading " << mpFileName << std::endl;
     loadJSON(mp, mpFileName);
     // load last activated preset
-    ESP_LOGD("Model", "Loading patch number %d", mp["activePatch"].GetInt());
-    LoadPreset(mp["activePatch"].GetInt());
-
+    if (mp.IsObject() && mp.HasMember("activePatch") && mp["activePatch"].IsInt()) {
+        ESP_LOGD("Model", "Loading patch number %d", mp["activePatch"].GetInt());
+        LoadPreset(mp["activePatch"].GetInt());
+    }
+    else {
+        ESP_LOGD("Model", "No active patch found");
+    }
 }
 
 ctagSPDataModel::~ctagSPDataModel() {
@@ -65,6 +69,7 @@ const char *ctagSPDataModel::GetCStrJSONParams() {
 
 void ctagSPDataModel::mergeModels() {
     // iterate preset model for all parameters
+    if (!activePreset.IsObject()) return;
     if (!activePreset.HasMember("params")) return;
     if (!mui.HasMember("params")) return;
     Value &patchParams = activePreset["params"];
@@ -76,6 +81,7 @@ void ctagSPDataModel::mergeModels() {
 
 void ctagSPDataModel::SetParamValue(const string &id, const string &key, const int val) {
     ESP_LOGD("Model", "Setting id %s, with %s to %d", id.c_str(), key.c_str(), val);
+    if (!activePreset.IsObject()) return;
     if (!activePreset.HasMember("params")) return;
     Value &patchParams = activePreset["params"];
     if (!patchParams.IsArray()) return;
@@ -92,6 +98,7 @@ void ctagSPDataModel::SetParamValue(const string &id, const string &key, const i
 }
 
 int ctagSPDataModel::GetParamValue(const string &id, const string &key) {
+    if (!activePreset.IsObject()) return 0;
     if (!activePreset.HasMember("params")) return 0;
     Value &patchParams = activePreset["params"];
     if (!patchParams.IsArray()) return 0;
@@ -146,6 +153,7 @@ void ctagSPDataModel::LoadPreset(const int num) {
     loadJSON(mp, mpFileName);
     int patchNum = num;
     if (patchNum < 0) patchNum = 0;
+    if (!mp.IsObject()) return;
     if (!mp.HasMember("patches")) return;
     if (!mp["patches"].IsArray()) return;
     if (patchNum >= mp["patches"].GetArray().Size()) {
@@ -251,6 +259,7 @@ const char *ctagSPDataModel::GetCStrJSONAllPresetData() {
 }
 
 bool ctagSPDataModel::IsParamTrig(const string &id) {
+    if (!activePreset.IsObject()) return false;
     if (!activePreset.HasMember("params")) return false;
     Value &patchParams = activePreset["params"];
     if (!patchParams.IsArray()) return false;
@@ -265,6 +274,7 @@ bool ctagSPDataModel::IsParamTrig(const string &id) {
 }
 
 bool ctagSPDataModel::IsParamCV(const string &id) {
+    if (!activePreset.IsObject()) return false;
     if (!activePreset.HasMember("params")) return false;
     Value &patchParams = activePreset["params"];
     if (!patchParams.IsArray()) return false;

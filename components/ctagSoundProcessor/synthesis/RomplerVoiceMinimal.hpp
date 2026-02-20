@@ -24,19 +24,20 @@ respective component folders / files if different from this license.
 #include "helpers/ctagSampleRom.hpp"
 #include "helpers/ctagADEnv.hpp"
 #include "stmlib/dsp/filter.h"
+#include "mifx/pitch_shifter_mono.h"
 
 using namespace CTAG::SP::HELPERS;
 
 namespace CTAG::SYNTHESIS{
     class RomplerVoiceMinimal {
     public:
-        enum class FilterType : uint32_t {NONE = 0x00, LP, BP, HP};
         struct Params{
             uint32_t slice;
             float playbackSpeed, pitch;
             float startOffsetRelative, lengthRelative; // relative to entire sliceLength
             float a, d;
             float cutoff, resonance;
+            enum class FilterType : uint32_t {NONE = 0x00, LP, BP, HP};
             FilterType filterType;
             bool loop, loopPiPo;
             float loopMarker; // relative to length of subsection, not sliceLength
@@ -44,6 +45,9 @@ namespace CTAG::SYNTHESIS{
             uint32_t bitReduction;
             // struct for filter type
             bool gate;
+            // Time-stretch controls
+            bool timeStretchEnable = false; // bypass when false (no extra CPU)
+            float timeStretchWindowSize = 1.f; // window size
         };
 
         void Init(const float samplingRate);
@@ -62,6 +66,10 @@ namespace CTAG::SYNTHESIS{
         ctagADEnv ad;
         // multimode filter
         stmlib::Svf svf;
+
+        // pitch shifter, needs 2048 floats as buffer, i.e. 8KiB
+        mifx::PitchShifterMono pitch_shifter;
+        float *pitch_shifter_buffer;
 
         // process methods for modes
         void processBlock(float *out, const uint32_t size);

@@ -12,6 +12,10 @@
 #include "esp_event.h"
 #include "esp_mac.h"
 #include "mdns.h"
+#include "tinyusb.h"
+#include "tinyusb_net.h"
+#include "dhcpserver/dhcpserver_options.h"
+#include "lwip/esp_netif_net_stack.h"
 #include "lwip/apps/netbiosns.h"
 
 using namespace CTAG::NET;
@@ -28,9 +32,54 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
-static const char *TAG = "wifi station";
+static const char *TAG = "network";
 
 static int s_retry_num = 0;
+
+string Network::_ssid = "";
+string Network::_ip = "";
+string Network::_pwd = "";
+string Network::_mdns = "";
+string Network::_mdns_instance = "";
+Network::IF_TYPE Network::_if_type = Network::IF_TYPE::IF_TYPE_AP;
+uint32_t Network::_ip_addr = 0;
+esp_netif_t *Network::netif = nullptr;
+
+
+esp_err_t Network::netif_recv_callback(void *buffer, uint16_t len, void *ctx)
+{
+    // FIXME: where is buf_copy de-allocated?
+    if (netif) {
+        void *buf_copy = malloc(len);
+        if (!buf_copy) {
+            return ESP_ERR_NO_MEM;
+        }
+        memcpy(buf_copy, buffer, len);
+        return esp_netif_receive(netif, buf_copy, len, nullptr);
+    }
+    return ESP_OK;
+}
+
+esp_err_t wired_send(void *buffer, uint16_t len, void *buff_free_arg)
+{
+    return tinyusb_net_send_sync(buffer, len, buff_free_arg, pdMS_TO_TICKS(100));
+}
+
+static void l2_free(void *h, void *buffer)
+{
+    free(buffer);
+}
+
+static esp_err_t netif_transmit (void *h, void *buffer, size_t len)
+{
+    esp_err_t err = wired_send(buffer, len, nullptr);
+    if(err != ESP_OK && err != ESP_ERR_INVALID_STATE){
+        ESP_LOGE(TAG, "Failed to send buffer to USB %d!", err);
+    }
+    return err;
+}
+
+
 
 void Network::event_handler_sta(void *arg, esp_event_base_t event_base,
                                 int32_t event_id, void *event_data) {
@@ -54,6 +103,7 @@ void Network::event_handler_sta(void *arg, esp_event_base_t event_base,
 }
 
 void Network::wifi_init_sta(void) {
+    ESP_LOGI("Network", "Starting sta interface");
     s_wifi_event_group = xEventGroupCreate();
 
     netif = esp_netif_create_default_wifi_sta();
@@ -61,8 +111,8 @@ void Network::wifi_init_sta(void) {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler_sta, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler_sta, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler_sta, nullptr));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler_sta, nullptr));
 
     wifi_config_t wifi_config;
     memset((void *) &wifi_config, 0, sizeof(wifi_config_t));
@@ -96,7 +146,7 @@ void Network::wifi_init_sta(void) {
         ESP_LOGI(TAG, "connected");
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(TAG, "Could not connect, starting as AP");
-        Network::SetIsAccessPoint(true);
+        Network::SetIfType(IF_TYPE::IF_TYPE_AP);
         Network::SetSSID(Network::_mdns);
         Network::SetPWD("");
         Network::wifi_init_softap();
@@ -119,9 +169,9 @@ void Network::wifi_event_handler_ap(void *arg, esp_event_base_t event_base,
     }
 }
 
-esp_netif_t *Network::netif = nullptr;
 
 void Network::wifi_init_softap(void) {
+    ESP_LOGI("Network", "Starting softap interface");
     netif = esp_netif_create_default_wifi_ap();
 
 
@@ -130,7 +180,7 @@ void Network::wifi_init_softap(void) {
     // issues with wifi:bcn_timout,ap_probe_send_start
     ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
 
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler_ap, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler_ap, nullptr));
 
     wifi_config_t wifi_config;
     memset((void *) &wifi_config, 0, sizeof(wifi_config_t));
@@ -146,6 +196,15 @@ void Network::wifi_init_softap(void) {
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
+
+    // Assign a static IP to the AP
+    esp_netif_ip_info_t ip_info;
+    esp_netif_get_ip_info(netif, &ip_info);
+    ip_info.ip.addr = _ip_addr;
+    ip_info.netmask.addr = ESP_IP4TOADDR(255, 255, 255, 0);
+    ip_info.gw.addr = _ip_addr;
+    esp_netif_set_ip_info(netif, &ip_info);
+
 
     /* DHCP stuff not working yet
     esp_netif_dhcpc_stop(netif);
@@ -171,6 +230,12 @@ void Network::wifi_init_softap(void) {
 
 void Network::initialise_mdns(const string hostname, const string instance_name_set) {
     mdns_init();
+
+    mdns_register_netif(netif);
+    mdns_netif_action(netif, mdns_event_actions_t(MDNS_EVENT_ENABLE_IP4 | MDNS_EVENT_ENABLE_IP6));
+    mdns_netif_action(netif, mdns_event_actions_t(MDNS_EVENT_ANNOUNCE_IP4 | MDNS_EVENT_ANNOUNCE_IP6));
+    mdns_netif_action(netif, mdns_event_actions_t(MDNS_EVENT_IP4_REVERSE_LOOKUP | MDNS_EVENT_IP6_REVERSE_LOOKUP));
+
     mdns_hostname_set(hostname.c_str());
     mdns_instance_name_set(instance_name_set.c_str());
 
@@ -183,9 +248,99 @@ void Network::initialise_mdns(const string hostname, const string instance_name_
                                      sizeof(serviceTxtData) / sizeof(serviceTxtData[0])));
 }
 
+void Network::if_init_usbncm(void){
+    ESP_LOGI("Network", "Starting USB NCM interface");
+    const tinyusb_net_config_t net_config = {
+            // locally administrated address for the ncm device as it's going to be used internally
+            // for configuration only
+            .mac_addr = {0x02, 0x02, 0x11, 0x22, 0x33, 0x01},
+            .on_recv_callback = netif_recv_callback,
+            .free_tx_buffer = nullptr,
+            .on_init_callback = nullptr,
+            .user_context = nullptr
+    };
+
+    esp_err_t ret = tinyusb_net_init(TINYUSB_USBDEV_0, &net_config);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Cannot initialize USB Net device");
+        assert(0);
+    }
+
+    // with OUI range MAC to create a virtual netif running http server
+    // this needs to be different to usb_interface_mac (==client)
+    uint8_t lwip_addr[6] =  {0x02, 0x02, 0x11, 0x22, 0x33, 0x02};
+
+    const esp_netif_ip_info_t ip_cfg = {
+            .ip = { .addr = _ip_addr },
+            //.ip = { .addr = ESP_IP4TOADDR( 192, 168, 4, 1) },
+            .netmask = { .addr = ESP_IP4TOADDR( 255, 255, 255, 0) },
+            //.gw = { .addr = ESP_IP4TOADDR( 192, 168, 4, 1) },
+            .gw = { .addr = ESP_IP4TOADDR( 0, 0, 0, 0) },
+    };
+
+    // Definition of
+    // 1) Derive the base config (very similar to IDF's default WiFi AP with DHCP server)
+    esp_netif_inherent_config_t base_cfg =  {
+            .flags = esp_netif_flags_t(ESP_NETIF_DHCP_SERVER | ESP_NETIF_FLAG_AUTOUP), // Run DHCP server; set the netif "ip" immediately
+            .mac = {0, 0, 0, 0, 0, 0},
+            .ip_info = &ip_cfg,
+            .get_ip_event = IP_EVENT_STA_GOT_IP,
+            .lost_ip_event = IP_EVENT_STA_LOST_IP,
+            .if_key = "wired",                                      // Set mame, key, priority
+            .if_desc = "usb ncm config device",
+            .route_prio = 10,
+            .bridge_info = nullptr
+    };
+    // 2) Use static config for driver's config pointing only to static transmit and free functions
+    esp_netif_driver_ifconfig_t driver_cfg = {
+            .handle = (void *)1,                // not using an instance, USB-NCM is a static singleton (must be != nullptr)
+            .transmit = netif_transmit,
+            .transmit_wrap = nullptr,
+            .driver_free_rx_buffer = l2_free,    // point to Free Rx buffer function
+            .driver_set_mac_filter = nullptr
+    };
+
+    // 3) USB-NCM is an Ethernet netif from lwip perspective, we already have IO definitions for that:
+    struct esp_netif_netstack_config lwip_netif_config = {
+            .lwip = {
+                    .init_fn = ethernetif_init,
+                    .input_fn = ethernetif_input
+            }
+    };
+
+    // Config the esp-netif with:
+    //   1) inherent config (behavioural settings of an interface)
+    //   2) driver's config (connection to IO functions -- usb)
+    //   3) stack config (using lwip IO functions -- derive from eth)
+    esp_netif_config_t cfg = {
+            .base = &base_cfg,
+            .driver = &driver_cfg,
+            .stack = &lwip_netif_config
+    };
+
+    netif = esp_netif_new(&cfg);
+    if (netif == nullptr) {
+        assert(0);
+    }
+    esp_netif_set_mac(netif, lwip_addr);
+
+    /*
+    esp_netif_dns_info_t dns_info = {0};
+    IP_ADDR4(&dns_info.ip, 8, 8, 8, 8);
+    esp_netif_set_dns_info(s_netif, ESP_NETIF_DNS_MAIN, &dns_info);
+     */
+
+    // set the minimum lease time
+    uint32_t  lease_opt = 60;
+    esp_netif_dhcps_option(netif, esp_netif_dhcp_option_mode_t(esp_netif_dhcp_option_mode_t::ESP_NETIF_OP_SET), esp_netif_dhcp_option_id_t(dhcp_msg_option::IP_ADDRESS_LEASE_TIME), (void*)&lease_opt, sizeof(lease_opt));
+
+    // start the interface manually (as the driver has been started already)
+    esp_netif_action_start(netif, 0, 0, 0);
+}
+
 void Network::Up() {
-    ESP_LOGI("Network", "Starting with ssid %s, pwd %s, mdns %s, ip %s, is %s",
-             _ssid.c_str(), _pwd.c_str(), _mdns.c_str(), _ip.c_str(), isAP ? "ap" : "sta");
+    ESP_LOGI("Network", "Starting with ssid %s, pwd %s, mdns %s, ip %s, is %d",
+             _ssid.c_str(), _pwd.c_str(), _mdns.c_str(), _ip.c_str(), int(_if_type));
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -194,29 +349,35 @@ void Network::Up() {
     ESP_ERROR_CHECK(ret);
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+
+    switch(_if_type) {
+        case IF_TYPE::IF_TYPE_AP:
+            wifi_init_softap();
+            break;
+        case IF_TYPE::IF_TYPE_STA:
+            wifi_init_sta();
+            break;
+        case IF_TYPE::IF_TYPE_USBNCM:
+            if_init_usbncm();
+            break;
+    }
+
+    if(_if_type != IF_TYPE::IF_TYPE_USBNCM){
+        ESP_LOGI("Network", "Disabling wifi power save mode");
+        wifi_ps_type_t ps_mode = WIFI_PS_NONE;
+        esp_wifi_set_ps(ps_mode);
+    }
+
+    // network interface to mdns services
     initialise_mdns(_mdns, _mdns_instance);
     netbiosns_init();
     netbiosns_set_name(_mdns.c_str());
 
-    if (isAP) {
-        wifi_init_softap();
-    } else {
-        wifi_init_sta();
-    }
-    ESP_LOGI("Network", "Disabling wifi power save mode");
-    wifi_ps_type_t ps_mode = WIFI_PS_NONE;
-    esp_wifi_set_ps(ps_mode);
 }
 
-string Network::_ssid = "";
-string Network::_ip = "";
-string Network::_pwd = "";
-string Network::_mdns = "";
-string Network::_mdns_instance = "";
-bool Network::isAP = true;
-
-void Network::SetIsAccessPoint(bool yes) {
-    isAP = yes;
+void Network::SetIfType(IF_TYPE if_type){
+    _if_type = if_type;
 }
 
 void Network::SetSSID(const string ssid) {
@@ -227,8 +388,23 @@ void Network::SetPWD(const string pwd) {
     _pwd = pwd;
 }
 
-void Network::SetIP(const string ip) {
+void Network::SetIP(string ip) {
     _ip = ip;
+    // parse ip to 4 bytes and store in _ip_addr
+    size_t start = 0;
+    size_t end = 0;
+    int index = 0;
+    uint8_t octets[4];
+    while ((end = ip.find('.', start)) != std::string::npos) {
+        std::string token = ip.substr(start, end - start);
+        int octet = std::stoi(token);
+        octets[index] = static_cast<uint8_t>(octet);
+        start = end + 1;
+        index++;
+    }
+    std::string token = ip.substr(start);
+    octets[index] = static_cast<uint8_t>(std::stoi(token));
+    _ip_addr = ESP_IP4TOADDR(octets[0], octets[1], octets[2], octets[3]);
 }
 
 void Network::SetMDNSName(const string name) {

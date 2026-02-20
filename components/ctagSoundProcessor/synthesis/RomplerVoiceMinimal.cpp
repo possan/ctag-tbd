@@ -27,6 +27,7 @@ respective component folders / files if different from this license.
 #include "dsps_biquad.h"
 #include "stmlib/dsp/units.h"
 #include "clouds/resources.h" // use fade lut
+#include "esp_heap_caps.h"
 
 namespace CTAG::SYNTHESIS {
 
@@ -59,8 +60,21 @@ namespace CTAG::SYNTHESIS {
         ad.SetDecay(params.d);
 
         // calculate playback speed = dt = phase increment
+        // check if time-stretch is active
+        bool timeStretch = params.timeStretchEnable;
         phaseIncrement = params.playbackSpeed; // speed
-        phaseIncrement *= stmlib::SemitonesToRatio( params.pitch); // includes pitch FM
+        float pitchFactor = stmlib::SemitonesToRatio(params.pitch); // includes pitch FM
+        if (timeStretch){
+            if (fabsf(phaseIncrement - 1.f) < 0.001f && fabsf(pitchFactor - 1.f) < 0.001f) {
+                timeStretch = false;
+            }
+        }
+
+        // pitch sample if time stretch is off
+        if (!timeStretch){
+            phaseIncrement *= pitchFactor;
+        }
+
 
         // evaluate loop settings
         if (params.loop) {
@@ -441,6 +455,14 @@ namespace CTAG::SYNTHESIS {
         }
         if (!ad.GetIsRunning()) bufferStatus = BufferStatus::STOPPED;
 
+        // pitch correct if in timestretch mode
+        if (timeStretch){
+            pitch_shifter.set_size(params.timeStretchWindowSize);
+            pitch_shifter.set_ratio(pitchFactor / params.playbackSpeed);
+            pitch_shifter.Process(out, size);
+        }
+
+        // apply SVF filter
         float fCut = params.cutoff;
         CONSTRAIN(fCut, 0.f, 1.f)
         fCut = 20.f * stmlib::SemitonesToRatio(fCut * 120.f);
@@ -450,17 +472,17 @@ namespace CTAG::SYNTHESIS {
                 set_f_q<stmlib::FREQUENCY_FAST>(fCut
                                                 / 44100.f, fReso);
         switch (params.filterType) {
-            case FilterType::LP:
+            case Params::FilterType::LP:
                 svf.
                         Process<stmlib::FILTER_MODE_LOW_PASS>(out, out, size
                 );
                 break;
-            case FilterType::BP:
+            case Params::FilterType::BP:
                 svf.
                         Process<stmlib::FILTER_MODE_BAND_PASS>(out, out, size
                 );
                 break;
-            case FilterType::HP:
+            case Params::FilterType::HP:
                 svf.
                         Process<stmlib::FILTER_MODE_HIGH_PASS>(out, out, size
                 );
@@ -468,6 +490,7 @@ namespace CTAG::SYNTHESIS {
             default:
                 break;
         }
+
     }
 
     void RomplerVoiceMinimal::Init(const float samplingRate) {
@@ -480,11 +503,18 @@ namespace CTAG::SYNTHESIS {
     }
 
     RomplerVoiceMinimal::RomplerVoiceMinimal() {
-        memset(&params, 0, sizeof(Params));
+        // pitch shifter memory
+        pitch_shifter_buffer = (float*) heap_caps_malloc(2048 * sizeof(float), MALLOC_CAP_SPIRAM);
+        assert(pitch_shifter_buffer != nullptr);
+        pitch_shifter.Init(pitch_shifter_buffer);
+
+        params = Params{};
+
         Reset();
     }
 
     RomplerVoiceMinimal::~RomplerVoiceMinimal() {
+        heap_caps_free(pitch_shifter_buffer);
     }
 
     void RomplerVoiceMinimal::processBlock(float *out, const uint32_t size) {
@@ -498,7 +528,7 @@ namespace CTAG::SYNTHESIS {
         // > 0.1f to limit processing power at high pitch, has aliasing then
         // TODO anti aliasing could possibly completely be removed
         float fAntiAlias = 0.5f / phaseIncrement;
-        if (fAntiAlias < 0.5f && fAntiAlias > 0.1f && params.filterType == FilterType::NONE) {
+        if (fAntiAlias < 0.5f && fAntiAlias > 0.1f && params.filterType == Params::FilterType::NONE) {
             // the more cascades the better, but beware of cost
             dsps_biquad_gen_lpf_f32(coeffs_lpf, fAntiAlias, .5f);
             dsps_biquad_f32(&readBufferFloat[2], &readBufferFloat[2], readBufferLength, coeffs_lpf, w_lpf1);

@@ -9,6 +9,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # pull in idf specific items, config vars etc.
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
+idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=sdmmc_read_sectors" APPEND)
+idf_build_set_property(LINK_OPTIONS "-Wl,--undefined=__wrap_sdmmc_read_sectors" APPEND)
+idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=sdmmc_write_sectors" APPEND)
+idf_build_set_property(LINK_OPTIONS "-Wl,--undefined=__wrap_sdmmc_write_sectors" APPEND)
 
 project(ctag-tbd)
 
@@ -16,34 +20,9 @@ project(ctag-tbd)
 #idf_build_set_property(COMPILE_OPTIONS -Wno-unused-local-typedefs -ffast-math APPEND) # -ffast-math -fno-finite-math-only https://stackoverflow.com/questions/22931147/stdisinf-does-not-work-with-ffast-math-how-to-check-for-infinity
 idf_build_set_property(COMPILE_DEFINITIONS -DRAPIDJSON_ALLOCATOR_DEFAULT_CHUNK_CAPACITY=4096 APPEND)
 idf_build_set_property(COMPILE_DEFINITIONS -DRAPIDJSON_HAS_STDSTRING=1 APPEND)
-
-if(CONFIG_TBD_PLATFORM_STR)
-    message("Configuring for Strämpler!")
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=8 APPEND)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=2 APPEND)
-    set(TBD_HW "Strampler")
-elseif(CONFIG_TBD_PLATFORM_MK2)
-    message("Configuring for MK2!")
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=22 APPEND)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=12 APPEND)
-    set(TBD_HW "mk2")
-elseif(CONFIG_TBD_PLATFORM_V2)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=4 APPEND)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=2 APPEND)
-    set(TBD_HW "V2")
-elseif(CONFIG_TBD_PLATFORM_V1)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=4 APPEND)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=2 APPEND)
-    set(TBD_HW "V1")
-elseif(CONFIG_TBD_PLATFORM_AEM)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=4 APPEND)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=2 APPEND)
-    set(TBD_HW "AEM")
-elseif(CONFIG_TBD_PLATFORM_BBA)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=90 APPEND)
-    idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=40 APPEND)
-    set(TBD_HW "BBA")
-endif()
+idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=1 APPEND)
+idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=1 APPEND)
+set(TBD_HW "DADA")
 
 # generate include definitions for hw + fw version
 execute_process(
@@ -53,31 +32,17 @@ string(STRIP ${TBD_FW} TBD_FW)
 configure_file(${CMAKE_SOURCE_DIR}/version.hpp.in ${CMAKE_BINARY_DIR}/gen_include/version.hpp @ONLY)
 idf_build_set_property(INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR}/gen_include APPEND)
 
-# Create a SPIFFS image from the contents of the 'spiffs_image' directory
-# that fits the partition named 'storage'. FLASH_IN_PROJECT indicates that
-# the generated image should be flashed when the entire project is flashed to
-# the target with 'idf.py -p PORT flash'.
-file(GLOB_RECURSE WWW_FILES RELATIVE ${CMAKE_SOURCE_DIR}/spiffs_image ${CMAKE_SOURCE_DIR}/spiffs_image/www/*)
-foreach(WWW_FILE ${WWW_FILES})
-    list(APPEND GZIP_COMMANDS
-            COMMAND gzip -9 ${CMAKE_BINARY_DIR}/spiffs_image/${WWW_FILE} )
-endforeach()
-if(NOT CONFIG_TBD_PLATFORM_BBA)
-    list(APPEND DEL_COMMANDS
-            COMMAND rm -f ${CMAKE_BINARY_DIR}/spiffs_image/data/sp/*DrumRack.jsn)
-    list(APPEND DEL_COMMANDS
-            COMMAND rm -f ${CMAKE_BINARY_DIR}/spiffs_image/dbup/sp/*DrumRack.jsn)
-endif()
-add_custom_target(copy-files ALL DEPENDS ${CMAKE_SOURCE_DIR}/spiffs_image
-        # clean up
-        COMMAND rm -rf ${CMAKE_BINARY_DIR}/spiffs_image
-        # copy spiffs files to build folder
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/spiffs_image ${CMAKE_BINARY_DIR}/spiffs_image
-        # create gzip encoded www files
-        ${GZIP_COMMANDS}
-        # and create backup file structure (sometimes when the ESP's power is interrupted during flash writes, the SPIFFS file gets corrupted)
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/spiffs_image/data ${CMAKE_BINARY_DIR}/spiffs_image/dbup
-        ${DEL_COMMANDS}
-        )
+# Create SD card zip archive and hash for embedded system
+set(SD_CARD_ZIP "${CMAKE_BINARY_DIR}/tbd-sd-card.zip")
+set(SD_CARD_HASH "${CMAKE_BINARY_DIR}/tbd-sd-card-hash.txt")
 
-littlefs_create_partition_image(storage ${CMAKE_BINARY_DIR}/spiffs_image FLASH_IN_PROJECT DEPENDS copy-files)
+# Find xxhash tool
+find_program(XXH128SUM xxh128sum REQUIRED)
+
+add_custom_target(sd_card_archive ALL
+    COMMAND ${CMAKE_SOURCE_DIR}/create_sd_archive.sh ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${XXH128SUM}
+    BYPRODUCTS ${SD_CARD_ZIP} ${SD_CARD_HASH}
+    COMMENT "Building SD card archive and hash"
+    VERBATIM
+)
+

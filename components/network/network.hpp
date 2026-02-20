@@ -10,15 +10,21 @@ namespace CTAG {
     namespace NET {
         class Network {
         public:
+            enum class IF_TYPE : uint8_t {
+                IF_TYPE_AP = 0x00,
+                IF_TYPE_STA = 0x01,
+                IF_TYPE_USBNCM = 0x02
+            };
+
             static void Up();
 
-            static void SetIsAccessPoint(bool yes);
+            static void SetIfType(IF_TYPE if_type);
 
             static void SetSSID(const string ssid);
 
             static void SetPWD(const string pwd);
 
-            static void SetIP(const string ip);
+            static void SetIP(string ip);
 
             static void SetMDNSName(const string name);
 
@@ -35,9 +41,14 @@ namespace CTAG {
             static void event_handler_sta(void *arg, esp_event_base_t event_base,
                                           int32_t event_id, void *event_data);
 
+            static void if_init_usbncm(void);
+
+            static esp_err_t netif_recv_callback(void *buffer, uint16_t len, void *ctx);
+
             static string _ssid, _pwd, _mdns, _mdns_instance;
-            static bool isAP;
+            static IF_TYPE _if_type;
             static string _ip;
+            static uint32_t _ip_addr;
             static esp_netif_t *netif;
         };
     }

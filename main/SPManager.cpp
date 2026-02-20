@@ -22,186 +22,299 @@ respective component folders / files if different from this license.
 
 #include "SPManager.hpp"
 #include "esp_log.h"
-#include "esp_system.h"
 #include "esp_cpu.h"
+#include "esp_timer.h"
 #include "stdint.h"
 #include "string.h"
-#include "codec.hpp"
+#include "codec_bba.hpp"
 #include "esp_heap_caps.h"
-#include "led_rgb.hpp"
+#include "led_rgb_bba.hpp"
 #include "network.hpp"
-#include "SerialAPI.hpp"
+#include "tusb.hpp"
 #include "RestServer.hpp"
+#include "SpiAPI.hpp"
 #include "Control.hpp"
-#include "Favorites.hpp"
-#include <math.h>
 #include "helpers/ctagFastMath.hpp"
 #include "helpers/ctagSampleRom.hpp"
-#include "freeverb3/efilter.hpp"
 #include "stmlib/dsp/dsp.h"
+#include "rp2350_spi_stream.hpp"
+// ableton link
+#include "link.hpp"
+#include "SpiProtocol.h"
+#include "SpiProtocolHelper.hpp"
 
 #define MAX(x, y) ((x)>(y)) ? (x) : (y)
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
+
 #define BUF_SZ 32
-//#define NOISE_GATE_LEVEL_CLOSE 0.000065f
-#define NOISE_GATE_LEVEL_CLOSE 0.0001f
-#define NOISE_GATE_LEVEL_OPEN 0.0003f
 
 using namespace CTAG;
 using namespace CTAG::AUDIO;
 using namespace CTAG::DRIVERS;
 
-#define NG_OPEN 0
-#define NG_BOTH 1
-#define NG_LEFT 2
-#define NG_RIGHT 3
-#define CPU_MAX_ALLOWED_CYCLES 174150 // is 32/44100kHz * 240MHz
+#define CPU_MAX_ALLOWED_CYCLES 300000 // 261224 // is 32/44100kHz * 360MHz
+#define SPI_TRANSACTION_TIMEOUT_US 3000000
 
-// global variable, spiffs base directory
+// global variable, sdcard base directory
 namespace CTAG {
     namespace RESOURCES {
-        std::string spiffsRoot {"/spiffs"};
+        std::string sdcardRoot {"/sdcard"};
     }
 }
 
+volatile uint32_t SoundProcessorManager::slowProcessCounter = 0;
+volatile uint32_t SoundProcessorManager::sentSynthMidiBytes = 0;
+volatile uint32_t SoundProcessorManager::receivedUsbDeviceMidiBytes = 0;
+volatile uint32_t SoundProcessorManager::requestCounterErrors = 0;
+
 // audio real-time task
 void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
+    float finput[BUF_SZ * 2];
     float fbuf[BUF_SZ * 2];
+    float finput2[BUF_SZ * 2];
+    float fbuf2[BUF_SZ * 2];
     float peakIn = 0.f, peakOut = 0.f;
-    float peakL = 0.f, peakR = 0.f;
-    int ngState = NG_OPEN;
-    float lramp[BUF_SZ];
+    int64_t before;
     bool isStereoCH0 = false;
     esp_cpu_cycle_count_t start, diff;
 
-
-    fv3::dccut_f in_dccutl, in_dccutr;
-    //fv3::dccut_f out_dccutl, out_dccutr;
-    in_dccutl.setCutOnFreq(3.7f, 44100.f);
-    in_dccutr.setCutOnFreq(3.7f, 44100.f);
-    /*
-    out_dccutl.setCutOnFreq(3.7f, 44100.f);
-    out_dccutr.setCutOnFreq(3.7f, 44100.f);
-    */
+    SpiProtocolHelper protocol;
 
     SP::ProcessData pd;
+    pd.controlData = nullptr;
+    pd.cv = nullptr;
+    pd.trig = nullptr;
     pd.buf = fbuf;
+    pd.sequencer_tempo = 12000;
+    pd.midi_bytes_length = 0;
+    memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
 
-    // generate linear ramp ]0,1[ squared
-    for (uint32_t i = 0; i < BUF_SZ; i++) {
-        lramp[i] = (float) (i + 1) / (float) (BUF_SZ + 1);
-        lramp[i] *= lramp[i];
-    }
+    int64_t nextspitime = 0;
+    int64_t nextspireceivedeadline = 0;
 
+    int responsecounter = 0;
+    int framecounter = 0;
     while (runAudioTask) {
+        //
+        // Prepare a response.
+        //
+        int64_t now = esp_timer_get_time();
 
-        // update data from ADCs and GPIOs for real-time control
-        CTAG::CTRL::Control::Update(&pd.trig, &pd.cv);
+        if (protocol.shouldPrepareNextResponse()) {
+            // printf("protocol: preparing next response (seq %d)\n", protocol.nextResponseSequenceCounter);
+
+            uint8_t *sendbuffer = nullptr;
+            CTAG::DRIVERS::rp2350_spi_stream::GetSendBuffer((void **)&sendbuffer);
+
+            if (sendbuffer != nullptr) {
+                // printf("protocol: got write buffer\n");
+
+                p4_spi_response_header *send_header = (p4_spi_response_header *)sendbuffer;
+                p4_spi_response2 *send_response =
+                    (p4_spi_response2 *)(sendbuffer + P4_SPI_RESPONSE_HEADER_SIZE);
+
+                //
+                // prepare next response
+                //
+
+                // pack ableton link data
+                LINK::link_session_data_t *link_data = (LINK::link_session_data_t*)&send_response->link_data;
+                LINK::link::GetLinkRtSessionData(link_data);
+
+                // pack midi data from USB device midi
+                uint8_t *midi_ptr = (uint8_t*) &send_response->usb_device_midi;
+                uint32_t *midi_len = (uint32_t*) &send_response->usb_device_midi_length;
+                *midi_len = tusb::Read(midi_ptr, P4_SPI_RESPONSE_USB_MIDI_DATA_SIZE);
+                // if (*midi_len > 0) {
+                //     printf("Received %d bytes of USB device midi data: %02X %02X %02X %02X...\n",
+                //         (int)(*midi_len), midi_ptr[0], midi_ptr[1], midi_ptr[2], midi_ptr[3]);
+                // }
+                receivedUsbDeviceMidiBytes += *midi_len;
+
+                // add some waveforms
+                for(int i=0; i<128; i++) {
+                    send_response->input_waveform[i] = 128;
+                    send_response->output_waveform[i] = 128;
+                }
+                for(int i=0; i<BUF_SZ * 2; i++) {
+                    send_response->input_waveform[i] = (int)(finput2[i] * 127.0f + 128.f);
+                    send_response->output_waveform[i] = (int)(fbuf2[i] * 127.0f + 128.f);
+                }
+
+                // and the led color
+                send_response->led_color = ledStatus;
+                responsecounter ++;
+                send_response->magic = 0xDEADBEEF;
+                send_response->magic2 = 0xFEED;
+                protocol.markNextResponsePrepared(
+                    (p4_spi_response_header*) send_header,
+                    (p4_spi_response2*) send_response);
+                // printf("protocol: next response prepared\n");
+            } else {
+                printf("protocol: no write buffer available\n");
+            }
+        } else {
+            // printf("protocol: no need to prepare next response\n");
+        }
+
+        if (protocol.shouldSendPreparedResponse()) {
+            // printf("protocol: queue response\n");
+            uint8_t *sendbuffer = nullptr;
+            CTAG::DRIVERS::rp2350_spi_stream::GetSendBuffer((void **)&sendbuffer);
+            if (sendbuffer != nullptr) {
+                p4_spi_response_header *send_header = (p4_spi_response_header *)sendbuffer;
+                p4_spi_response2 *send_response =
+                    (p4_spi_response2 *)(sendbuffer + P4_SPI_RESPONSE_HEADER_SIZE);
+                protocol.updateResponseBeforeSending(send_header, send_response);
+                CTAG::DRIVERS::rp2350_spi_stream::QueueBuffer((void *)sendbuffer);
+                protocol.queuedPreparedResponse();
+                nextspireceivedeadline = now + SPI_TRANSACTION_TIMEOUT_US;
+            }
+        } else {
+            // printf("protocol: should not send response.\n");
+        }
+
+        //
+        // check if current spi transaction is done
+        //
+
+        uint8_t *spi_request_ptr = nullptr;
+        if (CTAG::DRIVERS::rp2350_spi_stream::GetReceivedBuffer((void **)&spi_request_ptr)) {
+            p4_spi_request_header *spi_req_header = (p4_spi_request_header *)spi_request_ptr;
+            p4_spi_request2 *spi_req =
+                (p4_spi_request2 *)(spi_request_ptr + P4_SPI_REQUEST_HEADER_SIZE);
+
+            if (protocol.validateRequestPacket(spi_req_header, spi_req)) {
+                // printf("protocol: received transaction. (seq %d)\n", spi_req_header->request_sequence_counter);
+
+                // for(int k=0; k<8; k++) {
+                //     printf("  %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                //         spi_request_ptr[8 * k + 0],
+                //         spi_request_ptr[8 * k + 1],
+                //         spi_request_ptr[8 * k + 2],
+                //         spi_request_ptr[8 * k + 3],
+                //         spi_request_ptr[8 * k + 4],
+                //         spi_request_ptr[8 * k + 5],
+                //         spi_request_ptr[8 * k + 6],
+                //         spi_request_ptr[8 * k + 7]);
+                // }
+
+                // request is valid
+                // if (spi_req->synth_midi_length > 1) {
+                //     printf("got %d midi bytes, seq %d\n", (int)spi_req->synth_midi_length, spi_req_header->request_sequence_counter);
+                // }
+
+                pd.controlData = (void *)1; // run processing...
+                memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
+                memcpy(&pd.midi_bytes, (uint8_t*) &spi_req->synth_midi, spi_req->synth_midi_length);
+                pd.midi_bytes_length = spi_req->synth_midi_length;
+                // if (spi_req->synth_midi_length > 1) {
+                //     printf("Received %d bytes of synth midi data: %02X %02X %02X %02X %02X %02X %02X %02X...\n",
+                //         (int)(spi_req->synth_midi_length),
+                //         spi_req->synth_midi[0],
+                //         spi_req->synth_midi[1],
+                //         spi_req->synth_midi[2],
+                //         spi_req->synth_midi[3],
+                //         spi_req->synth_midi[4],
+                //         spi_req->synth_midi[5],
+                //         spi_req->synth_midi[6],
+                //         spi_req->synth_midi[7]);
+                // }
+                // printf("SPI Request tempo %ld\n", spi_req.sequencer_tempo);
+                pd.sequencer_tempo = spi_req->sequencer_tempo;
+                sentSynthMidiBytes += spi_req->synth_midi_length;
+
+                uint8_t expNext = protocol.getNextSequence(protocol.lastSeenRequestCounter);
+                if (spi_req_header->request_sequence_counter != expNext) {
+                    // printf("expected sequence %d but got %d, did we miss a packet?\n",
+                    //     expNext, spi_req_header->request_sequence_counter);
+                };
+
+                protocol.markRequestSeen(spi_req_header->request_sequence_counter);
+            } else {
+                printf("protocol: packet invalid\n");
+            }
+        } else {
+            // printf("protocol: did not receive packet\n");
+
+            // check timeout...
+            if (now > nextspireceivedeadline) {
+                printf("SPI receive timeout.\n");
+                protocol.markRequestSeen(0);
+                nextspireceivedeadline = now + SPI_TRANSACTION_TIMEOUT_US;
+            }
+        }
 
         // get normalized raw data from CODEC
-        DRIVERS::Codec::ReadBuffer(fbuf, BUF_SZ);
+        DRIVERS::Codec::ReadBuffer(finput, BUF_SZ);
+
+        memcpy(finput2, finput, BUF_SZ * 2 * sizeof(float));
+        memcpy(fbuf, finput, BUF_SZ * 2 * sizeof(float));
+
+        taskYIELD();
 
         // track the cpu cycles for audio task
         start = esp_cpu_get_cycle_count();
+        before = esp_timer_get_time();
 
-        // In peak detection
-        // dc cut input
-        float maxl = 0.f, maxr = 0.f;
+        // In peak detection, dc cut is done in codec
         float max = 0.f;
-        for (uint32_t i = 0; i < BUF_SZ; i++) {
-            fbuf[i * 2] = in_dccutl(fbuf[i * 2]);
-            float val = fabsf(fbuf[i * 2]);
-            if (val > maxl) maxl = val;
-            fbuf[i * 2 + 1] = in_dccutr(fbuf[i * 2 + 1]);
-            val = fabsf(fbuf[i * 2 + 1]);
-            if (val > maxr) maxr = val;
-        }
-        max = maxl >= maxr ? maxl : maxr;
+        // just take first sample of block for level meter
+        max = fabsf(fbuf[0] + fbuf[1]) / 2.f;
         peakIn = 0.95f * peakIn + 0.05f * max;
-
-        // noise gate
-        if (noiseGateCfg == 1) { // both channels noise gate
-            if (ngState == NG_OPEN && peakIn < NOISE_GATE_LEVEL_CLOSE) {
-                ngState = NG_BOTH;
-                for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp down buffer
-                    fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
-                    fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
-                }
-            } else if (ngState != NG_OPEN && peakIn > NOISE_GATE_LEVEL_OPEN) {
-                ngState = NG_OPEN;
-                for (uint32_t i = 0; i < BUF_SZ; i++) { // linearly ramp up buffer
-                    fbuf[i * 2] *= lramp[i];
-                    fbuf[i * 2 + 1] *= lramp[i];
-                }
-            } else if (ngState != NG_OPEN) {
-                memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
-            }
-        } else if (noiseGateCfg == 2) { // left channel
-            peakL = 0.95f * peakL + 0.05f * maxl;
-            if (ngState == NG_OPEN && peakL < NOISE_GATE_LEVEL_CLOSE) {
-                ngState = NG_LEFT;
-                for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
-                    fbuf[i * 2] *= lramp[BUF_SZ - 1 - i];
-                }
-            } else if (ngState != NG_OPEN && peakL > NOISE_GATE_LEVEL_OPEN) {
-                ngState = NG_OPEN;
-                for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
-                    fbuf[i * 2] *= lramp[i];
-                }
-            } else if (ngState != NG_OPEN) {
-                for (uint32_t i = 0; i < BUF_SZ; i++) {
-                    fbuf[i * 2] = 0;
-                }
-            }
-        } else if (noiseGateCfg == 3) { // right channel
-            peakR = 0.95f * peakR + 0.05f * maxr;
-            if (ngState == NG_OPEN && peakR < NOISE_GATE_LEVEL_CLOSE) {
-                ngState = NG_RIGHT;
-                for (uint32_t i = 0; i < BUF_SZ; i++) {// linearly ramp down buffer
-                    fbuf[i * 2 + 1] *= lramp[BUF_SZ - 1 - i];
-                }
-            } else if (ngState != NG_OPEN && peakR > NOISE_GATE_LEVEL_OPEN) {
-                ngState = NG_OPEN;
-                for (uint32_t i = 0; i < BUF_SZ; i++) { // linear ramp up
-                    fbuf[i * 2 + 1] *= lramp[i];
-                }
-            } else if (ngState != NG_OPEN) {
-                for (uint32_t i = 0; i < BUF_SZ; i++) {
-                    fbuf[i * 2 + 1] = 0;
-                }
-            }
-        }
 
         // led indicator, green for input
         max = 255.f + 3.2f * CTAG::SP::HELPERS::fast_dBV(peakIn); // cut away at approx -80dB
         uint32_t ledData = 0;
         //ESP_LOGI("SP", "Max %.9f %f", peakIn, max);
-        if (max > 0 && ngState == NG_OPEN) {
+        if (max > 0) {
             ledData = ((uint32_t) max);
             ledData <<= 8; // green
         }
 
-        // sound processors
-        if (xSemaphoreTake(processMutex, 0) == pdTRUE) {
-            // apply sound processors
-            if (sp[0] != nullptr) {
-                isStereoCH0 = sp[0]->GetIsStereo();
-                sp[0]->Process(pd);
-            }
-            if (!isStereoCH0){
-                // check if ch0 -> ch1 daisy chain, i.e. use output of ch0 as input for ch1
-                if(ch01Daisy){
-                    for (uint32_t i = 0; i < BUF_SZ; i++) {
-                        fbuf[i * 2 + 1] = fbuf[i * 2];
+        // sound processors - safer version with RAII and additional checks
+        bool processingLocked = (xSemaphoreTake(processMutex, 0) == pdTRUE);
+
+        if (processingLocked) {
+            // Validate control data and sound processors before processing
+            bool canProcess = (pd.controlData != nullptr) &&
+                              (sp[0] != nullptr || sp[1] != nullptr);
+
+            if (canProcess) {
+                // Process channel 0
+                if (sp[0] != nullptr) {
+                    isStereoCH0 = sp[0]->GetIsStereo();
+                    sp[0]->Process(pd);
+                }
+
+                // Process channel 1 (only if ch0 is not stereo)
+                if (!isStereoCH0) {
+                    // Daisy chain: copy ch0 output to ch1 input
+                    if (ch01Daisy) {
+                        for (uint32_t i = 0; i < BUF_SZ; i++) {
+                            fbuf[i * 2 + 1] = fbuf[i * 2];
+                        }
+                    }
+
+                    if (sp[1] != nullptr) {
+                        sp[1]->Process(pd);
                     }
                 }
-                if (sp[1] != nullptr) sp[1]->Process(pd); // 0 is not a stereo processor
+            } else {
+                // Mute audio if processors unavailable
+                memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
             }
+
+            memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
+            pd.midi_bytes_length = 0;
+
+            // Always release mutex
             xSemaphoreGive(processMutex);
         } else {
-            // mute audio
+            // Couldn't acquire mutex - mute audio for this buffer
             memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
         }
+
 
         // to stereo conversion
         if (!isStereoCH0) {
@@ -275,11 +388,24 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
         // get cpu cycles for audio task and tone led
         diff = esp_cpu_get_cycle_count() - start;
-        if(diff > CPU_MAX_ALLOWED_CYCLES) ledData = 0xB39134; // orange code for cpu overflow
+        int64_t diff2 = esp_timer_get_time() - before;
+        if(diff > CPU_MAX_ALLOWED_CYCLES) {
+            slowProcessCounter ++;
+            // ledData = 0xB39134; // orange code for cpu overflow
+        }
         ledStatus = ledData;
 
-        // write raw float data back to CODEC
+        memcpy(fbuf2, fbuf, BUF_SZ * 2 * sizeof(float));
+
+        // if (framecounter % 2900 == 0) {
+        //     printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
+        //     requestCounterErrors = 0;
+        // }
+
+        // write raw float data back to CODCE
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
+
+        framecounter ++;
     }
     memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
     DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
@@ -300,7 +426,7 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     ESP_LOGI("SPManager", "Switching ch%d to plugin %s", chan, id.c_str());
 
     // destroy active plugin
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     if(nullptr != sp[chan]){
         delete sp[chan]; // destruct processor
         sp[chan] = nullptr;
@@ -312,6 +438,12 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
         }
     }
 
+    ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+
     // create new plugin
     ctagSPAllocator::AllocationType aType = ctagSPAllocator::AllocationType::CH0;
     if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
@@ -319,8 +451,7 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     sp[chan] = ctagSoundProcessorFactory::Create(id, aType);
     model->SetActivePluginID(id, chan);
     sp[chan]->LoadPreset(model->GetActivePatchNum(chan));
-    xSemaphoreGive(processMutex);
-
+    // xSemaphoreGive(processMutex);
 
     ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
@@ -337,7 +468,6 @@ std::unique_ptr<SPManagerDataModel> SoundProcessorManager::model;
 DRAM_ATTR SemaphoreHandle_t SoundProcessorManager::processMutex;
 atomic<uint32_t> SoundProcessorManager::ledBlink;
 atomic<uint32_t> SoundProcessorManager::ledStatus;
-atomic<uint32_t> SoundProcessorManager::noiseGateCfg;
 atomic<uint32_t> SoundProcessorManager::ch01Daisy;
 atomic<uint32_t> SoundProcessorManager::toStereoCH0;
 atomic<uint32_t> SoundProcessorManager::toStereoCH1;
@@ -345,79 +475,90 @@ atomic<uint32_t> SoundProcessorManager::runAudioTask;
 atomic<uint32_t> SoundProcessorManager::ch0_outputSoftClip;
 atomic<uint32_t> SoundProcessorManager::ch1_outputSoftClip;
 
+
+static char freertosstats[2000] = { 0, };
+
+static void debug_task(void *pvParameters) {
+  while (true) {
+    vTaskDelay(4000 / portTICK_PERIOD_MS);
+    // vTaskGetRunTimeStats((char *)&freertosstats);
+    // vTaskDelay(200 / portTICK_PERIOD_MS);
+    // ESP_LOGI("SPManager", "FreeRTOS Stats:\n%s", freertosstats);
+
+    ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!, counters: tx-err=%ld queue-err=%ld parse-err=%ld success=%ld",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM),
+             DRIVERS::rp2350_spi_stream::transferErrorCount,
+             DRIVERS::rp2350_spi_stream::queueErrorCount,
+             DRIVERS::rp2350_spi_stream::parseErrorCount,
+             DRIVERS::rp2350_spi_stream::transferSuccessCount);
+
+    // printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
+    // requestCounterErrors = 0;
+  }
+}
+
 void SoundProcessorManager::StartSoundProcessor() {
     ledBlink = 5;
     model = std::make_unique<SPManagerDataModel>();
 
-    // check for network reset at bootup
-#ifdef CONFIG_TBD_PLATFORM_BBA
-    // uses SW1 = BOOT of esp32-s3-devkitc to reset network credentials
-    gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
-    if(gpio_get_level(GPIO_NUM_0) == 0){
-        model->ResetNetworkConfiguration();
-        ESP_LOGE("SP", "Network credentials reset requested!");
-        DRIVERS::LedRGB::SetLedRGB(255, 255, 255);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-#endif
-
-    /* there should be an extra pin for this!
-    // check if network reset requested trig 1 pressed at startup
-    if(GPIO::GetTrig1() == 0){
-        DRIVERS::LedRGB::SetLedRGB(255, 255, 255);
-        model->ResetNetworkConfiguration();
-        ESP_LOGE("SP", "Network credentials reset requested!");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    */
-
-#ifdef CONFIG_TBD_PLATFORM_STR
-    // inverted here as some pins are used twice --> check for issues
-    DRIVERS::Codec::InitCodec();
-    CTRL::Control::Init();
-#else
+    // init tinyusb
+    CTAG::DRIVERS::tusb::Init();
     // init control
     CTRL::Control::Init();
     // init codec
     DRIVERS::Codec::InitCodec();
-#endif
     // generate internal data
     updateConfiguration();
 
-#ifdef CONFIG_WIFI_UI
-    // boot network
+    // start network
     NET::Network::SetSSID(model->GetNetworkConfigurationData("ssid"));
     NET::Network::SetPWD(model->GetNetworkConfigurationData("pwd"));
-    NET::Network::SetIsAccessPoint(model->GetNetworkConfigurationData("mode").compare("ap") == 0);
+    if(model->GetNetworkConfigurationData("mode").compare("ap") == 0) {
+        NET::Network::SetIfType(NET::Network::IF_TYPE::IF_TYPE_AP);
+    }else if(model->GetNetworkConfigurationData("mode").compare("sta") == 0){
+        NET::Network::SetIfType(NET::Network::IF_TYPE::IF_TYPE_STA);
+    }else if(model->GetNetworkConfigurationData("mode").compare("usbncm") == 0){
+        NET::Network::SetIfType(NET::Network::IF_TYPE::IF_TYPE_USBNCM);
+    }else{
+        ESP_LOGE("SPM", "Fatal: unknown network mode!");
+        assert(0);
+    }
     NET::Network::SetIP(model->GetNetworkConfigurationData("ip"));
     NET::Network::SetMDNSName(model->GetNetworkConfigurationData("mdns_name"));
     NET::Network::Up();
     REST::RestServer::StartRestServer();
-#elif CONFIG_SERIAL_UI
-    SAPI::SerialAPI::StartSerialAPI();
-#endif
+    SPIAPI::SpiAPI::StartSpiAPI();
+
+    // Ableton Link
+    CTAG::LINK::link::Init();
 
     // prepare threads and mutex
     processMutex = xSemaphoreCreateMutex();
+
     if (processMutex == NULL) {
         ESP_LOGE("SPM", "Fatal couldn't create mutex!");
     }
-#ifndef CONFIG_TBD_PLATFORM_STR
+
     // create led indicator thread
     xTaskCreatePinnedToCore(&SoundProcessorManager::led_task, "led_task", 4096, nullptr, tskIDLE_PRIORITY + 2,
                             &ledTaskH, 0);
-#endif
-    CTRL::Control::FlushBuffers();
     // create audio thread
     runAudioTask = 1;
-    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 4096, nullptr, 23, &audioTaskH, 1);
+    ESP_LOGI("SPManager", "Init: Max stack %d", uxTaskGetStackHighWaterMark(NULL));
+    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 15000, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 1);
+    xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 0);
 
-#if defined(CONFIG_TBD_PLATFORM_MK2) || defined(CONFIG_TBD_PLATFORM_AEM) || defined(CONFIG_TBD_PLATFORM_BBA)
-    FAV::Favorites::StartUI();
-#endif
+    // Do not load last processor at start up
+    SetSoundProcessorChannel(0, "Void");
+    SetSoundProcessorChannel(1, "Void");
+    SetSoundProcessorChannel(0, "PicoSeqRack");
+    // SetSoundProcessorChannel(1, "Void");
+    // SetSoundProcessorChannel(0, model->GetActiveProcessorID(0));
+    // SetSoundProcessorChannel(1, model->GetActiveProcessorID(1));
 
-    SetSoundProcessorChannel(0, model->GetActiveProcessorID(0));
-    SetSoundProcessorChannel(1, model->GetActiveProcessorID(1));
     ESP_LOGI("SPManager", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
@@ -433,19 +574,19 @@ void SoundProcessorManager::SetChannelParamValue(const int chan, const string &i
 void SoundProcessorManager::ChannelSavePreset(const int chan, const string &name, const int number) {
     ledBlink = 3;
     if (sp[chan] == nullptr) return;
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     sp[chan]->SavePreset(name, number);
     model->SetActivePatchNum(number, chan);
-    xSemaphoreGive(processMutex);
+    // xSemaphoreGive(processMutex);
 }
 
 void SoundProcessorManager::ChannelLoadPreset(const int chan, const int number) {
     ledBlink = 3;
     if (sp[chan] == nullptr) return;
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     sp[chan]->LoadPreset(number);
     model->SetActivePatchNum(number, chan);
-    xSemaphoreGive(processMutex);
+    // xSemaphoreGive(processMutex);
 }
 
 string SoundProcessorManager::GetStringID(const int chan) {
@@ -455,32 +596,14 @@ string SoundProcessorManager::GetStringID(const int chan) {
 
 void SoundProcessorManager::SetConfigurationFromJSON(const string &data) {
     ledBlink = 3;
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     model->SetConfigurationFromJSON(data);
     updateConfiguration();
-    xSemaphoreGive(processMutex);
+    // xSemaphoreGive(processMutex);
 }
 
 void SoundProcessorManager::updateConfiguration() {
     ledBlink = 3;
-    CTRL::Control::SetCVChannelBiPolar(model->GetConfigurationData("cv_ch0") == "bipolar",
-                              model->GetConfigurationData("cv_ch1") == "bipolar",
-                              model->GetConfigurationData("cv_ch2") == "bipolar",
-                              model->GetConfigurationData("cv_ch3") == "bipolar");
-
-    // noise gate configuration
-    if (model->GetConfigurationData("ng_config").compare("off") == 0) {
-        noiseGateCfg = 0;
-    } else if (model->GetConfigurationData("ng_config").compare("dual") == 0) {
-        DRIVERS::Codec::RecalibDCOffset();
-        noiseGateCfg = 1;
-    } else if (model->GetConfigurationData("ng_config").compare("ch0") == 0) {
-        DRIVERS::Codec::RecalibDCOffset();
-        noiseGateCfg = 2;
-    } else if (model->GetConfigurationData("ng_config").compare("ch1") == 0) {
-        DRIVERS::Codec::RecalibDCOffset();
-        noiseGateCfg = 3;
-    }
 
     // ch01 daisy
     if (model->GetConfigurationData("ch01_daisy").compare("off") == 0) {
@@ -521,13 +644,8 @@ void SoundProcessorManager::updateConfiguration() {
         if(model->GetConfigurationData("ch0_codecLvlOut").compare("") != 0){
             int lLevel = std::stoi(model->GetConfigurationData("ch0_codecLvlOut"));
             int rLevel = std::stoi(model->GetConfigurationData("ch1_codecLvlOut"));
-#ifdef CONFIG_TBD_BBA_CODEC_ES8388
-            CONSTRAIN(rLevel, 0, 36)
-            CONSTRAIN(lLevel, 0, 36)
-#else
             CONSTRAIN(rLevel, 0, 63)
             CONSTRAIN(lLevel, 0, 63)
-#endif
             DRIVERS::Codec::SetOutputLevels(lLevel, rLevel);
         }
     }
@@ -543,11 +661,10 @@ void SoundProcessorManager::led_task(void *pvParams) {
         g = data & 0x0000FF00;
         g >>= 8;
         b = data & 0x000000FF;
-        if ((ledBlink % 2) == 1) {
-            DRIVERS::LedRGB::SetLedRGB(r, g, b);
-        } else {
-            DRIVERS::LedRGB::SetLedRGB(r, g, 255);
+        if ((ledBlink % 2) != 1) {
+            b = 255;
         }
+        DRIVERS::LedRGB::SetLedRGB(r, g, b);
         if (ledBlink > 1 && ledBlink < 42) ledBlink--; // >= 42 led blink doesn't stop
         if (ledBlink == 42) ledBlink = 44;
         vTaskDelay(50 / portTICK_PERIOD_MS); // 50ms refresh rate for led
@@ -555,7 +672,6 @@ void SoundProcessorManager::led_task(void *pvParams) {
 }
 
 void SoundProcessorManager::KillAudioTask() {
-    FAV::Favorites::DisableFavoritesUI();
     Codec::SetOutputLevels(0, 0);
     // stop audio Task, delete plugins
     runAudioTask = 0;
@@ -564,13 +680,10 @@ void SoundProcessorManager::KillAudioTask() {
     if(nullptr!=sp[1]) delete sp[1];
     sp[0] = nullptr;
     sp[1] = nullptr;
-    ctagSPAllocator::ReleaseInternalBuffer();
-#ifndef CONFIG_TBD_PLATFORM_STR
     vTaskDelete(ledTaskH);
     ledTaskH = NULL;
     vTaskDelay(100 / portTICK_PERIOD_MS);
     DRIVERS::LedRGB::SetLedRGB(255, 0, 255);
-#endif
     ESP_LOGI("SPManager", "Audio Task Killed: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
@@ -579,13 +692,13 @@ void SoundProcessorManager::KillAudioTask() {
 }
 
 void SoundProcessorManager::DisablePluginProcessing() {
-    xSemaphoreTake(processMutex, portMAX_DELAY);
+    // xSemaphoreTake(processMutex, portMAX_DELAY);
     ledBlink = 42;
 }
 
 void SoundProcessorManager::EnablePluginProcessing() {
     ledBlink = 5;
-    xSemaphoreGive(processMutex);
+    // xSemaphoreGive(processMutex);
 }
 
 void SoundProcessorManager::RefreshSampleRom() {

@@ -77,6 +77,11 @@ namespace CTAG {
                 model->SetCStrJSONSoundProcessorPreset(id, data);
             }
 
+            static void SetChannelParamsCstrJSON(const int chan, const char *data) {
+                ledBlink = 1;
+                return sp[chan]->SetChannelParamsFromCStrJSON(data);
+            }
+
             static void SetConfigurationFromJSON(const string &data);
 
             static string GetStringID(const int chan);
@@ -108,13 +113,16 @@ namespace CTAG {
             static SemaphoreHandle_t processMutex;
             static atomic<uint32_t> ledBlink;
             static atomic<uint32_t> ledStatus;
-            static atomic<uint32_t> noiseGateCfg;
             static atomic<uint32_t> ch01Daisy;
             static atomic<uint32_t> toStereoCH0;
             static atomic<uint32_t> toStereoCH1;
             static atomic<uint32_t> runAudioTask;
             static atomic<uint32_t> ch0_outputSoftClip;
             static atomic<uint32_t> ch1_outputSoftClip;
+            static volatile uint32_t slowProcessCounter;
+            static volatile uint32_t sentSynthMidiBytes;
+            static volatile uint32_t receivedUsbDeviceMidiBytes;
+            static volatile uint32_t requestCounterErrors;
         };
     }
 }
