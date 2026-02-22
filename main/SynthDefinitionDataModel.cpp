@@ -34,54 +34,13 @@ void SynthDefinitionDataModel::ReloadSynthDefinitions() {
 
     Document d;
     loadJSON(d, MODELJSONFN);
-    // char *buffer = (char *) heap_caps_malloc(MB_BUF_SZ, MALLOC_CAP_SPIRAM);
-    // d.GetAllocator().Clear();
-    // ESP_LOGI("SynthDefinitionDataModel", "read buffer");
-    // //FILE*
-    // FILE * fp = fopen(MODELJSONFN.c_str(), "r");
-    // if (fp == NULL) {
-    //     ESP_LOGE("SynthDefinitionDataModel", "could not open file %s", MODELJSONFN.c_str());
-    //     return;
-    // }
-    // //char readBuffer[512];
-    // ESP_LOGI("SynthDefinitionDataModel", "read stream");
-    // FileReadStream is(fp, buffer, MB_BUF_SZ);
-    // ESP_LOGI("SynthDefinitionDataModel", "trying to parse");
-    // d.ParseStream(is);
 
     if (d.HasParseError()) {
-        //     ESP_LOGE("SynthDefinitionDataModel", "JSON parse error: %d", d.GetParseError());
+        ESP_LOGE("SynthDefinitionDataModel", "JSON parse error: %d", d.GetParseError());
         return;
-        // } else {
-        //     ESP_LOGI("SynthDefinitionDataModel", "JSON parsed successfully");
     }
 
     DeserializeJSON(d);
-
-    // synths.clear();
-    // tracks.clear();
-
-    // if (d.HasMember("synths")) {
-    //     for (auto &v : d["synths"].GetArray()) {
-    //         SynthDefinition *s = new SynthDefinition();
-    //         if (s->DeserializeJSON(v)) {
-    //             synths.push_back(s);
-    //         } else {
-    //             delete s;
-    //         }
-    //     }
-    // }
-
-    // if (d.HasMember("tracks")) {
-    //     for (auto &v : d["tracks"].GetArray()) {
-    //         TrackDefinition *t = new TrackDefinition();
-    //         if (t->DeserializeJSON(v)) {
-    //             tracks.push_back(t);
-    //         } else {
-    //             delete t;
-    //         }
-    //     }
-    // }
 }
 
 int SynthDefinitionDataModel::GetNumberOfSynthDefinitions() {
@@ -92,6 +51,20 @@ void SynthDefinitionDataModel::GetSynthDeviceDefinitionId(int index, std::string
 }
 
 SynthDefinition *SynthDefinitionDataModel::GetSynthDefinition(const std::string id) {
+    for(SynthDefinition *s : synths) {
+        if (s->id == id) {
+            return s;
+        }
+    }
+    return nullptr;
+}
+
+TrackDefinition *SynthDefinitionDataModel::GetTrackDefinition(int index) {
+    for(TrackDefinition *t : tracks) {
+        if (t->index == index) {
+            return t;
+        }
+    }
     return nullptr;
 }
 
@@ -165,9 +138,8 @@ void SynthDefinitionDataModel:: SerializeTrackJSON(int index, std::string *outpu
 }
 
 void SynthDefinitionDataModel::SerializeSynthJSON(const std::string id, std::string *output){
- // Implement serialization logic here
+    // Implement serialization logic here
     Document d;
-
     d.SetObject();
 
     // Value machinesarray(kArrayType);
@@ -179,10 +151,10 @@ void SynthDefinitionDataModel::SerializeSynthJSON(const std::string id, std::str
             d.AddMember("id", Value(s->id.c_str(), d.GetAllocator()), d.GetAllocator());
             d.AddMember("name", Value(s->name.c_str(), d.GetAllocator()), d.GetAllocator());
             // machinejson.AddMember("type", s->type, d.GetAllocator());
-            
+
             Value paramarray(kArrayType);
             d.AddMember("parameters", paramarray, d.GetAllocator());
-            
+
             for(auto p : s->parameters) {
                 Value param(kObjectType);
 
@@ -200,14 +172,12 @@ void SynthDefinitionDataModel::SerializeSynthJSON(const std::string id, std::str
 
                 d["parameters"].PushBack(param, d.GetAllocator());
             }
-            
+
             // d["machines"].PushBack(machinejson, d.GetAllocator());
-
-
-        // if (s->SerializeJSONInto(machinejson, d.GetAllocator())) {
-        // }
-    }
+            // if (s->SerializeJSONInto(machinejson, d.GetAllocator())) {
+            // }
         }
+    }
 
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
@@ -258,7 +228,9 @@ void SynthDefinitionDataModel::SerializeStateJSON(std::string *output) {
     for(TrackDefinition *t : tracks) {
         Value trackjson(kObjectType);
         trackjson.AddMember("index", t->index, d.GetAllocator());
-        trackjson.AddMember("activeMachineId", Value(t->activeMachineId.c_str(), d.GetAllocator()), d.GetAllocator());
+        trackjson.AddMember("machine", Value(t->activeMachineId.c_str(), d.GetAllocator()), d.GetAllocator());
+        trackjson.AddMember("macro", "", d.GetAllocator());
+        trackjson.AddMember("preset", "", d.GetAllocator());
         d["tracks"].PushBack(trackjson, d.GetAllocator());
     }
 

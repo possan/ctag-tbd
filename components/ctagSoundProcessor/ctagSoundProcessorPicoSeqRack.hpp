@@ -100,13 +100,20 @@ namespace CTAG {
 			void registerParam(const PickSeqRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter);
 			void registerParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter);
 
-			void parseIncomingMidiMessages(const uint8_t *buf, const size_t len);
-            void handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel);
-            void handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel);
-            void handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value);
-            void handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel);
-            void handleMidiPatchChange(const uint8_t channel, const uint8_t patch);
-            void handleMidiPitchBend(const uint8_t channel, const uint16_t bend);
+			void _parseIncomingMidiMessages(const uint8_t *buf, const size_t len);
+            void _handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel);
+            void _handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel);
+            void _handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value);
+            void _handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel);
+            void _handleMidiPatchChange(const uint8_t channel, const uint8_t patch);
+            void _handleMidiPitchBend(const uint8_t channel, const uint16_t bend);
+
+			void setTrackMachine(const uint8_t trackIndex, const std::string machineId);
+
+			void handleMidiNoteOn(const uint8_t trackIndex, uint8_t note, uint8_t velocity);
+			void handleMidiNoteOff(const uint8_t trackIndex, uint8_t note, uint8_t velocity);
+			void handleMidiControlChange(const uint8_t trackIndex, uint8_t control, uint8_t value);
+			void handleMidiControlChangePair(const uint8_t trackIndex, uint8_t firstcontrol, uint16_t value);
 
         private:
             virtual void knowYourself() override;

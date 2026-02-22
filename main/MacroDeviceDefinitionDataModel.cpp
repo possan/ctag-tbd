@@ -59,10 +59,14 @@ void MacroDeviceDefinitionDataModel::ReloadMachineDefinitions() {
 
 MacroDeviceDefinition *MacroDeviceDefinitionDataModel::GetMacroDeviceDefinition(
     std::string id) {
-    Document d;
-    return new MacroDeviceDefinition();
-}
+    for(MacroDeviceDefinition *def : definitions) {
+        if (def->id == id) {
+            return def;
+        }
+    }
 
+    return nullptr;
+}
 
 void MacroDeviceDefinitionDataModel::SerializeListJSON(std::string *output) {
     Document d;

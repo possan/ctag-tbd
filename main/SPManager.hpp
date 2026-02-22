@@ -35,6 +35,7 @@ respective component folders / files if different from this license.
 #include "SynthDefinitionDataModel.hpp"
 #include "MacroSoundPresetDataModel.hpp"
 #include "MacroDeviceDefinitionDataModel.hpp"
+#include "MacroTranslator.hpp"
 
 using namespace CTAG::SP;
 
@@ -103,9 +104,14 @@ namespace CTAG {
             static void EnablePluginProcessing();
             static void RefreshSampleRom();
 
-            static std::unique_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> synthDefinitionModel;
-            static std::unique_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> macroSoundDefinitionModel;
-            static std::unique_ptr<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel> macroDeviceDefinitionModel;
+            static void SetTrackMachine(const int trackIndex, const string &synthID);
+            static void SetTrackMacro(const int trackIndex, const string &macroDefinitionID);
+            static void SetTrackParametersFromJSON(const int trackIndex, const string &parametersJSON);
+
+            static std::shared_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> synthDefinitionModel;
+            static std::shared_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> macroSoundDefinitionModel;
+            static std::shared_ptr<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel> macroDeviceDefinitionModel;
+            static std::shared_ptr<CTAG::MACROPRESETS::MacroTranslator> macroTranslator;
 
         private:
             static void audio_task(void *pvParams);

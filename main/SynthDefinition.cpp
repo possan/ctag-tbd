@@ -60,9 +60,9 @@ bool SynthDefinition::DeserializeJSON(const Value &jsonelement) {
 
             p->id = v["id"].GetString();
             p->name = v["name"].GetString();
-            if (v["type"].GetString() == std::string("CC")) {
+            if (v["type"].GetString() == std::string("cc")) {
                 p->type = SynthParameterType_CC;
-            } else if (v["type"].GetString() == std::string("NRPM")) {
+            } else if (v["type"].GetString() == std::string("nrpm")) {
                 p->type = SynthParameterType_NRPM;
             } else {
                 p->type = SynthParameterType_None;
@@ -77,17 +77,17 @@ bool SynthDefinition::DeserializeJSON(const Value &jsonelement) {
     return true;
 }
 
-bool SynthDefinition::SerializeJSONInto(const rapidjson::Value &jsonelement, rapidjson::Document::AllocatorType &allocator) {
-    // Implementation goes here
+// bool SynthDefinition::SerializeJSONInto(const rapidjson::Value &jsonelement, rapidjson::Document::AllocatorType &allocator) {
+//     // Implementation goes here
 
-    // Value obj(kObjectType);
-    // Value id(jsonelement["id"].GetString(), allocator);
-    // Value name(jsonelement["name"].GetString(), allocator);
-    // Value hint(kStringType);
+//     // Value obj(kObjectType);
+//     // Value id(jsonelement["id"].GetString(), allocator);
+//     // Value name(jsonelement["name"].GetString(), allocator);
+//     // Value hint(kStringType);
 
-    // jsonelement.AddMember("id", id.Move(), allocator);
-    // jsonelement.AddMember("name", name.Move(), allocator);
-    // // jsonelement.PushBack(obj.Move(), allocator);
+//     // jsonelement.AddMember("id", id.Move(), allocator);
+//     // jsonelement.AddMember("name", name.Move(), allocator);
+//     // // jsonelement.PushBack(obj.Move(), allocator);
 
-    return true;
-}
+//     return true;
+// }

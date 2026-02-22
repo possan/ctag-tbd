@@ -1,3 +1,8 @@
+body {
+    background-color: #222;
+    color: #aaa;
+}
+
 li b {
     display: block;
 }
@@ -5,4 +10,24 @@ li b {
 li span {
     display: block;
     font-size: 10px;
+}
+
+ul#tracks {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+ul#tracks li {
+    padding: 5px;
+    cursor: pointer;
+}
+
+ul#tracks li.active {
+    background-color: #ff4;
+    color: #000;
+    cursor: default;
 }

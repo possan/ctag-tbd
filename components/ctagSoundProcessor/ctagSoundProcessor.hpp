@@ -177,6 +177,34 @@ namespace CTAG {
                 loadPresetInternal();
             }
 
+            virtual void setTrackMachine(const uint8_t trackIndex, const std::string machineId) {
+                // default implementation does nothing, override in derived class if needed
+            }
+
+            // virtual void setTrackMacro(const uint8_t trackIndex, const std::string macroDefinitionId) {
+            //     // default implementation does nothing, override in derived class if needed
+            // }
+
+            // virtual void handleMidi(const uint8_t *midiBytes, uint32_t length) {
+            //     // default implementation does nothing, override in derived class if needed
+            // }
+
+            virtual void handleMidiNoteOn(const uint8_t trackIndex, uint8_t note, uint8_t velocity) {
+                // default implementation does nothing, override in derived class if needed
+            }
+
+            virtual void handleMidiNoteOff(const uint8_t trackIndex, uint8_t note, uint8_t velocity) {
+                // default implementation does nothing, override in derived class if needed
+            }
+
+            virtual void handleMidiControlChange(const uint8_t trackIndex, uint8_t control, uint8_t value) {
+                // default implementation does nothing, override in derived class if needed
+            }
+
+            virtual void handleMidiControlChangeNRPM(const uint8_t trackIndex, uint8_t control, uint16_t value) {
+                // default implementation does nothing, override in derived class if needed
+            }
+
         protected:
 
             virtual void knowYourself() = 0;
@@ -234,6 +262,11 @@ namespace CTAG {
             map<string, function<void(const int)>> pMapPar;
             map<string, function<void(const int)>> pMapCv;
             map<string, function<void(const int)>> pMapTrig;
+
+
+            // virtual void handleParameterValue(const uint8_t trackIndex, const uint8_t parameterIndex, int32_t value) {
+            //     // default implementation does nothing, override in derived class if needed
+            // }
         };
     }
 }

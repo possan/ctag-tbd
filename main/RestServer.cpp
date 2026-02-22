@@ -1139,6 +1139,19 @@ esp_err_t RestServer::put_trackinfo_handler(httpd_req_t *req) {
      * as well be any binary data (needs type casting).
      * In case of string data, null termination will be absent, and
      * content length would give length of string */
+
+    int trackindex = -1;
+    char query[128];
+    char pluginID[64];
+    httpd_req_get_url_query_str(req, query, 128);
+    httpd_resp_set_type(req, "application/json");
+    char *pLastSlash = strrchr(req->uri, '/');
+    if (pLastSlash) {
+        strcpy(pluginID, pLastSlash + 1);
+        ESP_LOGD(REST_TAG, "Sending sound preset for id %s", pluginID);
+        trackindex = atoi(pluginID);
+    }
+
     char *content = (char *) heap_caps_malloc(req->content_len + 1, MALLOC_CAP_SPIRAM);
     int ret = httpd_req_recv(req, content, req->content_len);
     if (ret <= 0) {  /* 0 return value indicates connection closed */
@@ -1155,17 +1168,12 @@ esp_err_t RestServer::put_trackinfo_handler(httpd_req_t *req) {
     }
     content[req->content_len] = 0;
 
-    ESP_LOGI("put_macrodefinition_handler", "Received definition data %s", content);
-    int ok = CTAG::AUDIO::SoundProcessorManager::macroDeviceDefinitionModel->UpdateDefinition(content);
-    free(content);
-    if (!ok) {
-        ESP_LOGE("put_macrodefinition_handler", "Error updating macro definition");
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid macro definition");
-        return ESP_OK;
-    }
+    ESP_LOGI("put_trackinfo_handler", "Received track %d command, data: %s", trackindex, content);
 
-    // CTAG::AUDIO::SoundProcessorManager::SetConfigurationFromJSON(string(content));
-    // free(content);
+    CTAG::AUDIO::SoundProcessorManager::macroTranslator
+        ->SetTrackParametersFromJSON(trackindex, content);
+    free(content);
+
     httpd_resp_set_type(req, "text/html");
     httpd_resp_send(req, NULL, 0);
     return ESP_OK;

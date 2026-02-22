@@ -42,6 +42,7 @@ respective component folders / files if different from this license.
 #include "link.hpp"
 #include "SpiProtocol.h"
 #include "SpiProtocolHelper.hpp"
+#include "MacroTranslator.hpp"
 
 #define MAX(x, y) ((x)>(y)) ? (x) : (y)
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
@@ -51,6 +52,7 @@ respective component folders / files if different from this license.
 using namespace CTAG;
 using namespace CTAG::AUDIO;
 using namespace CTAG::DRIVERS;
+using namespace CTAG::MACROPRESETS;
 
 #define CPU_MAX_ALLOWED_CYCLES 300000 // 261224 // is 32/44100kHz * 360MHz
 #define SPI_TRANSACTION_TIMEOUT_US 3000000
@@ -281,9 +283,12 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                               (sp[0] != nullptr || sp[1] != nullptr);
 
             if (canProcess) {
+                macroTranslator->TranslateInput(&pd);
+
                 // Process channel 0
                 if (sp[0] != nullptr) {
                     isStereoCH0 = sp[0]->GetIsStereo();
+                    // sp[0]->SetParamValue()
                     sp[0]->Process(pd);
                 }
 
@@ -437,6 +442,9 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
             sp[1] = nullptr;
         }
     }
+    if (chan == 0) {
+        macroTranslator->soundProcessor = nullptr;
+    }
 
     ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
@@ -449,6 +457,9 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
     if(model->IsStereo(id)) aType = ctagSPAllocator::AllocationType::STEREO;
     sp[chan] = ctagSoundProcessorFactory::Create(id, aType);
+    if (chan == 0) {
+        macroTranslator->soundProcessor = sp[chan];
+    }
     model->SetActivePluginID(id, chan);
     sp[chan]->LoadPreset(model->GetActivePatchNum(chan));
     // xSemaphoreGive(processMutex);
@@ -474,9 +485,10 @@ atomic<uint32_t> SoundProcessorManager::toStereoCH1;
 atomic<uint32_t> SoundProcessorManager::runAudioTask;
 atomic<uint32_t> SoundProcessorManager::ch0_outputSoftClip;
 atomic<uint32_t> SoundProcessorManager::ch1_outputSoftClip;
-std::unique_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> SoundProcessorManager::synthDefinitionModel = nullptr;
-std::unique_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> SoundProcessorManager::macroSoundDefinitionModel = nullptr;
-std::unique_ptr<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel> SoundProcessorManager::macroDeviceDefinitionModel = nullptr;
+std::shared_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> SoundProcessorManager::synthDefinitionModel = nullptr;
+std::shared_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> SoundProcessorManager::macroSoundDefinitionModel = nullptr;
+std::shared_ptr<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel> SoundProcessorManager::macroDeviceDefinitionModel = nullptr;
+std::shared_ptr<CTAG::MACROPRESETS::MacroTranslator> SoundProcessorManager::macroTranslator = nullptr;
 
 
 static char freertosstats[2000] = { 0, };
@@ -516,13 +528,21 @@ void SoundProcessorManager::StartSoundProcessor() {
     // generate internal data
     updateConfiguration();
 
-    synthDefinitionModel = std::make_unique<CTAG::MACROPRESETS::SynthDefinitionDataModel>();
-    macroSoundDefinitionModel = std::make_unique<CTAG::MACROPRESETS::MacroSoundPresetDataModel>();
-    macroDeviceDefinitionModel = std::make_unique<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel>();
+    synthDefinitionModel = std::make_shared<CTAG::MACROPRESETS::SynthDefinitionDataModel>();
+    
+    macroSoundDefinitionModel = std::make_shared<CTAG::MACROPRESETS::MacroSoundPresetDataModel>();
+    
+    macroDeviceDefinitionModel = std::make_shared<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel>();
+    
+    macroTranslator = std::make_shared<CTAG::MACROPRESETS::MacroTranslator>();
 
     synthDefinitionModel->ReloadSynthDefinitions();
     macroDeviceDefinitionModel->ReloadMachineDefinitions();
     macroSoundDefinitionModel->ReloadSoundPresets();
+
+    macroTranslator->synthDefinitionModel = synthDefinitionModel;
+    macroTranslator->macroDeviceDefinitionModel = macroDeviceDefinitionModel;
+    macroTranslator->macroSoundDefinitionModel = macroSoundDefinitionModel;
 
     // start network
     NET::Network::SetSSID(model->GetNetworkConfigurationData("ssid"));
@@ -718,3 +738,29 @@ void SoundProcessorManager::RefreshSampleRom() {
     ledBlink = 5;
     ctagSampleRom::RefreshDataStructure();
 }
+
+void SoundProcessorManager::SetTrackMachine(const int trackIndex, const string &synthID) {
+    if (sp[0] != nullptr) {
+        sp[0]->setTrackMachine(trackIndex, synthID);
+    }
+}
+
+void SoundProcessorManager::SetTrackMacro(const int trackIndex, const string &macroDefinitionID) {
+    if (macroTranslator == nullptr) {
+        return;
+    }
+
+    MacroDeviceDefinition *def = macroDeviceDefinitionModel
+        ->GetMacroDeviceDefinition(macroDefinitionID);
+    macroTranslator->SetTrackMacroDefinition(trackIndex, def);
+}
+
+void SoundProcessorManager::SetTrackParametersFromJSON(const int trackIndex, const string &parametersJSON) {
+    // translator->
+    if (macroTranslator == nullptr) {
+        return;
+    }
+
+    macroTranslator->SetTrackParametersFromJSON(trackIndex, parametersJSON);
+}
+

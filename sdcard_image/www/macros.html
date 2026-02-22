@@ -5,68 +5,75 @@
         <link rel="stylesheet" href="css/macros.css" />
     </head>
     <body>
-        <h1>PicoSeqRack Macros</h1>
+        <h1>PicoSeqRack Macro Editor</h1>
 
-        <h2>Available macro definitions</h2>
+        <h2>Test presets</h2>
+
+        <h3>Rack tracks</h3>
+        <ul id="tracks">
+            <li>loading tracks...</li>
+        </ul>
+
+        <h3><span id="tracktitle">Track ?</span></h3>
+
+        <p>
+            Machine:
+            <select id="activetrackmachine"></select>
+        </p>
+
+        <p>
+            Macro definition:
+            <select id="activemacrodefinition"></select>
+        </p>
+
+        <p>
+            Sound preset:
+            <select id="activesoundpreset"></select>
+        </p>
+
+        <h3>Preset parameters</h3>
+
+        <p>
+            <button id="defaultparameters">Default</button>
+            <button id="randomizeparameters">Randomize</button>
+            <button id="copypreset">Copy preset json</button>
+            <button id="loadpreset">Load preset json</button>
+        </p>
+
+        <ul id="trackparametergroups"></ul>
+
+        <hr />
+
+        <h2>Manage macros and presets</h2>
+
+        <h3>Available macro definitions</h3>
+        <p>
+            <button id="reloadmacrodefinitions">Reload macro definitions</button>
+        </p>
         <ul id="macrodefinitions">
             <li>loading macro definitions...</li>
-            <li>
-                <b>Macro definition 1</b>
-                <span>
-                    Kickdrum - Variant 1
-                </span>
-            </li>
-            <li>Macro definition 1 - Kickdrum - Variant 2</li>
-            <li>Macro definition 1 - Kickdrum - Variant 3</li>
         </ul>
         <p>
             Upload new macro definition <input id="uploadmacrodefinitionjson" type="text" value="paste macro definition json here" size="50" /> <button id="uploadmacrodefinition">Update</button>
         </p>
 
-        <h2>Available sound presets</h2>
+        <h3>Available sound presets</h3>
+        <p>
+            <button id="reloadsoundpresets">Reload sound presets</button>
+        </p>
         <ul id="soundpresets">
             <li>loading sound presets...</li>
-            <li>
-                <b>
-                Sound preset 1
-                </b>
-                <span>
-                    Kicks - First kick
-                </span>
-            </li>
-            <li>Sound preset 1 - Kicks - Second kick</li>
         </ul>
         <p>
             Upload new sound preset <input id="uploadsoundpresetjson" type="text" value="paste preset json here" size="50" /> <button id="uploadsoundpreset">Update</button>
         </p>
 
-        <h2>Rack tracks</h2>
-        <ul id="tracks">
-            <li>loading tracks...</li>
-            <li>
-                <b>
-                    Track 1 - Kick - Active synth: None
-                </b>
-                <span>
-                    Available synths: DB, AB, NoDrum
-                </span>
-            </li>
-            <li>Track 2 - Active synth: None - Available synths: FMK, NoDrum</li>
-        </ul>
-
-        <h2>Rack synths</h2>
+        <h3>Rack synths</h3>
+        <p>
+            <button id="reloadmachines">Reload machine list</button>
+        </p>
         <ul id="machines">
             <li>loading synths...</li>
-            <li>
-                <b>
-                    Synth 1 - Name
-                </b>
-                <span>
-                    Parameters: A,B,C,D
-                </span>
-                </li>
-            <li>Synth 2 - Kick drum (drum) - Parameters: B,C,E,f,G</li>
         </ul>
-
     </body>
 </html>
