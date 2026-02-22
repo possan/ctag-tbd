@@ -56,6 +56,14 @@ typedef struct rest_server_context {
 
 #define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
 
+/* Set CORS headers on a response */
+static void set_cors_headers(httpd_req_t *req) {
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type, Authorization");
+    httpd_resp_set_hdr(req, "Access-Control-Max-Age", "86400");
+}
+
 /* Set HTTP response content type and cache headers according to file extension */
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath) {
     const char *type = "text/plain";
@@ -93,6 +101,14 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
     }
 
     return httpd_resp_set_type(req, type);
+}
+
+/* Handle CORS preflight OPTIONS requests */
+static esp_err_t cors_options_handler(httpd_req_t *req) {
+    set_cors_headers(req);
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
 }
 
 /* Send HTTP response with the contents of the requested file */
@@ -151,6 +167,7 @@ esp_err_t RestServer::get_plugins_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     httpd_resp_set_type(req, "application/json");
     const char* res = CTAG::AUDIO::SoundProcessorManager::GetCStrJSONSoundProcessors();
     if(nullptr != res) httpd_resp_sendstr(req, res);
@@ -163,6 +180,7 @@ esp_err_t RestServer::get_active_plugin_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     size_t qlen = httpd_req_get_url_query_len(req);
     size_t urilen = strlen(req->uri);
     char ch = req->uri[urilen - qlen - 1];
@@ -183,6 +201,7 @@ esp_err_t RestServer::get_params_plugin_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     size_t qlen = httpd_req_get_url_query_len(req);
     size_t urilen = strlen(req->uri);
     char ch = req->uri[urilen - qlen - 1];
@@ -204,6 +223,7 @@ esp_err_t RestServer::set_active_plugin_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     char s[128];
     char v[128];
     size_t qlen = httpd_req_get_url_query_len(req);
@@ -231,6 +251,7 @@ esp_err_t RestServer::set_plugin_param_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     char query[128];
     char id[128];
     char cstrvalue[128];
@@ -263,6 +284,7 @@ esp_err_t RestServer::set_plugin_param_get_handler(httpd_req_t *req) {
 }
 
 esp_err_t RestServer::get_presets_get_handler(httpd_req_t *req) {
+    set_cors_headers(req);
     char query[128];
     size_t qlen = httpd_req_get_url_query_len(req);
     size_t urilen = strlen(req->uri);
@@ -286,6 +308,7 @@ esp_err_t RestServer::save_preset_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     char query[128];
     char name[128];
     char number[16];
@@ -310,6 +333,7 @@ esp_err_t RestServer::load_preset_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     char query[128];
     char number[16];
     size_t qlen = httpd_req_get_url_query_len(req);
@@ -339,7 +363,7 @@ esp_err_t RestServer::StartRestServer() {
     config.core_id = 0;
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.task_priority = tskIDLE_PRIORITY + 4;
-    config.max_uri_handlers = 20;
+    config.max_uri_handlers = 32;
     config.stack_size = 8192;
     config.recv_wait_timeout = 10;
     config.send_wait_timeout = 10;
@@ -514,6 +538,120 @@ esp_err_t RestServer::StartRestServer() {
     };
     httpd_register_uri_handler(server, &favorite_get_uri);
 
+
+
+
+
+
+
+    httpd_uri_t get_synthdefinitionlist_uri = {
+            .uri = "/api/v1/picoseq/synthdefinitionlist",
+            .method = HTTP_GET,
+            .handler = &RestServer::get_synthdefinitionlist_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &get_synthdefinitionlist_uri);
+
+    httpd_uri_t get_synthdefinition_uri = {
+            .uri = "/api/v1/picoseq/synthdefinition/*",
+            .method = HTTP_GET,
+            .handler = &RestServer::get_synthdefinition_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &get_synthdefinition_uri);
+
+    httpd_uri_t get_trackstatus_uri = {
+            .uri = "/api/v1/picoseq/trackstatus",
+            .method = HTTP_GET,
+            .handler = &RestServer::get_trackstatus_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &get_trackstatus_uri);
+
+    httpd_uri_t put_trackinfo_uri = {
+            .uri = "/api/v1/picoseq/tracks/*",
+            .method = HTTP_PUT,
+            .handler = &RestServer::put_trackinfo_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &put_trackinfo_uri);
+
+    httpd_uri_t get_trackdefinition_uri = {
+            .uri = "/api/v1/picoseq/trackdefinition/*",
+            .method = HTTP_GET,
+            .handler = &RestServer::get_trackdefinition_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &get_trackdefinition_uri);
+
+    httpd_uri_t get_macrodefinitionlist_uri = {
+            .uri = "/api/v1/picoseq/macrodefinitions",
+            .method = HTTP_GET,
+            .handler = &RestServer::get_macrodefinitionlist_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &get_macrodefinitionlist_uri);
+
+    httpd_uri_t get_macrodefinition_uri = {
+            .uri = "/api/v1/picoseq/macrodefinition/*",
+            .method = HTTP_GET,
+            .handler = &RestServer::get_macrodefinition_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &get_macrodefinition_uri);
+
+    httpd_uri_t put_macrodefinition_uri = {
+            .uri = "/api/v1/picoseq/macrodefinition/*",
+            .method = HTTP_PUT,
+            .handler = &RestServer::put_macrodefinition_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &put_macrodefinition_uri);
+
+    httpd_uri_t get_soundpresetlist_uri = {
+            .uri = "/api/v1/picoseq/soundpresets",
+            .method = HTTP_GET,
+            .handler = &RestServer::get_soundpresetlist_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &get_soundpresetlist_uri);
+
+    httpd_uri_t get_soundpreset_uri = {
+            .uri = "/api/v1/picoseq/soundpreset/*",
+            .method = HTTP_GET,
+            .handler = &RestServer::get_soundpreset_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &get_soundpreset_uri);
+
+    httpd_uri_t put_soundpreset_uri = {
+            .uri = "/api/v1/picoseq/soundpreset/*",
+            .method = HTTP_PUT,
+            .handler = &RestServer::put_soundpreset_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &put_soundpreset_uri);
+
+
+
+
+
+
+
+
+
+
+
+
+    /* CORS preflight handler for OPTIONS requests */
+    httpd_uri_t cors_options_uri = {
+            .uri = "/*",
+            .method = HTTP_OPTIONS,
+            .handler = cors_options_handler,
+            .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &cors_options_uri);
+
     /* URI handler for getting web server files */
     httpd_uri_t common_get_uri = {
             .uri = "/*",
@@ -532,6 +670,7 @@ esp_err_t RestServer::set_configuration_post_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     /* Destination buffer for content of HTTP POST request.
      * httpd_req_recv() accepts char* only, but content could
      * as well be any binary data (needs type casting).
@@ -565,6 +704,7 @@ esp_err_t RestServer::get_configuration_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     httpd_resp_set_type(req, "application/json");
     const char *res = CTAG::AUDIO::SoundProcessorManager::GetCStrJSONConfiguration();
     if(nullptr != res) httpd_resp_sendstr(req, res);
@@ -577,6 +717,7 @@ esp_err_t RestServer::get_preset_json_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     char query[128];
     char pluginID[64];
     httpd_req_get_url_query_str(req, query, 128);
@@ -594,6 +735,7 @@ esp_err_t RestServer::get_preset_json_handler(httpd_req_t *req) {
 }
 
 esp_err_t RestServer::reboot_handler(httpd_req_t *req) {
+    set_cors_headers(req);
     char query[128];
     httpd_req_get_url_query_str(req, query, 128);
     ESP_LOGW(REST_TAG, "Reboot requested");
@@ -604,6 +746,7 @@ esp_err_t RestServer::reboot_handler(httpd_req_t *req) {
 }
 
 esp_err_t RestServer::set_preset_json_handler(httpd_req_t *req) {
+    set_cors_headers(req);
     char query[128];
     char pluginID[64];
     memset(query, 0, 128);
@@ -658,6 +801,7 @@ esp_err_t RestServer::set_preset_json_handler(httpd_req_t *req) {
 
 // transmit io capabilities
 esp_err_t RestServer::get_iocaps_handler(httpd_req_t *req) {
+    set_cors_headers(req);
     httpd_resp_set_type(req, "application/json");
 #include "IOCapabilities.hpp"
     httpd_resp_sendstr(req, s.c_str());
@@ -670,6 +814,7 @@ esp_err_t RestServer::favorite_post_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
     string cmd{req->uri};
 
     ESP_LOGD("REST", "Favorite handler cmd: %s", cmd.c_str());
@@ -719,3 +864,310 @@ esp_err_t RestServer::favorite_post_handler(httpd_req_t *req) {
 
     return ESP_OK;
 }
+
+esp_err_t RestServer::get_synthdefinitionlist_handler(httpd_req_t *req) {
+    ESP_LOGI("get_synthdefinitionlist_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    char query[128];
+    httpd_req_get_url_query_str(req, query, 128);
+    httpd_resp_set_type(req, "application/json");
+
+    std::string outputjson;
+    CTAG::AUDIO::SoundProcessorManager::synthDefinitionModel->SerializeListJSON(&outputjson);
+    httpd_resp_sendstr(req, outputjson.c_str());
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t RestServer::get_synthdefinition_handler(httpd_req_t *req) {
+    ESP_LOGI("get_synthdefinition_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    char query[128];
+    char pluginID[64];
+    httpd_req_get_url_query_str(req, query, 128);
+    httpd_resp_set_type(req, "application/json");
+    char *pLastSlash = strrchr(req->uri, '/');
+    if (pLastSlash) {
+        strcpy(pluginID, pLastSlash + 1);
+        ESP_LOGD(REST_TAG, "Sending macro definition for id %s", pluginID);
+        std::string outputjson;
+        CTAG::AUDIO::SoundProcessorManager::synthDefinitionModel->SerializeSynthJSON(pluginID, &outputjson);
+        httpd_resp_sendstr(req, outputjson.c_str());
+    }
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t RestServer::get_trackstatus_handler(httpd_req_t *req) {
+    ESP_LOGI("get_trackstatus_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    char query[128];
+    httpd_req_get_url_query_str(req, query, 128);
+    httpd_resp_set_type(req, "application/json");
+
+    std::string outputjson;
+    CTAG::AUDIO::SoundProcessorManager::synthDefinitionModel->SerializeStateJSON(&outputjson);
+    httpd_resp_sendstr(req, outputjson.c_str());
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t RestServer::get_trackdefinition_handler(httpd_req_t *req) {
+    ESP_LOGI("get_trackdefinition_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    char query[128];
+    char trackIndex[64];
+    httpd_req_get_url_query_str(req, query, 128);
+    httpd_resp_set_type(req, "application/json");
+    char *pLastSlash = strrchr(req->uri, '/');
+    if (pLastSlash) {
+        strcpy(trackIndex, pLastSlash + 1);
+        ESP_LOGD(REST_TAG, "Sending macro definition for id %s", trackIndex);
+        std::string outputjson;
+        CTAG::AUDIO::SoundProcessorManager::synthDefinitionModel->SerializeTrackJSON(atoi(trackIndex), &outputjson);
+        httpd_resp_sendstr(req, outputjson.c_str());
+    }
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t RestServer::get_macrodefinitionlist_handler(httpd_req_t *req) {
+    ESP_LOGI("get_macrodefinitionlist_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    char query[128];
+    httpd_req_get_url_query_str(req, query, 128);
+    httpd_resp_set_type(req, "application/json");
+
+    std::string outputjson;
+    CTAG::AUDIO::SoundProcessorManager::macroDeviceDefinitionModel->SerializeListJSON(&outputjson);
+    httpd_resp_sendstr(req, outputjson.c_str());
+
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t RestServer::get_macrodefinition_handler(httpd_req_t *req) {
+    ESP_LOGI("get_macrodefinition_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    char query[128];
+    char pluginID[64];
+    httpd_req_get_url_query_str(req, query, 128);
+    httpd_resp_set_type(req, "application/json");
+    char *pLastSlash = strrchr(req->uri, '/');
+    if (pLastSlash) {
+        strcpy(pluginID, pLastSlash + 1);
+        ESP_LOGD(REST_TAG, "Sending macro definition for id %s", pluginID);
+        std::string outputjson;
+        CTAG::AUDIO::SoundProcessorManager::macroDeviceDefinitionModel->SerializeItemJSON(pluginID, &outputjson);
+        httpd_resp_sendstr(req, outputjson.c_str());
+    }
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t RestServer::put_macrodefinition_handler(httpd_req_t *req) {
+    ESP_LOGI("put_macrodefinition_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    /* Destination buffer for content of HTTP POST request.
+     * httpd_req_recv() accepts char* only, but content could
+     * as well be any binary data (needs type casting).
+     * In case of string data, null termination will be absent, and
+     * content length would give length of string */
+    char *content = (char *) heap_caps_malloc(req->content_len + 1, MALLOC_CAP_SPIRAM);
+    int ret = httpd_req_recv(req, content, req->content_len);
+    if (ret <= 0) {  /* 0 return value indicates connection closed */
+        /* Check if timeout occurred */
+        if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
+            /* In case of timeout one can choose to retry calling
+             * httpd_req_recv(), but to keep it simple, here we
+             * respond with an HTTP 408 (Request Timeout) error */
+            httpd_resp_send_408(req);
+        }
+        /* In case of error, returning ESP_FAIL will
+         * ensure that the underlying socket is closed */
+        return ESP_FAIL;
+    }
+    content[req->content_len] = 0;
+
+    ESP_LOGI("put_macrodefinition_handler", "Received definition data %s", content);
+    int ok = CTAG::AUDIO::SoundProcessorManager::macroDeviceDefinitionModel->UpdateDefinition(content);
+    free(content);
+    if (!ok) {
+        ESP_LOGE("put_macrodefinition_handler", "Error updating macro definition");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid macro definition");
+        return ESP_OK;
+    }
+
+    // CTAG::AUDIO::SoundProcessorManager::SetConfigurationFromJSON(string(content));
+    // free(content);
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+
+esp_err_t RestServer::get_soundpresetlist_handler(httpd_req_t *req) {
+    ESP_LOGI("get_soundpresetlist_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    char query[128];
+    httpd_req_get_url_query_str(req, query, 128);
+    httpd_resp_set_type(req, "application/json");
+
+    std::string outputjson;
+    CTAG::AUDIO::SoundProcessorManager::macroSoundDefinitionModel->SerializeListJSON(&outputjson);
+    httpd_resp_sendstr(req, outputjson.c_str());
+
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t RestServer::get_soundpreset_handler(httpd_req_t *req) {
+    ESP_LOGI("get_soundpreset_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    char query[128];
+    char pluginID[64];
+    httpd_req_get_url_query_str(req, query, 128);
+    httpd_resp_set_type(req, "application/json");
+    char *pLastSlash = strrchr(req->uri, '/');
+    if (pLastSlash) {
+        strcpy(pluginID, pLastSlash + 1);
+        ESP_LOGD(REST_TAG, "Sending sound preset for id %s", pluginID);
+
+        std::string outputjson;
+        CTAG::AUDIO::SoundProcessorManager::macroSoundDefinitionModel->SerializeItemJSON(pluginID, &outputjson);
+        httpd_resp_sendstr(req, outputjson.c_str());
+
+        const char *json = CTAG::AUDIO::SoundProcessorManager::GetCStrJSONSoundProcessorPresets(string(pluginID));
+        if (nullptr != json)
+            httpd_resp_sendstr(req, json);
+    }
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+esp_err_t RestServer::put_soundpreset_handler(httpd_req_t *req) {
+    ESP_LOGI("put_soundpreset_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    /* Destination buffer for content of HTTP POST request.
+     * httpd_req_recv() accepts char* only, but content could
+     * as well be any binary data (needs type casting).
+     * In case of string data, null termination will be absent, and
+     * content length would give length of string */
+    char *content = (char *) heap_caps_malloc(req->content_len + 1, MALLOC_CAP_SPIRAM);
+    int ret = httpd_req_recv(req, content, req->content_len);
+    if (ret <= 0) {  /* 0 return value indicates connection closed */
+        /* Check if timeout occurred */
+        if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
+            /* In case of timeout one can choose to retry calling
+             * httpd_req_recv(), but to keep it simple, here we
+             * respond with an HTTP 408 (Request Timeout) error */
+            httpd_resp_send_408(req);
+        }
+        /* In case of error, returning ESP_FAIL will
+         * ensure that the underlying socket is closed */
+        return ESP_FAIL;
+    }
+    content[req->content_len] = 0;
+
+    ESP_LOGI("put_soundpreset_handler", "Received preset data %s", content);
+    int ok = CTAG::AUDIO::SoundProcessorManager::macroSoundDefinitionModel->UpdatePreset(content);
+    free(content);
+    if (!ok) {
+        ESP_LOGE("put_soundpreset_handler", "Error updating sound preset");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid sound preset");
+        return ESP_OK;
+    }
+
+    // CTAG::AUDIO::SoundProcessorManager::SetConfigurationFromJSON(string(content));
+    // free(content);
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+
+
+esp_err_t RestServer::put_trackinfo_handler(httpd_req_t *req) {
+    ESP_LOGI("put_trackinfo_handler", "1: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    set_cors_headers(req);
+    /* Destination buffer for content of HTTP POST request.
+     * httpd_req_recv() accepts char* only, but content could
+     * as well be any binary data (needs type casting).
+     * In case of string data, null termination will be absent, and
+     * content length would give length of string */
+    char *content = (char *) heap_caps_malloc(req->content_len + 1, MALLOC_CAP_SPIRAM);
+    int ret = httpd_req_recv(req, content, req->content_len);
+    if (ret <= 0) {  /* 0 return value indicates connection closed */
+        /* Check if timeout occurred */
+        if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
+            /* In case of timeout one can choose to retry calling
+             * httpd_req_recv(), but to keep it simple, here we
+             * respond with an HTTP 408 (Request Timeout) error */
+            httpd_resp_send_408(req);
+        }
+        /* In case of error, returning ESP_FAIL will
+         * ensure that the underlying socket is closed */
+        return ESP_FAIL;
+    }
+    content[req->content_len] = 0;
+
+    ESP_LOGI("put_macrodefinition_handler", "Received definition data %s", content);
+    int ok = CTAG::AUDIO::SoundProcessorManager::macroDeviceDefinitionModel->UpdateDefinition(content);
+    free(content);
+    if (!ok) {
+        ESP_LOGE("put_macrodefinition_handler", "Error updating macro definition");
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid macro definition");
+        return ESP_OK;
+    }
+
+    // CTAG::AUDIO::SoundProcessorManager::SetConfigurationFromJSON(string(content));
+    // free(content);
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+

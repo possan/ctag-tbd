@@ -32,6 +32,9 @@ respective component folders / files if different from this license.
 #include "ctagSoundProcessorFactory.hpp"
 #include "SPManagerDataModel.hpp"
 #include <atomic>
+#include "SynthDefinitionDataModel.hpp"
+#include "MacroSoundPresetDataModel.hpp"
+#include "MacroDeviceDefinitionDataModel.hpp"
 
 using namespace CTAG::SP;
 
@@ -99,6 +102,10 @@ namespace CTAG {
             static void DisablePluginProcessing();
             static void EnablePluginProcessing();
             static void RefreshSampleRom();
+
+            static std::unique_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> synthDefinitionModel;
+            static std::unique_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> macroSoundDefinitionModel;
+            static std::unique_ptr<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel> macroDeviceDefinitionModel;
 
         private:
             static void audio_task(void *pvParams);

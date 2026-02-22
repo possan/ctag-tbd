@@ -688,7 +688,49 @@ namespace CTAG::SPIAPI{
                     result = transmitCString(requestType, info);
                 }
                 break;
+            case RequestType::EnableFileTransferMode:
+                break;
+            case RequestType::DisableFileTransferMode:
+                break;
+            case RequestType::GetSynthDefinitionsJSON:
+                {
+                    std::string info = "{\"status\":\"not implemented\"}";
+                    result = transmitCString(requestType, info.c_str());
+                }
+                break;
+            case RequestType::GetMacroMachineDefinitionsJSON:
+                {
+                    std::string info = "{\"status\":\"not implemented\"}";
+                    result = transmitCString(requestType, info.c_str());
+                }
+                break;
+            case RequestType::UploadMacroMachineDefinitionJSON:
+                {
+                    std::string info = "{\"status\":\"not implemented\"}";
+                    result = transmitCString(requestType, info.c_str());
+                }
+                break;
+            case RequestType::SetTrackMacroMachine:
+                break;
+            case RequestType::GetSoundPresetListJSON:
+                {
+                    std::string info = "{\"status\":\"not implemented\"}";
+                    result = transmitCString(requestType, info.c_str());
+                }
+                break;
+            case RequestType::GetSoundPresetJSON:
+                {
+                    std::string info = "{\"status\":\"not implemented\"}";
+                    result = transmitCString(requestType, info.c_str());
+                }
+                break;
+            case RequestType::UploadSoundPresetJSON:
+                {
+                    std::string info = "{\"status\":\"not implemented\"}";
+                    result = transmitCString(requestType, info.c_str());
+                }
+                break;
             }
-        }
+       }
     }
 }

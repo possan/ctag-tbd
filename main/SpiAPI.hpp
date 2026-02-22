@@ -63,6 +63,19 @@ namespace CTAG::SPIAPI{
             GetSampleFileCount = 0x50,
             GetSampleFileInfo = 0x51,
             GetSampleFileWaveformPreview = 0x52,
+
+            EnableFileTransferMode = 0x60,
+            DisableFileTransferMode = 0x61,
+
+            GetSynthDefinitionsJSON = 0x70,
+
+            GetMacroMachineDefinitionsJSON = 0x80,
+            UploadMacroMachineDefinitionJSON = 0x81,
+            SetTrackMacroMachine = 0x82,
+
+            GetSoundPresetListJSON = 0x90,
+            GetSoundPresetJSON = 0x91,
+            UploadSoundPresetJSON = 0x92,
         };
 
         static TaskHandle_t hTask;

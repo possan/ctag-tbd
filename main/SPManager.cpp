@@ -474,6 +474,9 @@ atomic<uint32_t> SoundProcessorManager::toStereoCH1;
 atomic<uint32_t> SoundProcessorManager::runAudioTask;
 atomic<uint32_t> SoundProcessorManager::ch0_outputSoftClip;
 atomic<uint32_t> SoundProcessorManager::ch1_outputSoftClip;
+std::unique_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> SoundProcessorManager::synthDefinitionModel = nullptr;
+std::unique_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> SoundProcessorManager::macroSoundDefinitionModel = nullptr;
+std::unique_ptr<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel> SoundProcessorManager::macroDeviceDefinitionModel = nullptr;
 
 
 static char freertosstats[2000] = { 0, };
@@ -512,6 +515,14 @@ void SoundProcessorManager::StartSoundProcessor() {
     DRIVERS::Codec::InitCodec();
     // generate internal data
     updateConfiguration();
+
+    synthDefinitionModel = std::make_unique<CTAG::MACROPRESETS::SynthDefinitionDataModel>();
+    macroSoundDefinitionModel = std::make_unique<CTAG::MACROPRESETS::MacroSoundPresetDataModel>();
+    macroDeviceDefinitionModel = std::make_unique<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel>();
+
+    synthDefinitionModel->ReloadSynthDefinitions();
+    macroDeviceDefinitionModel->ReloadMachineDefinitions();
+    macroSoundDefinitionModel->ReloadSoundPresets();
 
     // start network
     NET::Network::SetSSID(model->GetNetworkConfigurationData("ssid"));

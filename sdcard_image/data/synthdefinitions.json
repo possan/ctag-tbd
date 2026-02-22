@@ -1,0 +1,1320 @@
+{
+  "tracks": [
+    {
+      "index": 0,
+      "type": "drum",
+      "name": "Kick",
+      "midichannel": 9,
+      "drumnote": 36,
+      "basecc": 0,
+      "machines": [
+        "nodrum",
+        "db",
+        "ab",
+        "extdrum"
+      ]
+    },
+    {
+      "index": 1,
+      "type": "drum",
+      "name": "Kick2",
+      "midichannel": 9,
+      "drumnote": 37,
+      "basecc": 20,
+      "machines": [
+        "nodrum",
+        "fmk",
+        "extdrum"
+      ]
+    },
+    {
+      "index": 2,
+      "type": "drum",
+      "name": "Snare",
+      "midichannel": 9,
+      "drumnote": 38,
+      "basecc": 40,
+      "machines": [
+        "nodrum",
+        "ds",
+        "as",
+        "extdrum"
+      ]
+    },
+    {
+      "index": 3,
+      "type": "drum",
+      "name": "Hat",
+      "midichannel": 9,
+      "drumnote": 39,
+      "basecc": 60,
+      "machines": [
+        "nodrum",
+        "hh1",
+        "hh2",
+        "extdrum"
+      ]
+    },
+    {
+      "index": 4,
+      "type": "drum",
+      "name": "Rimshot",
+      "midichannel": 9,
+      "drumnote": 40,
+      "basecc": 80,
+      "machines": [
+        "nodrum",
+        "rs",
+        "extdrum"
+      ]
+    },
+    {
+      "index": 5,
+      "type": "drum",
+      "name": "Clap",
+      "midichannel": 9,
+      "drumnote": 41,
+      "basecc": 100,
+      "machines": [
+        "nodrum",
+        "cl",
+        "extdrum"
+      ]
+    },
+    {
+      "index": 6,
+      "type": "drum",
+      "name": "Rompler",
+      "midichannel": 9,
+      "drumnote": 42,
+      "basecc": 0,
+      "machines": [
+        "nodrum",
+        "ro",
+        "extdrum"
+      ]
+    },
+    {
+      "index": 7,
+      "type": "drum",
+      "name": "Rompler",
+      "midichannel": 9,
+      "drumnote": 43,
+      "basecc": 0,
+      "machines": [
+        "nodrum",
+        "ro",
+        "extdrum"
+      ]
+    },
+    {
+      "index": 8,
+      "type": "synth",
+      "name": "Bass",
+      "midichannel": 1,
+      "drumnote": 0,
+      "basecc": 0,
+      "machines": [
+        "nosynth",
+        "tb",
+        "extsynth"
+      ]
+    },
+    {
+      "index": 9,
+      "type": "synth",
+      "name": "Bass2",
+      "midichannel": 2,
+      "drumnote": 0,
+      "basecc": 0,
+      "machines": [
+        "nosynth",
+        "tb",
+        "extsynth"
+      ]
+    },
+    {
+      "index": 10,
+      "type": "synth",
+      "name": "Lead",
+      "midichannel": 3,
+      "drumnote": 0,
+      "basecc": 0,
+      "machines": [
+        "nosynth",
+        "mo",
+        "extsynth"
+      ]
+    },
+    {
+      "index": 11,
+      "type": "synth",
+      "name": "Lead2",
+      "midichannel": 4,
+      "drumnote": 0,
+      "basecc": 0,
+      "machines": [
+        "nosynth",
+        "wo",
+        "mo",
+        "extsynth"
+      ]
+    },
+    {
+      "index": 12,
+      "type": "synth",
+      "name": "Rompler",
+      "midichannel": 5,
+      "drumnote": 0,
+      "basecc": 0,
+      "machines": [
+        "nosynth",
+        "ro",
+        "extsynth"
+      ]
+    },
+    {
+      "index": 13,
+      "type": "synth",
+      "name": "Rompler",
+      "midichannel": 6,
+      "drumnote": 0,
+      "basecc": 0,
+      "machines": [
+        "nosynth",
+        "ro",
+        "extsynth"
+      ]
+    },
+    {
+      "index": 14,
+      "type": "synth",
+      "name": "Chordo",
+      "midichannel": 7,
+      "drumnote": 0,
+      "basecc": 0,
+      "machines": [
+        "nosynth",
+        "pp",
+        "extsynth"
+      ]
+    },
+    {
+      "index": 15,
+      "type": "synth",
+      "name": "Input",
+      "midichannel": 8,
+      "drumnote": 0,
+      "basecc": 0,
+      "machines": [
+        "nosynth",
+        "inp"
+      ]
+    }
+  ],
+  "machines": [
+    {
+      "id": "nodrum",
+      "name": "Empty drum",
+      "type": "drum",
+      "parameters": []
+    },
+    {
+      "id": "nosynth",
+      "name": "Empty synth",
+      "type": "synth",
+      "parameters": []
+    },
+    {
+      "id": "db",
+      "name": "Synth Kick",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "freq",
+          "name": "Freq",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "tone",
+          "name": "Tone",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "dirt",
+          "name": "Dirt",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "fm-env",
+          "name": "Fm Env",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        },
+        {
+          "id": "fm-decay",
+          "name": "Fm Decay",
+          "type": "cc",
+          "cc": 13,
+          "default": 0
+        },
+        {
+          "id": "fm-accent",
+          "name": "Fm Accent",
+          "type": "cc",
+          "cc": 14,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "ab",
+      "name": "Analog Kick",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "freq",
+          "name": "Freq",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "tone",
+          "name": "Tone",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "a-fm",
+          "name": "A FM",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "s-fm",
+          "name": "S FM",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        },
+        {
+          "id": "accent",
+          "name": "Accent",
+          "type": "cc",
+          "cc": 13,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "fmk",
+      "name": "FM Kick",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "f-b",
+          "name": "FM",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "d-b",
+          "name": "DB",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "f-m",
+          "name": "FM",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "d-m",
+          "name": "DM",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "b-m",
+          "name": "BM",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        },
+        {
+          "id": "a-f",
+          "name": "AF",
+          "type": "cc",
+          "cc": 13,
+          "default": 0
+        },
+        {
+          "id": "d-f",
+          "name": "DF",
+          "type": "cc",
+          "cc": 14,
+          "default": 0
+        },
+        {
+          "id": "i",
+          "name": "I",
+          "type": "cc",
+          "cc": 15,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "ds",
+      "name": "Digital Snare",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "freq",
+          "name": "Freq",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "fm",
+          "name": "FM",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "snap",
+          "name": "Snap",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "accent",
+          "name": "Accent",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "as",
+      "name": "Analog Snare",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "freq",
+          "name": "Freq",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "fm",
+          "name": "FM",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "snap",
+          "name": "Snap",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "accent",
+          "name": "Accent",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "hh1",
+      "name": "Hihat 1",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "freq",
+          "name": "Freq",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "tone",
+          "name": "Tone",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "noise",
+          "name": "Noise",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "accent",
+          "name": "Accent",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "hh2",
+      "name": "Hihat 2",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "freq",
+          "name": "Freq",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "tone",
+          "name": "Tone",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "noise",
+          "name": "Noise",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "accent",
+          "name": "Accent",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "rs",
+      "name": "Rimshot",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "freq",
+          "name": "Freq",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "tone",
+          "name": "Tone",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "noise",
+          "name": "Noise",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "accent",
+          "name": "Accent",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "cl",
+      "name": "Clap",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "freq",
+          "name": "Freq",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "tone",
+          "name": "Tone",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "scale",
+          "name": "Scale",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "trans",
+          "name": "Trans",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "ro",
+      "name": "Rompler",
+      "type": "drum",
+      "parameters": [
+        {
+          "id": "bank",
+          "name": "Bank",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "slice",
+          "name": "Slice",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "start",
+          "name": "Start",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "end",
+          "name": "End",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "cutoff",
+          "name": "Cutoff",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        },
+        {
+          "id": "reso",
+          "name": "Reso",
+          "type": "cc",
+          "cc": 13,
+          "default": 0
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "cc",
+          "cc": 14,
+          "default": 0
+        },
+        {
+          "id": "bitcr",
+          "name": "Bit.CR",
+          "type": "cc",
+          "cc": 15,
+          "default": 0
+        },
+        {
+          "id": "attack",
+          "name": "Attack",
+          "type": "cc",
+          "cc": 16,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 17,
+          "default": 0
+        },
+        {
+          "id": "speed",
+          "name": "Speed",
+          "type": "cc",
+          "cc": 18,
+          "default": 0
+        },
+        {
+          "id": "pitch",
+          "name": "Pitch",
+          "type": "cc",
+          "cc": 19,
+          "default": 0
+        },
+        {
+          "id": "loop",
+          "name": "Loop",
+          "type": "cc",
+          "cc": 20,
+          "default": 0
+        },
+        {
+          "id": "pingpong",
+          "name": "PingPong",
+          "type": "cc",
+          "cc": 21,
+          "default": 0
+        },
+        {
+          "id": "ppstart",
+          "name": "PPStart",
+          "type": "cc",
+          "cc": 22,
+          "default": 0
+        },
+        {
+          "id": "eg2fm",
+          "name": "EG2FM",
+          "type": "cc",
+          "cc": 23,
+          "default": 0
+        },
+        {
+          "id": "tsmode",
+          "name": "TSMode",
+          "type": "cc",
+          "cc": 24,
+          "default": 0
+        },
+        {
+          "id": "tsamt",
+          "name": "TSAmt",
+          "type": "cc",
+          "cc": 25,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "tb3",
+      "name": "TBD03",
+      "type": "synth",
+      "parameters": [
+        {
+          "id": "shape",
+          "name": "Bank",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "p0",
+          "name": "P0",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "vca_d",
+          "name": "VCA D",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "vcf_d",
+          "name": "VCF D",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "cutoff",
+          "name": "Cutoff",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        },
+        {
+          "id": "reso",
+          "name": "Reso",
+          "type": "cc",
+          "cc": 13,
+          "default": 0
+        },
+        {
+          "id": "envdec",
+          "name": "EnvDec",
+          "type": "cc",
+          "cc": 15,
+          "default": 0
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "cc",
+          "cc": 14,
+          "default": 0
+        },
+        {
+          "id": "satur",
+          "name": "Satur",
+          "type": "cc",
+          "cc": 16,
+          "default": 0
+        },
+        {
+          "id": "drive",
+          "name": "Drive",
+          "type": "cc",
+          "cc": 17,
+          "default": 0
+        },
+        {
+          "id": "slide",
+          "name": "Slide",
+          "type": "cc",
+          "cc": 18,
+          "default": 0
+        },
+        {
+          "id": "accent",
+          "name": "Accent",
+          "type": "cc",
+          "cc": 19,
+          "default": 0
+        },
+        {
+          "id": "p1",
+          "name": "P1",
+          "type": "cc",
+          "cc": 20,
+          "default": 0
+        },
+        {
+          "id": "p0amt",
+          "name": "P0 Amt",
+          "type": "cc",
+          "cc": 21,
+          "default": 0
+        },
+        {
+          "id": "p1amt",
+          "name": "P1 Amt",
+          "type": "cc",
+          "cc": 22,
+          "default": 0
+        },
+        {
+          "id": "acclev",
+          "name": "Acc. Lev",
+          "type": "cc",
+          "cc": 23,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "mo",
+      "name": "Macro osc",
+      "type": "synth",
+      "parameters": [
+        {
+          "id": "shape",
+          "name": "Bank",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "p0",
+          "name": "P0",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "p1",
+          "name": "P1",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "waveshap",
+          "name": "Waveshape",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "p0a",
+          "name": "P0 A",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        },
+        {
+          "id": "p1a",
+          "name": "P1 A",
+          "type": "cc",
+          "cc": 13,
+          "default": 0
+        },
+        {
+          "id": "fma",
+          "name": "FM A",
+          "type": "cc",
+          "cc": 14,
+          "default": 0
+        },
+        {
+          "id": "qscale",
+          "name": "Q Scale",
+          "type": "cc",
+          "cc": 15,
+          "default": 0
+        },
+        {
+          "id": "attack",
+          "name": "Attack",
+          "type": "cc",
+          "cc": 16,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 17,
+          "default": 0
+        },
+        {
+          "id": "loopenv",
+          "name": "Loop Env",
+          "type": "cc",
+          "cc": 18,
+          "default": 0
+        },
+        {
+          "id": "decim",
+          "name": "Decim",
+          "type": "cc",
+          "cc": 19,
+          "default": 0
+        },
+        {
+          "id": "bitred",
+          "name": "Bit Red",
+          "type": "cc",
+          "cc": 20,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "wo",
+      "name": "Wavetable osc",
+      "type": "synth",
+      "parameters": [
+        {
+          "id": "wavebank",
+          "name": "Bank",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "wave",
+          "name": "Wave",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "tune",
+          "name": "Tune",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "cutoff",
+          "name": "Cutoff",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        },
+        {
+          "id": "reso",
+          "name": "Reso",
+          "type": "cc",
+          "cc": 13,
+          "default": 0
+        },
+        {
+          "id": "qscale",
+          "name": "Q Scale",
+          "type": "cc",
+          "cc": 14,
+          "default": 0
+        },
+        {
+          "id": "attack",
+          "name": "Attack",
+          "type": "cc",
+          "cc": 15,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 16,
+          "default": 0
+        },
+        {
+          "id": "sustain",
+          "name": "Sustain",
+          "type": "cc",
+          "cc": 17,
+          "default": 0
+        },
+        {
+          "id": "release",
+          "name": "Release",
+          "type": "cc",
+          "cc": 18,
+          "default": 0
+        },
+        {
+          "id": "e2wave",
+          "name": "E2 Wave",
+          "type": "cc",
+          "cc": 19,
+          "default": 0
+        },
+        {
+          "id": "e2fm",
+          "name": "E2 FM",
+          "type": "cc",
+          "cc": 20,
+          "default": 0
+        },
+        {
+          "id": "e2filt",
+          "name": "E2 Filt",
+          "type": "cc",
+          "cc": 21,
+          "default": 0
+        },
+        {
+          "id": "speed",
+          "name": "Speed",
+          "type": "cc",
+          "cc": 22,
+          "default": 0
+        },
+        {
+          "id": "sync",
+          "name": "Sync",
+          "type": "cc",
+          "cc": 23,
+          "default": 0
+        },
+        {
+          "id": "l2wave",
+          "name": "L2 Wave",
+          "type": "cc",
+          "cc": 25,
+          "default": 0
+        },
+        {
+          "id": "l2am",
+          "name": "L2 AM",
+          "type": "cc",
+          "cc": 26,
+          "default": 0
+        },
+        {
+          "id": "l2fm",
+          "name": "L2 FM",
+          "type": "cc",
+          "cc": 27,
+          "default": 0
+        },
+        {
+          "id": "l2filt",
+          "name": "L2 Filt",
+          "type": "cc",
+          "cc": 28,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "pp",
+      "name": "Polypad",
+      "type": "synth",
+      "parameters": [
+        {
+          "id": "chord",
+          "name": "Chord",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "inver",
+          "name": "Inversion",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        },
+        {
+          "id": "detune",
+          "name": "Detune",
+          "type": "cc",
+          "cc": 10,
+          "default": 0
+        },
+        {
+          "id": "cutoff",
+          "name": "Cutoff",
+          "type": "cc",
+          "cc": 11,
+          "default": 0
+        },
+        {
+          "id": "reso",
+          "name": "Reso",
+          "type": "cc",
+          "cc": 12,
+          "default": 0
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "cc",
+          "cc": 13,
+          "default": 0
+        },
+        {
+          "id": "qscale",
+          "name": "Q Scale",
+          "type": "cc",
+          "cc": 14,
+          "default": 0
+        },
+        {
+          "id": "attack",
+          "name": "Attack",
+          "type": "cc",
+          "cc": 15,
+          "default": 0
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "cc": 16,
+          "default": 0
+        },
+        {
+          "id": "sustain",
+          "name": "Sustain",
+          "type": "cc",
+          "cc": 17,
+          "default": 0
+        },
+        {
+          "id": "release",
+          "name": "Release",
+          "type": "cc",
+          "cc": 18,
+          "default": 0
+        },
+        {
+          "id": "l1spd",
+          "name": "L1 Speed",
+          "type": "cc",
+          "cc": 19,
+          "default": 0
+        },
+        {
+          "id": "l1amt",
+          "name": "L1 Amount",
+          "type": "cc",
+          "cc": 20,
+          "default": 0
+        },
+        {
+          "id": "l2spd",
+          "name": "L2 Speed",
+          "type": "cc",
+          "cc": 21,
+          "default": 0
+        },
+        {
+          "id": "l2amt",
+          "name": "L2 Amount",
+          "type": "cc",
+          "cc": 22,
+          "default": 0
+        },
+        {
+          "id": "efltamt",
+          "name": "E Filter Amount",
+          "type": "cc",
+          "cc": 23,
+          "default": 0
+        },
+        {
+          "id": "l2rand",
+          "name": "L2 Random",
+          "type": "cc",
+          "cc": 24,
+          "default": 0
+        },
+        {
+          "id": "nnotes",
+          "name": "Number of Notes",
+          "type": "cc",
+          "cc": 25,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "extsynth",
+      "name": "MIDI Synth",
+      "type": "synth",
+      "parameters": [
+        {
+          "id": "chan",
+          "name": "MIDI Channel",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "extdrum",
+      "name": "MIDI Drum",
+      "type": "synth",
+      "parameters": [
+        {
+          "id": "chan",
+          "name": "MIDI Channel",
+          "type": "cc",
+          "cc": 8,
+          "default": 0
+        },
+        {
+          "id": "note",
+          "name": "MIDI Note",
+          "type": "cc",
+          "cc": 9,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "inp",
+      "name": "External input",
+      "type": "synth",
+      "parameters": []
+    }
+  ]
+}

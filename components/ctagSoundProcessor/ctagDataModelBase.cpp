@@ -72,7 +72,7 @@ void CTAG::SP::ctagDataModelBase::loadJSON(Document &d, const string &fn) {
         d.ParseStream(is);
         fclose(fp);
         // if backup parsing was successful, copy backuped data to defective file
-        if(!d.HasParseError()){
+        if(!d.HasParseError()) {
             storeJSON(d, fn);
         }else{
             ESP_LOGE("JSON", "FATAL ERROR: Could not recover from backup file %s", backup_file_name.c_str());
