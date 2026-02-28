@@ -268,8 +268,8 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
                 left -= 2;
 
                 if (velocity > 0) {
-                    ESP_LOGI("MacroTranslator", "Note on, channe %d, note %d, velocity %d",
-                        inputchannel, note, velocity);
+                    // ESP_LOGI("MacroTranslator", "Note on, channe %d, note %d, velocity %d",
+                    //     inputchannel, note, velocity);
                     soundProcessor->handleMidiNoteOn(inputchannel, note, velocity);
                 } else {
                     soundProcessor->handleMidiNoteOff(inputchannel, note, velocity);
