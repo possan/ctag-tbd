@@ -314,7 +314,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     int64_t Tstart = T2;
     ch16.PreProcess(idata);
     if (ch16.enabled) {
-        // ch16_in.enabled = ch16.enabled && ch16.device == 0;
         ch16_in.Process(idata); // - it does nothing...
         if (ch16_in.enabled) {
             mixRenderOutputStereo(ch16_in.out, ch16.level, ch16.pan, ch16.send1, ch16.send2);
@@ -327,13 +326,11 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch1.PreProcess(idata);
     if (ch1.enabled) {
-        // ch1_db.enabled = ch1.enabled && ch1.device == 0;
         ch1_db.Process(idata);
         if (ch1_db.enabled) {
             mixRenderOutputMono(ch1_db.out, ch1.level, ch1.pan, ch1.send1, ch1.send2);
         }
 
-        // ch1_ab.enabled = ch1.enabled && ch1.device == 1;
         ch1_ab.Process(idata);
         if (ch1_ab.enabled) {
             mixRenderOutputMono(ch1_ab.out, ch1.level, ch1.pan, ch1.send1, ch1.send2);
@@ -345,13 +342,11 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch2.PreProcess(idata);
     if (ch2.enabled) {
-        // ch2_fmb1.enabled = ch2.enabled && ch2.device == 0;
         ch2_fmb1.Process(idata);
         if (ch2_fmb1.enabled) {
             mixRenderOutputMono(ch2_fmb1.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
         }
 
-        // ch2_fmb2.enabled = ch2.enabled && ch2.device == 1;
         ch2_fmb2.Process(idata);
         if (ch2_fmb2.enabled) {
             mixRenderOutputMono(ch2_fmb2.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
@@ -364,13 +359,11 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch3.PreProcess(idata);
     if (ch3.enabled) {
-        // ch3_ds.enabled = ch3.enabled && ch3.device == 0;
         ch3_ds.Process(idata);
         if (ch3_ds.enabled) {
             mixRenderOutputMono(ch3_ds.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
         }
 
-        // ch3_as.enabled = ch3.enabled && ch3.device == 1;
         ch3_as.Process(idata);
         if (ch3_as.enabled) {
             mixRenderOutputMono(ch3_as.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
@@ -382,13 +375,11 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch4.PreProcess(idata);
     if (ch4.enabled) {
-        // ch4_hh1.enabled = ch4.enabled && ch4.device == 0;
         ch4_hh1.Process(idata);
         if (ch4_hh1.enabled) {
             mixRenderOutputMono(ch4_hh1.out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
         }
 
-        // ch4_hh2.enabled = ch4.enabled && ch4.device == 1;
         ch4_hh2.Process(idata);
         if (ch4_hh2.enabled) {
             mixRenderOutputMono(ch4_hh2.out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
@@ -401,7 +392,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch5.PreProcess(idata);
     if (ch5.enabled) {
-        // ch5_rs.enabled = ch5.enabled && ch5.device == 0;
         ch5_rs.Process(idata);
         if (ch5_rs.enabled) {
             mixRenderOutputMono(ch5_rs.rs_out, ch5.level, ch5.pan, ch5.send1, ch5.send2);
@@ -413,7 +403,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch6.PreProcess(idata);
     if (ch6.enabled) {
-        // ch6_cl.enabled = ch6.enabled && ch6.device == 0;
         ch6_cl.Process(idata);
         if (ch6_cl.enabled) {
             mixRenderOutputMono(ch6_cl.out, ch6.level, ch6.pan, ch6.send1, ch6.send2);
@@ -425,7 +414,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch7.PreProcess(idata);
     if (ch7.enabled) {
-        // ch7_ro.enabled = ch7.enabled && ch7.device == 0;
         ch7_ro.track_length = ch7.track_length;
         ch7_ro.Process(idata);
         if (ch7_ro.enabled) {
@@ -438,7 +426,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch8.PreProcess(idata);
     if (ch8.enabled) {
-        // ch8_ro.enabled = ch8.enabled && ch8.device == 0;
         ch8_ro.track_length = ch8.track_length;
         ch8_ro.Process(idata);
         if (ch8_ro.enabled) {
@@ -453,7 +440,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch9.PreProcess(idata);
     if (ch9.enabled) {
-        // ch9_td3.enabled = ch9.enabled && ch9.device == 0;
         ch9_td3.Process(idata);
         if (ch9_td3.enabled) {
             mixRenderOutputMono(ch9_td3.td3_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
@@ -465,7 +451,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch10.PreProcess(idata);
     if (ch10.enabled) {
-        // ch10_td3.enabled = ch10.enabled && ch10.device == 0;
         ch10_td3.Process(idata);
         if (ch10_td3.enabled) {
             mixRenderOutputMono(ch10_td3.td3_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
@@ -477,7 +462,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch11.PreProcess(idata);
     if (ch11.enabled) {
-        // ch11_mo.enabled = ch11.enabled && ch11.device == 0;
         ch11_mo.Process(idata);
         if (ch11_mo.enabled) {
             mixRenderOutputMono(ch11_mo.mo_out, ch11.level, ch11.pan, ch11.send1, ch11.send2);
@@ -489,13 +473,11 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch12.PreProcess(idata);
     if (ch12.enabled) {
-        // ch12_wtosc.enabled = ch12.enabled && ch12.device == 0;
         ch12_wtosc.Process(idata);
         if (ch12_wtosc.enabled) {
             mixRenderOutputMono(ch12_wtosc.out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
         }
 
-        // ch12_mo.enabled = ch12.enabled && ch12.device == 1;
         ch12_mo.Process(idata);
         if (ch12_mo.enabled) {
             mixRenderOutputMono(ch12_mo.mo_out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
@@ -507,7 +489,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch13.PreProcess(idata);
     if (ch13.enabled) {
-        // ch13_ro.enabled = ch13.enabled && ch13.device == 0;
         ch13_ro.track_length = ch13.track_length;
         ch13_ro.Process(idata);
         if (ch13_ro.enabled) {
@@ -520,7 +501,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch14.PreProcess(idata);
     if (ch14.enabled) {
-        // ch14_ro.enabled = ch14.enabled && ch14.device == 0;
         ch14_ro.track_length = ch14.track_length;
         ch14_ro.Process(idata);
         if (ch14_ro.enabled) {
@@ -533,7 +513,6 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch15.PreProcess(idata);
     if (ch15.enabled) {
-        // ch15_pp.enabled = ch15.enabled && ch15.device == 0;
         ch15_pp.Process(idata);
         if (ch15_pp.enabled) {
             mixRenderOutputStereo(ch15_pp.pp_out_stereo, ch15.level, ch15.pan, ch15.send1, ch15.send2);
@@ -595,32 +574,9 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     }
 }
 
-// void ctagSoundProcessorPicoSeqRack::registerParam(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter){
-//     string fullId = string(prefix) + string(suffix);
-//     pMapPar.emplace(fullId, setter);
-// }
-
-// void ctagSoundProcessorPicoSeqRack::registerParam(const PickSeqRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter){
-//     string fullId = string(initdata->prefix) + string(suffix);
-//     pMapPar.emplace(fullId, setter);
-// }
-
 void ctagSoundProcessorPicoSeqRack::registerParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter) {
     string fullId = string(initdata->prefix) + string(suffix);
-    // pMapPar.emplace(fullId, setter);
-    if (cc != -1) {
-    }
-    // pMapCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), fullId);
     pMapParCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), setter);
-}
-
-void ctagSoundProcessorPicoSeqRack::registerMacroParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter){
-    string fullId = string(initdata->prefix) + string(suffix);
-    // pMapPar.emplace(fullId, setter);
-    // if (cc != -1) {
-    // pMapMacroCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), fullId);
-    pMapMacroParCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), setter);
-    // }
 }
 
 void ctagSoundProcessorPicoSeqRack::_handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel) {
@@ -675,209 +631,21 @@ void ctagSoundProcessorPicoSeqRack::_handleMidiNoteOff(const uint8_t channel, co
     }
 };
 
-void ctagSoundProcessorPicoSeqRack::_handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel) {
-    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: note on %d, %d, %d", channel, note, vel);
-
-    if (channel == 0) {
-        if (ch9_td3.enabled) {
-            if (vel == 0) {
-                ch9_td3.noteOff(note, 0);
-            } else {
-                ch9_td3.noteOn(note, vel);
-            }
-        }
-    }
-    else if (channel == 1) {
-        if (ch10_td3.enabled) {
-            if (vel == 0) {
-                ch10_td3.noteOff(note, 0);
-            } else {
-                ch10_td3.noteOn(note, vel);
-            }
-        }
-    }
-    else if (channel == 2) {
-        if (ch11_mo.enabled) {
-            if (vel == 0) {
-                ch11_mo.noteOff(note, 0);
-            } else {
-                ch11_mo.noteOn(note, vel);
-            }
-        }
-    }
-    else if (channel == 3) {
-        if (ch12_mo.enabled) {
-            if (vel == 0) {
-                ch12_mo.noteOff(note, 0);
-            } else {
-                ch12_mo.noteOn(note, vel);
-            }
-        }
-        else if (ch12_wtosc.enabled) {
-            if (vel == 0) {
-                ch12_wtosc.noteOff(note, 0);
-            } else {
-                ch12_wtosc.noteOn(note, vel);
-            }
-        }
-    }
-    else if (channel == 4) {
-        if (ch13_ro.enabled) {
-            if (vel == 0) {
-                ch13_ro.noteOff(note, 0);
-            } else {
-                ch13_ro.noteOn(note, vel);
-            }
-        }
-    }
-    else if (channel == 5) {
-        if (ch14_ro.enabled) {
-            if (vel == 0) {
-                ch14_ro.noteOff(note, 0);
-            } else {
-                ch14_ro.noteOn(note, vel);
-            }
-        }
-    }
-    else if (channel == 6) {
-        if (ch15_pp.enabled) {
-            if (vel == 0) {
-                ch15_pp.noteOff(note, 0);
-            } else {
-                ch15_pp.noteOn(note, vel);
-            }
-        }
-    }
-    else if (channel == 7) {
-        // ch16 has no notes
-    }
-    else if (channel == 9) {
-        // drum rack doesn't care about note offs'
-
-        if (note == 36) { // kick 1
-            if (ch1_ab.enabled) {
-                if (vel > 0) {
-                    ch1_ab.trigger();
-                }
-            }
-            else if (ch1_db.enabled) {
-                if (vel > 0) {
-                    ch1_db.trigger();
-                }
-            }
-        }
-        else if (note == 37) { // kick 2
-            if (ch2_fmb1.enabled) {
-                if (vel > 0) {
-                    ch2_fmb1.trigger();
-                }
-            }
-        }
-        else if (note == 38) { // snare
-            if (ch3_as.enabled) {
-                if (vel > 0) {
-                    ch3_as.trigger();
-                }
-            }
-            else if (ch3_ds.enabled) {
-                if (vel > 0) {
-                    ch3_ds.trigger();
-                }
-            }
-        }
-        else if (note == 39) { // hat
-            if (ch4_hh1.enabled) {
-                if (vel > 0) {
-                    ch4_hh1.trigger();
-                }
-            }
-            else if (ch4_hh2.enabled) {
-                if (vel > 0) {
-                    ch4_hh2.trigger();
-                }
-            }
-        }
-        else if (note == 40) { // rs
-            if (ch5_rs.enabled) {
-                if (vel > 0) {
-                    ch5_rs.trigger();
-                }
-            }
-        }
-        else if (note == 41) { // clap
-            if (ch6_cl.enabled) {
-                if (vel > 0) {
-                    ch6_cl.trigger();
-                }
-            }
-        }
-    }
-    else if (channel == 11) {
-        if (ch7_ro.enabled) {
-            if (vel == 0) {
-                ch7_ro.noteOff(note, 0);
-            } else {
-                ch7_ro.noteOn(note, 127);
-            }
-        }
-    }
-    else if (channel == 12) {
-        if (ch8_ro.enabled) {
-            if (vel == 0) {
-                ch8_ro.noteOff(note, 0);
-            } else {
-                ch8_ro.noteOn(note, 127);
-            }
-        }
-    }
-};
-
 void ctagSoundProcessorPicoSeqRack::_handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel) {
     ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: aftertouch %d, %d, %d", channel, note, vel);
 };
 
-void ctagSoundProcessorPicoSeqRack::_handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value) {
-    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: CC %d, %d, %d", channel, control, value);
-
+void ctagSoundProcessorPicoSeqRack::handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value) {
     int cv_value = ((int)value * 4096) / 128;
     int key = CC_TO_MAP_KEY(channel, control);
-    // auto it = pMapCC.find(key);
-    // if (it != pMapCC.end()) {
-    //     // printf("CC%d, CH%d map to %s = %d (%d)\n", control, channel, it->second.c_str(), cv_value, value);
-    //     auto it2 = pMapPar.find(it->second.c_str());
-    //     if (it2 != pMapPar.end()) {
-    //         (it2->second)(cv_value);
-    //     }
-    //     // } else {
-    //     //     printf("No CC mapping for CC %d, CH %d\n", control, channel);
-    // }
 
     auto it = pMapParCC.find(key);
     if (it != pMapParCC.end()) {
+        // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: CC %d, %d, %d (Set)", channel, control, value);
+        // TODO: Write directly to devices?.
         (it->second)(cv_value);
-    }
-
-    // TODO: Write directly to devices?.
-};
-
-void ctagSoundProcessorPicoSeqRack::_handleMacroMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value) {
-    int cv_value = ((int)value * 4096) / 128;
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: CC %d, %d, %d, cv %d", channel, control, value, cv_value);
-
-    int key = CC_TO_MAP_KEY(channel, control);
-    // auto it = pMapMacroCC.find(key);
-    // if (it != pMapMacroCC.end()) {
-    //     // printf("CC%d, CH%d map to %s = %d (%d)\n", control, channel, it->second.c_str(), cv_value, value);
-    //     auto it2 = pMapPar.find(it->second.c_str());
-    //     if (it2 != pMapPar.end()) {
-    //         (it2->second)(cv_value);
-    //     }
-    //     // } else {
-    //     //     printf("No CC mapping for CC %d, CH %d\n", control, channel);
-    // }
-    auto it = pMapMacroParCC.find(key);
-    if (it != pMapMacroParCC.end()) {
-        (it->second)(cv_value);
+    } else {
+        // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: CC %d, %d, %d (Unhandled)", channel, control, value);
     }
 };
 
@@ -1079,7 +847,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     // print out some stats.
     ESP_LOGI("ctagSoundProcessorPicoSeqRack", "DrumRack: number of parameters registered %d", pMapPar.size());
     ESP_LOGI("ctagSoundProcessorPicoSeqRack", "DrumRack: number of CC's registered %d", pMapParCC.size());
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "DrumRack: number of macro CC's registered %d", pMapMacroParCC.size());
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "DrumRack: number of macro CC's registered %d", pMapMacroParCC.size());
     dumpMemoryUsage();
 
 #ifdef TBD_SIM
@@ -1129,139 +897,39 @@ ctagSoundProcessorPicoSeqRack::~ctagSoundProcessorPicoSeqRack(){
 }
 
 #define DEFINE_GLOBAL_PARAM(name, channel, cc, parametername) \
-    /* pMapPar.emplace(name, [&](const int val){ parametername = val;}); */ \
-    /* pMapCC.emplace(CC_TO_MAP_KEY(channel, cc), name); */ \
     pMapParCC.emplace(CC_TO_MAP_KEY(channel, cc), [&](const int val){ parametername = val;});
 
 void ctagSoundProcessorPicoSeqRack::knowYourself(){
     // autogenerated code here
     // sectionCpp0
 
-    // pMapPar.emplace("fx1_time_ms", [&](const int val){ fx1_time_ms = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 20), "fx1_time_ms");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 20), [&](const int val){ fx1_time_ms = val;});
     DEFINE_GLOBAL_PARAM("fx1_time_ms", 13, 20, fx1_time_ms);
-
-    // pMapPar.emplace("fx1_sync", [&](const int val){ fx1_sync = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 21), "fx1_sync");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 21), [&](const int val){ fx1_sync = val;});
     DEFINE_GLOBAL_PARAM("fx1_sync", 13, 21, fx1_sync);
-
-    // pMapPar.emplace("fx1_freeze", [&](const int val){ fx1_freeze = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 22), "fx1_freeze");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 22), [&](const int val){ fx1_freeze = val;});
     DEFINE_GLOBAL_PARAM("fx1_freeze", 13, 22, fx1_freeze);
-
-    // pMapPar.emplace("fx1_tape_digital", [&](const int val){ fx1_tape_digital = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 23), "fx1_tape_digital");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 23), [&](const int val){ fx1_tape_digital = val;});
     DEFINE_GLOBAL_PARAM("fx1_tape_digital", 13, 23, fx1_tape_digital);
-
-    // pMapPar.emplace("fx1_st_width", [&](const int val){ fx1_st_width = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 24), "fx1_st_width");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 24), [&](const int val){ fx1_st_width = val;});
     DEFINE_GLOBAL_PARAM("fx1_st_width", 13, 24, fx1_st_width);
-
-    // pMapPar.emplace("fx1_fx_send", [&](const int val){ fx1_fx_send = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 25), "fx1_fx_send");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 25), [&](const int val){ fx1_fx_send = val;});
     DEFINE_GLOBAL_PARAM("fx1_fx_send", 13, 25, fx1_fx_send);
-
-    // pMapPar.emplace("fx1_feedback", [&](const int val){ fx1_feedback = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 26), "fx1_feedback");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 26), [&](const int val){ fx1_feedback = val;});
     DEFINE_GLOBAL_PARAM("fx1_feedback", 13, 26, fx1_feedback);
-
-    // pMapPar.emplace("fx1_base", [&](const int val){ fx1_base = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 27), "fx1_base");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 27), [&](const int val){ fx1_base = val;});
     DEFINE_GLOBAL_PARAM("fx1_base", 13, 27, fx1_base);
-
-    // pMapPar.emplace("fx1_width", [&](const int val){ fx1_width = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 28), "fx1_width");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 28), [&](const int val){ fx1_width = val;});
     DEFINE_GLOBAL_PARAM("fx1_width", 13, 28, fx1_width);
-
-    // pMapPar.emplace("fx1_amount", [&](const int val){ fx1_amount = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 29), "fx1_amount");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 29), [&](const int val){ fx1_amount = val;});
     DEFINE_GLOBAL_PARAM("fx1_amount", 13, 29, fx1_amount);
 
-
-
-    // pMapPar.emplace("fx2_time", [&](const int val){ fx2_time = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 40), "fx2_time");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 40), [&](const int val){ fx2_time = val;});
     DEFINE_GLOBAL_PARAM("fx2_time", 13, 40, fx2_time);
-
-    // pMapPar.emplace("fx2_lp", [&](const int val){ fx2_lp = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 41), "fx2_lp");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 41), [&](const int val){ fx2_lp = val;});
     DEFINE_GLOBAL_PARAM("fx2_lp", 13, 41, fx2_lp);
-
-    // pMapPar.emplace("fx2_amount", [&](const int val){ fx2_amount = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 42), "fx2_amount");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 42), [&](const int val){ fx2_amount = val;});
     DEFINE_GLOBAL_PARAM("fx2_amount", 13, 42, fx2_amount);
 
-
-
-    // pMapPar.emplace("c_thres", [&](const int val){ c_thres = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 60), "c_thres");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 60), [&](const int val){ c_thres = val;});
     DEFINE_GLOBAL_PARAM("c_thres", 13, 60, c_thres);
-
-    // pMapPar.emplace("c_ratio", [&](const int val){ c_ratio = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 61), "c_ratio");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 61), [&](const int val){ c_ratio = val;});
     DEFINE_GLOBAL_PARAM("c_ratio", 13, 61, c_ratio);
-
-    // pMapPar.emplace("c_atk", [&](const int val){ c_atk = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 62), "c_atk");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 62), [&](const int val){ c_atk = val;});
     DEFINE_GLOBAL_PARAM("c_atk", 13, 62, c_atk);
-
-    // pMapPar.emplace("c_rel", [&](const int val){ c_rel = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 63), "c_rel");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 63), [&](const int val){ c_rel = val;});
     DEFINE_GLOBAL_PARAM("c_rel", 13, 63, c_rel);
-
-    // pMapPar.emplace("c_lpf", [&](const int val){ c_lpf = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 64), "c_lpf");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 64), [&](const int val){ c_lpf = val;});
     DEFINE_GLOBAL_PARAM("c_lpf", 13, 64, c_lpf);
-
-    // pMapPar.emplace("c_gain", [&](const int val){ c_gain = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 65), "c_gain");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 65), [&](const int val){ c_gain = val;});
     DEFINE_GLOBAL_PARAM("c_gain", 13, 65, c_gain);
-
-    // pMapPar.emplace("c_mix", [&](const int val){ c_mix = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 66), "c_mix");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 66), [&](const int val){ c_mix = val;});
     DEFINE_GLOBAL_PARAM("c_mix", 13, 66, c_mix);
-
-    // pMapPar.emplace("c_dly_level", [&](const int val){ c_dly_level = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 67), "c_dly_level");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 67), [&](const int val){ c_dly_level = val;});
     DEFINE_GLOBAL_PARAM("c_dly_level", 13, 67, c_dly_level);
-
-    // pMapPar.emplace("c_rev_level", [&](const int val){ c_rev_level = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 68), "c_rev_level");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 68), [&](const int val){ c_rev_level = val;});
     DEFINE_GLOBAL_PARAM("c_rev_level", 13, 68, c_rev_level);
 
-
-    // pMapPar.emplace("sum_mute", [&](const int val){ sum_mute = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 80), "sum_mute");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 80), [&](const int val){ sum_mute = val;});
     DEFINE_GLOBAL_PARAM("sum_mute", 13, 80, sum_mute);
-
-    // pMapPar.emplace("sum_lev", [&](const int val){ sum_lev = val;});
-    // pMapCC.emplace(CC_TO_MAP_KEY(13, 81), "sum_lev");
-    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 81), [&](const int val){ sum_lev = val;});
     DEFINE_GLOBAL_PARAM("sum_lev", 13, 81, sum_lev);
-
 
     isStereo = true;
 	id = "PicoSeqRack";
@@ -1313,12 +981,6 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-
-                // if (b2 > 0) {
-                //     _handleMidiNoteOn(channel, b1, b2);
-                // } else {
-                //     _handleMidiNoteOff(channel, b1, b2);
-                // }
                 break;
             }
             case 0xA0: // aftertouch
@@ -1328,7 +990,6 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-                // _handleMidiAftertouch(channel, b1, b2);
                 break;
             }
             case 0xB0: // control change
@@ -1338,7 +999,7 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-                _handleMidiControlChange(channel, b1, b2);
+                handleMidiControlChange(channel, b1, b2);
                 break;
             }
             case 0xC0: // program change
@@ -1348,7 +1009,6 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++]; // not used?
                 left -= 2;
-                // _handleMidiPatchChange(channel, b1);
                 break;
             }
             case 0xE0: // pitch bend
@@ -1358,7 +1018,6 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-                // _handleMidiPitchBend(channel, b2 * 128 + b1);
                 break;
             }
             case 0xF0: // system common / real time
@@ -1480,47 +1139,65 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
         if (note == 36) {
             if (ch1_ab.enabled) {
                 // printf("ch1_ab triggered by note %d, velocity %d\n", note, velocity);
-                ch1_ab.trigger();
+                if (velocity > 0) {
+                    ch1_ab.trigger();
+                }
             }
             else  if (ch1_db.enabled) {
                 // printf("ch1_db triggered by note %d, velocity %d\n", note, velocity);
-                ch1_db.trigger();
+                if (velocity > 0) {
+                    ch1_db.trigger();
+                }
             }
         }
         else if (note == 37) {
             if (ch2_fmb1.enabled) {
                 // printf("ch2_fmb1 triggered by note %d, velocity %d\n", note, velocity);
-                ch2_fmb1.trigger();
+                if (velocity > 0) {
+                    ch2_fmb1.trigger();
+                }
             }
             else if (ch2_fmb2.enabled) {
                 // printf("ch2_fmb2 triggered by note %d, velocity %d\n", note, velocity);
-                ch2_fmb2.trigger();
+                if (velocity > 0) {
+                    ch2_fmb2.trigger();
+                }
             }
         }
         else if (note == 38) {
             if (ch3_as.enabled) {
                 // printf("ch3_as triggered by note %d, velocity %d\n", note, velocity);
-                ch3_as.trigger();
+                if (velocity > 0) {
+                    ch3_as.trigger();
+                }
             }
             else if (ch3_ds.enabled) {
                 // printf("ch3_ds triggered by note %d, velocity %d\n", note, velocity);
-                ch3_ds.trigger();
+                if (velocity > 0) {
+                    ch3_ds.trigger();
+                }
             }
         }
         else if (note == 39) {
             if (ch4_hh1.enabled) {
                 // printf("ch4_hh1 triggered by note %d, velocity %d\n", note, velocity);
-                ch4_hh1.trigger();
+                if (velocity > 0) {
+                    ch4_hh1.trigger();
+                }
             }
             else if (ch4_hh2.enabled) {
                 // printf("ch4_hh2 triggered by note %d, velocity %d\n", note, velocity);
-                ch4_hh2.trigger();
+                if (velocity > 0) {
+                    ch4_hh2.trigger();
+                }
             }
         }
         else if (note == 40) {
             if (ch5_rs.enabled) {
                 // printf("ch5_rs triggered by note %d, velocity %d\n", note, velocity);
-                ch5_rs.trigger();
+                if (velocity > 0) {
+                    ch5_rs.trigger();
+                }
             }
         }
         else if (note == 41) {
@@ -1552,7 +1229,7 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
     }
     else if (channel == 0) {
         if (ch9_td3.enabled) {
-            // printf("ch9_td3 triggered by note %d, velocity %d\n", note, velocity);
+            //  printf("ch9    _td3 triggered by note %d, velocity %d\n", note, velocity);
             if (velocity == 0) {
                 ch9_td3.noteOff(note, 0);
             } else {
@@ -1622,9 +1299,9 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
         }
 
     }
-    else if (channel == 15) {
-        // ch16 is audio in, which has no notes
-    }
+    // else if (channel == 15) {
+    // ch16 is audio in, which has no notes
+    // }
 }
 
 void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t channel, uint8_t note, uint8_t velocity) {
@@ -1675,13 +1352,5 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t channel, uin
     }
 }
 
-void ctagSoundProcessorPicoSeqRack::handleMacroMidiControlChange(const uint8_t trackIndex, uint8_t control, uint8_t value) {
-    _handleMacroMidiControlChange(trackIndex, control, value);
-}
-
-void ctagSoundProcessorPicoSeqRack::handleMidiControlChange(const uint8_t trackIndex, uint8_t control, uint8_t value) {
-    _handleMidiControlChange(trackIndex, control, value);
-}
-
-void ctagSoundProcessorPicoSeqRack::handleMidiControlChangePair(const uint8_t trackIndex, uint8_t firstcontrol, uint16_t value) {
+void ctagSoundProcessorPicoSeqRack::handleMidiControlChangePair(const uint8_t channel, uint8_t firstcontrol, uint16_t value) {
 }

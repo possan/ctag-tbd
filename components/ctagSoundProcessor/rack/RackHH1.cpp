@@ -7,11 +7,11 @@ using namespace CTAG::SP;
 void RackHH1::Init(const PickSeqRackInitData *initdata) {
     hh1.Init();
 
-    initdata->rack->registerMacroParamAndCC(initdata, "f0", 8, [&](const int val){ hh1_f0 = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "tone", 9, [&](const int val){ hh1_tone = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "decay", 10, [&](const int val){ hh1_decay = val;});
-	initdata->rack->registerMacroParamAndCC(initdata, "noise", 11, [&](const int val){ hh1_noise = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "accent", 12, [&](const int val){ hh1_accent = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ hh1_f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 9, [&](const int val){ hh1_tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 10, [&](const int val){ hh1_decay = val;});
+	initdata->rack->registerParamAndCC(initdata, "noise", 11, [&](const int val){ hh1_noise = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 12, [&](const int val){ hh1_accent = val;});
 
     this->enabled = false;
 }

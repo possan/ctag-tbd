@@ -1,17 +1,3 @@
-/***************
-dadamachines TBD-16 — Sample Manager REST API
-
-(c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
-
-Licensed under the GNU Lesser General Public License (LGPL 3.0).
-https://www.gnu.org/licenses/lgpl-3.0.txt
-
-Part of the dadamachines additions to the CTAG TBD platform.
-See LICENSE in the repository root for full terms.
-
-Provided "as is" without any express or implied warranties.
-***************/
-
 #include "MacroAPI.hpp"
 #include "SPManager.hpp"
 #include "RestServer.hpp"

@@ -9,7 +9,6 @@ public:
 	void PreProcess(const PicoSeqRackProcessData &data);
 	void Init(const PickSeqRackInitData *initdata);
 	bool enabled;
-	int device;
 	float level;
 	float pan;
 	float send1;

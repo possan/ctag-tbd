@@ -7,11 +7,11 @@ using namespace CTAG::SP;
 void RackASD::Init(const PickSeqRackInitData *initdata) {
     asd.Init();
 
-    initdata->rack->registerMacroParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "a_spy", 11, [&](const int val){ a_spy = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "accent", 12, [&](const int val){ accent = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "a_spy", 11, [&](const int val){ a_spy = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 12, [&](const int val){ accent = val;});
 
     this->enabled = false;
 }
@@ -29,7 +29,7 @@ void RackASD::Process(const PicoSeqRackProcessData &data) {
     }
     if (_trig != trig_prev){
         // if (_trig) {
-            // printf("ASD\n");
+        //     printf("ASD\n");
         // }
         trig_prev = _trig;
     }

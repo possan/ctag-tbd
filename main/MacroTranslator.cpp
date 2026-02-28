@@ -19,7 +19,6 @@ MacroTranslator::MacroTranslator() {
 
     for (int i = 0; i < 16; i++) {
         trackToMidiChannel[i] = -1;
-        midiChannelToTrack[i] = -1;
         trackBaseCC[i] = 0;
         trackMachineId[i] = "";
         definition[i] = nullptr;
@@ -43,9 +42,7 @@ void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string &s
         trackIndex, synthID.c_str());
     trackMachineId[trackIndex] = synthID;
 
-    SynthDefinition *synthDef =
-        synthDefinitionModel->GetSynthDefinition(synthID);
-
+    SynthDefinition *synthDef = synthDefinitionModel->GetSynthDefinition(synthID);
     if (synthDef == nullptr) {
         ESP_LOGE("MacroTranslator", "Synth definition not found for id %s",
             synthID.c_str());
@@ -53,7 +50,6 @@ void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string &s
     }
 
     int idx = 0;
-
 
     TrackDefinition *trackDef = synthDefinitionModel->GetTrackDefinition(trackIndex);
     if (trackDef == nullptr) {
@@ -63,7 +59,7 @@ void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string &s
     }
 
     trackToMidiChannel[trackIndex] = trackDef->midiChannel;
-    midiChannelToTrack[trackDef->midiChannel] = trackIndex;
+    // midiChannelToTrack[trackDef->midiChannel] = trackIndex;
     trackBaseCC[trackIndex] = trackDef->baseCC;
 
     idx = 0;
@@ -75,8 +71,6 @@ void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string &s
 
         if (par->type == SynthParameterType_CC) {
             soundProcessor->handleMidiControlChange(
-                // trackIndex,
-                // trackToMidiChannel[trackIndex],
                 trackDef->midiChannel,
                 trackBaseCC[trackIndex] + par->cc,
                 par->defaultValue
@@ -115,19 +109,16 @@ void MacroTranslator::SetTrackMacroDefinition(const int trackIndex, MacroDeviceD
             def->synthId.c_str());
     }
 
-    TrackDefinition *trackDef = synthDefinitionModel->GetTrackDefinition(trackIndex);
-    if (trackDef == nullptr) {
-        ESP_LOGE("MacroTranslator", "Track definition not found for track index %d",
-            trackIndex);
-        return;
-    }
+    // TrackDefinition *trackDef = synthDefinitionModel->GetTrackDefinition(trackIndex);
+    // if (trackDef == nullptr) {
+    //     ESP_LOGE("MacroTranslator", "Track definition not found for track index %d",
+    //         trackIndex);
+    //     return;
+    // }
 
     Document d1;
     d1.SetObject();
     if (def->SerializeJSONInto(d1)) {
-        // StringBuffer buffer;
-        // Writer<StringBuffer> writer(buffer);
-        // d1.Accept(writer);
         MacroDeviceDefinition *defcopy = new MacroDeviceDefinition();
         if (defcopy->DeserializeJSON(d1)) {
             definition[trackIndex] = defcopy;
@@ -153,8 +144,8 @@ void MacroTranslator::SetTrackParameter(const int trackIndex, int parameterIndex
         return;
     }
 
-    ESP_LOGI("MacroTranslator", "Track %d, Parameter %d = %d",
-        trackIndex, parameterIndex, value);
+    // ESP_LOGI("MacroTranslator", "Track %d, Parameter %d = %d",
+    //     trackIndex, parameterIndex, value);
     trackParameterValues[trackIndex][parameterIndex] = value;
     trackDirty[trackIndex] = 1;
 }
@@ -254,7 +245,7 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
 
         uint8_t inputchannel = (b0 & 0x0F);
         uint8_t cmd = (b0 & 0xF0);
-        int trackindex = midiChannelToTrack[inputchannel];
+        // int trackindex = midiChannelToTrack[inputchannel];
 
         switch(cmd) {
             case 0x80: // note off
@@ -266,7 +257,6 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
                 left -= 2;
 
                 soundProcessor->handleMidiNoteOff(inputchannel, note, velocity);
-                // _handleMidiNoteOff(channel, b1, b2);
                 break;
             }
             case 0x90: // note on
@@ -278,13 +268,11 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
                 left -= 2;
 
                 if (velocity > 0) {
-                    ESP_LOGI("MacroTranslator", "Note on, track %d (ch %d), note %d, velocity %d",
-                        trackindex, inputchannel, note, velocity);
+                    ESP_LOGI("MacroTranslator", "Note on, channe %d, note %d, velocity %d",
+                        inputchannel, note, velocity);
                     soundProcessor->handleMidiNoteOn(inputchannel, note, velocity);
-                    // _handleMidiNoteOn(channel, note, velocity);
                 } else {
                     soundProcessor->handleMidiNoteOff(inputchannel, note, velocity);
-                    // _handleMidiNoteOff(channel, note, velocity);
                 }
                 break;
             }
@@ -295,7 +283,6 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-                // _handleMidiAftertouch(channel, b1, b2);
                 break;
             }
             case 0xB0: // control change
@@ -306,15 +293,17 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
                 uint8_t value = buf[o++];
                 left -= 2;
 
-                int macrocc = (int)control - trackBaseCC[trackindex];
-                macrocc -= 8; // input parameter CC's start at 8 too and...
-
-                // ESP_LOGI("MacroTranslator", "CC, track %d, control %d, value %d",
-                //     track, control, value);
-                this->SetTrackParameter(trackindex, macrocc, value);
-
-                // }
-                // _handleMidiControlChange(channel, cnotrol, b2);
+                for(int t=0; t<16; t++) {
+                    if (trackToMidiChannel[t] == inputchannel) {
+                        // First change machines if needed.
+                        // soundProcessor->setTrackMachine(t, trackMachineId[t]);
+                        int macrocc = (int)control - trackBaseCC[t];
+                        macrocc -= 8; // input parameter CC's start at 8 too and...
+                        // ESP_LOGI("MacroTranslator", "CC, track %d, control %d, value %d",
+                        //     track, control, value);
+                        this->SetTrackParameter(t, macrocc, value);
+                    }
+                }
                 break;
             }
             case 0xC0: // program change
@@ -324,7 +313,6 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++]; // not used?
                 left -= 2;
-                // _handleMidiPatchChange(channel, b1);
                 break;
             }
             case 0xE0: // pitch bend
@@ -334,7 +322,6 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-                // _handleMidiPitchBend(channel, b2 * 128 + b1);
                 break;
             }
             case 0xF0: // system common / real time
@@ -380,17 +367,17 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
 
             MacroDeviceDefinition *def = definition[t];
 
-            ESP_LOGI("MacroTranslator", "Track %d is dirty, def=0x%08X", t, (uintptr_t)def);
+            // ESP_LOGI("MacroTranslator", "Track %d is dirty, def=0x%08X", t, (uintptr_t)def);
 
             if (def != nullptr) {
-                ESP_LOGI("MacroTranslator", "Using definition: %s, %s",
-                    def->id.c_str(), def->name.c_str());
+                // ESP_LOGI("MacroTranslator", "Using definition: %s, %s",
+                //     def->id.c_str(), def->name.c_str());
 
                 int idx = 0;
                 for(auto om : def->outputMappings) {
                     int32_t finalvalue = om->startValue;
 
-                    int cc = om->ctrl;
+                    int cc = om->ctrl + trackBaseCC[t];
                     for(auto src : om->sources) {
                         int val = trackParameterValues[t][src->parameterIndex];
                         if (src->divider > 0) {
@@ -409,8 +396,7 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
                     // ESP_LOGI("MacroTranslator", "Track %d: (ch %d) setting synth parameter %d to %d (CC %d)",
                     //     t, midichannel, idx, finalvalue, cc);
                     if (cc != -1) {
-                        // cc = trackBaseCC[t] + cc;
-                        soundProcessor->handleMacroMidiControlChange(midichannel, cc, finalvalue);
+                        soundProcessor->handleMidiControlChange(midichannel, cc, finalvalue);
                     }
                     idx ++;
                 }
@@ -421,25 +407,13 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
 
 
 void MacroTranslator::SerializeStateJSON(std::string *output) {
-    // Implement serialization logic here
     Document d;
 
     d.SetObject();
 
-    // Value machinesarray(kArrayType);
-    // d.AddMember("machines", machinesarray, d.GetAllocator());
-    // for(SynthDefinition *s : synths) {
-    //     Value machinejson(kObjectType);
-    //     machinejson.AddMember("id", Value(s->id.c_str(), d.GetAllocator()), d.GetAllocator());
-    //     d["machines"].PushBack(machinejson, d.GetAllocator());
-    // }
-
     Value tracksarray(kArrayType);
     d.AddMember("tracks", tracksarray, d.GetAllocator());
     for(int ti =0;ti<16;ti++) {
-        // TrackDefinition *t = GetTrackDefinition(ti);
-        // if (t == nullptr) continue;
-
         Value trackjson(kObjectType);
 
         trackjson.AddMember("index", ti, d.GetAllocator());
@@ -447,13 +421,10 @@ void MacroTranslator::SerializeStateJSON(std::string *output) {
         trackjson.AddMember("machine", Value(trackMachineId[ti].c_str(), d.GetAllocator()), d.GetAllocator());
 
         if (definition[ti] != nullptr) {
-            // Value macrojson(kObjectType);
-            // definition[ti]->SerializeJSONInto(macrojson, d.GetAllocator());
             trackjson.AddMember("macro", Value(definition[ti]->id.c_str(), d.GetAllocator()), d.GetAllocator());
         } else {
             trackjson.AddMember("macro", "", d.GetAllocator());
         }
-        // trackjson.AddMember("macro", "", d.GetAllocator());
         // trackjson.AddMember("preset", "", d.GetAllocator());
 
         d["tracks"].PushBack(trackjson, d.GetAllocator());

@@ -7,11 +7,11 @@ using namespace CTAG::SP;
 void RackHH2::Init(const PickSeqRackInitData *initdata) {
     hh2.Init();
 
-    initdata->rack->registerMacroParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "noise", 11, [&](const int val){ noise = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "accent", 12, [&](const int val){ accent = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "noise", 11, [&](const int val){ noise = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 12, [&](const int val){ accent = val;});
     
     this->enabled = false;
 }
@@ -24,9 +24,9 @@ void RackHH2::Process(const PicoSeqRackProcessData &data) {
     // MK_BOOL_PAR_NOCV(_trig, trigger)
     bool _trig = midi_trig;
     if (_trig != trig_prev) {
-        if (_trig) {
-            printf("HH2\n");
-        }
+        // if (_trig) {
+        //     printf("HH2\n");
+        // }
         trig_prev = _trig;
     }
     midi_trig = false;

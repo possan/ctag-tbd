@@ -28,35 +28,35 @@ void RackWTOsc::Init(const PickSeqRackInitData *initdata) {
 
     this->enabled = false;
 
-    initdata->rack->registerMacroParamAndCC(initdata, "wavebank", 8, [&](const int val){ wavebank = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "wave", 9, [&](const int val){ wave = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "tune", 10, [&](const int val){ tune = val;});
+    initdata->rack->registerParamAndCC(initdata, "wavebank", 8, [&](const int val){ wavebank = val;});
+    initdata->rack->registerParamAndCC(initdata, "wave", 9, [&](const int val){ wave = val;});
+    initdata->rack->registerParamAndCC(initdata, "tune", 10, [&](const int val){ tune = val;});
 
-    initdata->rack->registerMacroParamAndCC(initdata, "fmode", 11, [&](const int val){ fmode = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "fcut", 12, [&](const int val){ fcut = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "freso", 13, [&](const int val){ freso = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "q_scale", 14, [&](const int val){ q_scale = val;});
+    initdata->rack->registerParamAndCC(initdata, "fmode", 11, [&](const int val){ fmode = val;});
+    initdata->rack->registerParamAndCC(initdata, "fcut", 12, [&](const int val){ fcut = val;});
+    initdata->rack->registerParamAndCC(initdata, "freso", 13, [&](const int val){ freso = val;});
+    initdata->rack->registerParamAndCC(initdata, "q_scale", 14, [&](const int val){ q_scale = val;});
 
-    initdata->rack->registerMacroParamAndCC(initdata, "attack", 15, [&](const int val){ attack = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "decay", 16, [&](const int val){ decay = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "sustain", 17, [&](const int val){ sustain = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "release", 18, [&](const int val){ release = val;});
+    initdata->rack->registerParamAndCC(initdata, "attack", 15, [&](const int val){ attack = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 16, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "sustain", 17, [&](const int val){ sustain = val;});
+    initdata->rack->registerParamAndCC(initdata, "release", 18, [&](const int val){ release = val;});
 
-    initdata->rack->registerMacroParamAndCC(initdata, "eg2wave", 19, [&](const int val){ eg2wave = val;});
+    initdata->rack->registerParamAndCC(initdata, "eg2wave", 19, [&](const int val){ eg2wave = val;});
     // initdata->rack->registerParamAndCC(initdata, "eg2am", 19, [&](const int val){ eg2am = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "eg2fm", 20, [&](const int val){ eg2fm = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "eg2filtfm", 21, [&](const int val){ eg2filtfm = val;});
+    initdata->rack->registerParamAndCC(initdata, "eg2fm", 20, [&](const int val){ eg2fm = val;});
+    initdata->rack->registerParamAndCC(initdata, "eg2filtfm", 21, [&](const int val){ eg2filtfm = val;});
 
-    initdata->rack->registerMacroParamAndCC(initdata, "lfospeed", 22, [&](const int val){ lfospeed = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "lfosync", 23, [&](const int val){ lfosync = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfospeed", 22, [&](const int val){ lfospeed = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfosync", 23, [&](const int val){ lfosync = val;});
     // initdata->rack->registerParamAndCC(initdata, "egfasl", 24, [&](const int val){ egfasl = val;});
 
-    initdata->rack->registerMacroParamAndCC(initdata, "lfo2wave", 25, [&](const int val){ lfo2wave = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "lfo2am", 26, [&](const int val){ lfo2am = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "lfo2fm", 27, [&](const int val){ lfo2fm = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "lfo2filtfm", 28, [&](const int val){ lfo2filtfm = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfo2wave", 25, [&](const int val){ lfo2wave = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfo2am", 26, [&](const int val){ lfo2am = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfo2fm", 27, [&](const int val){ lfo2fm = val;});
+    initdata->rack->registerParamAndCC(initdata, "lfo2filtfm", 28, [&](const int val){ lfo2filtfm = val;});
 
-    initdata->rack->registerMacroParamAndCC(initdata, "gain", 29, [&](const int val){ gain = val;});
+    initdata->rack->registerParamAndCC(initdata, "gain", 29, [&](const int val){ gain = val;});
     // initdata->rack->registerParamAndCC(initdata, "pitch", 9, [&](const int val){ pitch = val;});
 }
 

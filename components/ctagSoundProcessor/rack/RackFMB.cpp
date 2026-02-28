@@ -7,16 +7,16 @@ using namespace CTAG::SP;
 void RackFMB::Init(const PickSeqRackInitData *initdata) {
     fmb.Init();
 
-    initdata->rack->registerMacroParamAndCC(initdata, "f_b", 8, [&](const int val){ f_b = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "d_b", 9, [&](const int val){ d_b = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "f_m", 10, [&](const int val){ f_m = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "d_m", 11, [&](const int val){ d_m = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "b_m", 12, [&](const int val){ b_m = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "A_f", 13, [&](const int val){ A_f = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "d_f", 14, [&](const int val){ d_f = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "I", 15, [&](const int val){ I = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "use_ratio_mode", 16, [&](const int val){ use_ratio_mode = val;}); // not used
-	initdata->rack->registerMacroParamAndCC(initdata, "mod_env_sync", 17, [&](const int val){ mod_env_sync = val;}); // not used
+    initdata->rack->registerParamAndCC(initdata, "f_b", 8, [&](const int val){ f_b = val;});
+    initdata->rack->registerParamAndCC(initdata, "d_b", 9, [&](const int val){ d_b = val;});
+    initdata->rack->registerParamAndCC(initdata, "f_m", 10, [&](const int val){ f_m = val;});
+    initdata->rack->registerParamAndCC(initdata, "d_m", 11, [&](const int val){ d_m = val;});
+    initdata->rack->registerParamAndCC(initdata, "b_m", 12, [&](const int val){ b_m = val;});
+    initdata->rack->registerParamAndCC(initdata, "A_f", 13, [&](const int val){ A_f = val;});
+    initdata->rack->registerParamAndCC(initdata, "d_f", 14, [&](const int val){ d_f = val;});
+    initdata->rack->registerParamAndCC(initdata, "I", 15, [&](const int val){ I = val;});
+    initdata->rack->registerParamAndCC(initdata, "use_ratio_mode", 16, [&](const int val){ use_ratio_mode = val;}); // not used
+	initdata->rack->registerParamAndCC(initdata, "mod_env_sync", 17, [&](const int val){ mod_env_sync = val;}); // not used
 
     this->enabled = false;
 }

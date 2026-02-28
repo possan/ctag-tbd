@@ -7,13 +7,13 @@ using namespace CTAG::SP;
 void RackDBD::Init(const PickSeqRackInitData *initdata) {
     dbd.Init();
 
-    initdata->rack->registerMacroParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val; printf( "set f0 to %d\n", val); });
-    initdata->rack->registerMacroParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "dirty", 11, [&](const int val){ dirty = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "fm_env", 12, [&](const int val){ fm_env = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "fm_dcy", 13, [&](const int val){ fm_dcy = val;});
-    initdata->rack->registerMacroParamAndCC(initdata, "accent", 14, [&](const int val){ accent = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val; });
+    initdata->rack->registerParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
+    initdata->rack->registerParamAndCC(initdata, "dirty", 11, [&](const int val){ dirty = val;});
+    initdata->rack->registerParamAndCC(initdata, "fm_env", 12, [&](const int val){ fm_env = val;});
+    initdata->rack->registerParamAndCC(initdata, "fm_dcy", 13, [&](const int val){ fm_dcy = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 14, [&](const int val){ accent = val;});
 
     this->enabled = false;
 }
@@ -33,9 +33,9 @@ void RackDBD::Process(const PicoSeqRackProcessData &data) {
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0, f0, 4095.f, 0.0005f, 0.01f)
 
     if (_trig != trig_prev){
-        if (_trig) {
-            printf("DBD %f hz\n", _f0);
-        }
+        // if (_trig) {
+        //     printf("DBD %f hz\n", _f0);
+        // }
         trig_prev = _trig;
     }
 

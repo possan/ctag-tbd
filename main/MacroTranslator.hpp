@@ -15,7 +15,6 @@ namespace CTAG {
     namespace MACROPRESETS {
         class MacroTranslator {
             private:
-                int8_t midiChannelToTrack[16];
                 int8_t trackToMidiChannel[16];
                 uint8_t trackBaseCC[16];
                 uint16_t trackParameterValues[16][16];
