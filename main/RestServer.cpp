@@ -37,6 +37,7 @@ respective component folders / files if different from this license.
 #include "esp_vfs.h"
 #include "SPManager.hpp"
 #include "Favorites.hpp"
+#include "SampleAPI.hpp"
 #include "sdkconfig.h"
 #include "esp_flash.h"
 
