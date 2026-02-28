@@ -23,7 +23,6 @@ void MacroDeviceDefinitionDataModel::ReloadMachineDefinitions() {
     ESP_LOGI("MacroDeviceDefinitionDataModel", "Trying to read macro device definition file");
 
     Document d;
-
     definitions.clear();
 
     DIR *dir;
@@ -36,6 +35,13 @@ void MacroDeviceDefinitionDataModel::ReloadMachineDefinitions() {
             std::string fn(ent->d_name);
             // if (fn.find("mui-") != std::string::npos) {
             ESP_LOGI("MacroDeviceDefinitionDataModel", "Filename: %s", fn.c_str());
+
+
+    ESP_LOGI("MacroDeviceDefinitionDataModel", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
 
             Document d;
             loadJSON(d, path + "/" + fn);
@@ -87,6 +93,8 @@ void MacroDeviceDefinitionDataModel::SerializeListJSON(std::string *output) {
 }
 
 bool MacroDeviceDefinitionDataModel::UpdateDefinition(const std::string &jsonString) {
+    // return true;
+
     Document d;
 
     if (d.Parse(jsonString.c_str()).HasParseError()) {
@@ -114,32 +122,68 @@ bool MacroDeviceDefinitionDataModel::UpdateDefinition(const std::string &jsonStr
     fwrite(jsonString.c_str(), 1, jsonString.size(), fp);
     fclose(fp);
 
-    ReloadMachineDefinitions();
+    // ReloadMachineDefinitions();
 
     return true;
 }
 
 
 void MacroDeviceDefinitionDataModel::SerializeItemJSON(const std::string &id, std::string *output) {
-    Document d;
-    d.SetObject();
+    // TODO: Just read from disk?
 
-    for(MacroDeviceDefinition *s : definitions) {
-        if (s->id == id) {
-            // Document d2;
-            if (s->SerializeJSONInto(d)) {
-                // d = d2.Move();
-            } else {
-                ESP_LOGE("MacroDeviceDefinitionDataModel", "Failed to serialize macro device definition #%s \"%s\" into JSON", s->id.c_str(), s->name.c_str());
-            }
-            break;
-        }
+    std::string path = std::string(CTAG::RESOURCES::sdcardRoot + std::string("/data/macrodefinitions"));
+
+    std::string filename = path + "/" + id + ".json";
+
+    FILE *fp = fopen(filename.c_str(), "r");
+    if (fp == NULL) {
+        ESP_LOGE("MacroDeviceDefinitionDataModel", "could not open file %s", filename.c_str());
+        output->assign("");
+        return;
     }
 
-    StringBuffer buffer;
-    Writer<StringBuffer> writer(buffer);
-    d.Accept(writer);
-    ESP_LOGW("MacroDeviceDefinitionDataModel", "JSON string %s", buffer.GetString());
+    fseek(fp, 0, SEEK_END);
+    long filesize = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
 
-    output->assign(buffer.GetString());
+    char *content = (char *) heap_caps_malloc(50000, MALLOC_CAP_SPIRAM);
+    fread(content, 1, filesize, fp);
+    fclose(fp);
+
+    content[filesize] = '\0';
+
+    output->assign(content);
+
+    heap_caps_free(content);
+
+    // Document d;
+    // d.SetObject();
+    // for(MacroDeviceDefinition *s : definitions) {
+    //     if (s->id == id) {
+    //         // Document d2;
+    //         if (s->SerializeJSONInto(d)) {
+    //             // d = d2.Move();
+    //         } else {
+    //             ESP_LOGE("MacroDeviceDefinitionDataModel", "Failed to serialize macro device definition #%s \"%s\" into JSON", s->id.c_str(), s->name.c_str());
+    //         }
+    //         break;
+    //     }
+    // }
+    // StringBuffer buffer;
+    // Writer<StringBuffer> writer(buffer);
+    // d.Accept(writer);
+    // ESP_LOGW("MacroDeviceDefinitionDataModel", "JSON string %s", buffer.GetString());
+    // output->assign(buffer.GetString());
+}
+
+
+void MacroDeviceDefinitionDataModel::DeleteItem(const std::string &id) {
+    // TODO: Just delete from disk?
+
+    std::string path = std::string(CTAG::RESOURCES::sdcardRoot + std::string("/data/macrodefinitions"));
+
+    std::string filename = path + "/" + id + ".json";
+    ESP_LOGI("MacroDeviceDefinitionDataModel", "Deleting file: %s", filename.c_str());
+
+    unlink(filename.c_str());
 }

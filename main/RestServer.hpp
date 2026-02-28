@@ -30,6 +30,7 @@ namespace CTAG {
         public:
             RestServer() = delete;
             static esp_err_t StartRestServer();
+            static void set_cors_headers(httpd_req_t *req);
 
         private:
             static esp_err_t get_plugins_get_handler(httpd_req_t *req);
@@ -62,17 +63,20 @@ namespace CTAG {
 
             static esp_err_t get_iocaps_handler(httpd_req_t *req);
 
-            static esp_err_t get_synthdefinitionlist_handler(httpd_req_t *req);
-            static esp_err_t get_synthdefinition_handler(httpd_req_t *req);
-            static esp_err_t get_trackdefinition_handler(httpd_req_t *req);
-            static esp_err_t get_trackstatus_handler(httpd_req_t *req);
-            static esp_err_t put_trackinfo_handler(httpd_req_t *req);
-            static esp_err_t get_macrodefinitionlist_handler(httpd_req_t *req);
-            static esp_err_t get_macrodefinition_handler(httpd_req_t *req);
-            static esp_err_t put_macrodefinition_handler(httpd_req_t *req);
-            static esp_err_t get_soundpresetlist_handler(httpd_req_t *req);
-            static esp_err_t get_soundpreset_handler(httpd_req_t *req);
-            static esp_err_t put_soundpreset_handler(httpd_req_t *req);
+            // static esp_err_t get_synthdefinitionlist_handler(httpd_req_t *req);
+            // static esp_err_t get_synthdefinition_handler(httpd_req_t *req);
+            // static esp_err_t get_trackdefinition_handler(httpd_req_t *req);
+            // static esp_err_t put_synthdefinition_handler(httpd_req_t *req);
+
+            // static esp_err_t get_macrodefinitionlist_handler(httpd_req_t *req);
+            // static esp_err_t get_macrodefinition_handler(httpd_req_t *req);
+            // static esp_err_t put_macrodefinition_handler(httpd_req_t *req);
+            // static esp_err_t delete_macrodefinition_handler(httpd_req_t *req);
+
+            // static esp_err_t get_soundpresetlist_handler(httpd_req_t *req);
+            // static esp_err_t get_soundpreset_handler(httpd_req_t *req);
+            // static esp_err_t put_soundpreset_handler(httpd_req_t *req);
+            // static esp_err_t delete_soundpreset_handler(httpd_req_t *req);
         };
     }
 }

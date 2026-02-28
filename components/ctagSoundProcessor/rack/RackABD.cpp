@@ -7,12 +7,12 @@ using namespace CTAG::SP;
 void RackABD::Init(const PickSeqRackInitData *initdata) {
     abd.Init();
 
-    initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
-    initdata->rack->registerParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
-	initdata->rack->registerParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
-    initdata->rack->registerParamAndCC(initdata, "a_fm", 11, [&](const int val){ a_fm = val;});
-    initdata->rack->registerParamAndCC(initdata, "s_fm", 12, [&](const int val){ s_fm = val;});
-    initdata->rack->registerParamAndCC(initdata, "accent", 13, [&](const int val){ accent = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
+	initdata->rack->registerMacroParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "a_fm", 11, [&](const int val){ a_fm = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "s_fm", 12, [&](const int val){ s_fm = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "accent", 13, [&](const int val){ accent = val;});
     
     this->enabled = false;
 }

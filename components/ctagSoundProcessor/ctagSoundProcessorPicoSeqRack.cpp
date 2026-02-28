@@ -595,22 +595,32 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
     }
 }
 
-void ctagSoundProcessorPicoSeqRack::registerParam(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter){
-    string fullId = string(prefix) + string(suffix);
-    pMapPar.emplace(fullId, setter);
-}
+// void ctagSoundProcessorPicoSeqRack::registerParam(const char *prefix, const char *suffix, function<DrumRackParameterSetter> setter){
+//     string fullId = string(prefix) + string(suffix);
+//     pMapPar.emplace(fullId, setter);
+// }
 
-void ctagSoundProcessorPicoSeqRack::registerParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter){
+// void ctagSoundProcessorPicoSeqRack::registerParam(const PickSeqRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter){
+//     string fullId = string(initdata->prefix) + string(suffix);
+//     pMapPar.emplace(fullId, setter);
+// }
+
+void ctagSoundProcessorPicoSeqRack::registerParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter) {
     string fullId = string(initdata->prefix) + string(suffix);
-    pMapPar.emplace(fullId, setter);
+    // pMapPar.emplace(fullId, setter);
     if (cc != -1) {
-        pMapCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), fullId);
     }
+    // pMapCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), fullId);
+    pMapParCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), setter);
 }
 
-void ctagSoundProcessorPicoSeqRack::registerParam(const PickSeqRackInitData *initdata, const char *suffix, function<DrumRackParameterSetter> setter){
+void ctagSoundProcessorPicoSeqRack::registerMacroParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter){
     string fullId = string(initdata->prefix) + string(suffix);
-    pMapPar.emplace(fullId, setter);
+    // pMapPar.emplace(fullId, setter);
+    // if (cc != -1) {
+    // pMapMacroCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), fullId);
+    pMapMacroParCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), setter);
+    // }
 }
 
 void ctagSoundProcessorPicoSeqRack::_handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel) {
@@ -850,15 +860,43 @@ void ctagSoundProcessorPicoSeqRack::_handleMidiControlChange(const uint8_t chann
 
     int cv_value = ((int)value * 4096) / 128;
     int key = CC_TO_MAP_KEY(channel, control);
-    auto it = pMapCC.find(key);
-    if (it != pMapCC.end()) {
-        // printf("CC%d, CH%d map to %s = %d (%d)\n", control, channel, it->second.c_str(), cv_value, value);
-        auto it2 = pMapPar.find(it->second.c_str());
-        if (it2 != pMapPar.end()) {
-            (it2->second)(cv_value);
-        }
-        // } else {
-        //     printf("No CC mapping for CC %d, CH %d\n", control, channel);
+    // auto it = pMapCC.find(key);
+    // if (it != pMapCC.end()) {
+    //     // printf("CC%d, CH%d map to %s = %d (%d)\n", control, channel, it->second.c_str(), cv_value, value);
+    //     auto it2 = pMapPar.find(it->second.c_str());
+    //     if (it2 != pMapPar.end()) {
+    //         (it2->second)(cv_value);
+    //     }
+    //     // } else {
+    //     //     printf("No CC mapping for CC %d, CH %d\n", control, channel);
+    // }
+
+    auto it = pMapParCC.find(key);
+    if (it != pMapParCC.end()) {
+        (it->second)(cv_value);
+    }
+
+    // TODO: Write directly to devices?.
+};
+
+void ctagSoundProcessorPicoSeqRack::_handleMacroMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value) {
+    int cv_value = ((int)value * 4096) / 128;
+    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: CC %d, %d, %d, cv %d", channel, control, value, cv_value);
+
+    int key = CC_TO_MAP_KEY(channel, control);
+    // auto it = pMapMacroCC.find(key);
+    // if (it != pMapMacroCC.end()) {
+    //     // printf("CC%d, CH%d map to %s = %d (%d)\n", control, channel, it->second.c_str(), cv_value, value);
+    //     auto it2 = pMapPar.find(it->second.c_str());
+    //     if (it2 != pMapPar.end()) {
+    //         (it2->second)(cv_value);
+    //     }
+    //     // } else {
+    //     //     printf("No CC mapping for CC %d, CH %d\n", control, channel);
+    // }
+    auto it = pMapMacroParCC.find(key);
+    if (it != pMapMacroParCC.end()) {
+        (it->second)(cv_value);
     }
 };
 
@@ -872,10 +910,28 @@ void ctagSoundProcessorPicoSeqRack::_handleMidiPitchBend(const uint8_t channel, 
     ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: pitch bend %d, %d", channel, bend);
 };
 
+static void dumpMemoryUsage() {
+    uint32_t freeSize = esp_get_free_heap_size();
+	printf("The available total size of heap:%" PRIu32 "\n", freeSize);
+
+	printf("\tDescription\tInternal\tSPIRAM\n");
+	printf("Current Free Memory\t%d\t\t%d\n",
+			heap_caps_get_free_size(MALLOC_CAP_8BIT) - heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+			heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+	printf("Largest Free Block\t%d\t\t%d\n",
+			heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+			heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+	printf("Min. Ever Free Size\t%d\t\t%d\n",
+			heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+			heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM));
+}
+
 void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     // construct internal data model
 
 	printf("ctagSoundProcessorPicoSeqRack::Init(%zu, %x)\n", blockSize, (uintptr_t) blockPtr);
+
+    dumpMemoryUsage();
 
     ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Before know yourself");
     knowYourself();
@@ -885,6 +941,8 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
 
     PickSeqRackInitData dri;
     dri.rack = this;
+
+    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy -2");
 
     dri.midi_channel = 9;
     dri.cc_base = 0;
@@ -1065,94 +1123,147 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     // init compressor
     sumCompressor.setSampleRate(44100.f);
     sumCompressor.initRuntime();
+
+    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "After Init()");
+    dumpMemoryUsage();
 }
 
 ctagSoundProcessorPicoSeqRack::~ctagSoundProcessorPicoSeqRack(){
 }
 
+#define DEFINE_GLOBAL_PARAM(name, channel, cc, parametername) \
+    /* pMapPar.emplace(name, [&](const int val){ parametername = val;}); */ \
+    /* pMapCC.emplace(CC_TO_MAP_KEY(channel, cc), name); */ \
+    pMapParCC.emplace(CC_TO_MAP_KEY(channel, cc), [&](const int val){ parametername = val;});
+
 void ctagSoundProcessorPicoSeqRack::knowYourself(){
     // autogenerated code here
     // sectionCpp0
 
-    pMapPar.emplace("fx1_time_ms", [&](const int val){ fx1_time_ms = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 20), "fx1_time_ms");
+    // pMapPar.emplace("fx1_time_ms", [&](const int val){ fx1_time_ms = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 20), "fx1_time_ms");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 20), [&](const int val){ fx1_time_ms = val;});
+    DEFINE_GLOBAL_PARAM("fx1_time_ms", 13, 20, fx1_time_ms);
 
-    pMapPar.emplace("fx1_sync", [&](const int val){ fx1_sync = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 21), "fx1_sync");
+    // pMapPar.emplace("fx1_sync", [&](const int val){ fx1_sync = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 21), "fx1_sync");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 21), [&](const int val){ fx1_sync = val;});
+    DEFINE_GLOBAL_PARAM("fx1_sync", 13, 21, fx1_sync);
 
-    pMapPar.emplace("fx1_freeze", [&](const int val){ fx1_freeze = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 22), "fx1_freeze");
+    // pMapPar.emplace("fx1_freeze", [&](const int val){ fx1_freeze = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 22), "fx1_freeze");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 22), [&](const int val){ fx1_freeze = val;});
+    DEFINE_GLOBAL_PARAM("fx1_freeze", 13, 22, fx1_freeze);
 
-    pMapPar.emplace("fx1_tape_digital", [&](const int val){ fx1_tape_digital = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 23), "fx1_tape_digital");
+    // pMapPar.emplace("fx1_tape_digital", [&](const int val){ fx1_tape_digital = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 23), "fx1_tape_digital");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 23), [&](const int val){ fx1_tape_digital = val;});
+    DEFINE_GLOBAL_PARAM("fx1_tape_digital", 13, 23, fx1_tape_digital);
 
-    pMapPar.emplace("fx1_st_width", [&](const int val){ fx1_st_width = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 24), "fx1_st_width");
+    // pMapPar.emplace("fx1_st_width", [&](const int val){ fx1_st_width = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 24), "fx1_st_width");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 24), [&](const int val){ fx1_st_width = val;});
+    DEFINE_GLOBAL_PARAM("fx1_st_width", 13, 24, fx1_st_width);
 
-    pMapPar.emplace("fx1_fx_send", [&](const int val){ fx1_fx_send = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 25), "fx1_fx_send");
+    // pMapPar.emplace("fx1_fx_send", [&](const int val){ fx1_fx_send = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 25), "fx1_fx_send");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 25), [&](const int val){ fx1_fx_send = val;});
+    DEFINE_GLOBAL_PARAM("fx1_fx_send", 13, 25, fx1_fx_send);
 
-    pMapPar.emplace("fx1_feedback", [&](const int val){ fx1_feedback = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 26), "fx1_feedback");
+    // pMapPar.emplace("fx1_feedback", [&](const int val){ fx1_feedback = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 26), "fx1_feedback");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 26), [&](const int val){ fx1_feedback = val;});
+    DEFINE_GLOBAL_PARAM("fx1_feedback", 13, 26, fx1_feedback);
 
-    pMapPar.emplace("fx1_base", [&](const int val){ fx1_base = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 27), "fx1_base");
+    // pMapPar.emplace("fx1_base", [&](const int val){ fx1_base = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 27), "fx1_base");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 27), [&](const int val){ fx1_base = val;});
+    DEFINE_GLOBAL_PARAM("fx1_base", 13, 27, fx1_base);
 
-    pMapPar.emplace("fx1_width", [&](const int val){ fx1_width = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 28), "fx1_width");
+    // pMapPar.emplace("fx1_width", [&](const int val){ fx1_width = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 28), "fx1_width");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 28), [&](const int val){ fx1_width = val;});
+    DEFINE_GLOBAL_PARAM("fx1_width", 13, 28, fx1_width);
 
-    pMapPar.emplace("fx1_amount", [&](const int val){ fx1_amount = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 29), "fx1_amount");
-
-
-
-    pMapPar.emplace("fx2_time", [&](const int val){ fx2_time = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 40), "fx2_time");
-
-    pMapPar.emplace("fx2_lp", [&](const int val){ fx2_lp = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 41), "fx2_lp");
-
-    pMapPar.emplace("fx2_amount", [&](const int val){ fx2_amount = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 42), "fx2_amount");
-
-
-
-
-    pMapPar.emplace("c_thres", [&](const int val){ c_thres = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 60), "c_thres");
-
-    pMapPar.emplace("c_ratio", [&](const int val){ c_ratio = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 61), "c_ratio");
-
-    pMapPar.emplace("c_atk", [&](const int val){ c_atk = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 62), "c_atk");
-
-    pMapPar.emplace("c_rel", [&](const int val){ c_rel = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 63), "c_rel");
-
-    pMapPar.emplace("c_lpf", [&](const int val){ c_lpf = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 64), "c_lpf");
-
-    pMapPar.emplace("c_gain", [&](const int val){ c_gain = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 65), "c_gain");
-
-    pMapPar.emplace("c_mix", [&](const int val){ c_mix = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 66), "c_mix");
-
-    pMapPar.emplace("c_dly_level", [&](const int val){ c_dly_level = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 67), "c_dly_level");
-
-    pMapPar.emplace("c_rev_level", [&](const int val){ c_rev_level = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 68), "c_rev_level");
+    // pMapPar.emplace("fx1_amount", [&](const int val){ fx1_amount = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 29), "fx1_amount");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 29), [&](const int val){ fx1_amount = val;});
+    DEFINE_GLOBAL_PARAM("fx1_amount", 13, 29, fx1_amount);
 
 
 
-    pMapPar.emplace("sum_mute", [&](const int val){ sum_mute = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 80), "sum_mute");
+    // pMapPar.emplace("fx2_time", [&](const int val){ fx2_time = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 40), "fx2_time");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 40), [&](const int val){ fx2_time = val;});
+    DEFINE_GLOBAL_PARAM("fx2_time", 13, 40, fx2_time);
 
-    pMapPar.emplace("sum_lev", [&](const int val){ sum_lev = val;});
-    pMapCC.emplace(CC_TO_MAP_KEY(13, 81), "sum_lev");
+    // pMapPar.emplace("fx2_lp", [&](const int val){ fx2_lp = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 41), "fx2_lp");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 41), [&](const int val){ fx2_lp = val;});
+    DEFINE_GLOBAL_PARAM("fx2_lp", 13, 41, fx2_lp);
 
+    // pMapPar.emplace("fx2_amount", [&](const int val){ fx2_amount = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 42), "fx2_amount");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 42), [&](const int val){ fx2_amount = val;});
+    DEFINE_GLOBAL_PARAM("fx2_amount", 13, 42, fx2_amount);
+
+
+
+    // pMapPar.emplace("c_thres", [&](const int val){ c_thres = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 60), "c_thres");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 60), [&](const int val){ c_thres = val;});
+    DEFINE_GLOBAL_PARAM("c_thres", 13, 60, c_thres);
+
+    // pMapPar.emplace("c_ratio", [&](const int val){ c_ratio = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 61), "c_ratio");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 61), [&](const int val){ c_ratio = val;});
+    DEFINE_GLOBAL_PARAM("c_ratio", 13, 61, c_ratio);
+
+    // pMapPar.emplace("c_atk", [&](const int val){ c_atk = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 62), "c_atk");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 62), [&](const int val){ c_atk = val;});
+    DEFINE_GLOBAL_PARAM("c_atk", 13, 62, c_atk);
+
+    // pMapPar.emplace("c_rel", [&](const int val){ c_rel = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 63), "c_rel");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 63), [&](const int val){ c_rel = val;});
+    DEFINE_GLOBAL_PARAM("c_rel", 13, 63, c_rel);
+
+    // pMapPar.emplace("c_lpf", [&](const int val){ c_lpf = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 64), "c_lpf");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 64), [&](const int val){ c_lpf = val;});
+    DEFINE_GLOBAL_PARAM("c_lpf", 13, 64, c_lpf);
+
+    // pMapPar.emplace("c_gain", [&](const int val){ c_gain = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 65), "c_gain");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 65), [&](const int val){ c_gain = val;});
+    DEFINE_GLOBAL_PARAM("c_gain", 13, 65, c_gain);
+
+    // pMapPar.emplace("c_mix", [&](const int val){ c_mix = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 66), "c_mix");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 66), [&](const int val){ c_mix = val;});
+    DEFINE_GLOBAL_PARAM("c_mix", 13, 66, c_mix);
+
+    // pMapPar.emplace("c_dly_level", [&](const int val){ c_dly_level = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 67), "c_dly_level");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 67), [&](const int val){ c_dly_level = val;});
+    DEFINE_GLOBAL_PARAM("c_dly_level", 13, 67, c_dly_level);
+
+    // pMapPar.emplace("c_rev_level", [&](const int val){ c_rev_level = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 68), "c_rev_level");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 68), [&](const int val){ c_rev_level = val;});
+    DEFINE_GLOBAL_PARAM("c_rev_level", 13, 68, c_rev_level);
+
+
+    // pMapPar.emplace("sum_mute", [&](const int val){ sum_mute = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 80), "sum_mute");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 80), [&](const int val){ sum_mute = val;});
+    DEFINE_GLOBAL_PARAM("sum_mute", 13, 80, sum_mute);
+
+    // pMapPar.emplace("sum_lev", [&](const int val){ sum_lev = val;});
+    // pMapCC.emplace(CC_TO_MAP_KEY(13, 81), "sum_lev");
+    // pMapParCC.emplace(CC_TO_MAP_KEY(13, 81), [&](const int val){ sum_lev = val;});
+    DEFINE_GLOBAL_PARAM("sum_lev", 13, 81, sum_lev);
 
 
     isStereo = true;
@@ -1195,7 +1306,7 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-                _handleMidiNoteOff(channel, b1, b2);
+                // _handleMidiNoteOff(channel, b1, b2);
                 break;
             }
             case 0x90: // note on
@@ -1206,11 +1317,11 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b2 = buf[o++];
                 left -= 2;
 
-                if (b2 > 0) {
-                    _handleMidiNoteOn(channel, b1, b2);
-                } else {
-                    _handleMidiNoteOff(channel, b1, b2);
-                }
+                // if (b2 > 0) {
+                //     _handleMidiNoteOn(channel, b1, b2);
+                // } else {
+                //     _handleMidiNoteOff(channel, b1, b2);
+                // }
                 break;
             }
             case 0xA0: // aftertouch
@@ -1220,7 +1331,7 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-                _handleMidiAftertouch(channel, b1, b2);
+                // _handleMidiAftertouch(channel, b1, b2);
                 break;
             }
             case 0xB0: // control change
@@ -1240,7 +1351,7 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++]; // not used?
                 left -= 2;
-                _handleMidiPatchChange(channel, b1);
+                // _handleMidiPatchChange(channel, b1);
                 break;
             }
             case 0xE0: // pitch bend
@@ -1250,7 +1361,7 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
                 uint8_t b1 = buf[o++];
                 uint8_t b2 = buf[o++];
                 left -= 2;
-                _handleMidiPitchBend(channel, b2 * 128 + b1);
+                // _handleMidiPitchBend(channel, b2 * 128 + b1);
                 break;
             }
             case 0xF0: // system common / real time
@@ -1505,73 +1616,66 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t trackIndex, u
         }
 
     }
-
-    if (trackIndex == 15) {
+    else if (channel == 15) {
         // ch16 is audio in, which has no notes
     }
 }
 
-void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t trackIndex, uint8_t note, uint8_t velocity) {
-    if (trackIndex == 6) {
+void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t channel, uint8_t note, uint8_t velocity) {
+    if (channel == 11) {
         if (ch7_ro.enabled) {
             ch7_ro.noteOff(note, 0);
         }
     }
-
-    if (trackIndex == 7) {
+    else if (channel == 12) {
         if (ch8_ro.enabled) {
             ch8_ro.noteOff(note, 0);
         }
     }
-
-    if (trackIndex == 8) {
+    else if (channel == 0) {
         if (ch9_td3.enabled) {
             ch9_td3.noteOff(note, 0);
         }
     }
-
-    if (trackIndex == 9) {
+    else if (channel == 1) {
         if (ch10_td3.enabled) {
             ch10_td3.noteOff(note, 0);
         }
     }
-
-    if (trackIndex == 10) {
+    else if (channel == 2) {
         if (ch11_mo.enabled) {
             ch11_mo.noteOff(note, 0);
         }
     }
-
-    if (trackIndex == 11) {
+    else if (channel == 3) {
         if (ch12_mo.enabled) {
             ch12_mo.noteOff(note, 0);
         }
     }
-
-    if (trackIndex == 12) {
+    else if (channel == 4) {
         if (ch13_ro.enabled) {
             ch13_ro.noteOff(note, 0);
         }
     }
-
-    if (trackIndex == 13) {
+    else if (channel == 5) {
         if (ch14_ro.enabled) {
             ch14_ro.noteOff(note, 0);
         }
     }
-
-    if (trackIndex == 14) {
+    else if (channel == 6) {
         if (ch15_pp.enabled) {
             ch15_pp.noteOff(note, 0);
         }
     }
 }
 
+void ctagSoundProcessorPicoSeqRack::handleMacroMidiControlChange(const uint8_t trackIndex, uint8_t control, uint8_t value) {
+    _handleMacroMidiControlChange(trackIndex, control, value);
+}
+
 void ctagSoundProcessorPicoSeqRack::handleMidiControlChange(const uint8_t trackIndex, uint8_t control, uint8_t value) {
-    // TODO: Map track index to midi channel
     _handleMidiControlChange(trackIndex, control, value);
 }
 
 void ctagSoundProcessorPicoSeqRack::handleMidiControlChangePair(const uint8_t trackIndex, uint8_t firstcontrol, uint16_t value) {
-    // default implementation does nothing, override in derived class if needed
 }

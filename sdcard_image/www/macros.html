@@ -19,16 +19,22 @@
         <p>
             Machine:
             <select id="activetrackmachine"></select>
+            <br/>
+            <span id="activetrackmachinejson">{JSON}</span>
         </p>
 
         <p>
             Macro definition:
             <select id="activemacrodefinition"></select>
+            <br/>
+            <span id="activemacrodefinitionjson">{JSON}</span>
         </p>
 
         <p>
             Sound preset:
             <select id="activesoundpreset"></select>
+            <br/>
+            <span id="activesoundpresetjson">{JSON}</span>
         </p>
 
         <h3>Preset parameters</h3>
@@ -71,9 +77,14 @@
         <h3>Rack synths</h3>
         <p>
             <button id="reloadmachines">Reload machine list</button>
+            <button id="reloadmachinesondevice">Reload machine configuration on device</button>
+        </p>
+        <p>
+            Upload new synth definition <input id="uploadsynthdefinitionjson" type="text" value="paste synth definition json here" size="50" /> <button id="uploadsynthdefinition">Update</button>
         </p>
         <ul id="machines">
             <li>loading synths...</li>
         </ul>
+
     </body>
 </html>

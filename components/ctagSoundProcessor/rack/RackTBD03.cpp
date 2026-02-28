@@ -26,28 +26,28 @@ void RackTBD03::Init(const PickSeqRackInitData *initdata) {
     td3_adVCF.SetDecay(0.5f);
     td3_ws.Init(0xcafe);
 
-    initdata->rack->registerParamAndCC(initdata, "shape", 8, [&](const int val){ td3_shape = val;});
-	initdata->rack->registerParamAndCC(initdata, "param_0", 9, [&](const int val){ td3_param_0 = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay_vca", 10, [&](const int val){ td3_decay_vca = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay_vcf", 11, [&](const int val){ td3_decay_vcf = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "shape", 8, [&](const int val){ td3_shape = val;});
+	initdata->rack->registerMacroParamAndCC(initdata, "param_0", 9, [&](const int val){ td3_param_0 = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "decay_vca", 10, [&](const int val){ td3_decay_vca = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "decay_vcf", 11, [&](const int val){ td3_decay_vcf = val;});
 
-    initdata->rack->registerParamAndCC(initdata, "cutoff", 12, [&](const int val){ td3_cutoff = val;});
-	initdata->rack->registerParamAndCC(initdata, "resonance", 13, [&](const int val){ td3_resonance = val;});
-	initdata->rack->registerParamAndCC(initdata, "envelope", 14, [&](const int val){ td3_envelope = val;});
-	initdata->rack->registerParamAndCC(initdata, "filter_type", 15, [&](const int val){ td3_filter_type = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "cutoff", 12, [&](const int val){ td3_cutoff = val;});
+	initdata->rack->registerMacroParamAndCC(initdata, "resonance", 13, [&](const int val){ td3_resonance = val;});
+	initdata->rack->registerMacroParamAndCC(initdata, "envelope", 14, [&](const int val){ td3_envelope = val;});
+	initdata->rack->registerMacroParamAndCC(initdata, "filter_type", 15, [&](const int val){ td3_filter_type = val;});
 
-	initdata->rack->registerParamAndCC(initdata, "saturation", 16, [&](const int val){ td3_saturation = val;});
-    initdata->rack->registerParamAndCC(initdata, "drive", 17, [&](const int val){ td3_drive = val;});
-    initdata->rack->registerParamAndCC(initdata, "slide", 18, [&](const int val){ td3_slide = val;});
-    initdata->rack->registerParamAndCC(initdata, "accent", 19, [&](const int val){ td3_accent = val;});
+	initdata->rack->registerMacroParamAndCC(initdata, "saturation", 16, [&](const int val){ td3_saturation = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "drive", 17, [&](const int val){ td3_drive = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "slide", 18, [&](const int val){ td3_slide = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "accent", 19, [&](const int val){ td3_accent = val;});
 
-    initdata->rack->registerParamAndCC(initdata, "param_1", 20, [&](const int val){ td3_param_1 = val;});
-    initdata->rack->registerParamAndCC(initdata, "p0_amt", 21, [&](const int val){ td3_p0_amt = val;});
-    initdata->rack->registerParamAndCC(initdata, "p1_amt", 22, [&](const int val){ td3_p1_amt = val;});
-    initdata->rack->registerParamAndCC(initdata, "accent_level", 23, [&](const int val){ td3_accent_level = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "param_1", 20, [&](const int val){ td3_param_1 = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "p0_amt", 21, [&](const int val){ td3_p0_amt = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "p1_amt", 22, [&](const int val){ td3_p1_amt = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "accent_level", 23, [&](const int val){ td3_accent_level = val;});
 
-    initdata->rack->registerParamAndCC(initdata, "slide_level", 24, [&](const int val){ td3_slide_level = val;}); // not used
-    initdata->rack->registerParamAndCC(initdata, "sync_trig", 25, [&](const int val){ td3_sync_trig = val;}); // not used
+    initdata->rack->registerMacroParamAndCC(initdata, "slide_level", 24, [&](const int val){ td3_slide_level = val;}); // not used
+    initdata->rack->registerMacroParamAndCC(initdata, "sync_trig", 25, [&](const int val){ td3_sync_trig = val;}); // not used
 
     this->enabled = false;
 }

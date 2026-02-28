@@ -201,6 +201,10 @@ namespace CTAG {
                 // default implementation does nothing, override in derived class if needed
             }
 
+            virtual void handleMacroMidiControlChange(const uint8_t trackIndex, uint8_t control, uint8_t value) {
+                // default implementation does nothing, override in derived class if needed
+            }
+
             virtual void handleMidiControlChangeNRPM(const uint8_t trackIndex, uint8_t control, uint16_t value) {
                 // default implementation does nothing, override in derived class if needed
             }

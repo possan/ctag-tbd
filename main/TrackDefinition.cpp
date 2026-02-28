@@ -19,11 +19,6 @@ TrackDefinition::TrackDefinition() {
 TrackDefinition::~TrackDefinition() {
 }
 
-void TrackDefinition::GetDefinitionJson(std::string *target) {
-    Document d;
-    target->assign("{}");
-}
-
 bool TrackDefinition::DeserializeJSON(const Value &jsonelement) {
     if (!jsonelement.HasMember("index")) return false;
     if (!jsonelement.HasMember("name")) return false;
@@ -37,6 +32,12 @@ bool TrackDefinition::DeserializeJSON(const Value &jsonelement) {
     drumNote = jsonelement["drumnote"].GetInt();
     baseCC = jsonelement["basecc"].GetInt();
 
+    ESP_LOGI("TrackDefinition", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+   
     macroMachineIds.clear();
     if (jsonelement.HasMember("machines") && jsonelement["machines"].IsArray()) {
         for (auto &v : jsonelement["machines"].GetArray()) {

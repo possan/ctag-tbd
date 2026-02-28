@@ -106,12 +106,21 @@ namespace CTAG {
 
             static void SetTrackMachine(const int trackIndex, const string &synthID);
             static void SetTrackMacro(const int trackIndex, const string &macroDefinitionID);
-            static void SetTrackParametersFromJSON(const int trackIndex, const string &parametersJSON);
+            static void SetTrackParametersFromJSON(const string &parametersJSON);
 
             static std::shared_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> synthDefinitionModel;
             static std::shared_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> macroSoundDefinitionModel;
             static std::shared_ptr<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel> macroDeviceDefinitionModel;
             static std::shared_ptr<CTAG::MACROPRESETS::MacroTranslator> macroTranslator;
+
+            // static bool UpdateSynthDefinitionJSON(const string &jsonstring);
+            // static bool UpdateSoundPresetJSON(const string &jsonstring);
+            // static bool UpdateMacroDefinitionJSON(const string &jsonstring);
+            // static bool DeleteSoundPreset(const string &id);
+            // static bool DeleteMacroDefinition(const string &id);
+            // static bool GetSoundPresetJSON(const string &id, string *jsonoutput);
+            // static bool GetMacroDefinitionJSON(const string &id, string *jsonoutput);
+            static void RefreshMacros();
 
         private:
             static void audio_task(void *pvParams);
@@ -132,6 +141,7 @@ namespace CTAG {
             static atomic<uint32_t> runAudioTask;
             static atomic<uint32_t> ch0_outputSoftClip;
             static atomic<uint32_t> ch1_outputSoftClip;
+            static volatile uint32_t audioLockErrors;
             static volatile uint32_t slowProcessCounter;
             static volatile uint32_t sentSynthMidiBytes;
             static volatile uint32_t receivedUsbDeviceMidiBytes;

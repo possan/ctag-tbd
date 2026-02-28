@@ -94,7 +94,6 @@ bool MacroDeviceParameter::SerializeJSONInto(rapidjson::Document &doc) {
     doc.AddMember("idx", index, doc.GetAllocator());
     doc.AddMember("name", Value(name.c_str(), doc.GetAllocator()), doc.GetAllocator());
     doc.AddMember("def", defval, doc.GetAllocator());
-    // doc.AddMember("def", defaultValue, doc.GetAllocator());
     doc.AddMember("min", minval, doc.GetAllocator());
     doc.AddMember("max", maxval, doc.GetAllocator());
     doc.AddMember("res", resval, doc.GetAllocator());
@@ -163,13 +162,13 @@ bool MacroDeviceParameterGroup::SerializeJSONInto(rapidjson::Document &doc) {
 
 MacroDeviceOutputMappingSource::MacroDeviceOutputMappingSource() {
     parameterIndex = 0;
-    amount = 0;
+    multiplier = 1;
+    divider = 1;
 }
 
 MacroDeviceOutputMappingSource::~MacroDeviceOutputMappingSource() {}
 
 bool MacroDeviceOutputMappingSource:: DeserializeJSON(const rapidjson::Value &jsonelement) {
-
     if (!jsonelement.IsObject()) {
         ESP_LOGE("MacroDeviceOutputMappingSource", "Not a JSON object");
         return false;
@@ -182,10 +181,17 @@ bool MacroDeviceOutputMappingSource:: DeserializeJSON(const rapidjson::Value &js
         return false;
     }
 
-    if (jsonelement.HasMember("amt") && jsonelement["amt"].IsInt()) {
-        amount = jsonelement["amt"].GetInt();
+    if (jsonelement.HasMember("mul") && jsonelement["mul"].IsInt()) {
+        multiplier = jsonelement["mul"].GetInt();
     } else {
-        ESP_LOGE("MacroDeviceOutputMappingSource", "Missing or invalid 'amt' field");
+        ESP_LOGE("MacroDeviceOutputMappingSource", "Missing or invalid 'mul' field");
+        return false;
+    }
+
+    if (jsonelement.HasMember("div") && jsonelement["div"].IsInt()) {
+        divider = jsonelement["div"].GetInt();
+    } else {
+        ESP_LOGE("MacroDeviceOutputMappingSource", "Missing or invalid 'div' field");
         return false;
     }
 
@@ -198,18 +204,22 @@ bool MacroDeviceOutputMappingSource:: SerializeJSONInto(rapidjson::Document &doc
     Value srcval(kNumberType);
     srcval.SetInt(parameterIndex);
 
-    Value amtval(kNumberType);
-    amtval.SetInt(amount);
+    Value mulval(kNumberType);
+    mulval.SetInt(multiplier);
+
+    Value divval(kNumberType);
+    divval.SetInt(divider);
 
     doc.AddMember("src", srcval, doc.GetAllocator());
-    doc.AddMember("amt", amtval, doc.GetAllocator());
+    doc.AddMember("mul", mulval, doc.GetAllocator());
+    doc.AddMember("div", divval, doc.GetAllocator());
 
     return true;
 }
 
 
 MacroDeviceOutputMapping::MacroDeviceOutputMapping() {
-    synthParameterId = "";
+    ctrl = 0;
     startValue = 0;
     sources.clear();
 }
@@ -217,16 +227,15 @@ MacroDeviceOutputMapping::MacroDeviceOutputMapping() {
 MacroDeviceOutputMapping::~MacroDeviceOutputMapping() {}
 
 bool MacroDeviceOutputMapping::DeserializeJSON(const rapidjson::Value &jsonelement) {
-
     if (!jsonelement.IsObject()) {
         ESP_LOGE("MacroDeviceOutputMapping", "Not a JSON object");
         return false;
     }
 
-    if (jsonelement.HasMember("tgt") && jsonelement["tgt"].IsString()) {
-        synthParameterId = jsonelement["tgt"].GetString();
+    if (jsonelement.HasMember("ctrl") && jsonelement["ctrl"].IsInt()) {
+        ctrl = jsonelement["ctrl"].GetInt();
     } else {
-        ESP_LOGE("MacroDeviceOutputMapping", "Missing or invalid 'tgt' field");
+        ESP_LOGE("MacroDeviceOutputMapping", "Missing or invalid 'ctrl' field");
         return false;
     }
 
@@ -255,11 +264,8 @@ bool MacroDeviceOutputMapping::DeserializeJSON(const rapidjson::Value &jsoneleme
 bool MacroDeviceOutputMapping::SerializeJSONInto(rapidjson::Document &doc) {
     doc.SetObject();
 
-    doc.AddMember("tgt", Value(synthParameterId.c_str(), doc.GetAllocator()), doc.GetAllocator());
-
-    Value startval(kNumberType);
-    startval.SetInt(this->startValue);
-    doc.AddMember("start", startval, doc.GetAllocator());
+    doc.AddMember("ctrl", ctrl, doc.GetAllocator());
+    doc.AddMember("start", startValue, doc.GetAllocator());
 
     Value add(kArrayType);
     doc.AddMember("add", add, doc.GetAllocator());

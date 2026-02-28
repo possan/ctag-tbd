@@ -392,6 +392,56 @@ static esp_err_t handle_list(httpd_req_t *req) {
             httpd_resp_send_chunk(req, NULL, 0);
             return ESP_OK;
         }
+
+
+        // Handle preview request
+        if (httpd_query_key_value(query, "getconfig", val, sizeof(val)) == ESP_OK) {
+            free(query);
+            // val contains path like "drums/factory/BD0"
+            char decoded[256];
+            url_decode(decoded, val, sizeof(decoded));
+            std::string jsonPath = std::string(CONFIG_ROOT) + "/" + decoded;
+
+            // Try .wav then .WAV
+            FILE *fp = fopen(jsonPath.c_str(), "r");
+            if (!fp) {
+                return send_error(req, 404, "Config file not found");
+            }
+
+            // Get file size
+            fseek(fp, 0, SEEK_END);
+            long fsize = ftell(fp);
+            fseek(fp, 0, SEEK_SET);
+
+            httpd_resp_set_type(req, "application/json");
+            httpd_resp_set_hdr(req, "Connection", "close");
+            httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+            httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+
+            // Stream the file in chunks
+            char *chunk = (char *)heap_caps_malloc(CHUNK_BUF_SIZE, MALLOC_CAP_SPIRAM);
+            if (!chunk) {
+                fclose(fp);
+                return send_error(req, 500, "Out of memory");
+            }
+            size_t read_bytes;
+            do {
+                read_bytes = fread(chunk, 1, CHUNK_BUF_SIZE, fp);
+                if (read_bytes > 0) {
+                    if (httpd_resp_send_chunk(req, chunk, read_bytes) != ESP_OK) {
+                        fclose(fp);
+                        heap_caps_free(chunk);
+                        httpd_resp_send_chunk(req, NULL, 0);
+                        return ESP_FAIL;
+                    }
+                }
+            } while (read_bytes > 0);
+
+            fclose(fp);
+            heap_caps_free(chunk);
+            httpd_resp_send_chunk(req, NULL, 0);
+            return ESP_OK;
+        }
     }
 
     // Load sample_rom.jsn
@@ -442,7 +492,7 @@ static esp_err_t handle_list(httpd_req_t *req) {
 
     Value files2(kArrayType);
     scan_json_files(CONFIG_ROOT, "", files2, alloc);
-    resp.AddMember("presetfiles", files2, alloc);
+    resp.AddMember("configfiles", files2, alloc);
 
     // 2) Kits metadata (entire sample_rom object)
     Value kitsObj(kObjectType);
@@ -607,6 +657,94 @@ static esp_err_t handle_upload(httpd_req_t *req) {
     return send_json(req, resp);
 }
 
+
+static esp_err_t handle_uploadconfig(httpd_req_t *req) {
+    ESP_LOGI(TAG, "samples_uploadconfig_handler, content_len=%d", req->content_len);
+
+    // Parse query params
+    size_t qlen = httpd_req_get_url_query_len(req);
+    char query_buf[256] = {0};
+    char pathVal[128] = "user";
+    char filenameVal[64] = {0};
+
+    if (qlen > 0) {
+        httpd_req_get_url_query_str(req, query_buf, sizeof(query_buf));
+        char raw[128];
+        if (httpd_query_key_value(query_buf, "path", raw, sizeof(raw)) == ESP_OK) {
+            url_decode(pathVal, raw, sizeof(pathVal));
+        } else {
+            return send_error(req, 400, "Bad request");
+        }
+    }
+
+    if (filenameVal[0] == 0) {
+        snprintf(filenameVal, sizeof(filenameVal), "sample_%lu", (unsigned long)esp_log_timestamp());
+    }
+
+    // Ensure target directory exists
+    // std::string dirPath = std::string(CONFIG_ROOT) + "/" + pathVal;
+    // // Create directories recursively (simple approach)
+    // {
+    //     std::string tmp;
+    //     for (size_t i = 0; i < dirPath.size(); i++) {
+    //         tmp += dirPath[i];
+    //         if (dirPath[i] == '/' && i > 0) {
+    //             mkdir(tmp.c_str(), 0755);
+    //         }
+    //     }
+    //     mkdir(dirPath.c_str(), 0755);
+    // }
+
+    // Write configfile
+    std::string filePath = std::string(CONFIG_ROOT) + "/" + pathVal;
+    // std::string filePath = dirPath;
+    FILE *fp = fopen(filePath.c_str(), "w");
+    if (!fp) {
+        ESP_LOGE(TAG, "Cannot create file: %s", filePath.c_str());
+            return send_error(req, 500, "Cannot create file");
+    }
+
+    // Receive and write in chunks
+    char *chunk = (char *)heap_caps_malloc(CHUNK_BUF_SIZE, MALLOC_CAP_SPIRAM);
+    if (!chunk) {
+        fclose(fp);
+        return send_error(req, 500, "Out of memory");
+    }
+
+    int remaining = req->content_len;
+    int total_written = 0;
+    while (remaining > 0) {
+        int toRead = remaining > CHUNK_BUF_SIZE ? CHUNK_BUF_SIZE : remaining;
+        int recv = httpd_req_recv(req, chunk, toRead);
+        if (recv <= 0) {
+            if (recv == HTTPD_SOCK_ERR_TIMEOUT) {
+                continue;
+            }
+            ESP_LOGE(TAG, "Upload recv error");
+            fclose(fp);
+            heap_caps_free(chunk);
+            remove(filePath.c_str());
+            return send_error(req, 500, "Upload receive error");
+        }
+        fwrite(chunk, 1, recv, fp);
+        remaining -= recv;
+        total_written += recv;
+    }
+
+    fflush(fp);
+    fclose(fp);
+    heap_caps_free(chunk);
+
+    ESP_LOGI(TAG, "Uploaded %s (%d bytes)", filePath.c_str(), total_written);
+
+    // Return OK with file info
+    char resp[256];
+    snprintf(resp, sizeof(resp),
+             "{\"ok\":true,\"name\":\"%s\",\"path\":\"%s\",\"size\":%d}",
+             filenameVal, pathVal, total_written);
+    return send_json(req, resp);
+}
+
 // ─── POST /api/v1/samples/manage ─────────────────────────────
 //
 // Body: JSON with { "action": "rename"|"delete"|"saveKit"|"createKit"|"createFolder", ... }
@@ -657,6 +795,21 @@ static esp_err_t handle_manage(httpd_req_t *req) {
         std::string filePath = std::string(SAMPLE_ROOT) + "/" +
                                doc["path"].GetString() + "/" +
                                doc["filename"].GetString() + ".wav";
+        if (remove(filePath.c_str()) != 0) {
+            ESP_LOGE(TAG, "Delete failed: %s", filePath.c_str());
+            return send_error(req, 500, "Delete failed");
+        }
+        ESP_LOGI(TAG, "Deleted: %s/%s", doc["path"].GetString(), doc["filename"].GetString());
+        return send_ok(req);
+    }
+
+    // ── deleteconfig ──
+    if (action == "deleteconfig") {
+        if (!doc.HasMember("path")) {
+            return send_error(req, 400, "Missing delete fields");
+        }
+        std::string filePath = std::string(CONFIG_ROOT) + "/" +
+                               doc["path"].GetString();
         if (remove(filePath.c_str()) != 0) {
             ESP_LOGE(TAG, "Delete failed: %s", filePath.c_str());
             return send_error(req, 500, "Delete failed");
@@ -1043,7 +1196,6 @@ static esp_err_t handle_reload(httpd_req_t *req) {
     // Disable plugin processing, refresh, re-enable
     CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
     CTAG::AUDIO::SoundProcessorManager::RefreshSampleRom();
-    CTAG::AUDIO::SoundProcessorManager::RefreshMacros();
     CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
 
     ESP_LOGI(TAG, "PSRAM reload complete");
@@ -1070,6 +1222,8 @@ esp_err_t SampleAPI::samples_post_handler(httpd_req_t *req) {
 
     if (strcmp(action, "upload") == 0) {
         return handle_upload(req);
+    } else if (strcmp(action, "uploadconfig") == 0) {
+        return handle_uploadconfig(req);
     } else if (strcmp(action, "manage") == 0) {
         return handle_manage(req);
     } else if (strcmp(action, "reload") == 0) {

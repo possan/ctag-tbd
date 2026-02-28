@@ -9,16 +9,17 @@
 #include "MacroDeviceDefinition.hpp"
 #include "MacroDeviceDefinitionDataModel.hpp"
 
+// #define MAX_TRACKS 24
+
 namespace CTAG {
     namespace MACROPRESETS {
         class MacroTranslator {
             private:
-                int midiChannelToTrack[16];
-                int trackToMidiChannel[16];
-                int trackBaseCC[16];
-                int trackParameterValues[16][16];
-                int trackDirty[16];
-                int trackOutputMappingCC[16][16]; // [track][parameterIndex] => CC
+                int8_t midiChannelToTrack[16];
+                int8_t trackToMidiChannel[16];
+                uint8_t trackBaseCC[16];
+                uint16_t trackParameterValues[16][16];
+                bool trackDirty[16];
                 std::string trackMachineId[16];
                 MacroDeviceDefinition *definition[16];
 
@@ -42,9 +43,11 @@ namespace CTAG {
 
                 void SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value);
 
-                void SetTrackParametersFromJSON(const int trackIndex, const std::   string &parametersJSON);
+                void SetTrackParametersFromJSON(const std::string &parametersJSON);
 
                 void TranslateInput(CTAG::SP::ProcessData *pd);
+
+                void SerializeStateJSON(std::string *output);
         };
     }
 }

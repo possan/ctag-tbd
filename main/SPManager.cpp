@@ -68,6 +68,7 @@ volatile uint32_t SoundProcessorManager::slowProcessCounter = 0;
 volatile uint32_t SoundProcessorManager::sentSynthMidiBytes = 0;
 volatile uint32_t SoundProcessorManager::receivedUsbDeviceMidiBytes = 0;
 volatile uint32_t SoundProcessorManager::requestCounterErrors = 0;
+volatile uint32_t SoundProcessorManager::audioLockErrors = 0;
 
 // audio real-time task
 void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
@@ -91,11 +92,17 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
     pd.midi_bytes_length = 0;
     memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
 
+    // wait a bit to let everything initialize and stabilize
+    vTaskDelay(pdMS_TO_TICKS(4000));
+
     int64_t nextspitime = 0;
     int64_t nextspireceivedeadline = 0;
 
     int responsecounter = 0;
     int framecounter = 0;
+
+    ESP_LOGI("SPManager", "Audio task started, entering main loop.");
+
     while (runAudioTask) {
         //
         // Prepare a response.
@@ -253,8 +260,6 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         memcpy(finput2, finput, BUF_SZ * 2 * sizeof(float));
         memcpy(fbuf, finput, BUF_SZ * 2 * sizeof(float));
 
-        taskYIELD();
-
         // track the cpu cycles for audio task
         start = esp_cpu_get_cycle_count();
         before = esp_timer_get_time();
@@ -276,7 +281,6 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
         // sound processors - safer version with RAII and additional checks
         bool processingLocked = (xSemaphoreTake(processMutex, 0) == pdTRUE);
-
         if (processingLocked) {
             // Validate control data and sound processors before processing
             bool canProcess = (pd.controlData != nullptr) &&
@@ -310,7 +314,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                 memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
             }
 
-            memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
+            // memset(&pd.midi_bytes, 0, sizeof(pd.midi_bytes));
             pd.midi_bytes_length = 0;
 
             // Always release mutex
@@ -318,6 +322,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         } else {
             // Couldn't acquire mutex - mute audio for this buffer
             memset(fbuf, 0, BUF_SZ * 2 * sizeof(float));
+            audioLockErrors ++;
         }
 
 
@@ -402,13 +407,15 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
         memcpy(fbuf2, fbuf, BUF_SZ * 2 * sizeof(float));
 
-        // if (framecounter % 2900 == 0) {
-        //     printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
-        //     requestCounterErrors = 0;
-        // }
+        if (framecounter % 3200 == 0) {
+            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors, %d lock errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors, (int)audioLockErrors);
+            requestCounterErrors = 0;
+        }
 
         // write raw float data back to CODCE
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
+
+        taskYIELD();
 
         framecounter ++;
     }
@@ -431,7 +438,7 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     ESP_LOGI("SPManager", "Switching ch%d to plugin %s", chan, id.c_str());
 
     // destroy active plugin
-    // xSemaphoreTake(processMutex, portMAX_DELAY);
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     if(nullptr != sp[chan]){
         delete sp[chan]; // destruct processor
         sp[chan] = nullptr;
@@ -462,7 +469,7 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     }
     model->SetActivePluginID(id, chan);
     sp[chan]->LoadPreset(model->GetActivePatchNum(chan));
-    // xSemaphoreGive(processMutex);
+    xSemaphoreGive(processMutex);
 
     ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
@@ -529,11 +536,8 @@ void SoundProcessorManager::StartSoundProcessor() {
     updateConfiguration();
 
     synthDefinitionModel = std::make_shared<CTAG::MACROPRESETS::SynthDefinitionDataModel>();
-    
     macroSoundDefinitionModel = std::make_shared<CTAG::MACROPRESETS::MacroSoundPresetDataModel>();
-    
     macroDeviceDefinitionModel = std::make_shared<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel>();
-    
     macroTranslator = std::make_shared<CTAG::MACROPRESETS::MacroTranslator>();
 
     synthDefinitionModel->ReloadSynthDefinitions();
@@ -581,8 +585,9 @@ void SoundProcessorManager::StartSoundProcessor() {
     // create audio thread
     runAudioTask = 1;
     ESP_LOGI("SPManager", "Init: Max stack %d", uxTaskGetStackHighWaterMark(NULL));
-    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 15000, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 1);
+    xTaskCreatePinnedToCore(&SoundProcessorManager::audio_task, "audio_task", 20000, nullptr, configMAX_PRIORITIES - 1, &audioTaskH, 1);
     xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 0);
+    ESP_LOGI("SPManager", "Init: task id %ld", audioTaskH);
 
     // Do not load last processor at start up
     SetSoundProcessorChannel(0, "Void");
@@ -607,19 +612,19 @@ void SoundProcessorManager::SetChannelParamValue(const int chan, const string &i
 void SoundProcessorManager::ChannelSavePreset(const int chan, const string &name, const int number) {
     ledBlink = 3;
     if (sp[chan] == nullptr) return;
-    // xSemaphoreTake(processMutex, portMAX_DELAY);
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     sp[chan]->SavePreset(name, number);
     model->SetActivePatchNum(number, chan);
-    // xSemaphoreGive(processMutex);
+    xSemaphoreGive(processMutex);
 }
 
 void SoundProcessorManager::ChannelLoadPreset(const int chan, const int number) {
     ledBlink = 3;
     if (sp[chan] == nullptr) return;
-    // xSemaphoreTake(processMutex, portMAX_DELAY);
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     sp[chan]->LoadPreset(number);
     model->SetActivePatchNum(number, chan);
-    // xSemaphoreGive(processMutex);
+    xSemaphoreGive(processMutex);
 }
 
 string SoundProcessorManager::GetStringID(const int chan) {
@@ -629,10 +634,10 @@ string SoundProcessorManager::GetStringID(const int chan) {
 
 void SoundProcessorManager::SetConfigurationFromJSON(const string &data) {
     ledBlink = 3;
-    // xSemaphoreTake(processMutex, portMAX_DELAY);
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     model->SetConfigurationFromJSON(data);
     updateConfiguration();
-    // xSemaphoreGive(processMutex);
+    xSemaphoreGive(processMutex);
 }
 
 void SoundProcessorManager::updateConfiguration() {
@@ -741,7 +746,9 @@ void SoundProcessorManager::RefreshSampleRom() {
 
 void SoundProcessorManager::SetTrackMachine(const int trackIndex, const string &synthID) {
     if (sp[0] != nullptr) {
+        // xSemaphoreTake(processMutex, portMAX_DELAY);
         sp[0]->setTrackMachine(trackIndex, synthID);
+        // xSemaphoreGive(processMutex);
     }
 }
 
@@ -752,15 +759,79 @@ void SoundProcessorManager::SetTrackMacro(const int trackIndex, const string &ma
 
     MacroDeviceDefinition *def = macroDeviceDefinitionModel
         ->GetMacroDeviceDefinition(macroDefinitionID);
+
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     macroTranslator->SetTrackMacroDefinition(trackIndex, def);
+    xSemaphoreGive(processMutex);
 }
 
-void SoundProcessorManager::SetTrackParametersFromJSON(const int trackIndex, const string &parametersJSON) {
-    // translator->
+// bool SoundProcessorManager::UpdateSoundPresetJSON(const std::string &jsonstring) {
+//     xSemaphoreTake(processMutex, portMAX_DELAY);
+//     bool ok = macroSoundDefinitionModel->UpdatePreset(jsonstring);
+//     // macroSoundDefinitionModel->ReloadSoundPresets();
+//     xSemaphoreGive(processMutex);
+//     return ok; 
+// }
+
+// bool SoundProcessorManager::UpdateMacroDefinitionJSON(const std::string &jsonstring) {
+//     xSemaphoreTake(processMutex, portMAX_DELAY);
+//     bool ok = macroDeviceDefinitionModel->UpdateDefinition(jsonstring);
+//     // macroDeviceDefinitionModel->ReloadMachineDefinitions();
+//     xSemaphoreGive(processMutex);
+//     return ok; 
+// }
+
+// bool SoundProcessorManager::DeleteSoundPreset(const std::string &id) {
+//     xSemaphoreTake(processMutex, portMAX_DELAY);
+//     macroSoundDefinitionModel->DeleteItem(id);
+//     // macroSoundDefinitionModel->ReloadSoundPresets();
+//     xSemaphoreGive(processMutex);
+//     return true;
+// }
+
+// bool SoundProcessorManager::DeleteMacroDefinition(const std::string &id) {
+//     xSemaphoreTake(processMutex, portMAX_DELAY);
+//     macroDeviceDefinitionModel->DeleteItem(id);
+//     // macroDeviceDefinitionModel->ReloadMachineDefinitions();
+//     xSemaphoreGive(processMutex);
+//     return true;
+// }
+
+// bool SoundProcessorManager::GetSoundPresetJSON(const std::string &id, std::string *jsonoutput) {
+//     xSemaphoreTake(processMutex, portMAX_DELAY);
+//     macroSoundDefinitionModel->SerializeItemJSON(id, jsonoutput);
+//     xSemaphoreGive(processMutex);
+//     return true; 
+// }
+
+// bool SoundProcessorManager::GetMacroDefinitionJSON(const std::string &id, std::string *jsonoutput) {
+//     xSemaphoreTake(processMutex, portMAX_DELAY);
+//     macroDeviceDefinitionModel->SerializeItemJSON(id, jsonoutput);
+//     xSemaphoreGive(processMutex);
+//     return true; 
+// }
+
+void SoundProcessorManager::SetTrackParametersFromJSON(const string &parametersJSON) {
     if (macroTranslator == nullptr) {
         return;
     }
 
-    macroTranslator->SetTrackParametersFromJSON(trackIndex, parametersJSON);
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    macroTranslator->SetTrackParametersFromJSON(parametersJSON);
+    xSemaphoreGive(processMutex);
 }
 
+// bool SoundProcessorManager::UpdateSynthDefinitionJSON(const string &jsonstring) {
+//     xSemaphoreTake(processMutex, portMAX_DELAY);
+//     bool ok = synthDefinitionModel->UpdateDefinitionJSON(jsonstring);
+//     // synthDefinitionModel->ReloadSynthDefinitions();
+//     xSemaphoreGive(processMutex);
+//     return ok;
+// }
+
+void SoundProcessorManager::RefreshMacros() {
+    synthDefinitionModel->ReloadSynthDefinitions();
+    macroDeviceDefinitionModel->ReloadMachineDefinitions();
+    macroSoundDefinitionModel->ReloadSoundPresets();
+    // macroTranslator
+}

@@ -33,31 +33,45 @@ SynthDefinition::SynthDefinition() {
 SynthDefinition::~SynthDefinition() {
 }
 
-void SynthDefinition::GetDefinitionJson(std::string *target) {
-    Document d;
-    target->assign("{}");
-}
-
 bool SynthDefinition::DeserializeJSON(const Value &jsonelement) {
     if (!jsonelement.HasMember("id")) return false;
-    if (!jsonelement.HasMember("name")) return false;
-    if (!jsonelement.HasMember("type")) return false;
-
+    if (!jsonelement["id"].IsString()) return false;
     id = jsonelement["id"].GetString();
+
+    if (!jsonelement.HasMember("name")) return false;
+    if (!jsonelement["name"].IsString()) return false;
     name = jsonelement["name"].GetString();
-    type = static_cast<SynthType>(jsonelement["type"].GetInt());
+
+    if (!jsonelement.HasMember("type")) return false;
+    if (!jsonelement["type"].IsString()) return false;
+
+    std::string typestring = jsonelement["name"].GetString();
+    type = SynthType_None;
+    if (typestring == "synth") {
+        type = SynthType_Synth;
+    }
+    if (typestring == "drum") {
+        type = SynthType_Drum;
+    }
+    // type = static_cast<SynthType>(jsonelement["type"].GetInt());
+
+    ESP_LOGI("SynthDefinition", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+
 
     parameters.clear();
     if (jsonelement.HasMember("parameters") && jsonelement["parameters"].IsArray()) {
         for (auto &v : jsonelement["parameters"].GetArray()) {
-            SynthParameter *p = new SynthParameter();
-
             if (!v.HasMember("id")) return false;
             if (!v.HasMember("name")) return false;
             if (!v.HasMember("type")) return false;
-            if (!v.HasMember("default")) return false;
-            if (!v.HasMember("cc")) return false;
+            if (!v.HasMember("def")) return false;
+            if (!v.HasMember("ctrl")) return false;
 
+            SynthParameter *p = new SynthParameter();
             p->id = v["id"].GetString();
             p->name = v["name"].GetString();
             if (v["type"].GetString() == std::string("cc")) {
@@ -67,8 +81,8 @@ bool SynthDefinition::DeserializeJSON(const Value &jsonelement) {
             } else {
                 p->type = SynthParameterType_None;
             }
-            p->defaultValue = v["default"].GetUint();
-            p->cc = v["cc"].GetUint();
+            p->defaultValue = v["def"].GetUint();
+            p->cc = v["ctrl"].GetUint();
 
             parameters.push_back(p);
         }

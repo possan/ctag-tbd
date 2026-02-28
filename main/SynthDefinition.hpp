@@ -43,7 +43,6 @@ namespace CTAG {
                 ~SynthDefinition();
                 bool DeserializeJSON(const rapidjson::Value &jsonelement);
                 // bool SerializeJSONInto(const rapidjson::Value &jsonelement, rapidjson::Document::AllocatorType &allocator);
-                void GetDefinitionJson(std::string *target);
         };
     }
 }

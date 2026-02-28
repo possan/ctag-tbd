@@ -7,11 +7,11 @@ using namespace CTAG::SP;
 void RackDSD::Init(const PickSeqRackInitData *initdata) {
     dsd.Init();
 
-	initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay", 9, [&](const int val){ decay = val;});
-    initdata->rack->registerParamAndCC(initdata, "fm_amt", 10, [&](const int val){ fm_amt = val;});
-    initdata->rack->registerParamAndCC(initdata, "spy", 11, [&](const int val){ spy = val;});
-	initdata->rack->registerParamAndCC(initdata, "accent", 12, [&](const int val){ accent = val;});
+	initdata->rack->registerMacroParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "decay", 9, [&](const int val){ decay = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "fm_amt", 10, [&](const int val){ fm_amt = val;});
+    initdata->rack->registerMacroParamAndCC(initdata, "spy", 11, [&](const int val){ spy = val;});
+	initdata->rack->registerMacroParamAndCC(initdata, "accent", 12, [&](const int val){ accent = val;});
     
     this->enabled = false;
 }

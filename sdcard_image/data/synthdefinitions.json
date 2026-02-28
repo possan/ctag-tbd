@@ -23,7 +23,7 @@
       "basecc": 20,
       "machines": [
         "nodrum",
-        "fmk",
+        "fmb",
         "extdrum"
       ]
     },
@@ -111,12 +111,12 @@
       "index": 8,
       "type": "synth",
       "name": "Bass",
-      "midichannel": 1,
+      "midichannel": 0,
       "drumnote": 0,
       "basecc": 0,
       "machines": [
         "nosynth",
-        "tb",
+        "td3",
         "extsynth"
       ]
     },
@@ -124,12 +124,12 @@
       "index": 9,
       "type": "synth",
       "name": "Bass2",
-      "midichannel": 2,
+      "midichannel": 1,
       "drumnote": 0,
       "basecc": 0,
       "machines": [
         "nosynth",
-        "tb",
+        "td3",
         "extsynth"
       ]
     },
@@ -137,7 +137,7 @@
       "index": 10,
       "type": "synth",
       "name": "Lead",
-      "midichannel": 3,
+      "midichannel": 2,
       "drumnote": 0,
       "basecc": 0,
       "machines": [
@@ -150,7 +150,7 @@
       "index": 11,
       "type": "synth",
       "name": "Lead2",
-      "midichannel": 4,
+      "midichannel": 3,
       "drumnote": 0,
       "basecc": 0,
       "machines": [
@@ -164,7 +164,7 @@
       "index": 12,
       "type": "synth",
       "name": "Rompler",
-      "midichannel": 5,
+      "midichannel": 4,
       "drumnote": 0,
       "basecc": 0,
       "machines": [
@@ -177,7 +177,7 @@
       "index": 13,
       "type": "synth",
       "name": "Rompler",
-      "midichannel": 6,
+      "midichannel": 5,
       "drumnote": 0,
       "basecc": 0,
       "machines": [
@@ -190,7 +190,7 @@
       "index": 14,
       "type": "synth",
       "name": "Chordo",
-      "midichannel": 7,
+      "midichannel": 6,
       "drumnote": 0,
       "basecc": 0,
       "machines": [
@@ -203,12 +203,48 @@
       "index": 15,
       "type": "synth",
       "name": "Input",
-      "midichannel": 8,
+      "midichannel": 7,
       "drumnote": 0,
       "basecc": 0,
       "machines": [
         "nosynth",
         "inp"
+      ]
+    },
+    {
+      "index": 16,
+      "type": "fx",
+      "name": "FX1",
+      "midichannel": 10,
+      "drumnote": 0,
+      "basecc": 0,
+      "machines": [
+        "nofx",
+        "delayfx"
+      ]
+    },
+    {
+      "index": 17,
+      "type": "fx",
+      "name": "FX2",
+      "midichannel": 10,
+      "drumnote": 0,
+      "basecc": 20,
+      "machines": [
+        "nofx",
+        "reverbfx"
+      ]
+    },
+    {
+      "index": 18,
+      "type": "fx",
+      "name": "Master",
+      "midichannel": 10,
+      "drumnote": 0,
+      "basecc": 40,
+      "machines": [
+        "nofx",
+        "masterfx"
       ]
     }
   ],
@@ -226,6 +262,201 @@
       "parameters": []
     },
     {
+      "id": "nofx",
+      "name": "Empty fx (bypass)",
+      "type": "fx",
+      "parameters": []
+    },
+    {
+      "id": "fxdelay",
+      "name": "Delay FX",
+      "type": "fx",
+      "parameters": [
+        {
+          "id": "time",
+          "name": "Time",
+          "type": "cc",
+          "ctrl": 8,
+          "def": 16
+        },
+        {
+          "id": "sync",
+          "name": "Sync",
+          "type": "cc",
+          "ctrl": 9,
+          "def": 0
+        },
+        {
+          "id": "freeze",
+          "name": "Freeze",
+          "type": "cc",
+          "ctrl": 10,
+          "def": 0
+        },
+        {
+          "id": "tapedig",
+          "name": "Tapedig",
+          "type": "cc",
+          "ctrl": 11,
+          "def": 0
+        },
+        {
+          "id": "stwid",
+          "name": "Stereo width",
+          "type": "cc",
+          "ctrl": 12,
+          "def": 32
+        },
+        {
+          "id": "fx2send",
+          "name": "FX2 Send",
+          "type": "cc",
+          "ctrl": 13,
+          "def": 0
+        },
+        {
+          "id": "feedback",
+          "name": "Feedback",
+          "type": "cc",
+          "ctrl": 14,
+          "def": 32
+        },
+        {
+          "id": "base",
+          "name": "Base",
+          "type": "cc",
+          "ctrl": 15,
+          "def": 0
+        },
+        {
+          "id": "width2",
+          "name": "Width 2",
+          "type": "cc",
+          "ctrl": 16,
+          "def": 32
+        },
+        {
+          "id": "level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 17,
+          "def": 64
+        }
+      ]
+    },
+    {
+      "id": "fxreverb",
+      "name": "Reverb FX",
+      "type": "fx",
+      "parameters": [
+        {
+          "id": "time",
+          "name": "Time",
+          "type": "cc",
+          "ctrl": 8,
+          "def": 64
+        },
+        {
+          "id": "lowpass",
+          "name": "Lowpass",
+          "type": "cc",
+          "ctrl": 9,
+          "def": 96
+        },
+        {
+          "id": "level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 10,
+          "def": 64
+        }
+      ]
+    },
+    {
+      "id": "fxmaster",
+      "name": "Master FX",
+      "type": "fx",
+      "parameters": [
+        {
+          "id": "compthres",
+          "name": "Thresh",
+          "type": "cc",
+          "ctrl": 8,
+          "def": 100
+        },
+        {
+          "id": "compratio",
+          "name": "Ratio",
+          "type": "cc",
+          "ctrl": 9,
+          "def": 32
+        },
+        {
+          "id": "compatk",
+          "name": "Attack",
+          "type": "cc",
+          "ctrl": 10,
+          "def": 0
+        },
+        {
+          "id": "comprel",
+          "name": "Release",
+          "type": "cc",
+          "ctrl": 11,
+          "def": 20
+        },
+        {
+          "id": "complpf",
+          "name": "LPF",
+          "type": "cc",
+          "ctrl": 12,
+          "def": 48
+        },
+        {
+          "id": "compgain",
+          "name": "Gain",
+          "type": "cc",
+          "ctrl": 13,
+          "def": 0
+        },
+        {
+          "id": "compmix",
+          "name": "Mix",
+          "type": "cc",
+          "ctrl": 14,
+          "def": 64
+        },
+        {
+          "id": "compdlylev",
+          "name": "Dly.Lev",
+          "type": "cc",
+          "ctrl": 15,
+          "def": 64
+        },
+        {
+          "id": "comprevlev",
+          "name": "Rev.Lev",
+          "type": "cc",
+          "ctrl": 16,
+          "def": 64
+        },
+        {
+          "id": "summute",
+          "name": "Sum mute",
+          "type": "cc",
+          "ctrl": 17,
+          "def": 0
+        },
+        {
+          "id": "sumlev",
+          "name": "Sum lev",
+          "type": "cc",
+          "ctrl": 18,
+          "def": 64
+        }
+      ]
+    },
+    {
       "id": "db",
       "name": "Synth Kick",
       "type": "drum",
@@ -234,50 +465,50 @@
           "id": "freq",
           "name": "Freq",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 16
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 32
         },
         {
           "id": "tone",
           "name": "Tone",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 64
         },
         {
           "id": "dirt",
           "name": "Dirt",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 0
         },
         {
           "id": "fm-env",
           "name": "Fm Env",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 16
         },
         {
           "id": "fm-decay",
           "name": "Fm Decay",
           "type": "cc",
-          "cc": 13,
-          "default": 0
+          "ctrl": 13,
+          "def": 8
         },
         {
           "id": "fm-accent",
           "name": "Fm Accent",
           "type": "cc",
-          "cc": 14,
-          "default": 0
+          "ctrl": 14,
+          "def": 8
         }
       ]
     },
@@ -290,48 +521,48 @@
           "id": "freq",
           "name": "Freq",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 16
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 64
         },
         {
           "id": "tone",
           "name": "Tone",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 32
         },
         {
           "id": "a-fm",
           "name": "A FM",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 2
         },
         {
           "id": "s-fm",
           "name": "S FM",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 2
         },
         {
           "id": "accent",
           "name": "Accent",
           "type": "cc",
-          "cc": 13,
-          "default": 0
+          "ctrl": 13,
+          "def": 2
         }
       ]
     },
     {
-      "id": "fmk",
+      "id": "fmb",
       "name": "FM Kick",
       "type": "drum",
       "parameters": [
@@ -339,57 +570,57 @@
           "id": "f-b",
           "name": "FM",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 24
         },
         {
           "id": "d-b",
           "name": "DB",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 50
         },
         {
           "id": "f-m",
           "name": "FM",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 7
         },
         {
           "id": "d-m",
           "name": "DM",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 0
         },
         {
           "id": "b-m",
           "name": "BM",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 5
         },
         {
           "id": "a-f",
           "name": "AF",
           "type": "cc",
-          "cc": 13,
-          "default": 0
+          "ctrl": 13,
+          "def": 16
         },
         {
           "id": "d-f",
           "name": "DF",
           "type": "cc",
-          "cc": 14,
-          "default": 0
+          "ctrl": 14,
+          "def": 32
         },
         {
           "id": "i",
           "name": "I",
           "type": "cc",
-          "cc": 15,
-          "default": 0
+          "ctrl": 15,
+          "def": 1
         }
       ]
     },
@@ -402,36 +633,36 @@
           "id": "freq",
           "name": "Freq",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 32
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 16
         },
         {
           "id": "fm",
           "name": "FM",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 16
         },
         {
           "id": "snap",
           "name": "Snap",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 32
         },
         {
           "id": "accent",
           "name": "Accent",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 32
         }
       ]
     },
@@ -444,36 +675,36 @@
           "id": "freq",
           "name": "Freq",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 32
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 16
         },
         {
           "id": "fm",
           "name": "FM",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 16
         },
         {
           "id": "snap",
           "name": "Snap",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 32
         },
         {
           "id": "accent",
           "name": "Accent",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 32
         }
       ]
     },
@@ -486,36 +717,36 @@
           "id": "freq",
           "name": "Freq",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 32
         },
         {
           "id": "tone",
           "name": "Tone",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 16
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 16
         },
         {
           "id": "noise",
           "name": "Noise",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 32
         },
         {
           "id": "accent",
           "name": "Accent",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 32
         }
       ]
     },
@@ -528,36 +759,36 @@
           "id": "freq",
           "name": "Freq",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 32
         },
         {
           "id": "tone",
           "name": "Tone",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 16
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 16
         },
         {
           "id": "noise",
           "name": "Noise",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 32
         },
         {
           "id": "accent",
           "name": "Accent",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 32
         }
       ]
     },
@@ -570,36 +801,36 @@
           "id": "freq",
           "name": "Freq",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 32
         },
         {
           "id": "tone",
           "name": "Tone",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 16
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 16
         },
         {
           "id": "noise",
           "name": "Noise",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 32
         },
         {
           "id": "accent",
           "name": "Accent",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 32
         }
       ]
     },
@@ -612,36 +843,36 @@
           "id": "freq",
           "name": "Freq",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 16
         },
         {
           "id": "tone",
           "name": "Tone",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 10
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 10
         },
         {
           "id": "scale",
           "name": "Scale",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 4
         },
         {
           "id": "trans",
           "name": "Trans",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 4
         }
       ]
     },
@@ -654,132 +885,132 @@
           "id": "bank",
           "name": "Bank",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 0
         },
         {
           "id": "slice",
           "name": "Slice",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 0
         },
         {
           "id": "start",
           "name": "Start",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 0
         },
         {
           "id": "end",
           "name": "End",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 127
         },
         {
           "id": "cutoff",
           "name": "Cutoff",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 127
         },
         {
           "id": "reso",
           "name": "Reso",
           "type": "cc",
-          "cc": 13,
-          "default": 0
+          "ctrl": 13,
+          "def": 0
         },
         {
           "id": "type",
           "name": "Type",
           "type": "cc",
-          "cc": 14,
-          "default": 0
+          "ctrl": 14,
+          "def": 0
         },
         {
           "id": "bitcr",
           "name": "Bit.CR",
           "type": "cc",
-          "cc": 15,
-          "default": 0
+          "ctrl": 15,
+          "def": 0
         },
         {
           "id": "attack",
           "name": "Attack",
           "type": "cc",
-          "cc": 16,
-          "default": 0
+          "ctrl": 16,
+          "def": 0
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 17,
-          "default": 0
+          "ctrl": 17,
+          "def": 64
         },
         {
           "id": "speed",
           "name": "Speed",
           "type": "cc",
-          "cc": 18,
-          "default": 0
+          "ctrl": 18,
+          "def": 16
         },
         {
           "id": "pitch",
           "name": "Pitch",
           "type": "cc",
-          "cc": 19,
-          "default": 0
+          "ctrl": 19,
+          "def": 0
         },
         {
           "id": "loop",
           "name": "Loop",
           "type": "cc",
-          "cc": 20,
-          "default": 0
+          "ctrl": 20,
+          "def": 0
         },
         {
           "id": "pingpong",
           "name": "PingPong",
           "type": "cc",
-          "cc": 21,
-          "default": 0
+          "ctrl": 21,
+          "def": 0
         },
         {
           "id": "ppstart",
           "name": "PPStart",
           "type": "cc",
-          "cc": 22,
-          "default": 0
+          "ctrl": 22,
+          "def": 64
         },
         {
           "id": "eg2fm",
           "name": "EG2FM",
           "type": "cc",
-          "cc": 23,
-          "default": 0
+          "ctrl": 23,
+          "def": 0
         },
         {
           "id": "tsmode",
           "name": "TSMode",
           "type": "cc",
-          "cc": 24,
-          "default": 0
+          "ctrl": 24,
+          "def": 0
         },
         {
           "id": "tsamt",
           "name": "TSAmt",
           "type": "cc",
-          "cc": 25,
-          "default": 0
+          "ctrl": 25,
+          "def": 64
         }
       ]
     },
     {
-      "id": "tb3",
+      "id": "td3",
       "name": "TBD03",
       "type": "synth",
       "parameters": [
@@ -787,113 +1018,113 @@
           "id": "shape",
           "name": "Bank",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 0
         },
         {
           "id": "p0",
           "name": "P0",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 0
         },
         {
           "id": "vca_d",
           "name": "VCA D",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 8
         },
         {
           "id": "vcf_d",
           "name": "VCF D",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 8
         },
         {
           "id": "cutoff",
           "name": "Cutoff",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 64
         },
         {
           "id": "reso",
           "name": "Reso",
           "type": "cc",
-          "cc": 13,
-          "default": 0
+          "ctrl": 13,
+          "def": 0
         },
         {
           "id": "envdec",
           "name": "EnvDec",
           "type": "cc",
-          "cc": 15,
-          "default": 0
+          "ctrl": 15,
+          "def": 16
         },
         {
           "id": "type",
           "name": "Type",
           "type": "cc",
-          "cc": 14,
-          "default": 0
+          "ctrl": 14,
+          "def": 0
         },
         {
           "id": "satur",
           "name": "Satur",
           "type": "cc",
-          "cc": 16,
-          "default": 0
+          "ctrl": 16,
+          "def": 0
         },
         {
           "id": "drive",
           "name": "Drive",
           "type": "cc",
-          "cc": 17,
-          "default": 0
+          "ctrl": 17,
+          "def": 0
         },
         {
           "id": "slide",
           "name": "Slide",
           "type": "cc",
-          "cc": 18,
-          "default": 0
+          "ctrl": 18,
+          "def": 0
         },
         {
           "id": "accent",
           "name": "Accent",
           "type": "cc",
-          "cc": 19,
-          "default": 0
+          "ctrl": 19,
+          "def": 0
         },
         {
           "id": "p1",
           "name": "P1",
           "type": "cc",
-          "cc": 20,
-          "default": 0
+          "ctrl": 20,
+          "def": 0
         },
         {
           "id": "p0amt",
           "name": "P0 Amt",
           "type": "cc",
-          "cc": 21,
-          "default": 0
+          "ctrl": 21,
+          "def": 0
         },
         {
           "id": "p1amt",
           "name": "P1 Amt",
           "type": "cc",
-          "cc": 22,
-          "default": 0
+          "ctrl": 22,
+          "def": 0
         },
         {
           "id": "acclev",
           "name": "Acc. Lev",
           "type": "cc",
-          "cc": 23,
-          "default": 0
+          "ctrl": 23,
+          "def": 0
         }
       ]
     },
@@ -906,92 +1137,92 @@
           "id": "shape",
           "name": "Bank",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 0
         },
         {
           "id": "p0",
           "name": "P0",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 0
         },
         {
           "id": "p1",
           "name": "P1",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 0
         },
         {
           "id": "waveshap",
           "name": "Waveshape",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 0
         },
         {
           "id": "p0a",
           "name": "P0 A",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 0
         },
         {
           "id": "p1a",
           "name": "P1 A",
           "type": "cc",
-          "cc": 13,
-          "default": 0
+          "ctrl": 13,
+          "def": 0
         },
         {
           "id": "fma",
           "name": "FM A",
           "type": "cc",
-          "cc": 14,
-          "default": 0
+          "ctrl": 14,
+          "def": 0
         },
         {
           "id": "qscale",
           "name": "Q Scale",
           "type": "cc",
-          "cc": 15,
-          "default": 0
+          "ctrl": 15,
+          "def": 32
         },
         {
           "id": "attack",
           "name": "Attack",
           "type": "cc",
-          "cc": 16,
-          "default": 0
+          "ctrl": 16,
+          "def": 0
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 17,
-          "default": 0
+          "ctrl": 17,
+          "def": 32
         },
         {
           "id": "loopenv",
           "name": "Loop Env",
           "type": "cc",
-          "cc": 18,
-          "default": 0
+          "ctrl": 18,
+          "def": 0
         },
         {
           "id": "decim",
           "name": "Decim",
           "type": "cc",
-          "cc": 19,
-          "default": 0
+          "ctrl": 19,
+          "def": 0
         },
         {
           "id": "bitred",
           "name": "Bit Red",
           "type": "cc",
-          "cc": 20,
-          "default": 0
+          "ctrl": 20,
+          "def": 0
         }
       ]
     },
@@ -1004,141 +1235,141 @@
           "id": "wavebank",
           "name": "Bank",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 0
         },
         {
           "id": "wave",
           "name": "Wave",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 0
         },
         {
           "id": "tune",
           "name": "Tune",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 0
         },
         {
           "id": "type",
           "name": "Type",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 0
         },
         {
           "id": "cutoff",
           "name": "Cutoff",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 127
         },
         {
           "id": "reso",
           "name": "Reso",
           "type": "cc",
-          "cc": 13,
-          "default": 0
+          "ctrl": 13,
+          "def": 0
         },
         {
           "id": "qscale",
           "name": "Q Scale",
           "type": "cc",
-          "cc": 14,
-          "default": 0
+          "ctrl": 14,
+          "def": 0
         },
         {
           "id": "attack",
           "name": "Attack",
           "type": "cc",
-          "cc": 15,
-          "default": 0
+          "ctrl": 15,
+          "def": 0
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 16,
-          "default": 0
+          "ctrl": 16,
+          "def": 64
         },
         {
           "id": "sustain",
           "name": "Sustain",
           "type": "cc",
-          "cc": 17,
-          "default": 0
+          "ctrl": 17,
+          "def": 0
         },
         {
           "id": "release",
           "name": "Release",
           "type": "cc",
-          "cc": 18,
-          "default": 0
+          "ctrl": 18,
+          "def": 16
         },
         {
           "id": "e2wave",
           "name": "E2 Wave",
           "type": "cc",
-          "cc": 19,
-          "default": 0
+          "ctrl": 19,
+          "def": 0
         },
         {
           "id": "e2fm",
           "name": "E2 FM",
           "type": "cc",
-          "cc": 20,
-          "default": 0
+          "ctrl": 20,
+          "def": 0
         },
         {
           "id": "e2filt",
           "name": "E2 Filt",
           "type": "cc",
-          "cc": 21,
-          "default": 0
+          "ctrl": 21,
+          "def": 0
         },
         {
           "id": "speed",
           "name": "Speed",
           "type": "cc",
-          "cc": 22,
-          "default": 0
+          "ctrl": 22,
+          "def": 10
         },
         {
           "id": "sync",
           "name": "Sync",
           "type": "cc",
-          "cc": 23,
-          "default": 0
+          "ctrl": 23,
+          "def": 0
         },
         {
           "id": "l2wave",
           "name": "L2 Wave",
           "type": "cc",
-          "cc": 25,
-          "default": 0
+          "ctrl": 25,
+          "def": 0
         },
         {
           "id": "l2am",
           "name": "L2 AM",
           "type": "cc",
-          "cc": 26,
-          "default": 0
+          "ctrl": 26,
+          "def": 0
         },
         {
           "id": "l2fm",
           "name": "L2 FM",
           "type": "cc",
-          "cc": 27,
-          "default": 0
+          "ctrl": 27,
+          "def": 0
         },
         {
           "id": "l2filt",
           "name": "L2 Filt",
           "type": "cc",
-          "cc": 28,
-          "default": 0
+          "ctrl": 28,
+          "def": 0
         }
       ]
     },
@@ -1151,127 +1382,127 @@
           "id": "chord",
           "name": "Chord",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 0
         },
         {
           "id": "inver",
           "name": "Inversion",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 0
         },
         {
           "id": "detune",
           "name": "Detune",
           "type": "cc",
-          "cc": 10,
-          "default": 0
+          "ctrl": 10,
+          "def": 8
         },
         {
           "id": "cutoff",
           "name": "Cutoff",
           "type": "cc",
-          "cc": 11,
-          "default": 0
+          "ctrl": 11,
+          "def": 80
         },
         {
           "id": "reso",
           "name": "Reso",
           "type": "cc",
-          "cc": 12,
-          "default": 0
+          "ctrl": 12,
+          "def": 0
         },
         {
           "id": "type",
           "name": "Type",
           "type": "cc",
-          "cc": 13,
-          "default": 0
+          "ctrl": 13,
+          "def": 32
         },
         {
           "id": "qscale",
           "name": "Q Scale",
           "type": "cc",
-          "cc": 14,
-          "default": 0
+          "ctrl": 14,
+          "def": 0
         },
         {
           "id": "attack",
           "name": "Attack",
           "type": "cc",
-          "cc": 15,
-          "default": 0
+          "ctrl": 15,
+          "def": 0
         },
         {
           "id": "decay",
           "name": "Decay",
           "type": "cc",
-          "cc": 16,
-          "default": 0
+          "ctrl": 16,
+          "def": 8
         },
         {
           "id": "sustain",
           "name": "Sustain",
           "type": "cc",
-          "cc": 17,
-          "default": 0
+          "ctrl": 17,
+          "def": 8
         },
         {
           "id": "release",
           "name": "Release",
           "type": "cc",
-          "cc": 18,
-          "default": 0
+          "ctrl": 18,
+          "def": 16
         },
         {
           "id": "l1spd",
           "name": "L1 Speed",
           "type": "cc",
-          "cc": 19,
-          "default": 0
+          "ctrl": 19,
+          "def": 0
         },
         {
           "id": "l1amt",
           "name": "L1 Amount",
           "type": "cc",
-          "cc": 20,
-          "default": 0
+          "ctrl": 20,
+          "def": 0
         },
         {
           "id": "l2spd",
           "name": "L2 Speed",
           "type": "cc",
-          "cc": 21,
-          "default": 0
+          "ctrl": 21,
+          "def": 0
         },
         {
           "id": "l2amt",
           "name": "L2 Amount",
           "type": "cc",
-          "cc": 22,
-          "default": 0
+          "ctrl": 22,
+          "def": 0
         },
         {
           "id": "efltamt",
           "name": "E Filter Amount",
           "type": "cc",
-          "cc": 23,
-          "default": 0
+          "ctrl": 23,
+          "def": 0
         },
         {
           "id": "l2rand",
           "name": "L2 Random",
           "type": "cc",
-          "cc": 24,
-          "default": 0
+          "ctrl": 24,
+          "def": 127
         },
         {
           "id": "nnotes",
           "name": "Number of Notes",
           "type": "cc",
-          "cc": 25,
-          "default": 0
+          "ctrl": 25,
+          "def": 32
         }
       ]
     },
@@ -1284,8 +1515,8 @@
           "id": "chan",
           "name": "MIDI Channel",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 0
         }
       ]
     },
@@ -1298,15 +1529,15 @@
           "id": "chan",
           "name": "MIDI Channel",
           "type": "cc",
-          "cc": 8,
-          "default": 0
+          "ctrl": 8,
+          "def": 0
         },
         {
           "id": "note",
           "name": "MIDI Note",
           "type": "cc",
-          "cc": 9,
-          "default": 0
+          "ctrl": 9,
+          "def": 36
         }
       ]
     },

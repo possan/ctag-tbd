@@ -1,9 +1,8 @@
 let ROOT = ''
-ROOT = 'http://192.168.4.1/api/v1/picoseq'
+ROOT = 'http://192.168.4.1/api/v1'
 // ROOT = '/api/v1/picoseq'
 
 // let synthdefinitionids = [];
-// let synthdefinitions = {};
 // let trackdefinitions = [];
 // let macrodefinitionids = [];
 // let macrodefinitions = [];
@@ -18,9 +17,11 @@ let activesoundpresets = [];
 let parameters = [];
 
 let cache = {
-    synthdefinitionids: [],
-    synthdefinitions: {},
-    trackdefinitions: [],
+    synthdefinition: {},
+    configfilelist: [],
+    // synthdefinitions: {},
+    // synthdefinitionids: [],
+    // trackdefinitions: [],
     macrodefinitionids: [],
     macrodefinitions: [],
     soundpresetids: {},
@@ -62,12 +63,8 @@ async function loadCache() {
         cache = {};
     }
 
-    if (!cache.synthdefinitionids) {
-       cache.synthdefinitionids = [];
-    }
-
-    if (!cache.synthdefinitions) {
-        cache.synthdefinitions = {};
+    if (!cache.configfilelist) {
+        cache.configfilelist = [];
     }
 
     if (!cache.macrodefinitionids) {
@@ -86,9 +83,9 @@ async function loadCache() {
         cache.soundpresets = {};
     }
 
-    if (!cache.trackdefinitions) {
-        cache.trackdefinitions = [];
-    }
+    cache.synthdefinitionids = undefined;
+    cache.synthdefinitions = undefined
+    cache.synthdefinition.tracks = undefined;
 }
 
 async function saveCache() {
@@ -101,37 +98,36 @@ async function saveCache() {
 // API calls to TBD rest endpoints
 //
 
+async function fetchSynthDefinitionConfig() {
+    if (ROOT === '') {
+        return JSON.parse(`{"machines":["md-analogkick-2","db-1234","db","ab","extdrum","ro"]}`)
+    }
+
+    try {
+      const response = await fetch(`${ROOT}/samples?getconfig=synthdefinitions.json`);
+        const data = await response.json();
+        await delay(100);
+        return data;
+    } catch(e) {
+        console.warn('err', e);
+        return undefined;
+    }
+}
+
 async function fetchSynthDefinitionList() {
     if (ROOT === '') {
         return JSON.parse(`{"machines":["md-analogkick-2","db-1234","db","ab","extdrum","ro"]}`)
     }
 
-    const response = await fetch(`${ROOT}/synthdefinitionlist`);
-    const data = await response.json();
-    await delay(100);
-    return data;
-}
-
-async function fetchMacroSoundPresetList() {
-    if (ROOT === '') {
-        return JSON.parse(`{"presets":["dummypreset-123","dummy123","dummy1234"]}`)
+    try {
+      const response = await fetch(`${ROOT}/synthdefinitionlist`);
+        const data = await response.json();
+        await delay(100);
+        return data;
+    } catch(e) {
+        console.warn('err', e);
+        return undefined;
     }
-
-    const response = await fetch(`${ROOT}/soundpresets`);
-    const data = await response.json();
-    await delay(100);
-    return data;
-}
-
-async function fetchMacroDefinitionList() {
-    if (ROOT === '') {
-        return JSON.parse(`{"machines":["md-analogkick-2"]}`)
-    }
-
-    const response = await fetch(`${ROOT}/macrodefinitions`);
-    const data = await response.json();
-    await delay(100);
-    return data;
 }
 
 async function fetchMacroSoundPreset(id) {
@@ -152,10 +148,15 @@ async function fetchMacroSoundPreset(id) {
 }`)
     }
 
-    const response = await fetch(`${ROOT}/soundpreset/${id}`);
-    const data = await response.json();
-    await delay(100);
-    return data;
+    try {
+        const response = await fetch(`${ROOT}/samples?getconfig=macrosoundpresets/${id}.json`);
+        const data = await response.json();
+        await delay(100);
+        return data;
+    } catch(e) {
+        console.warn('err', e);
+        return undefined;
+    }
 }
 
 async function fetchMacroDefinition(id) {
@@ -285,10 +286,15 @@ async function fetchMacroDefinition(id) {
 }`)
     }
 
-    const response = await fetch(`${ROOT}/macrodefinition/${id}`);
-    const data = await response.json();
-    await delay(100);
-    return data;
+    try {
+        const response = await fetch(`${ROOT}/samples?getconfig=macrodefinitions/${id}.json`);
+        const data = await response.json();
+        await delay(100);
+        return data;
+    } catch(e) {
+        console.warn('err', e);
+        return undefined;
+    }
 }
 
 async function fetchTrackState() {
@@ -363,222 +369,141 @@ async function fetchTrackState() {
 }`)
     }
 
-    const response = await fetch(`${ROOT}/trackstatus`);
-    const data = await response.json();
-    await delay(100);
-    return data;
+    try {
+        const response = await fetch(`${ROOT}/macroapi`);
+        const data = await response.json();
+        await delay(100);
+        return data;
+    } catch(e) {
+        return { tracks: [] };
+    }
 }
 
-async function fetchSynthDefinition(id) {
+async function fetchSamplesOutput() {
     if (ROOT === '') {
-        return JSON.parse(`{
-    "id": "ro",
-    "name": "Rompler",
-    "parameters": [
-        {
-            "id": "bank",
-            "name": "Bank",
-            "type": "None",
-            "cc": 8,
-            "default": 0
-        },
-        {
-            "id": "slice",
-            "name": "Slice",
-            "type": "None",
-            "cc": 9,
-            "default": 0
-        },
-        {
-            "id": "start",
-            "name": "Start",
-            "type": "None",
-            "cc": 10,
-            "default": 0
-        },
-        {
-            "id": "end",
-            "name": "End",
-            "type": "None",
-            "cc": 11,
-            "default": 0
-        },
-        {
-            "id": "cutoff",
-            "name": "Cutoff",
-            "type": "None",
-            "cc": 12,
-            "default": 0
-        },
-        {
-            "id": "reso",
-            "name": "Reso",
-            "type": "None",
-            "cc": 13,
-            "default": 0
-        },
-        {
-            "id": "type",
-            "name": "Type",
-            "type": "None",
-            "cc": 14,
-            "default": 0
-        },
-        {
-            "id": "bitcr",
-            "name": "Bit.CR",
-            "type": "None",
-            "cc": 15,
-            "default": 0
-        },
-        {
-            "id": "attack",
-            "name": "Attack",
-            "type": "None",
-            "cc": 16,
-            "default": 0
-        },
-        {
-            "id": "decay",
-            "name": "Decay",
-            "type": "None",
-            "cc": 17,
-            "default": 0
-        },
-        {
-            "id": "speed",
-            "name": "Speed",
-            "type": "None",
-            "cc": 18,
-            "default": 0
-        },
-        {
-            "id": "pitch",
-            "name": "Pitch",
-            "type": "None",
-            "cc": 19,
-            "default": 0
-        },
-        {
-            "id": "loop",
-            "name": "Loop",
-            "type": "None",
-            "cc": 20,
-            "default": 0
-        },
-        {
-            "id": "pingpong",
-            "name": "PingPong",
-            "type": "None",
-            "cc": 21,
-            "default": 0
-        },
-        {
-            "id": "ppstart",
-            "name": "PPStart",
-            "type": "None",
-            "cc": 22,
-            "default": 0
-        },
-        {
-            "id": "eg2fm",
-            "name": "EG2FM",
-            "type": "None",
-            "cc": 23,
-            "default": 0
-        },
-        {
-            "id": "tsmode",
-            "name": "TSMode",
-            "type": "None",
-            "cc": 24,
-            "default": 0
-        },
-        {
-            "id": "tsamt",
-            "name": "TSAmt",
-            "type": "None",
-            "cc": 25,
-            "default": 0
-        }
-    ]
-}`)
+        return JSON.parse(`{"configfiles":[]}`)
     }
 
-    const response = await fetch(`${ROOT}/synthdefinition/${id}`);
-    const data = await response.json();
-    await delay(100);
-    return data;
-}
-
-async function fetchTrackDefinition(id) {
-    if (ROOT === '') {
-        return JSON.parse(`{"tracks":[],"index":0,"name":"Kick","machines":["nodrum","db","ab","extdrum"]}`)
+    try {
+        const response = await fetch(`${ROOT}/samples`);
+        const data = await response.json();
+        await delay(100);
+        return data;
+    } catch(e) {
+        console.warn('err', e);
+        return undefined;
     }
-    const response = await fetch(`${ROOT}/trackdefinition/${id}`);
-    const data = await response.json();
-    await delay(100);
-    return data;
 }
 
 async function putMacroDefinition(id, jsonstring) {
-    const response = await fetch(`${ROOT}/macrodefinition/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: jsonstring
-    });
-    await delay(100);
-    return response.ok
+    try {
+        const response = await fetch(`${ROOT}/macrodefinition/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: jsonstring
+        });
+        await delay(100);
+        return response.ok
+    } catch(e) {
+        console.warn('err', e);
+        return false;
+    }
 }
 
 async function putSoundPreset(id, jsonstring) {
-    const response = await fetch(`${ROOT}/soundpreset/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: jsonstring
-    });
-    await delay(100);
-    return response.ok;
+    try {
+        const response = await fetch(`${ROOT}/soundpreset/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: jsonstring
+        });
+        await delay(100);
+        return response.ok;
+    } catch(e) {
+        console.warn('err', e);
+        return false;
+    }
+}
+
+async function putSynthDefinition(jsonstring) {
+    try {
+        const response = await fetch(`${ROOT}/samples?action=uploadconfig&path=synthdefinitions.json`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: jsonstring
+        });
+        await delay(100);
+        return response.ok;
+    } catch(e) {
+        console.warn('err', e);
+        return false;
+    }
 }
 
 async function putActiveMachineForTrack(trackindex, machineid) {
-    const response = await fetch(`${ROOT}/tracks/${trackindex}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ machine: machineid })
-    });
-    await delay(100);
-    return response.ok
+    try {
+        const response = await fetch(`${ROOT}/macroapi?action=update_track`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ track: trackindex, machine: machineid })
+        });
+        await delay(100);
+        return response.ok
+    } catch(e) {
+        console.warn('err', e);
+        return false;
+    }
 }
 
 async function putActiveMacroDefinitionForTrack(trackindex, macroid) {
-    const response = await fetch(`${ROOT}/tracks/${trackindex}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ macro: macroid })
-    });
-    await delay(100);
-    return response.ok
+    try {
+        const response = await fetch(`${ROOT}/macroapi?action=update_track`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ track: trackindex, macro: macroid })
+        });
+        await delay(100);
+        return response.ok
+    } catch(e) {
+        console.warn('err', e);
+        return false;
+    }
 }
 
 async function putParametersForTrack(trackindex, parameters) {
-    const response = await fetch(`${ROOT}/tracks/${trackindex}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ parameters: parameters })
+    try {
+        const response = await fetch(`${ROOT}/macroapi?action=update_track`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                track: trackindex,
+                parameters: parameters
+            })
+        });
+        await delay(100);
+        return response.ok
+    } catch(e) {
+        console.warn('err', e);
+        return false;
+    }
+}
+
+function reloadOnDevice() {
+    return fetch(`${ROOT}/macroapi?action=reload`, {
+        method: 'POST'
     });
-    await delay(100);
-    return response.ok
 }
 
 //
@@ -589,15 +514,15 @@ function recreateSynthMachineList() {
     const root = document.getElementById('machines');
     root.innerHTML = ''
 
-    for(const id of cache.synthdefinitionids) {
-        const mach = cache.synthdefinitions[id];
+    for(const mach of cache.synthdefinition.machines) {
+        // const mach = cache.synthdefinitions[id];
 
         const li = document.createElement('li');
         const title = document.createElement('b');
         if (mach) {
             title.textContent = `#${mach.id} ${mach.name}`;
-        } else {
-            title.textContent = `#${id}...`;
+        // } else {
+        //     title.textContent = `#${id}...`;
         }
         li.appendChild(title);
         const label = document.createElement('span');
@@ -614,7 +539,7 @@ function recreateTrackList() {
     root.innerHTML = ''
 
     for(let t=0; t<16; t++) {
-        let track = cache.trackdefinitions[t];
+        let track = cache.synthdefinition.tracks[t];
         let st = activetrackmachines[t];
 
         const li = document.createElement('li');
@@ -649,7 +574,7 @@ function recreateTrackList() {
 }
 
 function recreateActiveTrackTitle() {
-    const trackmeta = cache.trackdefinitions[activetrack];
+    const trackmeta = cache.synthdefinition.tracks[activetrack];
     document.getElementById('tracktitle').textContent = `Track ${activetrack + 1}: ${trackmeta ? trackmeta.name : '?'}`;
 }
 
@@ -659,11 +584,11 @@ function recreateActiveTrackMachineList() {
 
     sel.options.add(new Option('-- Select --', ''));
 
-    const trackinfo = cache.trackdefinitions[activetrack];
+    const trackinfo = cache.synthdefinition.tracks[activetrack];
     console.log('Recreating machine list for track', activetrack, trackinfo)
     if (trackinfo && trackinfo.machines) {
         for(const machid of trackinfo.machines) {
-            const mach = cache.synthdefinitions[machid];
+            const mach = cache.synthdefinition.machines.find(m => m.id === machid);
             // console.log('Adding machine option', machid, mach)
             if (mach) {
                 const name = mach ? mach.name : machid;
@@ -674,6 +599,14 @@ function recreateActiveTrackMachineList() {
 
     const currentmachine = activetrackmachines[activetrack] || '';
     setSelectValue(sel, currentmachine)
+
+    // const jsonel = document.getElementById('activetrackmachinejson')
+    // const mach = cache.synthdefinition.machines.find(m => m.id === currentmachine)
+    // if (mach) {
+    //     jsonel.textContent = JSON.stringify(mach, null, 2);
+    // } else {
+    //     jsonel.textContent = '';
+    // }
 }
 
 function recreateActiveTrackMacroDefinitionList() {
@@ -683,18 +616,36 @@ function recreateActiveTrackMacroDefinitionList() {
     sel.options.add(new Option('-- Select --', ''));
 
     const currentmachine = activetrackmachines[activetrack] || '';
-    const trackinfo = cache.trackdefinitions[activetrack];
+    const trackinfo = cache.synthdefinition.tracks[activetrack];
     console.log('Recreating macro definition list for track', activetrack, currentmachine, trackinfo)
     for(const machid of cache.macrodefinitionids) {
         const mach = cache.macrodefinitions[machid];
         if (mach) {
-            // TODO: filter by machine type
-            sel.options.add(new Option(mach.name, machid));
+            console.log('mach', currentmachine, mach);
+            if (mach.machine === currentmachine) {
+                sel.options.add(new Option(mach.name, machid));
+            }
         }
+    }
+
+    let jsonel = document.getElementById('activetrackmachinejson')
+    const mach = cache.synthdefinition.machines.find(m => m.id === currentmachine)
+    if (mach) {
+        jsonel.textContent = JSON.stringify(mach, null, 2);
+    } else {
+        jsonel.textContent = '';
     }
 
     const currentmacro = activemacrodefinitions[activetrack] || '';
     setSelectValue(sel, currentmacro)
+
+    jsonel = document.getElementById('activemacrodefinitionjson')
+    const macro = cache.macrodefinitions[currentmacro]
+    if (macro) {
+        jsonel.textContent = JSON.stringify(macro, null, 2);
+    } else {
+        jsonel.textContent = '';
+    }
 }
 
 function recreateActiveTrackSoundPresetList() {
@@ -707,6 +658,7 @@ function recreateActiveTrackSoundPresetList() {
 
     for(const presetid of cache.soundpresetids) {
         const preset = cache.soundpresets[presetid];
+        console.log('preset', currentmachine, preset);
         if (preset) {
             sel.options.add(new Option(preset.name, presetid));
         }
@@ -817,6 +769,14 @@ function setRandomParameters() {
     putParametersForTrack(activetrack, parameters);
 }
 
+async function deleteSoundPreset(id) {
+    if (confirm(`Are you sure you want to delete sound preset #${id}?`)) {
+        const f = await fetch(`${ROOT}/soundpreset/${id}`, {
+            method: 'DELETE'
+        })
+    }
+}
+
 function recreateSoundPresetList() {
     const root = document.getElementById('soundpresets');
     root.innerHTML = ''
@@ -834,11 +794,25 @@ function recreateSoundPresetList() {
         li.appendChild(title);
         const label = document.createElement('span');
         if (sp) {
-            label.textContent = JSON.stringify(sp);
+            // label.textContent = JSON.stringify(sp);
         }
+
+        const but = document.createElement('button');
+        but.textContent = 'Delete';
+        but.addEventListener('click', deleteSoundPreset.bind(this, id));
+        li.appendChild(but);
+
         // label.textContent = `#${track.index} "${track.name}" (machines: ${track.machines.join(', ')})`;
         li.appendChild(label);
         root.appendChild(li);
+    }
+}
+
+async function deleteMacroDefinition(id) {
+    if (confirm(`Are you sure you want to delete macro definition #${id}?`)) {
+        const f = await fetch(`${ROOT}/macrodefinition/${id}`, {
+            method: 'DELETE'
+        })
     }
 }
 
@@ -858,9 +832,15 @@ function recreateMacroDefinitionList() {
         }
         li.appendChild(title);
         const label = document.createElement('span');
-        label.textContent = JSON.stringify(mach);
+        // label.textContent = JSON.stringify(mach);
         // label.textContent = `#${track.index} "${track.name}" (machines: ${track.machines.join(', ')})`;
         li.appendChild(label);
+
+        const but = document.createElement('button');
+        but.textContent = 'Delete';
+        but.addEventListener('click', deleteMacroDefinition.bind(this, id));
+        li.appendChild(but);
+
         root.appendChild(li);
     }
 }
@@ -905,7 +885,7 @@ async function uploadMacroDefinition() {
     console.log('Uploading macro definition:', packed);
     const ok = await putMacroDefinition(json.id, packed)
     if (ok) {
-        await updateMacroDefinitionList();
+        // await updateMacroDefinitionList();
     } else {
         alert('Failed to upload macro definition');
     }
@@ -929,9 +909,29 @@ async function uploadSoundPreset() {
     console.log('Uploading sound preset:', packed);
     const ok = await putSoundPreset(json.id, packed);
     if (ok) {
-        await updateMacroSoundPresetList();
+        // await updateMacroSoundPresetList();
     } else {
         alert('Failed to upload sound preset');
+    }
+}
+
+async function uploadSynthDefinition() {
+    const jsonel = document.getElementById('uploadsynthdefinitionjson');
+    const txt = jsonel.value;
+    let json = undefined
+    try {
+        json = JSON.parse(txt);
+    } catch (e) {
+        alert('Invalid JSON: ' + e.message);
+        return;
+    }
+    const packed = JSON.stringify(json);
+    console.log('Uploading synth definition:', packed);
+    const ok = await putSynthDefinition(packed)
+    if (ok) {
+        // await updateMacroDefinitionList();
+    } else {
+        alert('Failed to upload macro definition');
     }
 }
 
@@ -985,37 +985,41 @@ async function updateParameterValue(idx, ev) {
 //
 
 async function updateSynthDefinitions() {
-    const ret = await fetchSynthDefinitionList();
-    cache.synthdefinitionids = ret.machines || [];
+    const config = await fetchSynthDefinitionConfig();
+    cache.synthdefinition = config;
+
+    // const ret = await fetchSynthDefinitionList();
+    // cache.synthdefinitionids = ret.machines || [];
 
     recreateSynthMachineList();
     recreateTrackList();
 
-    cache.synthdefinitions = {};
-    for(const k of cache.synthdefinitionids) {
-        const def = await fetchSynthDefinition(k);
-        if (def) {
-            cache.synthdefinitions[k] = def;
-        }
-    }
+    // cache.synthdefinitions = {};
+    // for(const k of cache.synthdefinitionids) {
+    //     const def = await fetchSynthDefinition(k);
+    //     if (def) {
+    //         cache.synthdefinitions[k] = def;
+    //     }
+    // }
 
-    recreateSynthMachineList();
+    // recreateSynthMachineList();
 
-    cache.trackdefinitions = [];
-    for(let t=0; t<16; t++) {
-        const def = await fetchTrackDefinition(t);
-        if (def) {
-            cache.trackdefinitions[t] = def;
-        }
-    }
+    // cache.synthdefinition.tracks = [];
+    // for(let t=0; t<16; t++) {
+    //     const def = await fetchTrackDefinition(t);
+    //     if (def) {
+    //         cache.synthdefinition.tracks[t] = def;
+    //     }
+    // }
 
     recreateTrackList();
 }
 
 async function updateMacroSoundPresetList() {
-    const ret = await fetchMacroSoundPresetList();
+    await updateMacroAndPresetDefinitionList();
 
-    cache.soundpresetids = ret.presets || [];
+    // const ret = await fetchMacroSoundPresetList();
+    // cache.soundpresetids = ret.presets || [];
     cache.soundpresets = {};
 
     recreateSoundPresetList();
@@ -1031,11 +1035,63 @@ async function updateMacroSoundPresetList() {
 }
 
 
-async function updateMacroDefinitionList() {
-    const ret = await fetchMacroDefinitionList();
-    console.log(ret)
+async function updateMacroAndPresetDefinitionList() {
+    const samplesdata = await fetchSamplesOutput();
+    console.log('samples data', samplesdata)
 
-    cache.macrodefinitionids = ret.machines || [];
+    /*
+
+    "configfiles": [
+        {
+            "name": "mui-VctrSnt.jsn",
+            "path": "sp",
+            "size": 15740,
+            "mtime": 315532802000
+        },
+        ...
+        {
+            "name": "md-kickmachine-2.json",
+            "path": "macrodefinitions",
+            "size": 1594,
+            "mtime": 315532804000
+        },
+        ...
+        {
+            "name": "msp-kick2.json",
+            "path": "macrosoundpresets",
+            "size": 117,
+            "mtime": 315532804000
+        },
+
+    */
+
+    const macrodefinitionids = [];
+    const macrosoundpresetids = [];
+    for(const c of samplesdata.configfiles) {
+        if (c.path === 'macrodefinitions') {
+            macrodefinitionids.push(c.name.replace('.json', ''));
+        } else if (c.path === 'macrosoundpresets') {
+            macrosoundpresetids.push(c.name.replace('.json', ''));
+        }
+    }
+
+    cache.macrodefinitionids = macrodefinitionids;
+    cache.soundpresetids = macrosoundpresetids;
+}
+
+async function updateMacroDefinitionList() {
+    await updateMacroAndPresetDefinitionList();
+
+    // const samplesdata = await fetchSamplesOutput();
+    // console.log('samples data', samplesdata)
+
+    // const machine = [];
+    // samplesdata.configfiles
+
+    // const ret = await fetchMacroDefinitionList();
+    // console.log(ret)
+
+    // cache.macrodefinitionids = ret.machines || [];
     cache.macrodefinitions = {};
 
     recreateMacroDefinitionList();
@@ -1055,12 +1111,15 @@ async function updateTrackState() {
     console.log(ret)
 
     ret.tracks.forEach(t => {
-        activetrackmachines[t.index] = t.activeMachineId || '';
-        // activemacrodefinitions[t.index] = t.activeMacro || '';
+        activetrackmachines[t.index] = t.machine || '';
+        activemacrodefinitions[t.index] = t.macro || '';
         // activesoundpresets[t.index] = t.activePreset || '';
     })
 
     recreateTrackList();
+    recreateActiveTrackMachineList();
+    recreateActiveTrackMacroDefinitionList();
+    recreateActiveTrackSoundPresetList();
 }
 
 async function reloadMachines() {
@@ -1107,6 +1166,9 @@ async function init() {
     document.getElementById('uploadsoundpreset')
         .addEventListener('click', uploadSoundPreset);
 
+    document.getElementById('uploadsynthdefinition')
+        .addEventListener('click', uploadSynthDefinition);
+
     document.getElementById('activetrackmachine')
         .addEventListener('change', changeActiveTrackMachine);
 
@@ -1130,6 +1192,9 @@ async function init() {
 
     document.getElementById('reloadmachines')
         .addEventListener('click', reloadMachines);
+
+    document.getElementById('reloadmachinesondevice')
+        .addEventListener('click', reloadOnDevice);
 
     if (!cache.synthdefinitionids || cache.synthdefinitionids.length === 0) {
         await updateSynthDefinitions();

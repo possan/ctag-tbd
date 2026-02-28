@@ -36,7 +36,8 @@ namespace CTAG {
         class MacroDeviceOutputMappingSource {
             public:
                 uint8_t parameterIndex;
-                int32_t amount;
+                int32_t multiplier;
+                int32_t divider;
 
             public:
                 MacroDeviceOutputMappingSource();
@@ -47,7 +48,7 @@ namespace CTAG {
 
         class MacroDeviceOutputMapping {
             public:
-                std::string synthParameterId;
+                int ctrl;
                 int startValue;
                 std::vector<MacroDeviceOutputMappingSource*> sources;
 

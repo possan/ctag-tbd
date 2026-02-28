@@ -24,13 +24,15 @@ SynthDefinitionDataModel::~SynthDefinitionDataModel() {
 // #define MB_BUF_SZ 1024
 
 void SynthDefinitionDataModel::ReloadSynthDefinitions() {
-    ESP_LOGI("SynthDefinitionDataModel", "Trying to read synth defintition file");
+    // return;
 
     #ifndef TBD_SIM
         const std::string MODELJSONFN = "/sdcard/data/synthdefinitions.json";
     #else
         const std::string MODELJSONFN = "../../sdcard_image/data/synthdefinitions.json";
     #endif
+
+    ESP_LOGI("SynthDefinitionDataModel", "Trying to read synth defintition file: %s", MODELJSONFN.c_str());
 
     Document d;
     loadJSON(d, MODELJSONFN);
@@ -69,6 +71,12 @@ TrackDefinition *SynthDefinitionDataModel::GetTrackDefinition(int index) {
 }
 
 bool SynthDefinitionDataModel::DeserializeJSON(const rapidjson::Value &jsonelement) {
+    ESP_LOGI("SynthDefinitionDataModel", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+
     synths.clear();
     tracks.clear();
 
@@ -99,16 +107,7 @@ bool SynthDefinitionDataModel::DeserializeJSON(const rapidjson::Value &jsoneleme
     return true;
 }
 
-bool SynthDefinitionDataModel::DeserializeJSON(const std::string *jsonString) {
-    Document document;
-    if (document.Parse(jsonString->c_str()).HasParseError()) {
-        return false;
-    }
-    // Implement deserialization logic here
-    return true;
-}
-
-void SynthDefinitionDataModel:: SerializeTrackJSON(int index, std::string *output){
+void SynthDefinitionDataModel::SerializeTrackJSON(int index, std::string *output){
     Document d;
 
     d.SetObject();
@@ -208,36 +207,27 @@ void SynthDefinitionDataModel::SerializeListJSON(std::string *output) {
     output->assign(buffer.GetString());
 }
 
+// bool SynthDefinitionDataModel::UpdateDefinitionJSON(const std::string &jsonstring) {
+//     Document d;
+//     if (d.Parse(jsonstring.c_str()).HasParseError()) {
+//         ESP_LOGE("SynthDefinitionDataModel", "Failed to parse JSON string: %s", jsonstring.c_str());
+//         return false;
+//     }
 
-void SynthDefinitionDataModel::SerializeStateJSON(std::string *output) {
-    // Implement serialization logic here
-    Document d;
+//     #ifndef TBD_SIM
+//         const std::string MODELJSONFN = "/sdcard/data/synthdefinitions.json";
+//     #else
+//         const std::string MODELJSONFN = "../../sdcard_image/data/synthdefinitions.json";
+//     #endif
 
-    d.SetObject();
+//     fp = fopen(MODELJSONFN.c_str(), "w");
+//     if (fp == NULL) {
+//         ESP_LOGE("MacroSoundPresetDataModel", "could not open file %s", MODELJSONFN.c_str());
+//         return false;
+//     }
+//     fwrite(jsonstring.c_str(), 1, jsonstring.size(), fp);
+//     fclose(fp);
 
-    // Value machinesarray(kArrayType);
-    // d.AddMember("machines", machinesarray, d.GetAllocator());
-    // for(SynthDefinition *s : synths) {
-    //     Value machinejson(kObjectType);
-    //     machinejson.AddMember("id", Value(s->id.c_str(), d.GetAllocator()), d.GetAllocator());
-    //     d["machines"].PushBack(machinejson, d.GetAllocator());
-    // }
+//     return true;
+// }
 
-    Value tracksarray(kArrayType);
-    d.AddMember("tracks", tracksarray, d.GetAllocator());
-    for(TrackDefinition *t : tracks) {
-        Value trackjson(kObjectType);
-        trackjson.AddMember("index", t->index, d.GetAllocator());
-        trackjson.AddMember("machine", Value(t->activeMachineId.c_str(), d.GetAllocator()), d.GetAllocator());
-        trackjson.AddMember("macro", "", d.GetAllocator());
-        trackjson.AddMember("preset", "", d.GetAllocator());
-        d["tracks"].PushBack(trackjson, d.GetAllocator());
-    }
-
-    StringBuffer buffer;
-    Writer<StringBuffer> writer(buffer);
-    d.Accept(writer);
-    ESP_LOGW("SynthDefinitionDataModel", "JSON string %s", buffer.GetString());
-
-    output->assign(buffer.GetString());
-}

@@ -72,6 +72,8 @@ bool MacroSoundPreset::DeserializeJSON(const rapidjson::Value &jsonelement) {
 }
 
 bool MacroSoundPreset::SerializeJSONInto(rapidjson::Document &doc) {
+    // TODO: Just read from disk?
+
     doc.SetObject();
 
     Value s_id(kObjectType);
