@@ -26,8 +26,6 @@ void RackFMB::trigger() {
 }
 
 void RackFMB::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(out, BUF_SZ, 0.f);
-
     // MK_BOOL_PAR_NOCV(_trig, trigger)
     bool _trig = false;
     if (midi_trig) {
@@ -45,6 +43,8 @@ void RackFMB::Process(const PicoSeqRackProcessData &data) {
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(out, BUF_SZ, 0.f);
 
     MK_BOOL_PAR_NOCV(_use_ratio_mode, use_ratio_mode)
     MK_BOOL_PAR_NOCV(_mod_env_sync, mod_env_sync)

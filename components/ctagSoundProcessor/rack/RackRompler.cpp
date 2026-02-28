@@ -47,11 +47,11 @@ void RackRompler::noteOff(uint8_t note, uint8_t vel) {
 }
 
 void RackRompler::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(s1_out, BUF_SZ, 0.f);
-
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(s1_out, BUF_SZ, 0.f);
 
     MK_INT_PAR_ABS_NOCV(bTSMode, s1_tsmode, 2.0f)
     rompler.params.timeStretchEnable = bTSMode > 0;

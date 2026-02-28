@@ -21,11 +21,11 @@ void RackClap::trigger() {
 }
 
 void RackClap::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(out, BUF_SZ, 0.f);
-
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(out, BUF_SZ, 0.f);
 
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_pitch1_, f0, 4095.f, 350.f, 4000.f)
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_pitch2_, f0, 4095.f, 300.f, 3000.f)

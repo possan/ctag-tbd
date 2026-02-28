@@ -62,11 +62,11 @@ void RackTBD03::noteOff(uint8_t note, uint8_t vel) {
 }
 
 void RackTBD03::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(td3_out, BUF_SZ, 0.f);
-
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(td3_out, BUF_SZ, 0.f);
 
     float dvcf, dvca;
     // bool trg = midi_trig;

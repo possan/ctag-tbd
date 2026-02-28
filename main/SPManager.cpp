@@ -254,6 +254,8 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
             }
         }
 
+        taskYIELD();
+
         // get normalized raw data from CODEC
         DRIVERS::Codec::ReadBuffer(finput, BUF_SZ);
 
@@ -292,7 +294,6 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                 // Process channel 0
                 if (sp[0] != nullptr) {
                     isStereoCH0 = sp[0]->GetIsStereo();
-                    // sp[0]->SetParamValue()
                     sp[0]->Process(pd);
                 }
 

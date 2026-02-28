@@ -59,11 +59,11 @@ void RackPolyPad::noteOff(uint8_t note, uint8_t vel) {
 
 void RackPolyPad::Process(const PicoSeqRackProcessData &data) {
     // std::fill_n(pp_out, BUF_SZ, 0.f);
-    std::fill_n(pp_out_stereo, BUF_SZ * 2, 0.f);
-
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(pp_out_stereo, BUF_SZ * 2, 0.f);
 
     int32_t NCVoices = 1; // pp_ncvoices;
     // CONSTRAIN(NCVoices, 1, 8)

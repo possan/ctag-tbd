@@ -21,7 +21,7 @@ void RackChannelMixer::Init(const PickSeqRackInitData *initdata) {
 		mix_track_length = val;
 	});
 
-	this->enabled = true;
+	this->enabled = false;
 	this->device = -1;
 	this->track_length = 16;
 }

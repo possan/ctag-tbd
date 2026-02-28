@@ -54,11 +54,11 @@ void RackMO::noteOff(uint8_t note, uint8_t vel) {
 }
 
 void RackMO::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(mo_out, BUF_SZ, 0.f);
-
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(mo_out, BUF_SZ, 0.f);
 
     // ad envelope and loop
     float a = mo_attack / 4095.f * 5.f;

@@ -12,7 +12,7 @@ void RackDSD::Init(const PickSeqRackInitData *initdata) {
     initdata->rack->registerMacroParamAndCC(initdata, "fm_amt", 10, [&](const int val){ fm_amt = val;});
     initdata->rack->registerMacroParamAndCC(initdata, "spy", 11, [&](const int val){ spy = val;});
 	initdata->rack->registerMacroParamAndCC(initdata, "accent", 12, [&](const int val){ accent = val;});
-    
+
     this->enabled = false;
 }
 
@@ -21,8 +21,6 @@ void RackDSD::trigger() {
 }
 
 void RackDSD::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(out, BUF_SZ, 0.f);
-
     // MK_BOOL_PAR_NOCV(_trig, trigger)
     bool _trig = false;
     if (midi_trig) {
@@ -39,6 +37,8 @@ void RackDSD::Process(const PicoSeqRackProcessData &data) {
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(out, BUF_SZ, 0.f);
 
     MK_FLT_PAR_ABS_NOCV(_accent, accent, 4095.f, 1.f)
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0, f0, 4095.f, 0.0008f, 0.01f)

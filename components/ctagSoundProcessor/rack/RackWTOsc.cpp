@@ -72,11 +72,11 @@ void RackWTOsc::noteOff(uint8_t note, uint8_t vel) {
 }
 
 void RackWTOsc::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(out, BUF_SZ, 0.f);
-
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(out, BUF_SZ, 0.f);
 
     // wave select
     currentBank = (wavebank * 16) / 4096;

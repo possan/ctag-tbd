@@ -21,8 +21,6 @@ void RackHH2::trigger() {
 }
 
 void RackHH2::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(out, BUF_SZ, 0.f);
-
     // MK_BOOL_PAR_NOCV(_trig, trigger)
     bool _trig = midi_trig;
     if (_trig != trig_prev) {
@@ -36,6 +34,8 @@ void RackHH2::Process(const PicoSeqRackProcessData &data) {
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(out, BUF_SZ, 0.f);
 
     MK_FLT_PAR_ABS_NOCV(_accent, accent, 4095.f, 1.f)
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0, f0, 4095.f, .00001f, .1f)

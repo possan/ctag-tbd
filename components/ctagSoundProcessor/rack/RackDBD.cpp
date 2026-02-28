@@ -23,8 +23,6 @@ void RackDBD::trigger() {
 }
 
 void RackDBD::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(out, BUF_SZ, 0.f);
-
     // MK_BOOL_PAR_NOCV(_trig, trigger)
     bool _trig = false;
     if (midi_trig) {
@@ -44,6 +42,8 @@ void RackDBD::Process(const PicoSeqRackProcessData &data) {
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(out, BUF_SZ, 0.f);
 
     MK_FLT_PAR_ABS_NOCV(_accent, accent, 4095.f, 1.f)
     MK_FLT_PAR_ABS_NOCV(_tone, tone, 4095.f, 1.f)

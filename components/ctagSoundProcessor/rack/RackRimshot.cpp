@@ -21,11 +21,11 @@ void RackRimshot::trigger() {
 }
 
 void RackRimshot::Process(const PicoSeqRackProcessData &data) {
-    std::fill_n(rs_out, BUF_SZ, 0.f);
-
     if (!this->enabled) {
         return;
     }
+
+    std::fill_n(rs_out, BUF_SZ, 0.f);
 
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0_, f0, 4095.f, 70.f, 350.f)
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_decay, decay, 4095.f, .1f, .75f)
