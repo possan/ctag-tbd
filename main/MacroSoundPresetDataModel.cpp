@@ -175,7 +175,7 @@ void MacroSoundPresetDataModel::GetPresetIndexJson(int trackIndex, std::string *
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
     doc.Accept(writer);
-    ESP_LOGW("MacroSoundPresetDataModel", "JSON string %s", buffer.GetString());
+    ESP_LOGI("MacroSoundPresetDataModel", "JSON string %s", buffer.GetString());
 
     output->assign(buffer.GetString());
 }
@@ -203,7 +203,7 @@ void MacroSoundPresetDataModel::SerializeListJSON(std::string *output) {
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
     doc.Accept(writer);
-    ESP_LOGW("MacroSoundPresetDataModel", "JSON string %s", buffer.GetString());
+    ESP_LOGI("MacroSoundPresetDataModel", "JSON string %s", buffer.GetString());
 
     output->assign(buffer.GetString());
 }
@@ -269,6 +269,9 @@ void MacroSoundPresetDataModel::SerializeItemJSON(const std::string &id, std::st
     fclose(fp);
 
     content[filesize] = '\0';
+
+    ESP_LOGI("MacroSoundPresetDataModel", "JSON string %s", content);
+
     output->assign(content);
 
     heap_caps_free(content);
@@ -298,8 +301,11 @@ bool MacroSoundPresetDataModel::SerializeListInto(int trackIndex, rapidjson::Doc
         groupobj.AddMember("presets", presetsarray, doc.GetAllocator());
 
         for(MacroSoundPreset *p : presets) {
-
             if (!p->validTracks.contains(trackIndex)) {
+                continue;
+            }
+
+            if (p->groupName != g->displayName) {
                 continue;
             }
 

@@ -152,6 +152,8 @@ void MacroDeviceDefinitionDataModel::SerializeItemJSON(const std::string &id, st
 
     content[filesize] = '\0';
 
+    ESP_LOGI("MacroDeviceDefinitionDataModel", "JSON string %s", content);
+
     output->assign(content);
 
     heap_caps_free(content);
