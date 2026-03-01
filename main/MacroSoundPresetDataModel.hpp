@@ -9,6 +9,9 @@ namespace CTAG {
         class MacroSoundPreset;
         class MacroSoundPresetGroup;
 
+        class SynthDefinitionDataModel;
+        class MacroDeviceDefinitionDataModel;
+
         class MacroSoundPresetDataModel final : public CTAG::SP::ctagDataModelBase{
             private:
                 std::vector<MacroSoundPreset*> presets;
@@ -16,16 +19,17 @@ namespace CTAG {
             public:
                 MacroSoundPresetDataModel();
                 ~MacroSoundPresetDataModel();
-                void ReloadSoundPresets();
+                void ReloadSoundPresets( MacroDeviceDefinitionDataModel *macromodel,  SynthDefinitionDataModel *synthmodel);
                 int GetNumberOfSoundPresetGroups();
                 void GetMacroSoundPresetGroupId(int index, std::string *idOutput);
                 int GetNumberOfSoundPresets();
-                void GetPresetIndexJson(std::string *output);
+                void GetPresetIndexJson(int trackIndex, std::string *output);
                 void SerializeListJSON(std::string *output);
                 void SerializeItemJSON(const std::string &id, std::string *output);
                 MacroSoundPreset *GetMacroSoundPreset(const std::string id);
                 bool UpdatePreset(const std::string &jsonString);
                 void DeleteItem(const std::string &id);
+                bool SerializeListInto(int trackIndex, rapidjson::Document &doc);
         };
     }
 }

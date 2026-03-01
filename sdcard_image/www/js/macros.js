@@ -397,8 +397,8 @@ async function fetchSamplesOutput() {
 
 async function putMacroDefinition(id, jsonstring) {
     try {
-        const response = await fetch(`${ROOT}/macrodefinition/${id}`, {
-            method: 'PUT',
+        const response = await fetch(`${ROOT}/samples?action=uploadconfig&path=macrodefinitions/${id}.json`, {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -414,8 +414,8 @@ async function putMacroDefinition(id, jsonstring) {
 
 async function putSoundPreset(id, jsonstring) {
     try {
-        const response = await fetch(`${ROOT}/soundpreset/${id}`, {
-            method: 'PUT',
+        const response = await fetch(`${ROOT}/samples?action=uploadconfig&path=macrosoundpresets/${id}.json`, {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -502,7 +502,7 @@ async function putParametersForTrack(trackindex, parameters) {
 
 function reloadOnDevice() {
     return fetch(`${ROOT}/macroapi?action=reload`, {
-        method: 'POST'
+        method: 'POST',
     });
 }
 
@@ -615,18 +615,23 @@ function recreateActiveTrackMacroDefinitionList() {
 
     sel.options.add(new Option('-- Select --', ''));
 
+    const selectablemachines = cache.synthdefinition.tracks[activetrack] ? cache.synthdefinition.tracks[activetrack].machines : [];
+
     const currentmachine = activetrackmachines[activetrack] || '';
     const trackinfo = cache.synthdefinition.tracks[activetrack];
     console.log('Recreating macro definition list for track', activetrack, currentmachine, trackinfo)
     for(const machid of cache.macrodefinitionids) {
-        const mach = cache.macrodefinitions[machid];
-        if (mach) {
-            console.log('mach', currentmachine, mach);
-            if (mach.machine === currentmachine) {
-                sel.options.add(new Option(mach.name, machid));
+        const macro = cache.macrodefinitions[machid];
+        if (macro) {
+            console.log('mach', selectablemachines, currentmachine, macro);
+            if (selectablemachines.indexOf(macro.machine) !== -1) {
+                sel.options.add(new Option(macro.machine + ': ' +  macro.name, machid));
             }
         }
     }
+
+    const currentmacro = activemacrodefinitions[activetrack] || '';
+    setSelectValue(sel, currentmacro)
 
     let jsonel = document.getElementById('activetrackmachinejson')
     const mach = cache.synthdefinition.machines.find(m => m.id === currentmachine)
@@ -635,9 +640,6 @@ function recreateActiveTrackMacroDefinitionList() {
     } else {
         jsonel.textContent = '';
     }
-
-    const currentmacro = activemacrodefinitions[activetrack] || '';
-    setSelectValue(sel, currentmacro)
 
     jsonel = document.getElementById('activemacrodefinitionjson')
     const macro = cache.macrodefinitions[currentmacro]
@@ -771,8 +773,14 @@ function setRandomParameters() {
 
 async function deleteSoundPreset(id) {
     if (confirm(`Are you sure you want to delete sound preset #${id}?`)) {
-        const f = await fetch(`${ROOT}/soundpreset/${id}`, {
-            method: 'DELETE'
+        const f = await fetch(`${ROOT}/samples?action=manage`, {
+            method: 'POST',            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'deleteconfig',
+                path: `macrosoundpresets/${id}.json`
+            })
         })
     }
 }
@@ -810,8 +818,12 @@ function recreateSoundPresetList() {
 
 async function deleteMacroDefinition(id) {
     if (confirm(`Are you sure you want to delete macro definition #${id}?`)) {
-        const f = await fetch(`${ROOT}/macrodefinition/${id}`, {
-            method: 'DELETE'
+        const f = await fetch(`${ROOT}/samples?action=manage`, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'deleteconfig',
+                path:  `macrodefinitions/${id}.json`
+            })
         })
     }
 }
@@ -947,10 +959,16 @@ async function changeActiveTrackMachine(ev) {
 }
 
 async function changeActiveTrackMacroDefinition(ev) {
-    const machid = getSelectValue(ev.target)
-    activemacrodefinitions[activetrack] = machid;
-    console.log(`Selecting macro definition ${machid} for track ${activetrack}`);
-    await putActiveMacroDefinitionForTrack(activetrack, machid);
+    const macrodefid = getSelectValue(ev.target)
+    activemacrodefinitions[activetrack] = macrodefid;
+    const macrodef = cache.macrodefinitions[macrodefid];
+    console.log(`Selecting macro definition ${macrodefid} (machine ${macrodef?.machine}) for track ${activetrack}`);
+    if (macrodef) {
+        await putActiveMachineForTrack(activetrack, macrodef.machine);
+        activetrackmachines[activetrack] = macrodef.machine;
+    }
+    await putActiveMacroDefinitionForTrack(activetrack, macrodefid);
+    recreateActiveTrackMachineList();
     recreateTrackList();
     recreateActiveTrackSoundPresetList();
     recreateActiveTrackParameters();

@@ -12,6 +12,7 @@ MacroSoundPreset::MacroSoundPreset() {
     displayName = "";
     groupName = "";
     parameterValues.clear();
+    validTracks.clear();
 }
 
 MacroSoundPreset::~MacroSoundPreset() {

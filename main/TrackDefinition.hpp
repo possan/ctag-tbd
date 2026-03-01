@@ -15,6 +15,7 @@ namespace CTAG {
                 int baseCC;
                 std::string activeMachineId;
                 std::vector<std::string> macroMachineIds;
+                // std::vector<std::string> macroPresetIds;
 
             public:
                 TrackDefinition();

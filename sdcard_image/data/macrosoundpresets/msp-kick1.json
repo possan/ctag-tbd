@@ -1,6 +1,7 @@
 {
     "id" :"msp-kick2",
-    "name": "Kick 2",
-    "macroDeviceId": "md-analogkick-1",
-    "parameters": []
+    "name": "Analog kick 2",
+    "group": "Kicks",
+    "macro": "md-kickmachine-1",
+    "values": []
 }

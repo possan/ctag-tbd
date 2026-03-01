@@ -814,7 +814,7 @@ static esp_err_t handle_manage(httpd_req_t *req) {
             ESP_LOGE(TAG, "Delete failed: %s", filePath.c_str());
             return send_error(req, 500, "Delete failed");
         }
-        ESP_LOGI(TAG, "Deleted: %s/%s", doc["path"].GetString(), doc["filename"].GetString());
+        ESP_LOGI(TAG, "Deleted: %s", doc["path"].GetString());
         return send_ok(req);
     }
 

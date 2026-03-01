@@ -7,6 +7,7 @@ MacroSoundPresetGroup::MacroSoundPresetGroup() {
     id = "";
     displayName = "";
     fileIds.clear();
+    validTracks.clear();
 }
 
 MacroSoundPresetGroup::~MacroSoundPresetGroup() {

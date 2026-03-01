@@ -411,24 +411,7 @@ void MacroTranslator::SerializeStateJSON(std::string *output) {
 
     d.SetObject();
 
-    Value tracksarray(kArrayType);
-    d.AddMember("tracks", tracksarray, d.GetAllocator());
-    for(int ti =0;ti<16;ti++) {
-        Value trackjson(kObjectType);
-
-        trackjson.AddMember("index", ti, d.GetAllocator());
-
-        trackjson.AddMember("machine", Value(trackMachineId[ti].c_str(), d.GetAllocator()), d.GetAllocator());
-
-        if (definition[ti] != nullptr) {
-            trackjson.AddMember("macro", Value(definition[ti]->id.c_str(), d.GetAllocator()), d.GetAllocator());
-        } else {
-            trackjson.AddMember("macro", "", d.GetAllocator());
-        }
-        // trackjson.AddMember("preset", "", d.GetAllocator());
-
-        d["tracks"].PushBack(trackjson, d.GetAllocator());
-    }
+    SerializeStateInto(d);
 
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
@@ -436,4 +419,22 @@ void MacroTranslator::SerializeStateJSON(std::string *output) {
     ESP_LOGW("MacroTranslator", "JSON string %s", buffer.GetString());
 
     output->assign(buffer.GetString());
+}
+
+bool MacroTranslator::SerializeStateInto(rapidjson::Document &doc) {
+    Value tracksarray(kArrayType);
+    doc.AddMember("tracks", tracksarray, doc.GetAllocator());
+    for(int ti =0;ti<16;ti++) {
+        Value trackjson(kObjectType);
+        trackjson.AddMember("index", ti, doc.GetAllocator());
+        trackjson.AddMember("machine", Value(trackMachineId[ti].c_str(), doc.GetAllocator()), doc.GetAllocator());
+        if (definition[ti] != nullptr) {
+            trackjson.AddMember("macro", Value(definition[ti]->id.c_str(), doc.GetAllocator()), doc.GetAllocator());
+        } else {
+            trackjson.AddMember("macro", "", doc.GetAllocator());
+        }
+        // trackjson.AddMember("preset", "", doc.GetAllocator());
+        doc["tracks"].PushBack(trackjson, doc.GetAllocator());
+    }
+    return false;
 }

@@ -730,6 +730,72 @@ namespace CTAG::SPIAPI{
                     result = transmitCString(requestType, info.c_str());
                 }
                 break;
+            case RequestType::GetMacroSoundPresetList:
+                {
+                    // CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+                    std::string outputjson;
+                    int trackIndex = uint8_param_0;
+                    ESP_LOGI("SpiAPI", "Getting macro sound preset list, track %d", trackIndex);
+                    CTAG::AUDIO::SoundProcessorManager::macroSoundDefinitionModel
+                        ->GetPresetIndexJson(trackIndex, &outputjson);
+                    // CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+                    result = transmitCString(requestType, outputjson.c_str());
+                }
+                break;
+            case RequestType::GetMacroSoundPreset:
+                {
+                    std::string presetId = string_parameter;
+                    ESP_LOGI("SpiAPI", "Getting macro sound preset %s", presetId.c_str());
+                    std::string outputjson;
+                    outputjson = CTAG::AUDIO::SoundProcessorManager::GetMacroSoundPresetJSON(presetId);
+                    result = transmitCString(requestType, outputjson.c_str());
+                    // CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+                    // CTAG::MACROPRESETS::MacroSoundPreset *preset =
+                    //     CTAG::AUDIO::SoundProcessorManager::macroSoundDefinitionModel
+                    //         ->GetMacroSoundPreset(presetId);
+                    // SerializeJSONInto
+                    // GetPresetJson(presetId, &outputjson);
+                    // CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+                }
+                break;
+            case RequestType::GetMacroDefinition:
+                {
+                    std::string macroId = string_parameter; // receiveString(RequestType::SaveFavorite, string_parameter);
+                    ESP_LOGI("SpiAPI", "Getting macro definition %s", macroId.c_str());
+                    std::string outputjson;
+                    outputjson = CTAG::AUDIO::SoundProcessorManager::GetMacroDefinitionJSON(macroId);
+                    result = transmitCString(requestType, outputjson.c_str());
+                    // CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+                    // HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
+                    // HELPERS::ctagSampleRom::RefreshDataStructure();
+                    // CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+                }
+                break;
+            case RequestType::ActivateTrackMachine:
+                {
+                    int trackIndex = uint8_param_0;
+                    std::string machineId = string_parameter; // receiveString(RequestType::SaveFavorite, string_parameter);
+                    ESP_LOGI("SpiAPI", "Activating track %d machine %s", trackIndex, machineId.c_str());
+                    CTAG::AUDIO::SoundProcessorManager::ActivateTrackMachine(trackIndex, machineId);
+                    // CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+                    // HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
+                    // HELPERS::ctagSampleRom::RefreshDataStructure();
+                    // CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+                    // result = transmitCString(requestType, cstring);
+                }
+                break;
+            case RequestType::LoadTrackSoundPreset:
+                {
+                    int trackIndex = uint8_param_0;
+                    std::string presetId = string_parameter; // receiveString(RequestType::SaveFavorite, string_parameter);
+                    ESP_LOGI("SpiAPI", "Loading track %d macro \"%s\"", trackIndex, presetId.c_str());
+                    CTAG::AUDIO::SoundProcessorManager::LoadTrackMacroAndPreset(trackIndex, presetId);
+                    // HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
+                    // HELPERS::ctagSampleRom::RefreshDataStructure();
+                    // CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+                    // result = transmitCString(requestType, cstring);
+                }
+                break;
             }
        }
     }

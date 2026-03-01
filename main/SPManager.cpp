@@ -43,6 +43,8 @@ respective component folders / files if different from this license.
 #include "SpiProtocol.h"
 #include "SpiProtocolHelper.hpp"
 #include "MacroTranslator.hpp"
+#include "MacroDeviceDefinition.hpp"
+#include "MacroSoundPreset.hpp"
 
 #define MAX(x, y) ((x)>(y)) ? (x) : (y)
 #define MIN(x, y) ((x)<(y)) ? (x) : (y)
@@ -544,7 +546,7 @@ void SoundProcessorManager::StartSoundProcessor() {
 
     synthDefinitionModel->ReloadSynthDefinitions();
     macroDeviceDefinitionModel->ReloadMachineDefinitions();
-    macroSoundDefinitionModel->ReloadSoundPresets();
+    macroSoundDefinitionModel->ReloadSoundPresets(macroDeviceDefinitionModel.get(), synthDefinitionModel.get());
 
     macroTranslator->synthDefinitionModel = synthDefinitionModel;
     macroTranslator->macroDeviceDefinitionModel = macroDeviceDefinitionModel;
@@ -767,52 +769,6 @@ void SoundProcessorManager::SetTrackMacro(const int trackIndex, const string &ma
     xSemaphoreGive(processMutex);
 }
 
-// bool SoundProcessorManager::UpdateSoundPresetJSON(const std::string &jsonstring) {
-//     xSemaphoreTake(processMutex, portMAX_DELAY);
-//     bool ok = macroSoundDefinitionModel->UpdatePreset(jsonstring);
-//     // macroSoundDefinitionModel->ReloadSoundPresets();
-//     xSemaphoreGive(processMutex);
-//     return ok; 
-// }
-
-// bool SoundProcessorManager::UpdateMacroDefinitionJSON(const std::string &jsonstring) {
-//     xSemaphoreTake(processMutex, portMAX_DELAY);
-//     bool ok = macroDeviceDefinitionModel->UpdateDefinition(jsonstring);
-//     // macroDeviceDefinitionModel->ReloadMachineDefinitions();
-//     xSemaphoreGive(processMutex);
-//     return ok; 
-// }
-
-// bool SoundProcessorManager::DeleteSoundPreset(const std::string &id) {
-//     xSemaphoreTake(processMutex, portMAX_DELAY);
-//     macroSoundDefinitionModel->DeleteItem(id);
-//     // macroSoundDefinitionModel->ReloadSoundPresets();
-//     xSemaphoreGive(processMutex);
-//     return true;
-// }
-
-// bool SoundProcessorManager::DeleteMacroDefinition(const std::string &id) {
-//     xSemaphoreTake(processMutex, portMAX_DELAY);
-//     macroDeviceDefinitionModel->DeleteItem(id);
-//     // macroDeviceDefinitionModel->ReloadMachineDefinitions();
-//     xSemaphoreGive(processMutex);
-//     return true;
-// }
-
-// bool SoundProcessorManager::GetSoundPresetJSON(const std::string &id, std::string *jsonoutput) {
-//     xSemaphoreTake(processMutex, portMAX_DELAY);
-//     macroSoundDefinitionModel->SerializeItemJSON(id, jsonoutput);
-//     xSemaphoreGive(processMutex);
-//     return true; 
-// }
-
-// bool SoundProcessorManager::GetMacroDefinitionJSON(const std::string &id, std::string *jsonoutput) {
-//     xSemaphoreTake(processMutex, portMAX_DELAY);
-//     macroDeviceDefinitionModel->SerializeItemJSON(id, jsonoutput);
-//     xSemaphoreGive(processMutex);
-//     return true; 
-// }
-
 void SoundProcessorManager::SetTrackParametersFromJSON(const string &parametersJSON) {
     if (macroTranslator == nullptr) {
         return;
@@ -823,17 +779,79 @@ void SoundProcessorManager::SetTrackParametersFromJSON(const string &parametersJ
     xSemaphoreGive(processMutex);
 }
 
-// bool SoundProcessorManager::UpdateSynthDefinitionJSON(const string &jsonstring) {
-//     xSemaphoreTake(processMutex, portMAX_DELAY);
-//     bool ok = synthDefinitionModel->UpdateDefinitionJSON(jsonstring);
-//     // synthDefinitionModel->ReloadSynthDefinitions();
-//     xSemaphoreGive(processMutex);
-//     return ok;
-// }
-
 void SoundProcessorManager::RefreshMacros() {
     synthDefinitionModel->ReloadSynthDefinitions();
     macroDeviceDefinitionModel->ReloadMachineDefinitions();
-    macroSoundDefinitionModel->ReloadSoundPresets();
+    macroSoundDefinitionModel->ReloadSoundPresets(macroDeviceDefinitionModel.get(), synthDefinitionModel.get());
     // macroTranslator
 }
+
+std::string SoundProcessorManager::GetMacroSoundPresetListJSON(){
+    std::string output;
+    macroSoundDefinitionModel->SerializeListJSON(&output);
+    return output;
+}
+
+std::string SoundProcessorManager::GetMacroSoundPresetJSON(const std::string &soundPresetId){
+    std::string output;
+    macroSoundDefinitionModel->SerializeItemJSON(soundPresetId, &output);
+    return output;
+}
+
+std::string SoundProcessorManager::GetMacroDefinitionJSON(const std::string &soundPresetId){
+    std::string output;
+    macroDeviceDefinitionModel->SerializeItemJSON(soundPresetId, &output);
+    return output;
+}
+
+void SoundProcessorManager::ActivateTrackMachine(const int trackIndex, const std::string &machineId) {
+
+}
+
+void SoundProcessorManager::LoadTrackMacro(const int trackIndex, const std::string &macroId) {
+    MacroDeviceDefinition *def =
+        macroDeviceDefinitionModel->GetMacroDeviceDefinition(macroId);
+    if (def != nullptr) {
+        xSemaphoreTake(processMutex, portMAX_DELAY);
+        macroTranslator->SetTrackMachine(trackIndex, def->synthId);
+        macroTranslator->SetTrackMacroDefinition(trackIndex, def);
+        xSemaphoreGive(processMutex);
+    }
+}
+
+void SoundProcessorManager::LoadTrackMacroAndPreset(const int trackIndex, const std::string &soundPresetId) {
+    MacroSoundPreset *preset =
+        macroSoundDefinitionModel->GetMacroSoundPreset(soundPresetId);
+    if (preset == nullptr) {
+        ESP_LOGI("SPManager", "Preset %s not found, loading macro without preset",
+            soundPresetId.c_str());
+        return;
+    }
+
+    ESP_LOGI("SPManager", "Loaded sound preset \"%s\" name \"%s\" and macro \"%s\"",
+        preset->id.c_str(), preset->displayName.c_str(), preset->macroDeviceId.c_str());
+
+    MacroDeviceDefinition *def =
+        macroDeviceDefinitionModel->GetMacroDeviceDefinition(preset->macroDeviceId);
+    if (def == nullptr) {
+        ESP_LOGI("SPManager", "Macro definition %s not found, cannot load macro or preset",
+            preset->macroDeviceId.c_str());
+        return;
+    }
+
+    ESP_LOGI("SPManager", "Loaded macro def \"%s\" named \"%s\", applying to track %d",
+        def->id.c_str(), def->name.c_str(), trackIndex);
+    // LoadTrackMacro(trackIndex, def->synthId);
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    macroTranslator->SetTrackMachine(trackIndex, def->synthId);
+    macroTranslator->SetTrackMacroDefinition(trackIndex, def);
+    xSemaphoreGive(processMutex);
+    int pidx = 0;
+    for(const auto& param : preset->parameterValues) {
+        ESP_LOGI("SPManager", "  Setting track %d param %d to value %f",
+            trackIndex, pidx, param);
+        macroTranslator->SetTrackParameter(trackIndex, pidx, param);
+        pidx ++;
+    }
+}
+

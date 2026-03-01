@@ -72,10 +72,15 @@ namespace CTAG::SPIAPI{
             GetMacroMachineDefinitionsJSON = 0x80,
             UploadMacroMachineDefinitionJSON = 0x81,
             SetTrackMacroMachine = 0x82,
-
             GetSoundPresetListJSON = 0x90,
             GetSoundPresetJSON = 0x91,
             UploadSoundPresetJSON = 0x92,
+
+            GetMacroSoundPresetList = 0xA0,
+            GetMacroSoundPreset = 0xA1,
+            GetMacroDefinition = 0xA2,
+            ActivateTrackMachine = 0xA3,
+            LoadTrackSoundPreset = 0xA4,
         };
 
         static TaskHandle_t hTask;

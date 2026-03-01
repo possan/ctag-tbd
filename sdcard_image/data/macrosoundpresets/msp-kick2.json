@@ -1,7 +1,7 @@
 {
     "id" :"msp-kick2",
-    "name": "Kick 2",
-    "machineId": "db",
-    "parameters": [],
-    "outputmapping": []
+    "name": "Digital kick 2",
+    "group": "Kicks",
+    "macro": "md-kickmachine-2",
+    "values": []
 }

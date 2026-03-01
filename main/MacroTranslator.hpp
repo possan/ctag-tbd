@@ -47,6 +47,8 @@ namespace CTAG {
                 void TranslateInput(CTAG::SP::ProcessData *pd);
 
                 void SerializeStateJSON(std::string *output);
+
+                bool SerializeStateInto(rapidjson::Document &doc);
         };
     }
 }
