@@ -57,16 +57,16 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
     if ((dir = opendir(path.c_str())) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
             std::string fn(ent->d_name);
-            ESP_LOGI("MacroSoundPresetDataModel", "Reading preset file: %s", fn.c_str());
 
             Document d;
             loadJSON(d, path + "/" + fn);
             if(!d.HasParseError()) {
                 MacroSoundPreset *preset = new MacroSoundPreset();
                 if(preset->DeserializeJSON(d)) {
-                    ESP_LOGI("MacroSoundPresetDataModel", "  Deserialized macro sound preset: #%s \"%s\"", preset->id.c_str(), preset->displayName.c_str());
+                    ESP_LOGI("MacroSoundPresetDataModel", "Got sound preset: #%s \"%s\"", preset->id.c_str(), preset->displayName.c_str());
                     presets.push_back(preset);
 
+                    // Find existing or create new group
                     MacroSoundPresetGroup *group = nullptr;
                     for(MacroSoundPresetGroup *g : groups) {
                         if (g->id == preset->groupName) {
@@ -74,10 +74,10 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
                             break;
                         }
                     }
-
                     if (group != nullptr) {
                         group->fileIds.push_back(preset->id);
                     } else {
+                        ESP_LOGI("MacroSoundPresetDataModel", "Found new group: \"%s\"", preset->groupName.c_str());
                         group = new MacroSoundPresetGroup();
                         group->id = preset->groupName;
                         group->displayName = preset->groupName;
@@ -106,9 +106,12 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
                         }
                     }
                 } else {
-                    ESP_LOGE("MacroSoundPresetDataModel", "  Failed to deserialize macro sound preset from file %s", fn.c_str());
+                    ESP_LOGE("MacroSoundPresetDataModel", "Failed to deserialize macro sound preset from file %s", fn.c_str());
                     delete preset;
                 }
+            } else {
+                ESP_LOGI("MacroSoundPresetDataModel", "Failed to parse preset file: %s", fn.c_str());
+
             }
         }
         closedir(dir);
@@ -293,14 +296,16 @@ bool MacroSoundPresetDataModel::SerializeListInto(int trackIndex, rapidjson::Doc
 
         Value presetsarray(kArrayType);
         groupobj.AddMember("presets", presetsarray, doc.GetAllocator());
-        for(std::string fid : g->fileIds) {
-            // if (!p->validTracks.contains(trackIndex)) {
-            //     continue;
-            // }
+
+        for(MacroSoundPreset *p : presets) {
+
+            if (!p->validTracks.contains(trackIndex)) {
+                continue;
+            }
 
             Value presetobj(kObjectType);
-            presetobj.AddMember("id", Value(fid.c_str(), doc.GetAllocator()), doc.GetAllocator());
-            presetobj.AddMember("name", Value(fid.c_str(), doc.GetAllocator()), doc.GetAllocator());
+            presetobj.AddMember("id", Value(p->id.c_str(), doc.GetAllocator()), doc.GetAllocator());
+            presetobj.AddMember("name", Value(p->displayName.c_str(), doc.GetAllocator()), doc.GetAllocator());
             // TODO: Use name
             groupobj["presets"].PushBack(presetobj, doc.GetAllocator());
         }

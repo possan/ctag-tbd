@@ -33,15 +33,12 @@ void MacroDeviceDefinitionDataModel::ReloadMachineDefinitions() {
     if ((dir = opendir(path.c_str())) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
             std::string fn(ent->d_name);
-            // if (fn.find("mui-") != std::string::npos) {
-            ESP_LOGI("MacroDeviceDefinitionDataModel", "Filename: %s", fn.c_str());
 
-
-    ESP_LOGI("MacroDeviceDefinitionDataModel", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
-             heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-             heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
-             heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+            ESP_LOGI("MacroDeviceDefinitionDataModel", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+                     heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+                     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+                     heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+                     heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
 
             Document d;
             loadJSON(d, path + "/" + fn);
@@ -54,6 +51,9 @@ void MacroDeviceDefinitionDataModel::ReloadMachineDefinitions() {
                     ESP_LOGE("MacroDeviceDefinitionDataModel", "Failed to deserialize macro device definition from file %s", fn.c_str());
                     delete def;
                 }
+            } else {
+                ESP_LOGI("MacroDeviceDefinitionDataModel", "Failed to parse file: %s", fn.c_str());
+
             }
         }
         closedir(dir);
