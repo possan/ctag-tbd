@@ -12,7 +12,8 @@
         "db",
         "ab",
         "extdrum"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 1,
@@ -25,7 +26,8 @@
         "nodrum",
         "fmb",
         "extdrum"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 2,
@@ -39,7 +41,8 @@
         "ds",
         "as",
         "extdrum"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 3,
@@ -53,7 +56,8 @@
         "hh1",
         "hh2",
         "extdrum"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 4,
@@ -66,7 +70,8 @@
         "nodrum",
         "rs",
         "extdrum"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 5,
@@ -79,7 +84,8 @@
         "nodrum",
         "cl",
         "extdrum"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 6,
@@ -92,7 +98,8 @@
         "nodrum",
         "ro",
         "extdrum"
-      ]
+      ],
+      "defaultbank": "percussion"
     },
     {
       "index": 7,
@@ -105,7 +112,8 @@
         "nodrum",
         "ro",
         "extdrum"
-      ]
+      ],
+      "defaultbank": "chords"
     },
     {
       "index": 8,
@@ -118,7 +126,8 @@
         "nosynth",
         "td3",
         "extsynth"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 9,
@@ -131,7 +140,8 @@
         "nosynth",
         "td3",
         "extsynth"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 10,
@@ -144,7 +154,8 @@
         "nosynth",
         "mo",
         "extsynth"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 11,
@@ -158,7 +169,8 @@
         "wo",
         "mo",
         "extsynth"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 12,
@@ -171,7 +183,8 @@
         "nosynth",
         "ro",
         "extsynth"
-      ]
+      ],
+      "defaultbank": "stabs"
     },
     {
       "index": 13,
@@ -184,7 +197,8 @@
         "nosynth",
         "ro",
         "extsynth"
-      ]
+      ],
+      "defaultbank": "synths"
     },
     {
       "index": 14,
@@ -197,7 +211,8 @@
         "nosynth",
         "pp",
         "extsynth"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 15,
@@ -209,7 +224,8 @@
       "machines": [
         "nosynth",
         "inp"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 16,
@@ -221,7 +237,8 @@
       "machines": [
         "nofx",
         "delayfx"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 17,
@@ -233,7 +250,8 @@
       "machines": [
         "nofx",
         "reverbfx"
-      ]
+      ],
+      "defaultbank": ""
     },
     {
       "index": 18,
@@ -245,7 +263,8 @@
       "machines": [
         "nofx",
         "masterfx"
-      ]
+      ],
+      "defaultbank": ""
     }
   ],
   "machines": [
