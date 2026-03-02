@@ -691,7 +691,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     PickSeqRackInitData dri;
     dri.rack = this;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy -2");
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy -2");
 
     dri.midi_channel = 9;
     dri.cc_base = 0;
@@ -700,8 +700,8 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch1_ab_"; ch1_ab.Init(&dri);
     ch1_render_time = 0;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 0");
-    dumpMemoryUsage();
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 0");
+    // dumpMemoryUsage();
 
     dri.midi_channel = 9;
     dri.cc_base = 20;
@@ -710,8 +710,8 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch2_fbm2_"; ch2_fmb2.Init(&dri);
     ch2_render_time = 0;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 1");
-    dumpMemoryUsage();
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 1");
+    // dumpMemoryUsage();
 
     dri.midi_channel = 9;
     dri.cc_base = 40;
@@ -720,7 +720,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch3_as_"; ch3_as.Init(&dri);
     ch3_render_time = 0;
 
-    dumpMemoryUsage();
+    // dumpMemoryUsage();
 
     dri.midi_channel = 9;
     dri.cc_base = 60;
@@ -729,8 +729,8 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch4_hh2_"; ch4_hh2.Init(&dri);
     ch4_render_time = 0;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 2");
-    dumpMemoryUsage();
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 2");
+    // dumpMemoryUsage();
 
     dri.midi_channel = 9;
     dri.cc_base = 80;
@@ -738,7 +738,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch5_rs_"; ch5_rs.Init(&dri);
     ch5_render_time = 0;
 
-    dumpMemoryUsage();
+    // dumpMemoryUsage();
 
     dri.midi_channel = 9;
     dri.cc_base = 100;
@@ -746,8 +746,8 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch6_cl_"; ch6_cl.Init(&dri);
     ch6_render_time = 0;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 3");
-    dumpMemoryUsage();
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 3");
+    // dumpMemoryUsage();
 
     dri.midi_channel = 11;
     dri.cc_base = 0;
@@ -755,7 +755,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch7_smp_"; ch7_ro.Init(&dri);
     ch7_render_time = 0;
 
-    dumpMemoryUsage();
+    // dumpMemoryUsage();
 
     dri.midi_channel = 12;
     dri.cc_base = 0;
@@ -763,8 +763,8 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch8_smp_"; ch8_ro.Init(&dri);
     ch8_render_time = 0;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 4");
-    dumpMemoryUsage();
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 4");
+    // dumpMemoryUsage();
 
     dri.midi_channel = 0;
     dri.cc_base = 0;
@@ -772,7 +772,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch9_tbd03_"; ch9_td3.Init(&dri);
     ch9_render_time = 0;
 
-    dumpMemoryUsage();
+    // dumpMemoryUsage();
 
     dri.midi_channel = 1;
     dri.cc_base = 0;
@@ -780,15 +780,15 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch10_tbd03_"; ch10_td3.Init(&dri);
     ch10_render_time = 0;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 5");
-    dumpMemoryUsage();
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 5");
+    // dumpMemoryUsage();
 
     dri.midi_channel = 2;
     dri.cc_base = 0;
     dri.prefix = "ch11_"; ch11.Init(&dri);
     dri.prefix = "ch11_mo_"; ch11_mo.Init(&dri);
     ch11_render_time = 0;
-    dumpMemoryUsage();
+    // dumpMemoryUsage();
 
     dri.midi_channel = 3;
     dri.cc_base = 0;
@@ -797,15 +797,15 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch12_mo_"; ch12_mo.Init(&dri);
     ch12_render_time = 0;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 6");
-    dumpMemoryUsage();
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 6");
+    // dumpMemoryUsage();
 
     dri.midi_channel = 4;
     dri.cc_base = 0;
     dri.prefix = "ch13_"; ch13.Init(&dri);
     dri.prefix = "ch13_smp_"; ch13_ro.Init(&dri);
     ch13_render_time = 0;
-    dumpMemoryUsage();
+    // dumpMemoryUsage();
 
     dri.midi_channel = 5;
     dri.cc_base = 0;
@@ -813,14 +813,14 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch14_smp_"; ch14_ro.Init(&dri);
     ch14_render_time = 0;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 7");
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 7");
 
     dri.midi_channel = 6;
     dri.cc_base = 0;
     dri.prefix = "ch15_"; ch15.Init(&dri);
     dri.prefix = "ch15_pp_"; ch15_pp.Init(&dri);
     ch15_render_time = 0;
-    dumpMemoryUsage();
+    // dumpMemoryUsage();
 
     dri.midi_channel = 7;
     dri.cc_base = 0;
@@ -829,8 +829,8 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch16_in_"; ch16_in.Init(&dri); // audio input, no prefix
     ch16_render_time = 0;
 
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 8");
-    dumpMemoryUsage();
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 8");
+    // dumpMemoryUsage();
 
     dri.prefix = "fx1_";
     fx_delay.Init(&dri);
