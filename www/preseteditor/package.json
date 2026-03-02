@@ -1,0 +1,19 @@
+{
+  "name": "preseteditor",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "bundle": "tsc && vite build --outDir dist && rm -f \"../../sdcard_image/www/preseteditor*\" && cp dist/* ../../sdcard_image/www/ && ls -la ../../sdcard_image/www/preseteditor*"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vite": "^7.1.0"
+  },
+  "dependencies": {
+    "@tybys/wasm-util": "^0.10.0",
+    "memfs-browser": "^3.5.10302"
+  }
+}

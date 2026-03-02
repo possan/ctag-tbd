@@ -1,0 +1,189 @@
+body {
+    padding: 4px;
+    font-family: monospace;
+}
+
+h1, h2, h3 {
+    margin: 0 0 10px 0;
+    padding: 0;
+}
+
+p {
+    margin: 0 0 10px 0;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    gap: 4px;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 4px;
+}
+
+.flex {
+    flex: 1;
+}
+
+.flex2 {
+    flex: 2;
+}
+
+.droppable {
+    background-color: #f0f !important;
+}
+
+.paramgroup {
+    margin: 10px 0 10px 0;
+}
+
+.paramgroup ul {
+    list-style: none;
+    margin: 0;
+    border: 1px solid #ccc;
+    padding: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.paramgroup ul li {
+    border: 1px solid #ccc;
+    padding: 5px;
+}
+
+.paramgroup ul li  span {
+    color: #aaa;
+}
+
+.bad {
+    color: #d00;
+}
+
+.empty {
+    color: #aaa;
+}
+
+.propgroup {
+    background-color: #eee;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.propgroup.macro {
+    background-color: #dfc;
+}
+
+.propgroup.connection {
+    background-color: #ccf;
+}
+
+.propgroup.preview {
+    background-color: #dff;
+}
+
+.editor {
+    padding-top: 20px;
+}
+
+textarea#json, textarea#soundpresetjson {
+    font-size: 10px;
+    /* width: 100%; */
+}
+
+.mapping ul {
+    list-style: none;
+    border: 1px solid #ccc;
+    padding: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mapping ul li {
+    border: 1px solid #ccc;
+    padding: 5px;
+}
+
+.editing {
+    background-color: #ff0;
+}
+
+.parameter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.parameter.editor {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.parameter > span {
+    flex: 1;
+}
+.parameter p {
+    margin: 0;
+}
+
+input[type="number"] {
+    width: 60px;
+}
+
+#soundparametergroups {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 20px 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    padding: 2px;
+    gap: 2px;
+}
+
+#soundparametergroups > li {
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    padding: 2px;
+}
+
+#soundparametergroups > li > ul {
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    padding: 2px;
+    gap: 2px;
+}
+
+#soundparametergroups > li > ul > li {
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    padding: 2px;
+    display: flex;
+    flex-direction: column;
+}
+
+#soundparametergroups > li > ul > li > div.inputs {
+    display: flex;
+    flex-direction: row;
+}
+
+
+#soundparametergroups > li > ul > li > div.inputs input {
+    width: 100px;
+}
+
+.notused {
+    opacity: 0.2;
+}
