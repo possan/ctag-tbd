@@ -6,6 +6,8 @@
 #include "rapidjson/writer.h"
 #include <dirent.h>
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "ctagResources.hpp"
 
 
@@ -63,11 +65,10 @@ void MacroDeviceDefinitionDataModel::ReloadMachineDefinitions() {
 
 }
 
-MacroDeviceDefinition *MacroDeviceDefinitionDataModel::GetMacroDeviceDefinition(
-    std::string id) {
+MacroDeviceDefinition *MacroDeviceDefinitionDataModel::LoadMacroDeviceDefinition(std::string id) {
     for(MacroDeviceDefinition *def : definitions) {
         if (def->id == id) {
-            return def;
+            return def->copy();
         }
     }
 
@@ -87,14 +88,12 @@ void MacroDeviceDefinitionDataModel::SerializeListJSON(std::string *output) {
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
     d.Accept(writer);
-    ESP_LOGW("MacroDeviceDefinitionDataModel", "JSON string %s", buffer.GetString());
+    // ESP_LOGD("MacroDeviceDefinitionDataModel", "JSON string %s", buffer.GetString());
 
     output->assign(buffer.GetString());
 }
 
 bool MacroDeviceDefinitionDataModel::UpdateDefinition(const std::string &jsonString) {
-    // return true;
-
     Document d;
 
     if (d.Parse(jsonString.c_str()).HasParseError()) {
@@ -129,10 +128,7 @@ bool MacroDeviceDefinitionDataModel::UpdateDefinition(const std::string &jsonStr
 
 
 void MacroDeviceDefinitionDataModel::SerializeItemJSON(const std::string &id, std::string *output) {
-    // TODO: Just read from disk?
-
     std::string path = std::string(CTAG::RESOURCES::sdcardRoot + std::string("/data/macrodefinitions"));
-
     std::string filename = path + "/" + id + ".json";
 
     FILE *fp = fopen(filename.c_str(), "r");
@@ -145,37 +141,27 @@ void MacroDeviceDefinitionDataModel::SerializeItemJSON(const std::string &id, st
     fseek(fp, 0, SEEK_END);
     long filesize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
+    ESP_LOGI("MacroDeviceDefinitionDataModel", "File size %ld bytes", filesize);
 
-    char *content = (char *) heap_caps_malloc(50000, MALLOC_CAP_SPIRAM);
+    taskYIELD();
+
+    char *content = (char *) heap_caps_malloc(filesize + 1, MALLOC_CAP_SPIRAM);
+    if (content == nullptr) {
+        ESP_LOGE("MacroDeviceDefinitionDataModel", "Failed to allocate memory for reading macro device definition file");
+        output->assign("");
+        fclose(fp);
+        return;
+    }
     fread(content, 1, filesize, fp);
     fclose(fp);
 
     content[filesize] = '\0';
 
-    ESP_LOGI("MacroDeviceDefinitionDataModel", "JSON string %s", content);
+    // ESP_LOGD("MacroDeviceDefinitionDataModel", "JSON string %s", content);
 
     output->assign(content);
 
     heap_caps_free(content);
-
-    // Document d;
-    // d.SetObject();
-    // for(MacroDeviceDefinition *s : definitions) {
-    //     if (s->id == id) {
-    //         // Document d2;
-    //         if (s->SerializeJSONInto(d)) {
-    //             // d = d2.Move();
-    //         } else {
-    //             ESP_LOGE("MacroDeviceDefinitionDataModel", "Failed to serialize macro device definition #%s \"%s\" into JSON", s->id.c_str(), s->name.c_str());
-    //         }
-    //         break;
-    //     }
-    // }
-    // StringBuffer buffer;
-    // Writer<StringBuffer> writer(buffer);
-    // d.Accept(writer);
-    // ESP_LOGW("MacroDeviceDefinitionDataModel", "JSON string %s", buffer.GetString());
-    // output->assign(buffer.GetString());
 }
 
 

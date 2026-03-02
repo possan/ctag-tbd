@@ -763,6 +763,7 @@ namespace CTAG::SPIAPI{
                     std::string macroId = string_parameter; // receiveString(RequestType::SaveFavorite, string_parameter);
                     ESP_LOGI("SpiAPI", "Getting macro definition %s", macroId.c_str());
                     std::string outputjson;
+                    // CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
                     outputjson = CTAG::AUDIO::SoundProcessorManager::GetMacroDefinitionJSON(macroId);
                     result = transmitCString(requestType, outputjson.c_str());
                     // CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();

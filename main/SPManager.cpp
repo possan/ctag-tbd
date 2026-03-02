@@ -530,7 +530,12 @@ void SoundProcessorManager::StartSoundProcessor() {
     ledBlink = 5;
     model = std::make_unique<SPManagerDataModel>();
 
-    // init tinyusb
+    // prepare threads and mutex
+    processMutex = xSemaphoreCreateMutex();
+    if (processMutex == NULL) {
+        ESP_LOGE("SPM", "Fatal couldn't create mutex!");
+    }
+
     CTAG::DRIVERS::tusb::Init();
     // init control
     CTRL::Control::Init();
@@ -575,13 +580,6 @@ void SoundProcessorManager::StartSoundProcessor() {
 
     // Ableton Link
     CTAG::LINK::link::Init();
-
-    // prepare threads and mutex
-    processMutex = xSemaphoreCreateMutex();
-
-    if (processMutex == NULL) {
-        ESP_LOGE("SPM", "Fatal couldn't create mutex!");
-    }
 
     // create led indicator thread
     xTaskCreatePinnedToCore(&SoundProcessorManager::led_task, "led_task", 4096, nullptr, tskIDLE_PRIORITY + 2,
@@ -762,11 +760,18 @@ void SoundProcessorManager::SetTrackMacro(const int trackIndex, const string &ma
     }
 
     MacroDeviceDefinition *def = macroDeviceDefinitionModel
-        ->GetMacroDeviceDefinition(macroDefinitionID);
+        ->LoadMacroDeviceDefinition(macroDefinitionID);
+
+    if (def == nullptr) {
+        ESP_LOGI("SPManager", "Macro definition %s not found, cannot load macro",
+            macroDefinitionID.c_str());
+        return;
+    }
 
     xSemaphoreTake(processMutex, portMAX_DELAY);
     macroTranslator->SetTrackMacroDefinition(trackIndex, def);
     xSemaphoreGive(processMutex);
+    delete def;
 }
 
 void SoundProcessorManager::SetTrackParametersFromJSON(const string &parametersJSON) {
@@ -780,9 +785,12 @@ void SoundProcessorManager::SetTrackParametersFromJSON(const string &parametersJ
 }
 
 void SoundProcessorManager::RefreshMacros() {
+    // this wil lglit ch
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     synthDefinitionModel->ReloadSynthDefinitions();
     macroDeviceDefinitionModel->ReloadMachineDefinitions();
     macroSoundDefinitionModel->ReloadSoundPresets(macroDeviceDefinitionModel.get(), synthDefinitionModel.get());
+    xSemaphoreGive(processMutex);
     // macroTranslator
 }
 
@@ -794,34 +802,51 @@ std::string SoundProcessorManager::GetMacroSoundPresetListJSON(){
 
 std::string SoundProcessorManager::GetMacroSoundPresetJSON(const std::string &soundPresetId){
     std::string output;
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     macroSoundDefinitionModel->SerializeItemJSON(soundPresetId, &output);
+    xSemaphoreGive(processMutex);
     return output;
 }
 
 std::string SoundProcessorManager::GetMacroDefinitionJSON(const std::string &soundPresetId){
     std::string output;
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     macroDeviceDefinitionModel->SerializeItemJSON(soundPresetId, &output);
+    xSemaphoreGive(processMutex);
     return output;
 }
 
-void SoundProcessorManager::ActivateTrackMachine(const int trackIndex, const std::string &machineId) {
+void SoundProcessorManager::ActivateTrackMachine(const int trackIndex, const std::string machineId) {
 
 }
 
-void SoundProcessorManager::LoadTrackMacro(const int trackIndex, const std::string &macroId) {
+void SoundProcessorManager::LoadTrackMacro(const int trackIndex, const std::string macroId) {
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     MacroDeviceDefinition *def =
-        macroDeviceDefinitionModel->GetMacroDeviceDefinition(macroId);
+        macroDeviceDefinitionModel->LoadMacroDeviceDefinition(macroId);
+    xSemaphoreGive(processMutex);
     if (def != nullptr) {
         xSemaphoreTake(processMutex, portMAX_DELAY);
         macroTranslator->SetTrackMachine(trackIndex, def->synthId);
         macroTranslator->SetTrackMacroDefinition(trackIndex, def);
         xSemaphoreGive(processMutex);
+        delete def;
     }
 }
 
-void SoundProcessorManager::LoadTrackMacroAndPreset(const int trackIndex, const std::string &soundPresetId) {
+void SoundProcessorManager::LoadTrackMacroAndPreset(const int trackIndex, const std::string soundPresetId) {
+    ESP_LOGI("SPManager", "Loading sound preset \"%s\" for track %d", soundPresetId.c_str(), trackIndex);
+
+    ESP_LOGI("SPManager", "Mem 1 freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+        heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+        heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     MacroSoundPreset *preset =
-        macroSoundDefinitionModel->GetMacroSoundPreset(soundPresetId);
+        macroSoundDefinitionModel->LoadMacroSoundPreset(soundPresetId);
+    xSemaphoreGive(processMutex);
     if (preset == nullptr) {
         ESP_LOGI("SPManager", "Preset %s not found, loading macro without preset",
             soundPresetId.c_str());
@@ -831,27 +856,62 @@ void SoundProcessorManager::LoadTrackMacroAndPreset(const int trackIndex, const 
     ESP_LOGI("SPManager", "Loaded sound preset \"%s\" name \"%s\" and macro \"%s\"",
         preset->id.c_str(), preset->displayName.c_str(), preset->macroDeviceId.c_str());
 
+    xSemaphoreTake(processMutex, portMAX_DELAY);
     MacroDeviceDefinition *def =
-        macroDeviceDefinitionModel->GetMacroDeviceDefinition(preset->macroDeviceId);
+        macroDeviceDefinitionModel->LoadMacroDeviceDefinition(preset->macroDeviceId);
+    xSemaphoreGive(processMutex);
     if (def == nullptr) {
         ESP_LOGI("SPManager", "Macro definition %s not found, cannot load macro or preset",
             preset->macroDeviceId.c_str());
+        delete preset;
         return;
     }
 
-    ESP_LOGI("SPManager", "Loaded macro def \"%s\" named \"%s\", applying to track %d",
-        def->id.c_str(), def->name.c_str(), trackIndex);
+    ESP_LOGD("SPManager", "Loaded macro def \"%s\" named \"%s\", applying to track %d", def->id.c_str(), def->name.c_str(), trackIndex);
+
+    ESP_LOGI("SPManager", "Mem 2 freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+        heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+        heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+
     // LoadTrackMacro(trackIndex, def->synthId);
     xSemaphoreTake(processMutex, portMAX_DELAY);
     macroTranslator->SetTrackMachine(trackIndex, def->synthId);
+
+
+    // ESP_LOGI("SPManager", "Mem 2 freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+    //     heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    //     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    //     heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+    //     heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+
     macroTranslator->SetTrackMacroDefinition(trackIndex, def);
-    xSemaphoreGive(processMutex);
+    
+    
+    // ESP_LOGI("SPManager", "Mem 3 freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+    //     heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    //     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    //     heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+    //     heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    
     int pidx = 0;
     for(const auto& param : preset->parameterValues) {
-        ESP_LOGI("SPManager", "  Setting track %d param %d to value %f",
-            trackIndex, pidx, param);
+        // ESP_LOGI("SPManager", "  Setting track %d param %d to value %f",
+        //     trackIndex, pidx, param);
         macroTranslator->SetTrackParameter(trackIndex, pidx, param);
         pidx ++;
     }
+    xSemaphoreGive(processMutex);
+
+    delete preset;
+    delete def;
+
+    ESP_LOGD("SPManager", "Mem 4 freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+        heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+        heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+
 }
 

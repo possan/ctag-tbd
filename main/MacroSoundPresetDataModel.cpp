@@ -85,7 +85,7 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
                         groups.push_back(group);
                     }
 
-                    MacroDeviceDefinition *macrodef = macromodel->GetMacroDeviceDefinition(preset->macroDeviceId);
+                    MacroDeviceDefinition *macrodef = macromodel->LoadMacroDeviceDefinition(preset->macroDeviceId);
                     if (macrodef == nullptr) {
                         ESP_LOGE("MacroSoundPresetDataModel", "  Could not find macro device definition with id %s for preset %s", preset->macroDeviceId.c_str(), preset->id.c_str());
                     } else {
@@ -97,14 +97,15 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
                                 for(std::string mid : trackdef->macroMachineIds) {
                                     if (mid == macrodef->synthId) {
                                         ESP_LOGI("MacroSoundPresetDataModel", "    Track %d has macro machine id %s", i, mid.c_str());
-
                                         preset->validTracks.insert(i);
                                         group->validTracks.insert(i);
                                     }
                                 }
                             }
                         }
+                        delete macrodef;
                     }
+
                 } else {
                     ESP_LOGE("MacroSoundPresetDataModel", "Failed to deserialize macro sound preset from file %s", fn.c_str());
                     delete preset;
@@ -130,7 +131,7 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
         heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
 }
 
-MacroSoundPreset *MacroSoundPresetDataModel::GetMacroSoundPreset(std::string id) {
+MacroSoundPreset *MacroSoundPresetDataModel::LoadMacroSoundPreset(std::string id) {
     std::string path = std::string(CTAG::RESOURCES::sdcardRoot + std::string("/data/macrosoundpresets"));
     std::string filename = path + "/" + id + ".json";
 
@@ -175,7 +176,7 @@ void MacroSoundPresetDataModel::GetPresetIndexJson(int trackIndex, std::string *
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
     doc.Accept(writer);
-    ESP_LOGI("MacroSoundPresetDataModel", "JSON string %s", buffer.GetString());
+    ESP_LOGD("MacroSoundPresetDataModel", "JSON string %s", buffer.GetString());
 
     output->assign(buffer.GetString());
 }
@@ -203,7 +204,7 @@ void MacroSoundPresetDataModel::SerializeListJSON(std::string *output) {
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
     doc.Accept(writer);
-    ESP_LOGI("MacroSoundPresetDataModel", "JSON string %s", buffer.GetString());
+    ESP_LOGD("MacroSoundPresetDataModel", "JSON string %s", buffer.GetString());
 
     output->assign(buffer.GetString());
 }
@@ -270,7 +271,7 @@ void MacroSoundPresetDataModel::SerializeItemJSON(const std::string &id, std::st
 
     content[filesize] = '\0';
 
-    ESP_LOGI("MacroSoundPresetDataModel", "JSON string %s", content);
+    ESP_LOGD("MacroSoundPresetDataModel", "JSON string %s", content);
 
     output->assign(content);
 

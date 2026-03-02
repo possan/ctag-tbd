@@ -17,9 +17,10 @@ namespace CTAG {
             private:
                 int8_t trackToMidiChannel[16];
                 uint8_t trackBaseCC[16];
-                uint16_t trackParameterValues[16][16];
+                uint16_t trackParameterValues[16][32];
                 bool trackDirty[16];
                 std::string trackMachineId[16];
+                // std::string trackMacroId[16];
                 MacroDeviceDefinition *definition[16];
 
                 void _parseIncomingMidiMessages(const uint8_t *buf, const size_t len);
@@ -29,25 +30,18 @@ namespace CTAG {
                 ~MacroTranslator();
 
                 std::shared_ptr<SynthDefinitionDataModel> synthDefinitionModel;
-
                 std::shared_ptr<MacroSoundPresetDataModel> macroSoundDefinitionModel;
-
                 std::shared_ptr<MacroDeviceDefinitionDataModel> macroDeviceDefinitionModel;
-
                 CTAG::SP::ctagSoundProcessor *soundProcessor;
 
-                void SetTrackMachine(const int trackIndex, const std::string &synthID);
-
+                void SetTrackMachine(const int trackIndex, const std::string synthID);
                 void SetTrackMacroDefinition(const int trackIndex, MacroDeviceDefinition *def);
-
                 void SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value);
-
                 void SetTrackParametersFromJSON(const std::string &parametersJSON);
 
                 void TranslateInput(CTAG::SP::ProcessData *pd);
 
                 void SerializeStateJSON(std::string *output);
-
                 bool SerializeStateInto(rapidjson::Document &doc);
         };
     }

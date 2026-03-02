@@ -131,18 +131,18 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
             rompler.params.playbackSpeed = (float)sliceLengthMs / (float)stepsLengthMs;
         }
 
-        printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f, slicelen=%ld,msperbeat=%ld,slicelenms=%ld, tempo=%ld,tracklen=%d\n",
-            rompler.params.slice,
-            rompler.params.playbackSpeed,
-            rompler.params.pitch,
-            rompler.params.timeStretchEnable,
-            rompler.params.timeStretchWindowSize,
-            sliceLength,
-            data.msPerBeat,
-            sliceLengthMs,
-            data.tempo,
-            track_length
-        );
+        // printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f, slicelen=%ld,msperbeat=%ld,slicelenms=%ld, tempo=%ld,tracklen=%d\n",
+        //     rompler.params.slice,
+        //     rompler.params.playbackSpeed,
+        //     rompler.params.pitch,
+        //     rompler.params.timeStretchEnable,
+        //     rompler.params.timeStretchWindowSize,
+        //     sliceLength,
+        //     data.msPerBeat,
+        //     sliceLengthMs,
+        //     data.tempo,
+        //     track_length
+        // );
 
         // printf("S1 slice=%ld ps=%1.1f pitch=%1.1f %1.1f %1.1f\n",
         //     rompler.params.slice,

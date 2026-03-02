@@ -131,7 +131,7 @@ void SynthDefinitionDataModel::SerializeTrackJSON(int index, std::string *output
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
     d.Accept(writer);
-    ESP_LOGW("SynthDefinitionDataModel", "JSON string %s", buffer.GetString());
+    ESP_LOGD("SynthDefinitionDataModel", "JSON string %s", buffer.GetString());
 
     output->assign(buffer.GetString());
 }
@@ -181,7 +181,7 @@ void SynthDefinitionDataModel::SerializeSynthJSON(const std::string id, std::str
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
     d.Accept(writer);
-    ESP_LOGW("SynthDefinitionDataModel", "JSON string %s", buffer.GetString());
+    ESP_LOGD("SynthDefinitionDataModel", "JSON string %s", buffer.GetString());
 
     output->assign(buffer.GetString());
 }
@@ -202,7 +202,7 @@ void SynthDefinitionDataModel::SerializeListJSON(std::string *output) {
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
     d.Accept(writer);
-    ESP_LOGW("SynthDefinitionDataModel", "JSON string %s", buffer.GetString());
+    ESP_LOGD("SynthDefinitionDataModel", "JSON string %s", buffer.GetString());
 
     output->assign(buffer.GetString());
 }

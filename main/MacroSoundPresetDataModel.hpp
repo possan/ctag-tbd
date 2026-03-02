@@ -26,7 +26,7 @@ namespace CTAG {
                 void GetPresetIndexJson(int trackIndex, std::string *output);
                 void SerializeListJSON(std::string *output);
                 void SerializeItemJSON(const std::string &id, std::string *output);
-                MacroSoundPreset *GetMacroSoundPreset(const std::string id);
+                MacroSoundPreset *LoadMacroSoundPreset(const std::string id);
                 bool UpdatePreset(const std::string &jsonString);
                 void DeleteItem(const std::string &id);
                 bool SerializeListInto(int trackIndex, rapidjson::Document &doc);

@@ -6,32 +6,32 @@
 
 namespace CTAG {
     namespace MACROPRESETS {
-        class MacroDeviceParameter {
-            public:
-                uint8_t index;
-                std::string name;
-                int32_t defaultValue;
-                int32_t minValue;
-                int32_t maxValue;
-                int32_t resolution;
-                std::string uiType;
-            public:
-                MacroDeviceParameter();
-                ~MacroDeviceParameter();
-                bool DeserializeJSON(const rapidjson::Value &jsonelement);
-                bool SerializeJSONInto(rapidjson::Document &doc);
-        };
+        // class MacroDeviceParameter {
+        //     public:
+        //         uint8_t index;
+        //         std::string name;
+        //         int32_t defaultValue;
+        //         int32_t minValue;
+        //         int32_t maxValue;
+        //         int32_t resolution;
+        //         std::string uiType;
+        //     public:
+        //         MacroDeviceParameter();
+        //         ~MacroDeviceParameter();
+        //         bool DeserializeJSON(const rapidjson::Value &jsonelement);
+        //         bool SerializeJSONInto(rapidjson::Document &doc);
+        // };
 
-        class MacroDeviceParameterGroup {
-            public:
-                std::string name;
-                std::vector<MacroDeviceParameter*> parameters;
-            public:
-                MacroDeviceParameterGroup();
-                ~MacroDeviceParameterGroup();
-                bool DeserializeJSON(const rapidjson::Value &jsonelement);
-                bool SerializeJSONInto(rapidjson::Document &doc);
-        };
+        // class MacroDeviceParameterGroup {
+        //     public:
+        //         std::string name;
+        //         std::vector<MacroDeviceParameter> parameters;
+        //     public:
+        //         MacroDeviceParameterGroup();
+        //         ~MacroDeviceParameterGroup();
+        //         bool DeserializeJSON(const rapidjson::Value &jsonelement);
+        //         bool SerializeJSONInto(rapidjson::Document &doc);
+        // };
 
         class MacroDeviceOutputMappingSource {
             public:
@@ -43,20 +43,20 @@ namespace CTAG {
                 MacroDeviceOutputMappingSource();
                 ~MacroDeviceOutputMappingSource();
                 bool DeserializeJSON(const rapidjson::Value &jsonelement);
-                bool SerializeJSONInto(rapidjson::Document &doc);
+                // bool SerializeJSONInto(rapidjson::Document &doc);
         };
 
         class MacroDeviceOutputMapping {
             public:
                 int ctrl;
                 int startValue;
-                std::vector<MacroDeviceOutputMappingSource*> sources;
+                std::vector<MacroDeviceOutputMappingSource> sources;
 
             public:
                 MacroDeviceOutputMapping();
                 ~MacroDeviceOutputMapping();
                 bool DeserializeJSON(const rapidjson::Value &jsonelement);
-                bool SerializeJSONInto(rapidjson::Document &doc);
+                // bool SerializeJSONInto(rapidjson::Document &doc);
         };
 
         class MacroDeviceDefinition {
@@ -64,13 +64,14 @@ namespace CTAG {
                 std::string id;
                 std::string name;
                 std::string synthId;
-                std::vector<MacroDeviceParameterGroup*> parameterGroups;
-                std::vector<MacroDeviceOutputMapping*> outputMappings;
+                // std::vector<MacroDeviceParameterGroup> parameterGroups;
+                std::vector<MacroDeviceOutputMapping> outputMappings;
             public:
                 MacroDeviceDefinition();
                 ~MacroDeviceDefinition();
+                MacroDeviceDefinition *copy();
                 bool DeserializeJSON(const rapidjson::Value &jsonelement);
-                bool SerializeJSONInto(rapidjson::Document &doc);
+                // bool SerializeJSONInto(rapidjson::Document &doc);
         };
     }
 }

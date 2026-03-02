@@ -16,8 +16,8 @@ namespace CTAG {
                 ~MacroDeviceDefinitionDataModel();
                 void ReloadMachineDefinitions();
                 int GetNumberOfDefinitions();
-                void GetMacroDeviceDefinitionId(int index, char *buffer, int bufferSize);
-                MacroDeviceDefinition *GetMacroDeviceDefinition(const std::string id);
+                // void GetMacroDeviceDefinitionId(int index, char *buffer, int bufferSize);
+                MacroDeviceDefinition *LoadMacroDeviceDefinition(const std::string id);
                 void SerializeListJSON(std::string *output);
                 void SerializeItemJSON(const std::string &id, std::string *output);
                 bool UpdateDefinition(const std::string &jsonString);

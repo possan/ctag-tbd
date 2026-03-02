@@ -24,7 +24,7 @@ MacroTranslator::MacroTranslator() {
         definition[i] = nullptr;
         trackDirty[i] = false;
 
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < 32; j++) {
             trackParameterValues[i][j] = 0;
         }
     }
@@ -33,12 +33,12 @@ MacroTranslator::MacroTranslator() {
 MacroTranslator::~MacroTranslator() {
 };
 
-void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string &synthID) {
+void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string synthID) {
     if (synthID == trackMachineId[trackIndex]) {
         return;
     }
 
-    ESP_LOGI("MacroTranslator", "Track %d machine set to %s",
+    ESP_LOGD("MacroTranslator", "Track %d machine set to %s",
         trackIndex, synthID.c_str());
     trackMachineId[trackIndex] = synthID;
 
@@ -65,7 +65,7 @@ void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string &s
     idx = 0;
     for(auto par : synthDef->parameters) {
         ESP_LOGI("MacroTranslator", "Processing parameter %s, type %d, cc %d",
-            par->id.c_str(), par->type, par->cc);
+        par->id.c_str(), par->type, par->cc);
 
         trackParameterValues[trackIndex][idx] = par->defaultValue;
 
@@ -84,8 +84,8 @@ void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string &s
 }
 
 void MacroTranslator::SetTrackMacroDefinition(const int trackIndex, MacroDeviceDefinition *def) {
-    ESP_LOGI("MacroTranslator", "Setting track %d macro definition 0x%08X",
-        trackIndex, (uintptr_t)def);
+    // ESP_LOGI("MacroTranslator", "Setting track %d macro definition 0x%08X",
+    // trackIndex, (uintptr_t)def);
     if (def != nullptr) {
         ESP_LOGI("MacroTranslator", "Macro def: \"%s\" \"%s\" \"%s\"",
             def->id.c_str(), def->name.c_str(), def->synthId.c_str());
@@ -116,21 +116,43 @@ void MacroTranslator::SetTrackMacroDefinition(const int trackIndex, MacroDeviceD
     //     return;
     // }
 
-    Document d1;
-    d1.SetObject();
-    if (def->SerializeJSONInto(d1)) {
-        MacroDeviceDefinition *defcopy = new MacroDeviceDefinition();
-        if (defcopy->DeserializeJSON(d1)) {
-            definition[trackIndex] = defcopy;
-        } else {
-            ESP_LOGE("MacroTranslator", "Failed to deserialize macro definition into JSON");
-            delete defcopy;
-        }
-    } else {
-        ESP_LOGE("MacroTranslator", "Failed to serialize macro definition into JSON");
-    }
+    // Document d1;
+    // d1.SetObject();
+    // if (def->SerializeJSONInto(d1)) {
+    // ESP_LOGI("MacroTranslator", "dummy 5");
+    // ESP_LOGI("MacroTranslator", "Mem 1 freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+    //     heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    //     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    //     heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+    //     heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+
+    MacroDeviceDefinition *defcopy = def->copy();
+
+    // ESP_LOGI("MacroTranslator", "Mem 2 freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+    //     heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    //     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+    //     heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+    //     heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    
+    // if (defcopy == nullptr) {
+    definition[trackIndex] = defcopy;
+    ESP_LOGI("MacroTranslator", "dummy 6");
+    // } else {
+    //     ESP_LOGE("MacroTranslator", "Failed to deserialize macro definition into JSON");
+    //     delete defcopy;
+    //     ESP_LOGI("MacroTranslator", "dummy 7");
+    // }
+    // } else {
+    //     ESP_LOGE("MacroTranslator", "Failed to serialize macro definition into JSON");
+    // }
+    // ESP_LOGI("MacroTranslator", "dummy 8");
+
 
     SetTrackMachine(trackIndex, def->synthId);
+
+
+    // ESP_LOGI("MacroTranslator", "dummy 9");
+
 }
 
 void MacroTranslator::SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value) {
@@ -139,7 +161,7 @@ void MacroTranslator::SetTrackParameter(const int trackIndex, int parameterIndex
         return;
     }
 
-    if (parameterIndex < 0 || parameterIndex >= 16) {
+    if (parameterIndex < 0 || parameterIndex >= 32) {
         // ESP_LOGE("MacroTranslator", "Parameter index out of range: %d", parameterIndex);
         return;
     }
@@ -176,9 +198,10 @@ void MacroTranslator::SetTrackParametersFromJSON(const std::string &parametersJS
     if (d.HasMember("macro")) {
         std::string macro = d["macro"].GetString();
         MacroDeviceDefinition *def =
-            macroDeviceDefinitionModel->GetMacroDeviceDefinition(macro);
+            macroDeviceDefinitionModel->LoadMacroDeviceDefinition(macro);
         ESP_LOGI("MacroTranslator", "Setting track %d macro definition to %s => 0x%08X", trackIndex, macro.c_str(), (uintptr_t)def);
         this->SetTrackMacroDefinition(trackIndex, def);
+        delete def;
     }
 
     if (d.HasMember("machine")) {
@@ -204,8 +227,8 @@ void MacroTranslator::SetTrackParametersFromJSON(const std::string &parametersJS
                 values[idx] = v.GetInt();
                 trackParameterValues[trackIndex][idx] = values[idx];
                 trackDirty[trackIndex] = 1;
-                ESP_LOGI("MacroTranslator", "Set track %d parameter %d to %d",
-                    trackIndex, idx, values[idx]);
+                // ESP_LOGD("MacroTranslator", "Set track %d parameter %d to %d",
+                //     trackIndex, idx, values[idx]);
             }
 
             idx ++;
@@ -365,6 +388,7 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
         if (trackDirty[t]) {
             trackDirty[t] = false;
 
+            // TODO: copy mapping instead.
             MacroDeviceDefinition *def = definition[t];
 
             // ESP_LOGI("MacroTranslator", "Track %d is dirty, def=0x%08X", t, (uintptr_t)def);
@@ -375,15 +399,15 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
 
                 int idx = 0;
                 for(auto om : def->outputMappings) {
-                    int32_t finalvalue = om->startValue;
+                    int32_t finalvalue = om.startValue;
 
-                    int cc = om->ctrl + trackBaseCC[t];
-                    for(auto src : om->sources) {
-                        int val = trackParameterValues[t][src->parameterIndex];
-                        if (src->divider > 0) {
-                            finalvalue += (val * src->multiplier) / src->divider;
+                    int cc = om.ctrl + trackBaseCC[t];
+                    for(auto src : om.sources) {
+                        int val = trackParameterValues[t][src.parameterIndex];
+                        if (src.divider > 0) {
+                            finalvalue += (val * src.multiplier) / src.divider;
                         } else {
-                            finalvalue += val * src->multiplier;
+                            finalvalue += val * src.multiplier;
                         }
                     }
 

@@ -116,9 +116,9 @@ namespace CTAG {
             static std::string GetMacroSoundPresetListJSON();
             static std::string GetMacroSoundPresetJSON(const std::string &soundPresetId);
             static std::string GetMacroDefinitionJSON(const std::string &soundPresetId);
-            static void ActivateTrackMachine(const int trackIndex, const std::string &machineId);
-            static void LoadTrackMacro(const int trackIndex, const std::string &macroId);
-            static void LoadTrackMacroAndPreset(const int trackIndex, const std::string &soundPresetId);
+            static void ActivateTrackMachine(const int trackIndex, const std::string machineId);
+            static void LoadTrackMacro(const int trackIndex, const std::string macroId);
+            static void LoadTrackMacroAndPreset(const int trackIndex, const std::string soundPresetId);
 
             // static bool UpdateSynthDefinitionJSON(const string &jsonstring);
             // static bool UpdateSoundPresetJSON(const string &jsonstring);
