@@ -1247,7 +1247,7 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
             }
         }
     }
-    else if (channel == 10) {
+    else if (channel == 2) {
         if (ch11_mo.enabled) {
             // printf("ch11_mo triggered by note %d, velocity %d\n", note, velocity);
             if (velocity == 0) {
@@ -1257,7 +1257,7 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
             }
         }
     }
-    else if (channel == 11) {
+    else if (channel == 3) {
         if (ch12_mo.enabled) {
             // printf("ch12_mo triggered by note %d, velocity %d\n", note, velocity);
             if (velocity == 0) {
@@ -1268,7 +1268,7 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
         }
     }
 
-    else if (channel == 12) {
+    else if (channel == 4) {
         if (ch13_ro.enabled) {
             // printf("ch13_ro triggered by note %d, velocity %d\n", note, velocity);
             if (velocity == 0) {
@@ -1278,7 +1278,7 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
             }
         }
     }
-    else if (channel == 13) {
+    else if (channel == 5) {
         if (ch14_ro.enabled) {
             // printf("ch14_ro triggered by note %d, velocity %d\n", note, velocity);
             if (velocity == 0) {
@@ -1288,7 +1288,7 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
             }
         }
     }
-    else if (channel == 14) {
+    else if (channel == 6) {
         if (ch15_pp.enabled) {
             // printf("ch15_pp triggered by note %d, velocity %d\n", note, velocity);
             if (velocity == 0) {

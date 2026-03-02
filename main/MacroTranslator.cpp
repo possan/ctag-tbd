@@ -136,7 +136,7 @@ void MacroTranslator::SetTrackMacroDefinition(const int trackIndex, MacroDeviceD
     
     // if (defcopy == nullptr) {
     definition[trackIndex] = defcopy;
-    ESP_LOGI("MacroTranslator", "dummy 6");
+    // ESP_LOGI("MacroTranslator", "dummy 6");
     // } else {
     //     ESP_LOGE("MacroTranslator", "Failed to deserialize macro definition into JSON");
     //     delete defcopy;

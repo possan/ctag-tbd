@@ -166,7 +166,7 @@
       "basecc": 0,
       "machines": [
         "nosynth",
-        "wo",
+        "wtosc",
         "mo",
         "extsynth"
       ],
@@ -223,7 +223,7 @@
       "basecc": 0,
       "machines": [
         "nosynth",
-        "inp"
+        "in"
       ],
       "defaultbank": ""
     },
@@ -1246,7 +1246,7 @@
       ]
     },
     {
-      "id": "wo",
+      "id": "wtosc",
       "name": "Wavetable osc",
       "type": "synth",
       "parameters": [
@@ -1561,7 +1561,7 @@
       ]
     },
     {
-      "id": "inp",
+      "id": "in",
       "name": "External input",
       "type": "synth",
       "parameters": []

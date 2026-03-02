@@ -233,6 +233,9 @@ export function previewHandleChange(evt: Event, ds: Record<string, string>) {
   } else if (ds.inputfield === "soundpresetgroup") {
     soundpreset.group = (evt.target as HTMLInputElement).value;
     previewUpdate();
+  } else if (ds.inputfield === "soundpresetmacroid") {
+    soundpreset.macroId = (evt.target as HTMLInputElement).value;
+    previewUpdate();
   } else if (ds.inputfield === "soundpresetparam") {
     handleParameterChange(evt, ds);
   }

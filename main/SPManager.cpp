@@ -878,23 +878,9 @@ void SoundProcessorManager::LoadTrackMacroAndPreset(const int trackIndex, const 
     // LoadTrackMacro(trackIndex, def->synthId);
     xSemaphoreTake(processMutex, portMAX_DELAY);
     macroTranslator->SetTrackMachine(trackIndex, def->synthId);
-
-
-    // ESP_LOGI("SPManager", "Mem 2 freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
-    //     heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-    //     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-    //     heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
-    //     heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-
     macroTranslator->SetTrackMacroDefinition(trackIndex, def);
-    
-    
-    // ESP_LOGI("SPManager", "Mem 3 freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
-    //     heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-    //     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
-    //     heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
-    //     heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    
+    xSemaphoreGive(processMutex);
+
     int pidx = 0;
     for(const auto& param : preset->parameterValues) {
         // ESP_LOGI("SPManager", "  Setting track %d param %d to value %f",
@@ -902,7 +888,6 @@ void SoundProcessorManager::LoadTrackMacroAndPreset(const int trackIndex, const 
         macroTranslator->SetTrackParameter(trackIndex, pidx, param);
         pidx ++;
     }
-    xSemaphoreGive(processMutex);
 
     delete preset;
     delete def;
