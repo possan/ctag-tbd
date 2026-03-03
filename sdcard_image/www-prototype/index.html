@@ -1,0 +1,219 @@
+<!--
+  dadamachines TBD-16 — Persona-based WebUI Prototype
+  Two-persona design: Performer (default) | Sound Designer
+
+  (c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
+
+  Licensed under the GNU Lesser General Public License (LGPL 3.0).
+  https://www.gnu.org/licenses/lgpl-3.0.txt
+-->
+<!DOCTYPE html>
+<html lang="en" class="sl-theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TBD-16</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="shoelace/themes/dark.css?v=2">
+  <script type="module" src="js/shoelace-bundle.js?v=4"></script>
+  <link rel="stylesheet" href="css/app.css?v=1">
+</head>
+<body>
+<div class="app">
+
+  <!-- ─── Header ───────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="header-brand">
+      <h1>TBD-16</h1>
+      <span class="connection-pill" id="conn-pill">
+        <span class="conn-dot"></span>
+        <span id="conn-pill-text">Connecting…</span>
+      </span>
+    </div>
+
+    <div class="persona-switcher">
+      <button class="persona-btn active" data-persona="performer" id="btn-performer">
+        <sl-icon name="music-note-beamed"></sl-icon> Performer
+      </button>
+      <button class="persona-btn" data-persona="designer" id="btn-designer">
+        <sl-icon name="wrench-adjustable"></sl-icon> Sound Designer
+      </button>
+    </div>
+
+    <div class="header-spacer"></div>
+
+    <div class="header-right">
+      <sl-icon-button name="gear" label="Settings" id="config-btn" style="font-size:1rem;"></sl-icon-button>
+      <sl-icon-button name="moon-fill" label="Toggle theme" id="theme-toggle" style="font-size:1rem;"></sl-icon-button>
+    </div>
+  </header>
+
+  <!-- ─── Main Content ─────────────────────────────────── -->
+  <div class="app-main">
+
+    <!-- ═══ PERFORMER VIEW ═══ -->
+    <div id="view-performer" class="active">
+
+      <!-- Track Overview Strip -->
+      <div class="track-overview" id="track-overview">
+        <!-- Populated by JS — 16 track strips -->
+      </div>
+
+      <!-- Performer Main Layout -->
+      <div class="performer-main">
+
+        <!-- Preset Browser (left sidebar) -->
+        <div class="preset-browser" id="preset-browser">
+          <div class="preset-browser-header">
+            <sl-icon name="collection" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
+            <span>Sound Presets</span>
+          </div>
+          <div class="preset-browser-search">
+            <sl-input placeholder="Search presets…" size="small" clearable id="preset-search">
+              <sl-icon slot="prefix" name="search"></sl-icon>
+            </sl-input>
+          </div>
+          <div class="preset-list" id="preset-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Macro Controls (center) -->
+        <div class="macro-controls" id="macro-controls">
+          <div class="empty-state" id="macro-empty">
+            <sl-icon name="sliders"></sl-icon>
+            <h3>Select a Track</h3>
+            <p>Choose a track from the strip above to see its macro controls</p>
+          </div>
+          <!-- Populated by JS when a track is selected -->
+        </div>
+
+        <!-- Quick Actions (right sidebar) -->
+        <div class="quick-actions">
+          <div class="quick-action-section">
+            <h3>Favorites</h3>
+            <div class="fav-row" id="fav-row">
+              <!-- 10 fav buttons populated by JS -->
+            </div>
+          </div>
+
+          <div class="quick-action-section">
+            <h3>Preset</h3>
+            <button class="quick-action-btn" id="qa-save-preset">
+              <sl-icon name="floppy"></sl-icon> Save Preset
+            </button>
+            <button class="quick-action-btn" id="qa-randomize">
+              <sl-icon name="shuffle"></sl-icon> Randomize
+            </button>
+            <button class="quick-action-btn" id="qa-init">
+              <sl-icon name="arrow-counterclockwise"></sl-icon> Init Preset
+            </button>
+          </div>
+
+          <div class="quick-action-section">
+            <h3>Track</h3>
+            <button class="quick-action-btn" id="qa-mute-track">
+              <sl-icon name="volume-mute"></sl-icon> Mute Track
+            </button>
+            <button class="quick-action-btn" id="qa-solo-track">
+              <sl-icon name="star"></sl-icon> Solo Track
+            </button>
+          </div>
+
+          <div class="quick-action-section">
+            <h3>Global</h3>
+            <button class="quick-action-btn" id="qa-export">
+              <sl-icon name="download"></sl-icon> Export All
+            </button>
+            <button class="quick-action-btn" id="qa-import">
+              <sl-icon name="upload"></sl-icon> Import All
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SOUND DESIGNER VIEW ═══ -->
+    <div id="view-designer">
+
+      <!-- Designer Toolbar -->
+      <div class="designer-toolbar">
+        <label>Track:</label>
+        <sl-select id="designer-track-select" size="small" value="0" style="min-width:160px;">
+        </sl-select>
+        <label style="margin-left:0.5rem;">Machine Def:</label>
+        <sl-select id="designer-machine-select" size="small" style="min-width:200px;">
+        </sl-select>
+        <div class="designer-toolbar-spacer"></div>
+        <sl-button size="small" variant="primary" id="designer-save-btn">
+          <sl-icon slot="prefix" name="floppy"></sl-icon> Save Definition
+        </sl-button>
+        <sl-button size="small" variant="neutral" id="designer-export-btn">
+          <sl-icon slot="prefix" name="download"></sl-icon> Export JSON
+        </sl-button>
+        <sl-button size="small" variant="neutral" id="designer-import-btn">
+          <sl-icon slot="prefix" name="upload"></sl-icon> Import JSON
+        </sl-button>
+      </div>
+
+      <!-- Designer 3-column layout -->
+      <div class="designer-layout">
+
+        <!-- Machine Definitions Browser (left) -->
+        <div class="machine-browser">
+          <div class="machine-browser-header">
+            <sl-icon name="cpu" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
+            <span>Machines</span>
+          </div>
+          <div class="machine-list" id="machine-list">
+          </div>
+        </div>
+
+        <!-- Mapping Editor (center) -->
+        <div class="mapping-editor" id="mapping-editor">
+          <div class="empty-state" id="mapping-empty">
+            <sl-icon name="diagram-3"></sl-icon>
+            <h3>No Machine Selected</h3>
+            <p>Select a machine definition from the left panel to view & edit parameter mappings</p>
+          </div>
+        </div>
+
+        <!-- DSP Parameters Panel (right) -->
+        <div class="dsp-panel">
+          <div class="dsp-panel-header">
+            <sl-icon name="motherboard" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
+            <span>DSP Parameters</span>
+          </div>
+          <div class="dsp-param-list" id="dsp-param-list">
+            <div class="empty-state" style="padding:1.5rem;">
+              <sl-icon name="cpu" style="font-size:1.5rem;"></sl-icon>
+              <p style="font-size:0.78rem;">Select a track to see its raw DSP parameters</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- .app-main -->
+
+</div> <!-- .app -->
+
+<!-- Loading overlay -->
+<div class="loading-overlay hidden" id="loading-overlay">
+  <div class="loading-box">
+    <sl-spinner></sl-spinner>
+    <span id="loading-text">Loading…</span>
+  </div>
+</div>
+
+<!-- Toast stack -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<!-- ─── Scripts ─────────────────────────────────────────── -->
+<script src="js/shared.js?v=5"></script>
+<script src="js/display-hints.js?v=5"></script>
+<script src="js/performer.js?v=5"></script>
+<script src="js/designer.js?v=5"></script>
+<script src="js/app-persona.js?v=5"></script>
+</body>
+</html>
