@@ -660,6 +660,209 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--sl-color-neutral-500); }
 
+/* ── Designer: Definition Header ─────────────────── */
+.mapping-def-header {
+  display: flex; align-items: flex-start; gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--sl-color-neutral-200);
+}
+.mapping-def-fields {
+  display: flex; align-items: center; gap: 0.4rem;
+  flex-wrap: wrap; flex: 1;
+}
+.mapping-def-fields label {
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--sl-color-neutral-500);
+  text-transform: uppercase; letter-spacing: 0.03em;
+}
+.mapping-def-fields .mapping-input {
+  width: auto; min-width: 100px;
+}
+.mapping-def-fields .mapping-select {
+  font-size: 0.75rem; padding: 0.2rem 0.4rem;
+  border: 1px solid var(--sl-color-neutral-300);
+  border-radius: 3px; background: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-800);
+}
+.mapping-def-actions {
+  display: flex; gap: 0.35rem; flex-shrink: 0;
+}
+.mapping-btn {
+  padding: 0.3rem 0.6rem; font-size: 0.72rem; font-weight: 600;
+  border: 1px solid var(--sl-color-neutral-300);
+  border-radius: 4px; cursor: pointer;
+  background: var(--sl-color-neutral-100);
+  color: var(--sl-color-neutral-800);
+  transition: all 0.15s;
+}
+.mapping-btn:hover {
+  background: var(--sl-color-primary-100);
+  border-color: var(--sl-color-primary-400);
+  color: var(--sl-color-primary-700);
+}
+
+/* ── Designer: Tabs ──────────────────────────────────── */
+.mapping-tabs {
+  display: flex; border-bottom: 2px solid var(--sl-color-neutral-200);
+  margin-bottom: 0.75rem;
+}
+.mapping-tab {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem; font-weight: 600;
+  border: none; background: none; cursor: pointer;
+  color: var(--sl-color-neutral-500);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+}
+.mapping-tab:hover { color: var(--sl-color-neutral-700); }
+.mapping-tab.active {
+  color: var(--sl-color-primary-600);
+  border-bottom-color: var(--sl-color-primary-600);
+}
+.mapping-tab-content { display: none; }
+.mapping-tab-content.active { display: block; }
+
+/* ── Designer: Group title with inline input ─────────── */
+.mapping-group-title {
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.mapping-group-title .group-name-input {
+  width: auto; min-width: 80px; flex: 1;
+  font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.03em; border: none; background: transparent;
+  color: var(--sl-color-neutral-600);
+}
+.mapping-group-title .group-name-input:focus {
+  background: var(--sl-color-neutral-0);
+  border: 1px solid var(--sl-color-primary-500);
+}
+
+/* ── Designer: Add/Remove buttons ────────────────────── */
+.mapping-add-btn, .add-param-btn, .add-mapping-btn, .create-preset-btn {
+  padding: 0.2rem 0.5rem; font-size: 0.68rem; font-weight: 600;
+  border: 1px solid var(--sl-color-neutral-300); border-radius: 3px;
+  cursor: pointer; background: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-600);
+  transition: all 0.15s; white-space: nowrap;
+}
+.mapping-add-btn:hover, .add-param-btn:hover, .add-mapping-btn:hover, .create-preset-btn:hover {
+  background: var(--sl-color-primary-100);
+  border-color: var(--sl-color-primary-400);
+  color: var(--sl-color-primary-700);
+}
+.mapping-remove-btn, .remove-param-btn, .remove-mapping-btn, .delete-preset-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--sl-color-neutral-400); font-size: 0.85rem;
+  padding: 0.1rem; transition: color 0.15s;
+}
+.mapping-remove-btn:hover, .remove-param-btn:hover, .remove-mapping-btn:hover, .delete-preset-btn:hover {
+  color: var(--sl-color-danger-600);
+}
+
+/* ── Designer: Output Mappings ───────────────────────── */
+.mapping-output-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem; margin-bottom: 0.5rem;
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--sl-color-neutral-600);
+}
+.mapping-output-table .mapping-sources {
+  display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center;
+}
+.mapping-source {
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  font-size: 0.7rem; font-family: monospace;
+  background: var(--sl-color-primary-100);
+  color: var(--sl-color-primary-700);
+  padding: 0.1rem 0.35rem; border-radius: 3px;
+  white-space: nowrap;
+}
+.mapping-source button {
+  background: none; border: none; cursor: pointer;
+  color: var(--sl-color-primary-400); font-size: 0.75rem;
+  padding: 0; margin-left: 0.15rem;
+}
+.mapping-source button:hover { color: var(--sl-color-danger-600); }
+.mapping-add-src-btn {
+  padding: 0.1rem 0.3rem; font-size: 0.65rem; font-weight: 600;
+  border: 1px dashed var(--sl-color-neutral-300); border-radius: 3px;
+  cursor: pointer; background: transparent;
+  color: var(--sl-color-neutral-400);
+  transition: all 0.15s;
+}
+.mapping-add-src-btn:hover {
+  border-color: var(--sl-color-primary-400);
+  color: var(--sl-color-primary-600);
+}
+.mapping-cc-name {
+  font-size: 0.72rem; color: var(--sl-color-neutral-500);
+  font-style: italic;
+}
+.mapping-slot {
+  font-family: monospace; font-size: 0.72rem;
+  color: var(--sl-color-neutral-400); text-align: center;
+  width: 28px;
+}
+
+/* ── Designer: Sound Preset Chips ────────────────────── */
+.preset-values-cell {
+  display: flex; flex-wrap: wrap; gap: 0.15rem;
+}
+.preset-value-chip {
+  display: inline-block;
+  font-size: 0.65rem; font-family: monospace;
+  background: var(--sl-color-neutral-200);
+  color: var(--sl-color-neutral-700);
+  padding: 0.05rem 0.3rem; border-radius: 2px;
+  min-width: 22px; text-align: center;
+}
+
+/* ── Designer: Machine group header ──────────────────── */
+.machine-group { margin-bottom: 0.5rem; }
+.machine-group-header {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--sl-color-neutral-500);
+  background: var(--sl-color-neutral-100);
+  border-bottom: 1px solid var(--sl-color-neutral-200);
+}
+.machine-item-meta {
+  display: flex; gap: 0.5rem;
+  font-size: 0.62rem; color: var(--sl-color-neutral-400);
+}
+.machine-item {
+  flex-direction: column; align-items: flex-start;
+  gap: 0.15rem;
+}
+
+/* ── Designer: DSP Panel title ───────────────────────── */
+.dsp-panel-title {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--sl-color-neutral-600);
+  border-bottom: 1px solid var(--sl-color-neutral-200);
+  background: var(--sl-color-neutral-100);
+}
+.dsp-param-index {
+  font-family: monospace; font-size: 0.68rem;
+  color: var(--sl-color-neutral-400);
+  min-width: 40px;
+}
+.dsp-param-name {
+  flex: 1; font-size: 0.78rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dsp-param-value {
+  font-size: 0.68rem; font-family: monospace;
+  color: var(--sl-color-neutral-500);
+}
+.dsp-param-mapped-icon {
+  font-size: 0.7rem; color: var(--sl-color-primary-500);
+}
+
 /* ── Responsive ────────────────────────────────────── */
 @media (max-width: 900px) {
   .preset-browser { display: none; }

@@ -5,10 +5,11 @@
 // management. This is the entry point that coordinates the
 // Performer and Sound Designer views.
 //
-// Boot Sequence:
-//   1. Init shared (connection check, theme)
-//   2. Init active persona view
-//   3. Show UI
+// DOM IDs (matching index.html):
+//   Views:   #view-performer, #view-designer
+//   Buttons: #btn-performer (.persona-btn), #btn-designer (.persona-btn)
+//   Other:   #conn-pill, #conn-pill-text, #config-btn, #theme-toggle
+//            #loading-overlay, #loading-text
 //
 // (c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
 // Licensed under LGPL 3.0.
@@ -27,29 +28,29 @@
     if (persona === activePersona) return;
     activePersona = persona;
 
-    var performerView = document.getElementById('performer-view');
-    var designerView = document.getElementById('designer-view');
-    var performerTab = document.querySelector('.persona-tab[data-persona="performer"]');
-    var designerTab = document.querySelector('.persona-tab[data-persona="designer"]');
+    var performerView = document.getElementById('view-performer');
+    var designerView = document.getElementById('view-designer');
+    var performerBtn = document.getElementById('btn-performer');
+    var designerBtn = document.getElementById('btn-designer');
 
     if (persona === 'performer') {
-      performerView.classList.add('active');
-      designerView.classList.remove('active');
-      performerTab.classList.add('active');
-      designerTab.classList.remove('active');
+      if (performerView) performerView.classList.add('active');
+      if (designerView) designerView.classList.remove('active');
+      if (performerBtn) performerBtn.classList.add('active');
+      if (designerBtn) designerBtn.classList.remove('active');
 
       // Lazy-init performer if needed
-      if (!window.TBD.performer.state.initialized) {
+      if (window.TBD.performer && !window.TBD.performer.state.initialized) {
         window.TBD.performer.init();
       }
     } else {
-      designerView.classList.add('active');
-      performerView.classList.remove('active');
-      designerTab.classList.add('active');
-      performerTab.classList.remove('active');
+      if (designerView) designerView.classList.add('active');
+      if (performerView) performerView.classList.remove('active');
+      if (designerBtn) designerBtn.classList.add('active');
+      if (performerBtn) performerBtn.classList.remove('active');
 
       // Lazy-init designer if needed
-      if (!window.TBD.designer.state.initialized) {
+      if (window.TBD.designer && !window.TBD.designer.state.initialized) {
         window.TBD.designer.init();
       }
     }
@@ -61,9 +62,9 @@
   }
 
   function setupPersonaSwitcher() {
-    document.querySelectorAll('.persona-tab').forEach(function(tab) {
-      tab.addEventListener('click', function() {
-        var persona = tab.getAttribute('data-persona');
+    document.querySelectorAll('.persona-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var persona = btn.getAttribute('data-persona');
         switchPersona(persona);
       });
     });
@@ -85,7 +86,7 @@
   // ─── Theme ───────────────────────────────────────────────
 
   function setupTheme() {
-    var themeBtn = document.getElementById('theme-btn');
+    var themeBtn = document.getElementById('theme-toggle');
     if (!themeBtn) return;
 
     // Restore theme from localStorage
@@ -116,7 +117,7 @@
   // ─── Settings ────────────────────────────────────────────
 
   function setupSettings() {
-    var settingsBtn = document.getElementById('settings-btn');
+    var settingsBtn = document.getElementById('config-btn');
     if (!settingsBtn) return;
 
     settingsBtn.addEventListener('click', function() {
@@ -127,28 +128,26 @@
   // ─── Connection Status ───────────────────────────────────
 
   function updateConnectionStatus(connected) {
-    var pill = document.getElementById('connection-pill');
+    var pill = document.getElementById('conn-pill');
+    var pillText = document.getElementById('conn-pill-text');
     if (!pill) return;
 
     if (connected) {
       pill.classList.add('connected');
       pill.classList.remove('disconnected');
-      pill.textContent = 'Connected';
+      if (pillText) pillText.textContent = 'Connected';
     } else {
       pill.classList.remove('connected');
       pill.classList.add('disconnected');
-      pill.textContent = 'Offline';
+      if (pillText) pillText.textContent = 'Offline';
     }
   }
 
   function setupConnectionMonitor() {
-    // For prototype: simulate connected state
-    updateConnectionStatus(true);
-
-    // In production, use shared.js connection monitor:
-    // window.addEventListener('tbd-connection-change', function(e) {
-    //   updateConnectionStatus(e.detail.connected);
-    // });
+    // Quick connection check by fetching the API
+    fetch('/api/v1/samples')
+      .then(function() { updateConnectionStatus(true); })
+      .catch(function() { updateConnectionStatus(false); });
   }
 
   // ─── Boot Sequence ───────────────────────────────────────
@@ -170,17 +169,21 @@
 
     if (savedPersona === 'designer') {
       activePersona = 'designer';
-      document.querySelector('.persona-tab[data-persona="designer"]').classList.add('active');
-      document.querySelector('.persona-tab[data-persona="performer"]').classList.remove('active');
-      document.getElementById('designer-view').classList.add('active');
-      document.getElementById('performer-view').classList.remove('active');
+      var designerBtn = document.getElementById('btn-designer');
+      var performerBtn = document.getElementById('btn-performer');
+      var designerView = document.getElementById('view-designer');
+      var performerView = document.getElementById('view-performer');
+      if (designerBtn) designerBtn.classList.add('active');
+      if (performerBtn) performerBtn.classList.remove('active');
+      if (designerView) designerView.classList.add('active');
+      if (performerView) performerView.classList.remove('active');
     }
 
     // 3. Init the active persona view
     if (activePersona === 'performer') {
-      window.TBD.performer.init();
+      if (window.TBD.performer) window.TBD.performer.init();
     } else {
-      window.TBD.designer.init();
+      if (window.TBD.designer) window.TBD.designer.init();
     }
 
     // 4. Hide loading overlay

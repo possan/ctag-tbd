@@ -1,14 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// TBD-16 WebUI — Performer View
+// TBD-16 WebUI — Performer View (Real Data)
 // Persona: Performer / Artist
 //
-// Focused on performance: macro knobs, preset recall, track overview.
-// Shows only the high-level macro parameters (6 groups × 4 params),
-// NOT the raw DSP parameters.
+// Loads real data from the device API:
+//   - synthdefinitions.json  → tracks + machines + DSP CC params
+//   - macrodefinitions/*.json → macro parameter groups + output mappings
+//   - macrosoundpresets/*.json → sound preset values
 //
 // Data flow:
 //   Macro Sound Presets → Macro Definitions → DSP CC values
-//   (All resolved by MacroTranslator on the device.)
+//   (Resolved by MacroTranslator on the device.)
 //
 // (c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
 // Licensed under LGPL 3.0.
@@ -20,161 +21,71 @@
 
   // ─── State ───────────────────────────────────────────────
   var state = {
-    tracks: [],             // Track metadata (16 tracks)
-    activeTrack: -1,        // Currently selected track index (0-15)
-    macroDefinitions: {},   // Loaded macro definitions keyed by filename
-    soundPresets: {},       // Available sound presets
-    currentPreset: null,    // Active preset for selected track
-    currentMacroDef: null,  // Active macro definition for selected track
+    synthDefs: null,         // From synthdefinitions.json: { tracks, machines }
+    tracks: [],              // Array of track objects from synthDefs
+    machines: [],            // Array of machine objects from synthDefs
+    macroDefs: [],           // All loaded macro definitions
+    soundPresets: [],        // All loaded sound presets
+    activeTrack: -1,         // Currently selected track index
+    activeMachine: '',       // Active machine id for selected track
+    activeMacroDef: null,    // Active macro definition object
+    activePreset: null,      // Active sound preset object
+    paramValues: [],         // Current parameter values for active macro/preset
     presetSearchTerm: '',
     initialized: false,
+    loading: false,
   };
 
-  // ─── Mock Data (for prototype — replaced by API calls in production) ──
+  // ─── API Helpers ──────────────────────────────────────────
 
-  /**
-   * Generate mock track data for 16-track PicoSeqRack.
-   * In production, this comes from the device via API.
-   */
-  function generateMockTracks() {
-    var trackNames = [
-      'Kick',     'Snare',    'Hi-Hat',   'Clap',
-      'Perc 1',   'Perc 2',   'Bass',     'Lead',
-      'Pad',      'FX 1',     'FX 2',     'Chord',
-      'Arp',      'Stab',     'Sub',      'Master'
-    ];
-    var machines = [
-      'RackDBD',   'RackDSD',   'RackHH1',  'RackDSD',
-      'RackDBD',   'RackHH1',   'RackTBD03','RackSynth',
-      'RackSynth', 'RackFxDelay','RackFxDelay','RackSynth',
-      'RackSynth', 'RackRompler','RackDBD',  'Mixer'
-    ];
-    var tracks = [];
-    for (var i = 0; i < 16; i++) {
-      tracks.push({
-        index: i,
-        name: trackNames[i],
-        machine: machines[i],
-        muted: false,
-        solo: false,
-      });
-    }
-    return tracks;
-  }
-
-  /**
-   * Generate mock macro definition for a track.
-   * Structure: 6 parameter groups × 4 parameters each
-   */
-  function generateMockMacroDefinition(trackName, machine) {
-    var groups = [];
-    // Create meaningful parameter groups based on machine type
-    var groupDefs;
-    if (machine === 'RackDBD' || machine === 'RackDSD') {
-      groupDefs = [
-        { name: 'Tone',      params: ['Frequency', 'Tone', 'Decay', 'Noise'] },
-        { name: 'Shape',     params: ['Drive', 'Shape', 'Dirty', 'FM Decay'] },
-        { name: 'Dynamics',  params: ['Level', 'Accent', 'Attack', 'Sustain'] },
-        { name: 'Modulation',params: ['LFO Rate', 'LFO Depth', 'Env Mod', 'Pitch'] },
-        { name: 'Effects',   params: ['FX Send 1', 'FX Send 2', 'Pan', 'Width'] },
-        { name: 'Mix',       params: ['Volume', 'Mute', 'Solo', 'Comp'] },
-      ];
-    } else if (machine === 'RackTBD03') {
-      groupDefs = [
-        { name: 'Oscillator', params: ['Shape', 'Tune', 'Detune', 'Sub Level'] },
-        { name: 'Filter',     params: ['Cutoff', 'Resonance', 'Env Mod', 'Key Track'] },
-        { name: 'Envelope',   params: ['Attack', 'Decay', 'Sustain', 'Release'] },
-        { name: 'Accent',     params: ['Accent', 'Slide', 'Overdrive', 'Dist Type'] },
-        { name: 'Effects',    params: ['FX Send 1', 'FX Send 2', 'Pan', 'Width'] },
-        { name: 'Mix',        params: ['Volume', 'Mute', 'Solo', 'Comp'] },
-      ];
-    } else if (machine === 'RackHH1') {
-      groupDefs = [
-        { name: 'Tone',      params: ['Freq High', 'Freq Low', 'Tone', 'Noise'] },
-        { name: 'Envelope',  params: ['Decay', 'Attack', 'Hold', 'Release'] },
-        { name: 'Character', params: ['Metallic', 'Ring', 'Saturate', 'Bit Red.'] },
-        { name: 'Open/Close',params: ['Open Level', 'Closed Level', 'Choke', 'Threshold'] },
-        { name: 'Effects',   params: ['FX Send 1', 'FX Send 2', 'Pan', 'Width'] },
-        { name: 'Mix',       params: ['Volume', 'Mute', 'Solo', 'Comp'] },
-      ];
-    } else {
-      groupDefs = [
-        { name: 'Group 1', params: ['Param A', 'Param B', 'Param C', 'Param D'] },
-        { name: 'Group 2', params: ['Param E', 'Param F', 'Param G', 'Param H'] },
-        { name: 'Group 3', params: ['Param I', 'Param J', 'Param K', 'Param L'] },
-        { name: 'Group 4', params: ['Param M', 'Param N', 'Param O', 'Param P'] },
-        { name: 'Group 5', params: ['Param Q', 'Param R', 'Param S', 'Param T'] },
-        { name: 'Group 6', params: ['Param U', 'Param V', 'Param W', 'Param X'] },
-      ];
-    }
-
-    groupDefs.forEach(function(gd, gi) {
-      var params = [];
-      gd.params.forEach(function(pname, pi) {
-        params.push({
-          name: pname,
-          value: Math.floor(Math.random() * 128),
-          min: 0,
-          max: 127,
-        });
-      });
-      groups.push({
-        name: gd.name,
-        index: gi,
-        params: params,
-      });
+  function apiGet(url) {
+    return fetch(url).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
     });
-
-    return {
-      name: trackName + ' Macro',
-      groups: groups,
-    };
   }
 
-  /**
-   * Generate mock sound presets.
-   */
-  function generateMockPresets() {
-    var categories = {
-      'KICKS': [
-        { name: '808 Deep Kick', machine: 'RackDBD' },
-        { name: '909 Tight Kick', machine: 'RackDBD' },
-        { name: 'Sub Boom', machine: 'RackDBD' },
-        { name: 'Punchy Analog', machine: 'RackDBD' },
-        { name: 'Lo-Fi Thump', machine: 'RackDBD' },
-      ],
-      'SNARES': [
-        { name: 'Snappy Snare', machine: 'RackDSD' },
-        { name: 'Fat Clap', machine: 'RackDSD' },
-        { name: 'Tight Rim', machine: 'RackDSD' },
-        { name: 'Layered Crack', machine: 'RackDSD' },
-      ],
-      'HI-HATS': [
-        { name: 'Crispy Closed', machine: 'RackHH1' },
-        { name: 'Sizzle Open', machine: 'RackHH1' },
-        { name: 'Dark Hat', machine: 'RackHH1' },
-      ],
-      'BASS': [
-        { name: 'Acid Squelch', machine: 'RackTBD03' },
-        { name: 'Rubber Bass', machine: 'RackTBD03' },
-        { name: 'Deep Sub', machine: 'RackTBD03' },
-        { name: 'Growl Bass', machine: 'RackTBD03' },
-      ],
-      'SYNTHS': [
-        { name: 'Warm Pad', machine: 'RackSynth' },
-        { name: 'Bright Lead', machine: 'RackSynth' },
-        { name: 'Pluck Stab', machine: 'RackSynth' },
-      ],
-      'EFFECTS': [
-        { name: 'Tape Delay', machine: 'RackFxDelay' },
-        { name: 'Shimmer Verb', machine: 'RackFxDelay' },
-      ],
-    };
-
-    return categories;
+  function apiPost(url, data) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
   }
 
-  // ─── Track Overview ──────────────────────────────────────
+  // ─── Data Loading ─────────────────────────────────────────
+
+  function loadAllData() {
+    state.loading = true;
+    S.showLoading('Loading tracks & presets…');
+
+    return Promise.all([
+      apiGet('/api/v1/samples?getconfig=synthdefinitions.json'),
+      apiGet('/api/v1/macroapi/definitions'),
+      apiGet('/api/v1/macroapi/soundpresets'),
+    ]).then(function(results) {
+      state.synthDefs = results[0];
+      state.tracks = results[0].tracks || [];
+      state.machines = results[0].machines || [];
+      state.macroDefs = results[1] || [];
+      state.soundPresets = results[2] || [];
+      state.loading = false;
+      S.hideLoading();
+      console.log('[Performer] Loaded:', state.tracks.length, 'tracks,',
+                  state.macroDefs.length, 'macro defs,',
+                  state.soundPresets.length, 'sound presets');
+    }).catch(function(err) {
+      state.loading = false;
+      S.hideLoading();
+      console.error('[Performer] Load error:', err);
+      S.toast('Failed to load data: ' + err.message, 'danger', 4000);
+    });
+  }
+
+  // ─── Track Overview Strip ────────────────────────────────
 
   function renderTrackOverview() {
     var container = document.getElementById('track-overview');
@@ -184,14 +95,20 @@
     state.tracks.forEach(function(track) {
       var classes = 'track-strip';
       if (track.index === state.activeTrack) classes += ' active';
-      if (track.muted) classes += ' muted';
+
+      // Show first non-"no*" machine as the default machine
+      var availMachines = (track.machines || []).filter(function(m) {
+        return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
+      });
+      var defaultMachine = availMachines.length > 0 ? availMachines[0] : '—';
 
       html += '<div class="' + classes + '" data-track="' + track.index + '">';
       html += '<span class="track-num">' + String(track.index + 1).padStart(2, '0') + '</span>';
       html += '<span class="track-name">' + S.esc(track.name) + '</span>';
-      html += '<span class="track-machine">' + S.esc(track.machine.replace('Rack', '')) + '</span>';
+      html += '<span class="track-machine">' + S.esc(defaultMachine) + '</span>';
       html += '</div>';
     });
+
     container.innerHTML = html;
   }
 
@@ -207,82 +124,227 @@
     });
   }
 
-  function selectTrack(idx) {
-    if (idx < 0 || idx >= state.tracks.length) return;
-    state.activeTrack = idx;
+  // ─── Track Selection ─────────────────────────────────────
 
-    // Update track strip active state
+  function selectTrack(idx) {
+    var track = state.tracks.find(function(t) { return t.index === idx; });
+    if (!track) return;
+
+    state.activeTrack = idx;
+    state.activePreset = null;
+
+    // Update strip highlight
     document.querySelectorAll('.track-strip').forEach(function(s) {
       s.classList.toggle('active', parseInt(s.getAttribute('data-track'), 10) === idx);
     });
 
-    // Load macro controls for selected track
-    var track = state.tracks[idx];
-    var macroDef = generateMockMacroDefinition(track.name, track.machine);
-    state.currentMacroDef = macroDef;
+    // Get available machines for this track (excluding empty/no* machines)
+    var availMachines = (track.machines || []).filter(function(m) {
+      return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
+    });
 
-    renderMacroControls(track, macroDef);
+    // Default to first available machine
+    var machineId = availMachines.length > 0 ? availMachines[0] : '';
+    state.activeMachine = machineId;
+
+    // Find matching macro definitions for this machine
+    var matchingDefs = state.macroDefs.filter(function(d) {
+      return d.machine === machineId;
+    });
+
+    // Use first matching definition (or the allparams one if available)
+    var allParamsDef = matchingDefs.find(function(d) {
+      return d.id.indexOf('allparams') !== -1;
+    });
+    var def = allParamsDef || matchingDefs[0] || null;
+    state.activeMacroDef = def;
+
+    // Initialize param values from macro def defaults
+    state.paramValues = [];
+    if (def && def.groups) {
+      def.groups.forEach(function(group) {
+        group.parameters.forEach(function(param) {
+          state.paramValues[param.idx] = param.def || 0;
+        });
+      });
+    }
+
+    renderMacroControls(track, def, availMachines);
+    renderPresetBrowser();
+  }
+
+  // ─── Machine Selector ────────────────────────────────────
+
+  function getMachineInfo(machineId) {
+    return state.machines.find(function(m) { return m.id === machineId; }) || null;
   }
 
   // ─── Macro Controls Rendering ────────────────────────────
 
-  function renderMacroControls(track, macroDef) {
+  function renderMacroControls(track, macroDef, availMachines) {
     var container = document.getElementById('macro-controls');
     if (!container) return;
 
+    if (!macroDef) {
+      container.innerHTML =
+        '<div class="empty-state" id="macro-empty">' +
+        '<sl-icon name="sliders"></sl-icon>' +
+        '<h3>No macro definition found</h3>' +
+        '<p>No macro definition available for machine "' + S.esc(state.activeMachine) + '"</p>' +
+        '</div>';
+      return;
+    }
+
     var html = '';
 
-    // Track info header
+    // Track info header with machine selector
     html += '<div class="track-info-header">';
     html += '<span class="track-badge">CH ' + String(track.index + 1).padStart(2, '0') + '</span>';
     html += '<span class="track-title">' + S.esc(track.name) + '</span>';
-    html += '<span class="track-subtitle">' + S.esc(track.machine) + '</span>';
+
+    // Machine selector dropdown
+    html += '<sl-select id="performer-machine-select" size="small" value="' + S.esc(state.activeMachine) + '" style="min-width:140px; margin-left:0.5rem;">';
+    availMachines.forEach(function(machId) {
+      var info = getMachineInfo(machId);
+      var label = info ? info.name : machId;
+      html += '<sl-option value="' + S.esc(machId) + '">' + S.esc(label) + '</sl-option>';
+    });
+    html += '</sl-select>';
+
+    // Macro definition selector (if multiple defs for this machine)
+    var matchingDefs = state.macroDefs.filter(function(d) {
+      return d.machine === state.activeMachine;
+    });
+    if (matchingDefs.length > 1) {
+      html += '<sl-select id="performer-macrodef-select" size="small" value="' + S.esc(macroDef.id) + '" style="min-width:160px; margin-left:0.25rem;">';
+      matchingDefs.forEach(function(d) {
+        html += '<sl-option value="' + S.esc(d.id) + '">' + S.esc(d.name) + '</sl-option>';
+      });
+      html += '</sl-select>';
+    } else {
+      html += '<span class="track-subtitle">' + S.esc(macroDef.name) + '</span>';
+    }
     html += '</div>';
 
     // Render each macro group
-    macroDef.groups.forEach(function(group) {
-      html += '<div class="macro-group" data-group="' + group.index + '">';
+    if (macroDef.groups) {
+      macroDef.groups.forEach(function(group, gi) {
+        html += '<div class="macro-group" data-group="' + gi + '">';
 
-      // Group header
-      html += '<div class="macro-group-header">';
-      html += '<sl-icon name="chevron-down" class="macro-group-chevron"></sl-icon>';
-      html += '<span class="macro-group-name">' + S.esc(group.name) + '</span>';
-      html += '</div>';
-
-      // Group body with knob grid (4 columns)
-      html += '<div class="macro-group-body">';
-      group.params.forEach(function(param, pi) {
-        var pct = Math.round((param.value / param.max) * 100);
-        html += '<div class="macro-knob-cell" data-group="' + group.index + '" data-param="' + pi + '">';
-        html += '<div class="macro-knob" style="--knob-pct:' + pct + '" ';
-        html += 'data-value="' + param.value + '" data-min="' + param.min + '" data-max="' + param.max + '">';
-        html += '<span class="knob-indicator" style="' + knobIndicatorStyle(pct) + '"></span>';
+        // Group header
+        html += '<div class="macro-group-header">';
+        html += '<sl-icon name="chevron-down" class="macro-group-chevron"></sl-icon>';
+        html += '<span class="macro-group-name">' + S.esc(group.name) + '</span>';
         html += '</div>';
-        html += '<span class="macro-knob-label">' + S.esc(param.name) + '</span>';
-        html += '<span class="macro-knob-value">' + param.value + '</span>';
+
+        // Group body with knob grid (4 columns)
+        html += '<div class="macro-group-body">';
+        group.parameters.forEach(function(param) {
+          var value = state.paramValues[param.idx] !== undefined ? state.paramValues[param.idx] : (param.def || 0);
+          var min = param.min || 0;
+          var max = param.max || 127;
+          var pct = max > min ? Math.round(((value - min) / (max - min)) * 100) : 0;
+
+          html += '<div class="macro-knob-cell" data-param-idx="' + param.idx + '">';
+          html += '<div class="macro-knob" style="--knob-pct:' + pct + '" ';
+          html += 'data-value="' + value + '" data-min="' + min + '" data-max="' + max + '" data-idx="' + param.idx + '">';
+          html += '<span class="knob-indicator" style="' + knobIndicatorStyle(pct) + '"></span>';
+          html += '</div>';
+          html += '<span class="macro-knob-label">' + S.esc(param.name) + '</span>';
+          html += '<span class="macro-knob-value">' + value + '</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+
         html += '</div>';
       });
-      html += '</div>';
-
-      html += '</div>';
-    });
+    }
 
     container.innerHTML = html;
     setupMacroKnobEvents(container);
     setupMacroGroupEvents(container);
+    setupMachineChangeEvents();
+  }
+
+  function setupMachineChangeEvents() {
+    var machineSelect = document.getElementById('performer-machine-select');
+    if (machineSelect) {
+      machineSelect.addEventListener('sl-change', function() {
+        var newMachine = machineSelect.value;
+        if (newMachine === state.activeMachine) return;
+        state.activeMachine = newMachine;
+
+        // Find matching macro definitions for new machine
+        var matchingDefs = state.macroDefs.filter(function(d) {
+          return d.machine === newMachine;
+        });
+        var allParamsDef = matchingDefs.find(function(d) {
+          return d.id.indexOf('allparams') !== -1;
+        });
+        var def = allParamsDef || matchingDefs[0] || null;
+        state.activeMacroDef = def;
+
+        // Reset param values
+        state.paramValues = [];
+        if (def && def.groups) {
+          def.groups.forEach(function(group) {
+            group.parameters.forEach(function(param) {
+              state.paramValues[param.idx] = param.def || 0;
+            });
+          });
+        }
+
+        var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
+        var availMachines = (track.machines || []).filter(function(m) {
+          return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
+        });
+        renderMacroControls(track, def, availMachines);
+        renderPresetBrowser();
+
+        // Notify device of machine change
+        sendTrackUpdate({ track: state.activeTrack, machine: newMachine });
+      });
+    }
+
+    var macroDefSelect = document.getElementById('performer-macrodef-select');
+    if (macroDefSelect) {
+      macroDefSelect.addEventListener('sl-change', function() {
+        var defId = macroDefSelect.value;
+        var def = state.macroDefs.find(function(d) { return d.id === defId; });
+        if (!def) return;
+        state.activeMacroDef = def;
+
+        // Reset param values
+        state.paramValues = [];
+        if (def.groups) {
+          def.groups.forEach(function(group) {
+            group.parameters.forEach(function(param) {
+              state.paramValues[param.idx] = param.def || 0;
+            });
+          });
+        }
+
+        var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
+        var availMachines = (track.machines || []).filter(function(m) {
+          return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
+        });
+        renderMacroControls(track, def, availMachines);
+        renderPresetBrowser();
+
+        sendTrackUpdate({ track: state.activeTrack, macro: def.id });
+      });
+    }
   }
 
   /**
    * Calculate CSS position for the knob indicator dot.
-   * Maps 0-100% to a position on the knob's perimeter.
    */
   function knobIndicatorStyle(pct) {
-    // Map 0-100 to angle: 225° (start) → 315° (end) going clockwise (full range = 270°)
     var angle = 225 + (pct / 100) * 270;
     var rad = (angle * Math.PI) / 180;
-    var radius = 27; // half of 54px (inside the 68px knob, accounting for border + inner circle)
-    var cx = 34 + Math.cos(rad) * radius - 3; // center x - half dot width
-    var cy = 34 + Math.sin(rad) * radius - 3; // center y - half dot height
+    var radius = 27;
+    var cx = 34 + Math.cos(rad) * radius - 3;
+    var cy = 34 + Math.sin(rad) * radius - 3;
     return 'left:' + cx.toFixed(1) + 'px;top:' + cy.toFixed(1) + 'px;';
   }
 
@@ -300,6 +362,7 @@
       var valueEl = cell.querySelector('.macro-knob-value');
       var min = parseInt(knob.getAttribute('data-min'), 10) || 0;
       var max = parseInt(knob.getAttribute('data-max'), 10) || 127;
+      var paramIdx = parseInt(knob.getAttribute('data-idx'), 10);
       var startY = 0;
       var startVal = 0;
 
@@ -313,46 +376,61 @@
       }
 
       function onPointerMove(e) {
-        var dy = startY - e.clientY; // up = increase
+        var dy = startY - e.clientY;
         var range = max - min;
-        var sensitivity = range / 200; // 200px drag = full range
+        var sensitivity = range / 200;
         var newVal = Math.round(startVal + dy * sensitivity);
         newVal = Math.max(min, Math.min(max, newVal));
 
         knob.setAttribute('data-value', newVal);
-        var pct = Math.round(((newVal - min) / (max - min)) * 100);
+        var pct = max > min ? Math.round(((newVal - min) / (max - min)) * 100) : 0;
         knob.style.setProperty('--knob-pct', pct);
         valueEl.textContent = newVal;
+        state.paramValues[paramIdx] = newVal;
 
-        // Update indicator position
         var indicator = knob.querySelector('.knob-indicator');
         if (indicator) indicator.style.cssText = knobIndicatorStyle(pct);
       }
 
-      function onPointerUp(e) {
+      function onPointerUp() {
         knob.classList.remove('dragging');
         document.removeEventListener('pointermove', onPointerMove);
         document.removeEventListener('pointerup', onPointerUp);
 
-        // Send value to device
-        var groupIdx = parseInt(cell.getAttribute('data-group'), 10);
-        var paramIdx = parseInt(cell.getAttribute('data-param'), 10);
         var value = parseInt(knob.getAttribute('data-value'), 10);
-        sendMacroValue(state.activeTrack, groupIdx, paramIdx, value);
+        state.paramValues[paramIdx] = value;
+        sendParameterUpdate();
       }
 
       knob.addEventListener('pointerdown', onPointerDown);
     });
   }
 
-  function sendMacroValue(trackIdx, groupIdx, paramIdx, value) {
-    // In production, this sends to /api/v1/macroapi
-    // For prototype, just log it
-    console.log('Macro value: track=' + trackIdx + ' group=' + groupIdx +
-                ' param=' + paramIdx + ' value=' + value);
+  // ─── API: Send Updates ────────────────────────────────────
 
-    // TODO: POST to /api/v1/macroapi/tracks/{track}/parameters
-    // Body: { group: groupIdx, param: paramIdx, value: value }
+  function sendTrackUpdate(body) {
+    apiPost('/api/v1/macroapi?action=update_track', body).then(function() {
+      console.log('[Performer] Track update sent:', body);
+    }).catch(function(err) {
+      console.error('[Performer] Track update failed:', err);
+    });
+  }
+
+  function sendParameterUpdate() {
+    if (state.activeTrack < 0 || !state.activeMacroDef) return;
+
+    var body = {
+      track: state.activeTrack,
+      machine: state.activeMachine,
+      macro: state.activeMacroDef.id,
+      parameters: state.paramValues.slice(),
+    };
+
+    apiPost('/api/v1/macroapi?action=update_track', body).then(function() {
+      console.log('[Performer] Parameters sent for track', state.activeTrack);
+    }).catch(function(err) {
+      console.error('[Performer] Parameter send failed:', err);
+    });
   }
 
   // ─── Preset Browser ─────────────────────────────────────
@@ -361,30 +439,51 @@
     var container = document.getElementById('preset-list');
     if (!container) return;
 
-    var presets = generateMockPresets();
-    var term = state.presetSearchTerm.toLowerCase();
-    var html = '';
-
-    Object.keys(presets).forEach(function(category) {
-      var items = presets[category];
-      if (term) {
-        items = items.filter(function(p) {
-          return p.name.toLowerCase().indexOf(term) !== -1;
-        });
+    // Filter presets: show those whose `macro` references a definition for the active machine
+    var matchingDefIds = {};
+    state.macroDefs.forEach(function(d) {
+      if (d.machine === state.activeMachine) {
+        matchingDefIds[d.id] = true;
       }
-      if (items.length === 0) return;
+    });
 
-      html += '<div class="preset-category">' + S.esc(category) + '</div>';
-      items.forEach(function(p) {
-        html += '<div class="preset-item" data-preset="' + S.esc(p.name) + '">';
+    var presets = state.soundPresets.filter(function(p) {
+      return matchingDefIds[p.macro] || false;
+    });
+
+    // Apply search filter
+    var term = state.presetSearchTerm.toLowerCase();
+    if (term) {
+      presets = presets.filter(function(p) {
+        return (p.name || '').toLowerCase().indexOf(term) !== -1 ||
+               (p.group || '').toLowerCase().indexOf(term) !== -1;
+      });
+    }
+
+    // Group by `group` field
+    var groups = {};
+    presets.forEach(function(p) {
+      var g = p.group || 'Uncategorized';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(p);
+    });
+
+    var html = '';
+    Object.keys(groups).sort().forEach(function(groupName) {
+      html += '<div class="preset-category">' + S.esc(groupName) + '</div>';
+      groups[groupName].forEach(function(p) {
+        var isActive = state.activePreset && state.activePreset.id === p.id;
+        html += '<div class="preset-item' + (isActive ? ' active' : '') + '" data-preset-id="' + S.esc(p.id) + '">';
         html += '<span class="preset-item-name">' + S.esc(p.name) + '</span>';
-        html += '<span class="preset-item-machine">' + S.esc(p.machine.replace('Rack', '')) + '</span>';
+        html += '<span class="preset-item-machine">' + S.esc(p.macro) + '</span>';
         html += '</div>';
       });
     });
 
     if (!html) {
-      html = '<div class="empty-state" style="padding:1.5rem;"><p style="font-size:0.78rem;">No presets found</p></div>';
+      html = '<div class="empty-state" style="padding:1.5rem;">';
+      html += '<p style="font-size:0.78rem;">No presets for ' + S.esc(state.activeMachine || 'this track') + '</p>';
+      html += '</div>';
     }
 
     container.innerHTML = html;
@@ -408,37 +507,53 @@
       list.addEventListener('click', function(e) {
         var item = e.target.closest('.preset-item');
         if (!item) return;
-        var presetName = item.getAttribute('data-preset');
-
-        // Mark active
-        list.querySelectorAll('.preset-item').forEach(function(p) {
-          p.classList.remove('active');
-        });
-        item.classList.add('active');
-
-        loadPreset(presetName);
+        var presetId = item.getAttribute('data-preset-id');
+        loadPreset(presetId);
       });
     }
   }
 
-  function loadPreset(presetName) {
-    console.log('Loading preset:', presetName);
-    S.toast('Loaded preset: ' + presetName, 'success', 2000);
+  function loadPreset(presetId) {
+    var preset = state.soundPresets.find(function(p) { return p.id === presetId; });
+    if (!preset) return;
 
-    // In production: POST to /api/v1/macroapi to load the sound preset
-    // Then refresh the macro controls with new values
-    if (state.activeTrack >= 0) {
-      var track = state.tracks[state.activeTrack];
-      var macroDef = generateMockMacroDefinition(track.name, track.machine);
-      // Randomize values to simulate preset loading
-      macroDef.groups.forEach(function(g) {
-        g.params.forEach(function(p) {
-          p.value = Math.floor(Math.random() * 128);
-        });
-      });
-      state.currentMacroDef = macroDef;
-      renderMacroControls(track, macroDef);
+    state.activePreset = preset;
+
+    // Find the macro definition this preset references
+    var def = state.macroDefs.find(function(d) { return d.id === preset.macro; });
+    if (def) {
+      state.activeMacroDef = def;
+      state.activeMachine = def.machine;
     }
+
+    // Apply preset values to param values
+    if (preset.values && preset.values.length > 0) {
+      state.paramValues = preset.values.slice();
+    }
+
+    // Mark preset as active in browser
+    document.querySelectorAll('.preset-item').forEach(function(p) {
+      p.classList.toggle('active', p.getAttribute('data-preset-id') === presetId);
+    });
+
+    // Re-render controls with preset values
+    var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
+    if (track) {
+      var availMachines = (track.machines || []).filter(function(m) {
+        return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
+      });
+      renderMacroControls(track, state.activeMacroDef, availMachines);
+    }
+
+    // Send to device
+    sendTrackUpdate({
+      track: state.activeTrack,
+      machine: state.activeMachine,
+      macro: preset.macro,
+      parameters: state.paramValues.slice(),
+    });
+
+    S.toast('Loaded: ' + preset.name, 'success', 2000);
   }
 
   // ─── Favorites ───────────────────────────────────────────
@@ -459,50 +574,39 @@
   function setupFavoritesEvents() {
     var container = document.getElementById('fav-row');
     if (!container) return;
-
     container.addEventListener('click', function(e) {
       var btn = e.target.closest('.fav-btn');
       if (!btn) return;
       var idx = parseInt(btn.getAttribute('data-fav'), 10);
-      S.toast('Favorite ' + (idx + 1) + ' — recall/store not yet wired', 'primary', 2000);
+      S.toast('Favorite ' + (idx + 1) + ' — coming soon', 'primary', 2000);
     });
   }
 
   // ─── Quick Actions ───────────────────────────────────────
 
   function setupQuickActions() {
-    var muteBtn = document.getElementById('qa-mute-track');
-    if (muteBtn) {
-      muteBtn.addEventListener('click', function() {
-        if (state.activeTrack < 0) return;
-        var track = state.tracks[state.activeTrack];
-        track.muted = !track.muted;
-        renderTrackOverview();
-        S.toast(track.name + (track.muted ? ' muted' : ' unmuted'), 'primary', 1500);
-      });
-    }
-
-    var soloBtn = document.getElementById('qa-solo-track');
-    if (soloBtn) {
-      soloBtn.addEventListener('click', function() {
-        if (state.activeTrack < 0) return;
-        var track = state.tracks[state.activeTrack];
-        track.solo = !track.solo;
-        S.toast(track.name + (track.solo ? ' solo ON' : ' solo OFF'), 'primary', 1500);
-      });
-    }
-
     var randomizeBtn = document.getElementById('qa-randomize');
     if (randomizeBtn) {
       randomizeBtn.addEventListener('click', function() {
-        if (state.activeTrack < 0) {
+        if (state.activeTrack < 0 || !state.activeMacroDef) {
           S.toast('Select a track first', 'warning', 2000);
           return;
         }
-        var track = state.tracks[state.activeTrack];
-        var macroDef = generateMockMacroDefinition(track.name, track.machine);
-        state.currentMacroDef = macroDef;
-        renderMacroControls(track, macroDef);
+        if (state.activeMacroDef.groups) {
+          state.activeMacroDef.groups.forEach(function(group) {
+            group.parameters.forEach(function(param) {
+              var min = param.min || 0;
+              var max = param.max || 127;
+              state.paramValues[param.idx] = Math.floor(Math.random() * (max - min + 1)) + min;
+            });
+          });
+        }
+        var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
+        var availMachines = (track.machines || []).filter(function(m) {
+          return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
+        });
+        renderMacroControls(track, state.activeMacroDef, availMachines);
+        sendParameterUpdate();
         S.toast('Randomized ' + track.name, 'success', 1500);
       });
     }
@@ -510,20 +614,23 @@
     var initBtn = document.getElementById('qa-init');
     if (initBtn) {
       initBtn.addEventListener('click', function() {
-        if (state.activeTrack < 0) {
+        if (state.activeTrack < 0 || !state.activeMacroDef) {
           S.toast('Select a track first', 'warning', 2000);
           return;
         }
-        var track = state.tracks[state.activeTrack];
-        var macroDef = generateMockMacroDefinition(track.name, track.machine);
-        // Reset all values to midpoint
-        macroDef.groups.forEach(function(g) {
-          g.params.forEach(function(p) {
-            p.value = Math.floor((p.max - p.min) / 2);
+        if (state.activeMacroDef.groups) {
+          state.activeMacroDef.groups.forEach(function(group) {
+            group.parameters.forEach(function(param) {
+              state.paramValues[param.idx] = param.def || 0;
+            });
           });
+        }
+        var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
+        var availMachines = (track.machines || []).filter(function(m) {
+          return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
         });
-        state.currentMacroDef = macroDef;
-        renderMacroControls(track, macroDef);
+        renderMacroControls(track, state.activeMacroDef, availMachines);
+        sendParameterUpdate();
         S.toast('Initialized ' + track.name, 'success', 1500);
       });
     }
@@ -531,41 +638,160 @@
     var saveBtn = document.getElementById('qa-save-preset');
     if (saveBtn) {
       saveBtn.addEventListener('click', function() {
-        S.toast('Save preset — coming soon', 'primary', 2000);
+        if (state.activeTrack < 0 || !state.activeMacroDef) {
+          S.toast('Select a track first', 'warning', 2000);
+          return;
+        }
+        savePresetDialog();
+      });
+    }
+
+    var muteBtn = document.getElementById('qa-mute-track');
+    if (muteBtn) {
+      muteBtn.addEventListener('click', function() {
+        S.toast('Mute — requires device connection', 'primary', 2000);
+      });
+    }
+
+    var soloBtn = document.getElementById('qa-solo-track');
+    if (soloBtn) {
+      soloBtn.addEventListener('click', function() {
+        S.toast('Solo — requires device connection', 'primary', 2000);
       });
     }
 
     var exportBtn = document.getElementById('qa-export');
     if (exportBtn) {
       exportBtn.addEventListener('click', function() {
-        S.toast('Export all — coming soon', 'primary', 2000);
+        exportAllPresets();
       });
     }
 
     var importBtn = document.getElementById('qa-import');
     if (importBtn) {
       importBtn.addEventListener('click', function() {
-        S.toast('Import all — coming soon', 'primary', 2000);
+        importPresetFile();
       });
     }
+  }
+
+  // ─── Save Preset Dialog ──────────────────────────────────
+
+  function savePresetDialog() {
+    var name = prompt('Preset name:', state.activePreset ? state.activePreset.name : state.activeMacroDef.name);
+    if (!name) return;
+
+    var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    var group = prompt('Preset group:', state.activePreset ? state.activePreset.group : state.activeMachine);
+    if (group === null) return;
+
+    var preset = {
+      id: id,
+      name: name,
+      group: group || 'User',
+      macro: state.activeMacroDef.id,
+      values: state.paramValues.slice(),
+    };
+
+    var jsonStr = JSON.stringify(preset, null, 2);
+    var filePath = 'macrosoundpresets/' + id + '.json';
+
+    fetch('/api/v1/samples?action=uploadconfig&path=' + encodeURIComponent(filePath), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStr,
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      S.toast('Saved preset: ' + name, 'success', 2000);
+      return apiGet('/api/v1/macroapi/soundpresets');
+    }).then(function(presets) {
+      state.soundPresets = presets || [];
+      renderPresetBrowser();
+    }).catch(function(err) {
+      S.toast('Save failed: ' + err.message, 'danger', 3000);
+    });
+  }
+
+  // ─── Export / Import ──────────────────────────────────────
+
+  function exportAllPresets() {
+    var data = {
+      macroDefs: state.macroDefs,
+      soundPresets: state.soundPresets,
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'tbd16-presets-export.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    S.toast('Exported all presets', 'success', 2000);
+  }
+
+  function importPresetFile() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.addEventListener('change', function() {
+      if (!input.files.length) return;
+      var reader = new FileReader();
+      reader.onload = function() {
+        try {
+          var data = JSON.parse(reader.result);
+          if (data.id && data.macro) {
+            importSinglePreset(data);
+          } else if (data.soundPresets) {
+            S.toast('Bulk import — coming soon', 'primary', 2000);
+          } else {
+            S.toast('Unrecognized JSON format', 'warning', 3000);
+          }
+        } catch (err) {
+          S.toast('Invalid JSON: ' + err.message, 'danger', 3000);
+        }
+      };
+      reader.readAsText(input.files[0]);
+    });
+    input.click();
+  }
+
+  function importSinglePreset(preset) {
+    var filePath = 'macrosoundpresets/' + preset.id + '.json';
+    var jsonStr = JSON.stringify(preset, null, 2);
+
+    fetch('/api/v1/samples?action=uploadconfig&path=' + encodeURIComponent(filePath), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStr,
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      S.toast('Imported: ' + preset.name, 'success', 2000);
+      return apiGet('/api/v1/macroapi/soundpresets');
+    }).then(function(presets) {
+      state.soundPresets = presets || [];
+      renderPresetBrowser();
+    }).catch(function(err) {
+      S.toast('Import failed: ' + err.message, 'danger', 3000);
+    });
   }
 
   // ─── Initialization ─────────────────────────────────────
 
   function init() {
-    state.tracks = generateMockTracks();
-    renderTrackOverview();
-    setupTrackOverviewEvents();
-    renderPresetBrowser();
-    setupPresetBrowserEvents();
-    renderFavorites();
-    setupFavoritesEvents();
-    setupQuickActions();
+    loadAllData().then(function() {
+      renderTrackOverview();
+      setupTrackOverviewEvents();
+      setupPresetBrowserEvents();
+      renderFavorites();
+      setupFavoritesEvents();
+      setupQuickActions();
 
-    // Auto-select first track
-    selectTrack(0);
+      // Auto-select first instrument track
+      if (state.tracks.length > 0) {
+        selectTrack(state.tracks[0].index);
+      }
 
-    state.initialized = true;
+      state.initialized = true;
+    });
   }
 
   // ─── Exports ─────────────────────────────────────────────
@@ -574,6 +800,12 @@
   window.TBD.performer = {
     init: init,
     state: state,
+    reload: function() {
+      loadAllData().then(function() {
+        renderTrackOverview();
+        if (state.activeTrack >= 0) selectTrack(state.activeTrack);
+      });
+    },
   };
 
 })();

@@ -1,17 +1,17 @@
 // ═══════════════════════════════════════════════════════════════
-// TBD-16 WebUI — Sound Designer View
+// TBD-16 WebUI — Sound Designer View (Real Data)
 // Persona: Sound Designer
 //
-// Focused on creating machine definitions and mapping DSP params
-// to macro controls. Shows the mapping layer: macro param → DSP CC,
-// multiplier/divider, and the raw DSP parameter browser.
+// Loads and edits real macro definitions and sound presets:
+//   - synthdefinitions.json → machine list + DSP CC parameters
+//   - macrodefinitions/*.json → parameter groups + output mappings
+//   - macrosoundpresets/*.json → sound preset values
 //
 // Workflow:
-//   1. Select a track / or start from scratch
-//   2. Choose a DSP machine plugin from the browser
-//   3. Define output mappings (macro param → DSP CC)
-//   4. Set up 6 groups × 4 macro params with labels + ranges
-//   5. Save as machine definition JSON
+//   1. Select a machine (DSP plugin) or existing macro definition
+//   2. Edit parameter groups (6 groups × 4 params)
+//   3. Edit output mappings (macro param → DSP CC, mul/div)
+//   4. Save macro definition → create/load sound presets
 //
 // (c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
 // Licensed under LGPL 3.0.
@@ -23,479 +23,903 @@
 
   // ─── State ───────────────────────────────────────────────
   var state = {
-    machineDefinitions: [],       // Available machine definitions
-    selectedMachineDef: null,     // Currently edited definition
-    dspPlugins: [],               // Available DSP plugins
-    selectedPlugin: null,         // Currently loaded plugin
-    dspParams: [],                // Current plugin's DSP params
-    mappings: [],                 // Active mapping table rows
-    selectedTrack: 0,
+    synthDefs: null,           // From synthdefinitions.json
+    tracks: [],                // All tracks
+    machines: [],              // All machine definitions (id, name, type, parameters[])
+    macroDefs: [],             // All loaded macro definitions
+    soundPresets: [],          // All loaded sound presets
+    selectedDefId: null,       // Currently selected/edited macro definition id
+    editDef: null,             // Working copy of the definition being edited
+    selectedTrack: 0,          // Track select in toolbar
+    dirty: false,              // Has unsaved changes
     initialized: false,
   };
 
-  // ─── Mock Data ────────────────────────────────────────────
+  // ─── API Helpers ──────────────────────────────────────────
 
-  function generateMockDSPPlugins() {
-    return [
-      { id: 'DrumBDamp',    category: 'Drums',   desc: 'Bass Drum with damping' },
-      { id: 'DrumSD',       category: 'Drums',   desc: 'Snare Drum synthesis' },
-      { id: 'DrumHiHat',    category: 'Drums',   desc: 'Hi-Hat metallic synthesis' },
-      { id: 'CDelay',       category: 'Effects', desc: 'Configurable delay' },
-      { id: 'Reverb',       category: 'Effects', desc: 'Plate reverb' },
-      { id: 'WTOsc',        category: 'Synths',  desc: 'Wavetable oscillator' },
-      { id: 'SubOsc',       category: 'Synths',  desc: 'Sub-oscillator with filter' },
-      { id: 'Rompler',      category: 'Sampler', desc: 'ROM sample playback' },
-      { id: 'Granular',     category: 'Sampler', desc: 'Granular sample playback' },
-      { id: 'PicoSeqRack',  category: 'System',  desc: '16-track rack sequencer' },
-    ];
-  }
-
-  function generateMockDSPParams(pluginId) {
-    var paramSets = {
-      'DrumBDamp': [
-        'pitch', 'tune', 'decay', 'noise_level', 'noise_decay', 'fm_amount',
-        'fm_decay', 'drive', 'shape', 'attack', 'sustain', 'release',
-        'filter_freq', 'filter_reso', 'filter_env', 'volume',
-        'pan', 'fx_send_1', 'fx_send_2', 'trigger_mode',
-      ],
-      'DrumSD': [
-        'tune', 'snappy', 'decay', 'noise_color', 'noise_decay', 'drive',
-        'tone', 'ring_freq', 'ring_amount', 'filter_freq', 'filter_reso',
-        'attack', 'sustain', 'volume', 'pan', 'fx_send_1',
-      ],
-      'DrumHiHat': [
-        'freq_hi', 'freq_lo', 'tone', 'noise_mix', 'decay_closed', 'decay_open',
-        'metallic', 'ring', 'saturate', 'bit_reduce', 'filter_freq',
-        'attack', 'choke', 'volume', 'pan', 'fx_send_1',
-      ],
-      'WTOsc': [
-        'wave_pos', 'morph', 'detune', 'sub_level', 'sub_octave', 'fm_depth',
-        'filter_freq', 'filter_reso', 'filter_type', 'filter_env',
-        'env_attack', 'env_decay', 'env_sustain', 'env_release',
-        'lfo_rate', 'lfo_depth', 'lfo_dest', 'glide',
-        'volume', 'pan', 'fx_send_1', 'fx_send_2',
-      ],
-    };
-
-    var names = paramSets[pluginId] || [
-      'param_0', 'param_1', 'param_2', 'param_3',
-      'param_4', 'param_5', 'param_6', 'param_7',
-      'param_8', 'param_9', 'param_10', 'param_11',
-      'volume', 'pan', 'fx_send_1', 'fx_send_2',
-    ];
-
-    return names.map(function(name, i) {
-      return {
-        index: i,
-        name: name,
-        value: Math.floor(Math.random() * 4096),
-        min: 0,
-        max: 4095,
-        isCurrent: false,
-      };
+  function apiGet(url) {
+    return fetch(url).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
     });
   }
 
-  function generateMockMachineDefinitions() {
-    return [
-      {
-        name: 'RackDBD',
-        plugin: 'DrumBDamp',
-        description: 'Bass drum with 6×4 macro controls',
-        groups: 6,
-        mappedParams: 24,
-      },
-      {
-        name: 'RackDSD',
-        plugin: 'DrumSD',
-        description: 'Snare drum rack definition',
-        groups: 6,
-        mappedParams: 16,
-      },
-      {
-        name: 'RackHH1',
-        plugin: 'DrumHiHat',
-        description: 'Hi-hat with open/close control',
-        groups: 6,
-        mappedParams: 16,
-      },
-      {
-        name: 'RackTBD03',
-        plugin: 'WTOsc',
-        description: '303-style acid synth rack',
-        groups: 6,
-        mappedParams: 22,
-      },
-    ];
+  function apiPost(url, data) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
   }
 
-  function generateMockMappings(defName) {
-    var mappings;
-    if (defName === 'RackDBD') {
-      mappings = [
-        { group: 0, slot: 0, macroName: 'Frequency', dspParam: 'pitch',       mul: 1.0, div: 1.0 },
-        { group: 0, slot: 1, macroName: 'Tone',      dspParam: 'tone',        mul: 1.0, div: 1.0 },
-        { group: 0, slot: 2, macroName: 'Decay',     dspParam: 'decay',       mul: 1.0, div: 1.0 },
-        { group: 0, slot: 3, macroName: 'Noise',     dspParam: 'noise_level', mul: 0.5, div: 1.0 },
-        { group: 1, slot: 0, macroName: 'Drive',     dspParam: 'drive',       mul: 1.0, div: 1.0 },
-        { group: 1, slot: 1, macroName: 'Shape',     dspParam: 'shape',       mul: 1.0, div: 1.0 },
-        { group: 1, slot: 2, macroName: 'Dirty',     dspParam: 'fm_amount',   mul: 0.7, div: 1.0 },
-        { group: 1, slot: 3, macroName: 'FM Decay',  dspParam: 'fm_decay',    mul: 1.0, div: 1.0 },
-        { group: 2, slot: 0, macroName: 'Level',     dspParam: 'volume',      mul: 1.0, div: 1.0 },
-        { group: 2, slot: 1, macroName: 'Accent',    dspParam: 'attack',      mul: 1.0, div: 2.0 },
-        { group: 2, slot: 2, macroName: 'Attack',    dspParam: 'attack',      mul: 1.0, div: 1.0 },
-        { group: 2, slot: 3, macroName: 'Sustain',   dspParam: 'sustain',     mul: 1.0, div: 1.0 },
-      ];
-    } else {
-      mappings = [
-        { group: 0, slot: 0, macroName: 'Param A', dspParam: 'param_0', mul: 1.0, div: 1.0 },
-        { group: 0, slot: 1, macroName: 'Param B', dspParam: 'param_1', mul: 1.0, div: 1.0 },
-        { group: 0, slot: 2, macroName: 'Param C', dspParam: 'param_2', mul: 1.0, div: 1.0 },
-        { group: 0, slot: 3, macroName: 'Param D', dspParam: 'param_3', mul: 1.0, div: 1.0 },
-      ];
-    }
-    return mappings;
+  // ─── Data Loading ─────────────────────────────────────────
+
+  function loadAllData() {
+    S.showLoading('Loading definitions…');
+
+    return Promise.all([
+      apiGet('/api/v1/samples?getconfig=synthdefinitions.json'),
+      apiGet('/api/v1/macroapi/definitions'),
+      apiGet('/api/v1/macroapi/soundpresets'),
+    ]).then(function(results) {
+      state.synthDefs = results[0];
+      state.tracks = results[0].tracks || [];
+      state.machines = results[0].machines || [];
+      state.macroDefs = results[1] || [];
+      state.soundPresets = results[2] || [];
+      S.hideLoading();
+      console.log('[Designer] Loaded:', state.machines.length, 'machines,',
+                  state.macroDefs.length, 'macro defs,',
+                  state.soundPresets.length, 'sound presets');
+    }).catch(function(err) {
+      S.hideLoading();
+      console.error('[Designer] Load error:', err);
+      S.toast('Failed to load data: ' + err.message, 'danger', 4000);
+    });
   }
 
-  // ─── Track Select ────────────────────────────────────────
+  // ─── Track Select (toolbar) ──────────────────────────────
 
   function renderTrackSelect() {
     var select = document.getElementById('designer-track-select');
     if (!select) return;
 
     var html = '';
-    for (var i = 0; i < 16; i++) {
-      html += '<sl-option value="' + i + '">Track ' + (i + 1) + '</sl-option>';
-    }
+    state.tracks.forEach(function(t) {
+      html += '<sl-option value="' + t.index + '">Ch ' + (t.index + 1) + ': ' + S.esc(t.name) + ' (' + S.esc(t.type) + ')</sl-option>';
+    });
     select.innerHTML = html;
   }
 
   function setupTrackSelectEvents() {
     var select = document.getElementById('designer-track-select');
     if (!select) return;
-
     select.addEventListener('sl-change', function() {
       state.selectedTrack = parseInt(select.value, 10);
-      // Optionally reload definition / plugin for this track
+      // Update DSP panel to show this track's available machines
+      renderDSPPanel();
     });
-  }
-
-  // ─── Machine Definition List ─────────────────────────────
-
-  function renderMachineDefList() {
-    var container = document.getElementById('machine-def-list');
-    if (!container) return;
-
-    var defs = state.machineDefinitions;
-    var html = '';
-
-    defs.forEach(function(def) {
-      var isActive = state.selectedMachineDef && state.selectedMachineDef.name === def.name;
-      html += '<div class="machine-item' + (isActive ? ' active' : '') + '" data-def="' + S.esc(def.name) + '">';
-      html += '<div class="machine-item-name">' + S.esc(def.name) + '</div>';
-      html += '<div class="machine-item-desc">' + S.esc(def.description) + '</div>';
-      html += '<div class="machine-item-meta">';
-      html += '<span>Plugin: ' + S.esc(def.plugin) + '</span>';
-      html += '<span>' + def.mappedParams + ' mapped</span>';
-      html += '</div>';
-      html += '</div>';
-    });
-
-    if (!html) {
-      html = '<div class="empty-state"><p>No machine definitions found</p></div>';
-    }
-
-    container.innerHTML = html;
-  }
-
-  function setupMachineDefListEvents() {
-    var container = document.getElementById('machine-def-list');
-    if (!container) return;
-
-    container.addEventListener('click', function(e) {
-      var item = e.target.closest('.machine-item');
-      if (!item) return;
-      var defName = item.getAttribute('data-def');
-      selectMachineDefinition(defName);
-    });
-  }
-
-  function selectMachineDefinition(defName) {
-    var def = state.machineDefinitions.find(function(d) { return d.name === defName; });
-    if (!def) return;
-
-    state.selectedMachineDef = def;
-    state.mappings = generateMockMappings(defName);
-    state.dspParams = generateMockDSPParams(def.plugin);
-    state.selectedPlugin = def.plugin;
-
-    // Update machine def select
-    var select = document.getElementById('designer-machinedef-select');
-    if (select) {
-      select.value = defName;
-    }
-
-    // Update active states
-    document.querySelectorAll('.machine-item').forEach(function(item) {
-      item.classList.toggle('active', item.getAttribute('data-def') === defName);
-    });
-
-    renderMappingEditor();
-    renderDSPParams();
   }
 
   // ─── Machine Definition Select (toolbar) ─────────────────
 
   function renderMachineDefSelect() {
-    var select = document.getElementById('designer-machinedef-select');
+    var select = document.getElementById('designer-machine-select');
     if (!select) return;
 
-    var html = '<sl-option value="">— Select Machine —</sl-option>';
-    state.machineDefinitions.forEach(function(def) {
-      html += '<sl-option value="' + S.esc(def.name) + '">' + S.esc(def.name) + '</sl-option>';
+    var html = '<sl-option value="">— New Definition —</sl-option>';
+    state.macroDefs.forEach(function(def) {
+      html += '<sl-option value="' + S.esc(def.id) + '">' +
+              S.esc(def.name || def.id) + ' [' + S.esc(def.machine) + ']</sl-option>';
     });
     select.innerHTML = html;
+  }
+
+  function setupMachineDefSelectEvents() {
+    var select = document.getElementById('designer-machine-select');
+    if (!select) return;
 
     select.addEventListener('sl-change', function() {
-      if (select.value) {
-        selectMachineDefinition(select.value);
+      var defId = select.value;
+      if (defId) {
+        selectMacroDefinition(defId);
+      } else {
+        createNewDefinition();
       }
     });
   }
 
-  // ─── Mapping Editor ──────────────────────────────────────
+  // ─── Machine List (left panel) ───────────────────────────
 
-  function renderMappingEditor() {
-    var container = document.getElementById('mapping-editor-body');
+  function renderMachineList() {
+    var container = document.getElementById('machine-list');
     if (!container) return;
 
-    if (!state.selectedMachineDef) {
-      container.innerHTML =
-        '<div class="empty-state">' +
-        '<sl-icon name="git-branch" style="font-size:2rem;opacity:0.3;"></sl-icon>' +
-        '<p>Select a machine definition to edit mappings</p>' +
-        '</div>';
-      return;
-    }
-
-    // Update title
-    var title = document.getElementById('mapping-editor-title');
-    if (title) {
-      title.textContent = state.selectedMachineDef.name + ' — Output Mappings';
-    }
-
-    // Group mappings by group index
-    var groupedMappings = {};
-    state.mappings.forEach(function(m) {
-      if (!groupedMappings[m.group]) groupedMappings[m.group] = [];
-      groupedMappings[m.group].push(m);
+    // Group macro definitions by machine
+    var byMachine = {};
+    state.macroDefs.forEach(function(def) {
+      var m = def.machine || 'unknown';
+      if (!byMachine[m]) byMachine[m] = [];
+      byMachine[m].push(def);
     });
 
     var html = '';
 
-    // Build DSP param options for dropdowns
-    var dspOptions = '<option value="">—</option>';
-    state.dspParams.forEach(function(p) {
-      dspOptions += '<option value="' + S.esc(p.name) + '">' + S.esc(p.name) + ' [' + p.index + ']</option>';
+    // Show each machine group
+    Object.keys(byMachine).sort().forEach(function(machineId) {
+      var machineInfo = state.machines.find(function(m) { return m.id === machineId; });
+      var machineName = machineInfo ? machineInfo.name : machineId;
+
+      html += '<div class="machine-group">';
+      html += '<div class="machine-group-header">' + S.esc(machineName) + ' <span style="opacity:0.5;">(' + S.esc(machineId) + ')</span></div>';
+
+      byMachine[machineId].forEach(function(def) {
+        var isActive = state.selectedDefId === def.id;
+        html += '<div class="machine-item' + (isActive ? ' active' : '') + '" data-def-id="' + S.esc(def.id) + '">';
+        html += '<div class="machine-item-name">' + S.esc(def.name || def.id) + '</div>';
+        html += '<div class="machine-item-meta">';
+
+        // Count mapped params
+        var paramCount = 0;
+        if (def.groups) {
+          def.groups.forEach(function(g) { paramCount += (g.parameters || []).length; });
+        }
+        var mappingCount = (def.mapping || []).length;
+        html += '<span>' + paramCount + ' params</span>';
+        html += '<span>' + mappingCount + ' mappings</span>';
+        html += '</div>';
+        html += '</div>';
+      });
+
+      html += '</div>';
     });
 
-    Object.keys(groupedMappings).sort().forEach(function(gIdx) {
-      var group = groupedMappings[gIdx];
-      var groupNames = ['Tone', 'Shape', 'Dynamics', 'Modulation', 'Effects', 'Mix'];
-      var groupName = groupNames[gIdx] || 'Group ' + (parseInt(gIdx) + 1);
+    if (!html) {
+      html = '<div class="empty-state" style="padding:1rem;"><p style="font-size:0.78rem;">No macro definitions found</p></div>';
+    }
 
-      html += '<div class="mapping-group">';
+    container.innerHTML = html;
+  }
+
+  function setupMachineListEvents() {
+    var container = document.getElementById('machine-list');
+    if (!container) return;
+
+    container.addEventListener('click', function(e) {
+      var item = e.target.closest('.machine-item');
+      if (!item) return;
+      var defId = item.getAttribute('data-def-id');
+      selectMacroDefinition(defId);
+
+      // Also update the toolbar select
+      var select = document.getElementById('designer-machine-select');
+      if (select) select.value = defId;
+    });
+  }
+
+  // ─── Select / Edit a Macro Definition ────────────────────
+
+  function selectMacroDefinition(defId) {
+    var def = state.macroDefs.find(function(d) { return d.id === defId; });
+    if (!def) return;
+
+    state.selectedDefId = defId;
+    state.editDef = JSON.parse(JSON.stringify(def)); // Deep clone for editing
+    state.dirty = false;
+
+    // Ensure groups structure (6 groups × 4 params)
+    ensureGroupStructure(state.editDef);
+
+    // Update machine list active state
+    document.querySelectorAll('.machine-item').forEach(function(item) {
+      item.classList.toggle('active', item.getAttribute('data-def-id') === defId);
+    });
+
+    renderMappingEditor();
+    renderDSPPanel();
+  }
+
+  function createNewDefinition() {
+    state.selectedDefId = null;
+    state.editDef = {
+      id: '',
+      name: '',
+      machine: '',
+      groups: [],
+      mapping: [],
+    };
+    ensureGroupStructure(state.editDef);
+    state.dirty = true;
+
+    document.querySelectorAll('.machine-item').forEach(function(item) {
+      item.classList.remove('active');
+    });
+
+    renderMappingEditor();
+    renderDSPPanel();
+  }
+
+  /** Ensure definition has 6 groups with 4 param slots each */
+  function ensureGroupStructure(def) {
+    if (!def.groups) def.groups = [];
+    while (def.groups.length < 6) {
+      def.groups.push({
+        name: 'Page ' + (def.groups.length + 1),
+        parameters: [],
+      });
+    }
+    var runningIdx = 0;
+    def.groups.forEach(function(group) {
+      if (!group.parameters) group.parameters = [];
+      // Don't auto-fill — show actual params (may be 0-4 per group)
+      group.parameters.forEach(function(p) {
+        if (p.idx === undefined) {
+          p.idx = runningIdx;
+        }
+        runningIdx = Math.max(runningIdx, p.idx + 1);
+      });
+    });
+    if (!def.mapping) def.mapping = [];
+  }
+
+  // ─── Mapping Editor (center panel) ───────────────────────
+
+  function renderMappingEditor() {
+    var container = document.getElementById('mapping-editor');
+    if (!container) return;
+
+    if (!state.editDef) {
+      container.innerHTML =
+        '<div class="empty-state" id="mapping-empty">' +
+        '<sl-icon name="diagram-3"></sl-icon>' +
+        '<h3>No Machine Selected</h3>' +
+        '<p>Select a macro definition from the left panel to view & edit parameter mappings</p>' +
+        '</div>';
+      return;
+    }
+
+    var def = state.editDef;
+
+    // Get DSP params for the linked machine
+    var machineInfo = state.machines.find(function(m) { return m.id === def.machine; });
+    var machineParams = machineInfo ? (machineInfo.parameters || []) : [];
+
+    // Build DSP param CC options for mapping dropdowns
+    var ccOptions = '<option value="">—</option>';
+    machineParams.forEach(function(p) {
+      ccOptions += '<option value="' + p.ctrl + '">' + S.esc(p.name) + ' (CC ' + p.ctrl + ')</option>';
+    });
+
+    var html = '';
+
+    // Definition header
+    html += '<div class="mapping-def-header">';
+    html += '<div class="mapping-def-fields">';
+    html += '<label>ID:</label>';
+    html += '<input class="mapping-input def-id-input" value="' + S.esc(def.id) + '" placeholder="e.g. db-mypatch" />';
+    html += '<label>Name:</label>';
+    html += '<input class="mapping-input def-name-input" value="' + S.esc(def.name) + '" placeholder="e.g. My Kick Patch" />';
+    html += '<label>Machine:</label>';
+    html += '<select class="mapping-select def-machine-select">';
+    html += '<option value="">— Select —</option>';
+    state.machines.forEach(function(m) {
+      if (m.id === 'nodrum' || m.id === 'nosynth' || m.id === 'nofx') return;
+      var sel = (m.id === def.machine) ? ' selected' : '';
+      html += '<option value="' + S.esc(m.id) + '"' + sel + '>' + S.esc(m.name) + ' (' + S.esc(m.id) + ')</option>';
+    });
+    html += '</select>';
+    html += '</div>';
+
+    // Action buttons
+    html += '<div class="mapping-def-actions">';
+    html += '<button class="mapping-btn btn-1to1" title="Create 1:1 mapping from all machine CCs">1:1 Map</button>';
+    html += '</div>';
+    html += '</div>';
+
+    // ── Tabs: Parameters | Output Mappings | Sound Presets ──
+    html += '<div class="mapping-tabs">';
+    html += '<button class="mapping-tab active" data-tab="params">Parameter Groups</button>';
+    html += '<button class="mapping-tab" data-tab="mappings">Output Mappings (' + (def.mapping || []).length + ')</button>';
+    html += '<button class="mapping-tab" data-tab="presets">Sound Presets</button>';
+    html += '</div>';
+
+    // ── TAB: Parameter Groups ──
+    html += '<div class="mapping-tab-content active" data-tab="params">';
+    html += renderParameterGroups(def, ccOptions);
+    html += '</div>';
+
+    // ── TAB: Output Mappings ──
+    html += '<div class="mapping-tab-content" data-tab="mappings">';
+    html += renderOutputMappings(def, machineParams);
+    html += '</div>';
+
+    // ── TAB: Sound Presets ──
+    html += '<div class="mapping-tab-content" data-tab="presets">';
+    html += renderSoundPresetsForDef(def);
+    html += '</div>';
+
+    container.innerHTML = html;
+    setupMappingEditorEvents(container);
+  }
+
+  // ── Render: Parameter Groups ──
+
+  function renderParameterGroups(def, ccOptions) {
+    var html = '';
+
+    def.groups.forEach(function(group, gi) {
+      html += '<div class="mapping-group" data-group-idx="' + gi + '">';
       html += '<div class="mapping-group-title">';
-      html += '<span>Group ' + (parseInt(gIdx) + 1) + ': ' + S.esc(groupName) + '</span>';
-      html += '<button class="mapping-add-btn" data-group="' + gIdx + '" title="Add mapping">';
-      html += '<sl-icon name="plus-circle"></sl-icon>';
-      html += '</button>';
+      html += '<input class="mapping-input group-name-input" value="' + S.esc(group.name) + '" data-group="' + gi + '" placeholder="Group name" />';
+      html += '<button class="mapping-add-btn add-param-btn" data-group="' + gi + '" title="Add parameter">+ Param</button>';
       html += '</div>';
 
       html += '<table class="mapping-table">';
       html += '<thead><tr>';
-      html += '<th>Slot</th>';
-      html += '<th>Macro Name</th>';
-      html += '<th>DSP Parameter</th>';
-      html += '<th>Mul</th>';
-      html += '<th>Div</th>';
+      html += '<th>#</th>';
+      html += '<th>Name</th>';
+      html += '<th>Default</th>';
+      html += '<th>Min</th>';
+      html += '<th>Max</th>';
+      html += '<th>Res</th>';
+      html += '<th>UI</th>';
       html += '<th></th>';
       html += '</tr></thead>';
       html += '<tbody>';
 
-      group.forEach(function(m, i) {
-        html += '<tr class="mapping-row" data-group="' + m.group + '" data-slot="' + m.slot + '">';
-        html += '<td class="mapping-slot">' + (m.group * 4 + m.slot + 1) + '</td>';
-        html += '<td><input class="mapping-input mapping-name" value="' + S.esc(m.macroName) + '" /></td>';
-        html += '<td><select class="mapping-select mapping-dsp-param">';
-        // Re-build options with selection
-        html += '<option value="">—</option>';
-        state.dspParams.forEach(function(p) {
-          var sel = (p.name === m.dspParam) ? ' selected' : '';
-          html += '<option value="' + S.esc(p.name) + '"' + sel + '>' + S.esc(p.name) + ' [' + p.index + ']</option>';
+      (group.parameters || []).forEach(function(param, pi) {
+        html += '<tr class="mapping-row" data-group="' + gi + '" data-param="' + pi + '">';
+        html += '<td class="mapping-slot">' + param.idx + '</td>';
+        html += '<td><input class="mapping-input param-name" value="' + S.esc(param.name) + '" /></td>';
+        html += '<td><input class="mapping-input param-def" type="number" value="' + (param.def || 0) + '" style="width:50px;" /></td>';
+        html += '<td><input class="mapping-input param-min" type="number" value="' + (param.min || 0) + '" style="width:50px;" /></td>';
+        html += '<td><input class="mapping-input param-max" type="number" value="' + (param.max || 127) + '" style="width:50px;" /></td>';
+        html += '<td><input class="mapping-input param-res" type="number" value="' + (param.res || 64) + '" style="width:50px;" /></td>';
+        html += '<td>';
+        html += '<select class="mapping-select param-ui">';
+        ['bignum', 'slider', 'toggle', 'selector'].forEach(function(ui) {
+          var sel = (param.ui === ui) ? ' selected' : '';
+          html += '<option value="' + ui + '"' + sel + '>' + ui + '</option>';
         });
-        html += '</select></td>';
-        html += '<td><input class="mapping-input mapping-mul" type="number" step="0.1" min="0" max="10" value="' + m.mul + '" /></td>';
-        html += '<td><input class="mapping-input mapping-div" type="number" step="0.1" min="0.1" max="10" value="' + m.div + '" /></td>';
-        html += '<td><button class="mapping-remove-btn" title="Remove mapping"><sl-icon name="x-circle"></sl-icon></button></td>';
+        html += '</select>';
+        html += '</td>';
+        html += '<td><button class="mapping-remove-btn remove-param-btn" data-group="' + gi + '" data-param="' + pi + '" title="Remove"><sl-icon name="x-circle"></sl-icon></button></td>';
         html += '</tr>';
       });
 
-      // Empty slots (if group has <4 mappings)
-      for (var s = group.length; s < 4; s++) {
-        html += '<tr class="mapping-row mapping-row-empty" data-group="' + gIdx + '" data-slot="' + s + '">';
-        html += '<td class="mapping-slot">' + (parseInt(gIdx) * 4 + s + 1) + '</td>';
-        html += '<td><input class="mapping-input mapping-name" placeholder="(empty)" /></td>';
-        html += '<td><select class="mapping-select mapping-dsp-param">' + dspOptions + '</select></td>';
-        html += '<td><input class="mapping-input mapping-mul" type="number" step="0.1" min="0" max="10" value="1.0" /></td>';
-        html += '<td><input class="mapping-input mapping-div" type="number" step="0.1" min="0.1" max="10" value="1.0" /></td>';
-        html += '<td></td>';
-        html += '</tr>';
+      // Empty row hint if no params
+      if (!group.parameters || group.parameters.length === 0) {
+        html += '<tr class="mapping-row-empty"><td colspan="8" style="text-align:center;opacity:0.4;padding:0.5rem;">No parameters — click "+ Param" to add</td></tr>';
       }
 
       html += '</tbody></table>';
       html += '</div>';
     });
 
-    // If no groups exist, show empty groups 1-6
-    if (Object.keys(groupedMappings).length === 0) {
-      for (var g = 0; g < 6; g++) {
-        html += '<div class="mapping-group">';
-        html += '<div class="mapping-group-title">';
-        html += '<span>Group ' + (g + 1) + '</span>';
-        html += '</div>';
-
-        html += '<table class="mapping-table">';
-        html += '<thead><tr>';
-        html += '<th>Slot</th><th>Macro Name</th><th>DSP Parameter</th><th>Mul</th><th>Div</th><th></th>';
-        html += '</tr></thead><tbody>';
-
-        for (var s = 0; s < 4; s++) {
-          html += '<tr class="mapping-row mapping-row-empty" data-group="' + g + '" data-slot="' + s + '">';
-          html += '<td class="mapping-slot">' + (g * 4 + s + 1) + '</td>';
-          html += '<td><input class="mapping-input mapping-name" placeholder="(empty)" /></td>';
-          html += '<td><select class="mapping-select mapping-dsp-param">' + dspOptions + '</select></td>';
-          html += '<td><input class="mapping-input mapping-mul" type="number" step="0.1" min="0" max="10" value="1.0" /></td>';
-          html += '<td><input class="mapping-input mapping-div" type="number" step="0.1" min="0.1" max="10" value="1.0" /></td>';
-          html += '<td></td>';
-          html += '</tr>';
-        }
-
-        html += '</tbody></table></div>';
-      }
-    }
-
-    container.innerHTML = html;
-    setupMappingEditorEvents(container);
+    return html;
   }
 
-  function setupMappingEditorEvents(container) {
-    // Add mapping button
-    container.querySelectorAll('.mapping-add-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var groupIdx = parseInt(btn.getAttribute('data-group'), 10);
-        S.toast('Add mapping to group ' + (groupIdx + 1) + ' — coming soon', 'primary', 2000);
+  // ── Render: Output Mappings ──
+
+  function renderOutputMappings(def, machineParams) {
+    var mappings = def.mapping || [];
+    var html = '';
+
+    html += '<div class="mapping-output-header">';
+    html += '<span>Output Mappings: macro parameter values → DSP CC values via formula</span>';
+    html += '<button class="mapping-add-btn add-mapping-btn" title="Add output mapping">+ Mapping</button>';
+    html += '</div>';
+
+    html += '<div style="font-size:0.72rem;color:var(--sl-color-neutral-400);margin-bottom:0.5rem;">Formula: finalValue = start + Σ(paramValue × mul ÷ div)</div>';
+
+    // Build param index→name map
+    var paramNames = {};
+    def.groups.forEach(function(g) {
+      (g.parameters || []).forEach(function(p) {
+        paramNames[p.idx] = p.name || ('Param ' + p.idx);
       });
     });
 
-    // Remove mapping button
-    container.querySelectorAll('.mapping-remove-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var row = btn.closest('.mapping-row');
-        if (row) {
-          row.classList.add('mapping-row-empty');
-          row.querySelector('.mapping-name').value = '';
-          row.querySelector('.mapping-dsp-param').value = '';
-          row.querySelector('.mapping-mul').value = '1.0';
-          row.querySelector('.mapping-div').value = '1.0';
-          S.toast('Mapping removed', 'primary', 1500);
-        }
-      });
+    // CC name map
+    var ccNames = {};
+    machineParams.forEach(function(p) {
+      ccNames[p.ctrl] = p.name;
     });
 
-    // Mapping value change highlight
-    container.querySelectorAll('.mapping-input, .mapping-select').forEach(function(input) {
-      input.addEventListener('change', function() {
-        var row = input.closest('.mapping-row');
-        if (row) {
-          row.classList.add('mapping-changed');
-          // Highlight matching DSP param
-          var dspSelect = row.querySelector('.mapping-dsp-param');
-          if (dspSelect && dspSelect.value) {
-            highlightDSPParam(dspSelect.value);
-          }
-        }
+    html += '<table class="mapping-table mapping-output-table">';
+    html += '<thead><tr>';
+    html += '<th>CC #</th>';
+    html += '<th>CC Name</th>';
+    html += '<th>Start</th>';
+    html += '<th>Sources (param × mul ÷ div)</th>';
+    html += '<th></th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+
+    mappings.forEach(function(m, mi) {
+      html += '<tr class="mapping-row" data-mapping-idx="' + mi + '">';
+      html += '<td><input class="mapping-input mapping-ctrl" type="number" value="' + (m.ctrl || 0) + '" style="width:50px;" /></td>';
+      html += '<td class="mapping-cc-name">' + S.esc(ccNames[m.ctrl] || '?') + '</td>';
+      html += '<td><input class="mapping-input mapping-start" type="number" value="' + (m.start || 0) + '" style="width:50px;" /></td>';
+      html += '<td class="mapping-sources">';
+
+      // Render each source in the add[] array
+      (m.add || []).forEach(function(add, ai) {
+        html += '<span class="mapping-source" data-mapping="' + mi + '" data-add="' + ai + '">';
+        html += S.esc(paramNames[add.src] || ('P' + add.src));
+        html += ' × ' + add.mul + ' ÷ ' + add.div;
+        html += ' <button class="mapping-remove-src-btn" data-mapping="' + mi + '" data-add="' + ai + '">×</button>';
+        html += '</span>';
       });
+      html += '<button class="mapping-add-src-btn" data-mapping="' + mi + '" title="Add source">+src</button>';
+
+      html += '</td>';
+      html += '<td><button class="mapping-remove-btn remove-mapping-btn" data-mapping="' + mi + '" title="Remove mapping"><sl-icon name="x-circle"></sl-icon></button></td>';
+      html += '</tr>';
     });
-  }
 
-  // ─── DSP Parameters Panel ───────────────────────────────
-
-  function renderDSPParams() {
-    var container = document.getElementById('dsp-param-list');
-    if (!container) return;
-
-    if (!state.dspParams.length) {
-      container.innerHTML = '<div class="empty-state"><p>No DSP parameters loaded</p></div>';
-      return;
+    if (mappings.length === 0) {
+      html += '<tr class="mapping-row-empty"><td colspan="5" style="text-align:center;opacity:0.4;padding:0.5rem;">No output mappings</td></tr>';
     }
 
-    // Determine which params are mapped
-    var mappedParamNames = {};
-    state.mappings.forEach(function(m) {
-      mappedParamNames[m.dspParam] = true;
+    html += '</tbody></table>';
+
+    return html;
+  }
+
+  // ── Render: Sound Presets for this definition ──
+
+  function renderSoundPresetsForDef(def) {
+    var matching = state.soundPresets.filter(function(p) {
+      return p.macro === def.id;
     });
 
     var html = '';
-    state.dspParams.forEach(function(p) {
-      var isMapped = mappedParamNames[p.name] || false;
-      html += '<div class="dsp-param-row' + (isMapped ? ' mapped' : '') + '" data-param-name="' + S.esc(p.name) + '">';
-      html += '<span class="dsp-param-index">' + p.index + '</span>';
+    html += '<div class="mapping-output-header">';
+    html += '<span>Sound Presets using "' + S.esc(def.id) + '" (' + matching.length + ')</span>';
+    html += '<button class="mapping-add-btn create-preset-btn" title="Create new sound preset">+ New Preset</button>';
+    html += '</div>';
+
+    if (matching.length === 0) {
+      html += '<div style="text-align:center;opacity:0.4;padding:1rem;">No sound presets reference this definition</div>';
+      return html;
+    }
+
+    // Build param index→name map
+    var paramNames = {};
+    def.groups.forEach(function(g) {
+      (g.parameters || []).forEach(function(p) {
+        paramNames[p.idx] = p.name || ('Param ' + p.idx);
+      });
+    });
+
+    html += '<table class="mapping-table">';
+    html += '<thead><tr>';
+    html += '<th>Preset</th>';
+    html += '<th>Group</th>';
+    html += '<th>Values</th>';
+    html += '<th></th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+
+    matching.forEach(function(preset) {
+      html += '<tr class="mapping-row">';
+      html += '<td>' + S.esc(preset.name || preset.id) + '</td>';
+      html += '<td>' + S.esc(preset.group || '—') + '</td>';
+      html += '<td class="preset-values-cell">';
+      if (preset.values && preset.values.length > 0) {
+        preset.values.forEach(function(v, vi) {
+          var pName = paramNames[vi] || vi;
+          html += '<span class="preset-value-chip" title="' + S.esc(String(pName)) + '">' + v + '</span>';
+        });
+      } else {
+        html += '<span style="opacity:0.4;">empty</span>';
+      }
+      html += '</td>';
+      html += '<td>';
+      html += '<button class="mapping-remove-btn delete-preset-btn" data-preset-id="' + S.esc(preset.id) + '" title="Delete"><sl-icon name="trash"></sl-icon></button>';
+      html += '</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+
+    return html;
+  }
+
+  // ─── Mapping Editor Events ───────────────────────────────
+
+  function setupMappingEditorEvents(container) {
+    // Tab switching
+    container.querySelectorAll('.mapping-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        var tabId = tab.getAttribute('data-tab');
+        container.querySelectorAll('.mapping-tab').forEach(function(t) { t.classList.toggle('active', t.getAttribute('data-tab') === tabId); });
+        container.querySelectorAll('.mapping-tab-content').forEach(function(c) { c.classList.toggle('active', c.getAttribute('data-tab') === tabId); });
+      });
+    });
+
+    // Definition header fields
+    var defIdInput = container.querySelector('.def-id-input');
+    var defNameInput = container.querySelector('.def-name-input');
+    var defMachineSelect = container.querySelector('.def-machine-select');
+
+    if (defIdInput) {
+      defIdInput.addEventListener('change', function() {
+        if (state.editDef) { state.editDef.id = defIdInput.value; state.dirty = true; }
+      });
+    }
+    if (defNameInput) {
+      defNameInput.addEventListener('change', function() {
+        if (state.editDef) { state.editDef.name = defNameInput.value; state.dirty = true; }
+      });
+    }
+    if (defMachineSelect) {
+      defMachineSelect.addEventListener('change', function() {
+        if (state.editDef) {
+          state.editDef.machine = defMachineSelect.value;
+          state.dirty = true;
+          renderMappingEditor(); // Re-render to update CC options
+          renderDSPPanel();
+        }
+      });
+    }
+
+    // 1:1 mapping button
+    var btn1to1 = container.querySelector('.btn-1to1');
+    if (btn1to1) {
+      btn1to1.addEventListener('click', function() {
+        createOneToOneMapping();
+      });
+    }
+
+    // Group name changes
+    container.querySelectorAll('.group-name-input').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var gi = parseInt(input.getAttribute('data-group'), 10);
+        if (state.editDef && state.editDef.groups[gi]) {
+          state.editDef.groups[gi].name = input.value;
+          state.dirty = true;
+        }
+      });
+    });
+
+    // Parameter field changes
+    container.querySelectorAll('.mapping-row[data-group][data-param]').forEach(function(row) {
+      var gi = parseInt(row.getAttribute('data-group'), 10);
+      var pi = parseInt(row.getAttribute('data-param'), 10);
+
+      row.querySelectorAll('input, select').forEach(function(input) {
+        input.addEventListener('change', function() {
+          if (!state.editDef) return;
+          var param = state.editDef.groups[gi].parameters[pi];
+          if (!param) return;
+          if (input.classList.contains('param-name')) param.name = input.value;
+          if (input.classList.contains('param-def')) param.def = parseInt(input.value, 10) || 0;
+          if (input.classList.contains('param-min')) param.min = parseInt(input.value, 10) || 0;
+          if (input.classList.contains('param-max')) param.max = parseInt(input.value, 10) || 127;
+          if (input.classList.contains('param-res')) param.res = parseInt(input.value, 10) || 64;
+          if (input.classList.contains('param-ui')) param.ui = input.value;
+          state.dirty = true;
+        });
+      });
+    });
+
+    // Add parameter button
+    container.querySelectorAll('.add-param-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var gi = parseInt(btn.getAttribute('data-group'), 10);
+        if (!state.editDef || !state.editDef.groups[gi]) return;
+
+        // Find next available idx
+        var maxIdx = -1;
+        state.editDef.groups.forEach(function(g) {
+          (g.parameters || []).forEach(function(p) {
+            if (p.idx > maxIdx) maxIdx = p.idx;
+          });
+        });
+
+        state.editDef.groups[gi].parameters.push({
+          idx: maxIdx + 1,
+          name: 'New Param',
+          def: 0,
+          min: 0,
+          max: 127,
+          res: 64,
+          ui: 'bignum',
+        });
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // Remove parameter button
+    container.querySelectorAll('.remove-param-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var gi = parseInt(btn.getAttribute('data-group'), 10);
+        var pi = parseInt(btn.getAttribute('data-param'), 10);
+        if (!state.editDef || !state.editDef.groups[gi]) return;
+        state.editDef.groups[gi].parameters.splice(pi, 1);
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // Output mapping field changes
+    container.querySelectorAll('.mapping-row[data-mapping-idx]').forEach(function(row) {
+      var mi = parseInt(row.getAttribute('data-mapping-idx'), 10);
+      row.querySelectorAll('input').forEach(function(input) {
+        input.addEventListener('change', function() {
+          if (!state.editDef || !state.editDef.mapping[mi]) return;
+          if (input.classList.contains('mapping-ctrl')) {
+            state.editDef.mapping[mi].ctrl = parseInt(input.value, 10) || 0;
+          }
+          if (input.classList.contains('mapping-start')) {
+            state.editDef.mapping[mi].start = parseInt(input.value, 10) || 0;
+          }
+          state.dirty = true;
+          renderMappingEditor(); // Re-render to update CC name
+        });
+      });
+    });
+
+    // Add output mapping
+    var addMappingBtn = container.querySelector('.add-mapping-btn');
+    if (addMappingBtn) {
+      addMappingBtn.addEventListener('click', function() {
+        if (!state.editDef) return;
+        state.editDef.mapping.push({ ctrl: 0, start: 0, add: [] });
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    }
+
+    // Remove output mapping
+    container.querySelectorAll('.remove-mapping-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var mi = parseInt(btn.getAttribute('data-mapping'), 10);
+        if (!state.editDef) return;
+        state.editDef.mapping.splice(mi, 1);
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // Add source to mapping
+    container.querySelectorAll('.mapping-add-src-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var mi = parseInt(btn.getAttribute('data-mapping'), 10);
+        if (!state.editDef || !state.editDef.mapping[mi]) return;
+
+        var srcStr = prompt('Source param index (0-23):');
+        if (srcStr === null) return;
+        var src = parseInt(srcStr, 10);
+        if (isNaN(src)) return;
+
+        state.editDef.mapping[mi].add.push({ src: src, mul: 1, div: 1 });
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // Remove source from mapping
+    container.querySelectorAll('.mapping-remove-src-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var mi = parseInt(btn.getAttribute('data-mapping'), 10);
+        var ai = parseInt(btn.getAttribute('data-add'), 10);
+        if (!state.editDef || !state.editDef.mapping[mi]) return;
+        state.editDef.mapping[mi].add.splice(ai, 1);
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // Create preset button
+    var createPresetBtn = container.querySelector('.create-preset-btn');
+    if (createPresetBtn) {
+      createPresetBtn.addEventListener('click', function() {
+        createSoundPresetForDef();
+      });
+    }
+
+    // Delete preset buttons
+    container.querySelectorAll('.delete-preset-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var presetId = btn.getAttribute('data-preset-id');
+        deleteSoundPreset(presetId);
+      });
+    });
+  }
+
+  // ─── Create 1:1 Mapping ──────────────────────────────────
+
+  function createOneToOneMapping() {
+    if (!state.editDef || !state.editDef.machine) {
+      S.toast('Select a machine first', 'warning', 2000);
+      return;
+    }
+
+    var machineInfo = state.machines.find(function(m) { return m.id === state.editDef.machine; });
+    if (!machineInfo || !machineInfo.parameters || machineInfo.parameters.length === 0) {
+      S.toast('Machine has no CC parameters', 'warning', 2000);
+      return;
+    }
+
+    if (!confirm('This will replace all parameter groups and output mappings with a 1:1 mapping from all ' + machineInfo.parameters.length + ' CCs. Continue?')) {
+      return;
+    }
+
+    var params = machineInfo.parameters;
+
+    // Set ID and name if empty
+    if (!state.editDef.id) {
+      state.editDef.id = state.editDef.machine + '-allparams';
+    }
+    if (!state.editDef.name) {
+      state.editDef.name = (machineInfo.name || state.editDef.machine) + ' All params';
+    }
+
+    // Create groups: 4 params per group, across 6 groups max
+    state.editDef.groups = [];
+    var paramIdx = 0;
+    for (var g = 0; g < 6 && paramIdx < params.length; g++) {
+      var groupParams = [];
+      for (var p = 0; p < 4 && paramIdx < params.length; p++) {
+        var cc = params[paramIdx];
+        groupParams.push({
+          idx: paramIdx,
+          name: cc.name || ('CC' + cc.ctrl),
+          def: cc.def || 0,
+          min: 0,
+          max: 127,
+          res: 64,
+          ui: 'bignum',
+        });
+        paramIdx++;
+      }
+      state.editDef.groups.push({
+        name: 'Page ' + (g + 1),
+        parameters: groupParams,
+      });
+    }
+
+    // Create 1:1 output mappings
+    state.editDef.mapping = [];
+    var allParams = [];
+    state.editDef.groups.forEach(function(g) {
+      (g.parameters || []).forEach(function(p) {
+        allParams.push(p);
+      });
+    });
+
+    params.forEach(function(cc, i) {
+      if (i < allParams.length) {
+        state.editDef.mapping.push({
+          ctrl: cc.ctrl,
+          start: 0,
+          add: [{ src: allParams[i].idx, mul: 1, div: 1 }],
+        });
+      }
+    });
+
+    state.dirty = true;
+    renderMappingEditor();
+    S.toast('Created 1:1 mapping with ' + params.length + ' parameters', 'success', 2000);
+  }
+
+  // ─── Sound Preset CRUD ──────────────────────────────────
+
+  function createSoundPresetForDef() {
+    if (!state.editDef || !state.editDef.id) {
+      S.toast('Save the definition first', 'warning', 2000);
+      return;
+    }
+
+    var name = prompt('Sound preset name:');
+    if (!name) return;
+
+    var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    var group = prompt('Preset group:', state.editDef.machine);
+    if (group === null) return;
+
+    // Collect default values from the definition
+    var values = [];
+    state.editDef.groups.forEach(function(g) {
+      (g.parameters || []).forEach(function(p) {
+        values[p.idx] = p.def || 0;
+      });
+    });
+
+    var preset = {
+      id: id,
+      name: name,
+      group: group || 'User',
+      macro: state.editDef.id,
+      values: values,
+    };
+
+    var jsonStr = JSON.stringify(preset, null, 2);
+    var filePath = 'macrosoundpresets/' + id + '.json';
+
+    fetch('/api/v1/samples?action=uploadconfig&path=' + encodeURIComponent(filePath), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStr,
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      S.toast('Created preset: ' + name, 'success', 2000);
+      return apiGet('/api/v1/macroapi/soundpresets');
+    }).then(function(presets) {
+      state.soundPresets = presets || [];
+      renderMappingEditor();
+    }).catch(function(err) {
+      S.toast('Create failed: ' + err.message, 'danger', 3000);
+    });
+  }
+
+  function deleteSoundPreset(presetId) {
+    if (!confirm('Delete sound preset "' + presetId + '"?')) return;
+
+    var filePath = 'macrosoundpresets/' + presetId + '.json';
+    apiPost('/api/v1/samples?action=manage', {
+      action: 'deleteconfig',
+      path: filePath,
+    }).then(function() {
+      S.toast('Deleted preset: ' + presetId, 'success', 2000);
+      return apiGet('/api/v1/macroapi/soundpresets');
+    }).then(function(presets) {
+      state.soundPresets = presets || [];
+      renderMappingEditor();
+    }).catch(function(err) {
+      S.toast('Delete failed: ' + err.message, 'danger', 3000);
+    });
+  }
+
+  // ─── DSP Panel (right) ──────────────────────────────────
+
+  function renderDSPPanel() {
+    var container = document.getElementById('dsp-param-list');
+    if (!container) return;
+
+    // Show DSP params for the selected definition's machine
+    var machineId = state.editDef ? state.editDef.machine : '';
+    var machineInfo = state.machines.find(function(m) { return m.id === machineId; });
+
+    if (!machineInfo || !machineInfo.parameters || machineInfo.parameters.length === 0) {
+      container.innerHTML =
+        '<div class="empty-state" style="padding:1.5rem;">' +
+        '<sl-icon name="cpu" style="font-size:1.5rem;"></sl-icon>' +
+        '<p style="font-size:0.78rem;">Select a definition with a machine to see DSP CC parameters</p>' +
+        '</div>';
+      return;
+    }
+
+    // Build a set of mapped ctrl numbers
+    var mappedCtrls = {};
+    if (state.editDef && state.editDef.mapping) {
+      state.editDef.mapping.forEach(function(m) {
+        mappedCtrls[m.ctrl] = true;
+      });
+    }
+
+    var html = '<div class="dsp-panel-title">' + S.esc(machineInfo.name) + ' (' + S.esc(machineId) + ')</div>';
+
+    machineInfo.parameters.forEach(function(p) {
+      var isMapped = mappedCtrls[p.ctrl] || false;
+      html += '<div class="dsp-param-row' + (isMapped ? ' mapped' : '') + '" data-ctrl="' + p.ctrl + '">';
+      html += '<span class="dsp-param-index">CC ' + p.ctrl + '</span>';
       html += '<span class="dsp-param-name">' + S.esc(p.name) + '</span>';
-      html += '<span class="dsp-param-value">' + p.value + '</span>';
+      html += '<span class="dsp-param-value">def: ' + (p.def || 0) + '</span>';
       if (isMapped) {
-        html += '<sl-icon name="link" class="dsp-param-mapped-icon" title="Mapped to macro"></sl-icon>';
+        html += '<sl-icon name="link" class="dsp-param-mapped-icon" title="Mapped"></sl-icon>';
       }
       html += '</div>';
     });
 
     container.innerHTML = html;
-    setupDSPParamEvents(container);
-  }
-
-  function setupDSPParamEvents(container) {
-    container.querySelectorAll('.dsp-param-row').forEach(function(row) {
-      row.addEventListener('click', function() {
-        var name = row.getAttribute('data-param-name');
-        // Toggle highlight
-        container.querySelectorAll('.dsp-param-row').forEach(function(r) {
-          r.classList.remove('highlighted');
-        });
-        row.classList.add('highlighted');
-
-        // Find and highlight any mapping that references this param
-        highlightMappingForParam(name);
-      });
-    });
-  }
-
-  function highlightDSPParam(paramName) {
-    var list = document.getElementById('dsp-param-list');
-    if (!list) return;
-
-    list.querySelectorAll('.dsp-param-row').forEach(function(row) {
-      row.classList.toggle('highlighted', row.getAttribute('data-param-name') === paramName);
-    });
-  }
-
-  function highlightMappingForParam(paramName) {
-    var editor = document.getElementById('mapping-editor-body');
-    if (!editor) return;
-
-    editor.querySelectorAll('.mapping-row').forEach(function(row) {
-      var select = row.querySelector('.mapping-dsp-param');
-      row.classList.toggle('mapping-highlighted', select && select.value === paramName);
-    });
   }
 
   // ─── Toolbar Actions ─────────────────────────────────────
@@ -504,104 +928,154 @@
     var saveBtn = document.getElementById('designer-save-btn');
     if (saveBtn) {
       saveBtn.addEventListener('click', function() {
-        if (!state.selectedMachineDef) {
-          S.toast('No machine definition selected', 'warning', 2000);
-          return;
-        }
-        S.toast('Saved ' + state.selectedMachineDef.name, 'success', 2000);
+        saveDefinition();
       });
     }
 
     var exportBtn = document.getElementById('designer-export-btn');
     if (exportBtn) {
       exportBtn.addEventListener('click', function() {
-        if (!state.selectedMachineDef) {
-          S.toast('Nothing to export', 'warning', 2000);
-          return;
-        }
-        // Build export JSON
-        var exportData = {
-          name: state.selectedMachineDef.name,
-          plugin: state.selectedMachineDef.plugin,
-          description: state.selectedMachineDef.description,
-          mappings: state.mappings.map(function(m) {
-            return {
-              group: m.group,
-              slot: m.slot,
-              macroName: m.macroName,
-              dspParam: m.dspParam,
-              mul: m.mul,
-              div: m.div,
-            };
-          }),
-        };
-
-        var blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = state.selectedMachineDef.name + '.json';
-        a.click();
-        URL.revokeObjectURL(url);
-        S.toast('Exported ' + state.selectedMachineDef.name + '.json', 'success', 2000);
+        exportDefinition();
       });
     }
 
     var importBtn = document.getElementById('designer-import-btn');
     if (importBtn) {
       importBtn.addEventListener('click', function() {
-        var input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.addEventListener('change', function() {
-          if (input.files.length === 0) return;
-          var reader = new FileReader();
-          reader.onload = function() {
-            try {
-              var data = JSON.parse(reader.result);
-              S.toast('Imported: ' + (data.name || 'unknown'), 'success', 2000);
-              // In production: add to machine definitions list, reload
-            } catch (err) {
-              S.toast('Invalid JSON file', 'danger', 3000);
-            }
-          };
-          reader.readAsText(input.files[0]);
-        });
-        input.click();
+        importDefinitionFile();
       });
+    }
+  }
+
+  function saveDefinition() {
+    if (!state.editDef) {
+      S.toast('Nothing to save', 'warning', 2000);
+      return;
+    }
+    if (!state.editDef.id) {
+      S.toast('Definition ID is required', 'warning', 2000);
+      return;
+    }
+    if (!state.editDef.machine) {
+      S.toast('Select a machine for this definition', 'warning', 2000);
+      return;
     }
 
-    var newBtn = document.getElementById('designer-new-btn');
-    if (newBtn) {
-      newBtn.addEventListener('click', function() {
-        S.toast('New machine definition — coming soon', 'primary', 2000);
-      });
+    var jsonStr = JSON.stringify(state.editDef, null, 2);
+    var filePath = 'macrodefinitions/' + state.editDef.id + '.json';
+
+    S.showLoading('Saving definition…');
+
+    fetch('/api/v1/samples?action=uploadconfig&path=' + encodeURIComponent(filePath), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStr,
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      S.toast('Saved: ' + state.editDef.name, 'success', 2000);
+      state.dirty = false;
+
+      // Reload definitions
+      return apiGet('/api/v1/macroapi/definitions');
+    }).then(function(defs) {
+      state.macroDefs = defs || [];
+      renderMachineList();
+      renderMachineDefSelect();
+      S.hideLoading();
+    }).catch(function(err) {
+      S.hideLoading();
+      S.toast('Save failed: ' + err.message, 'danger', 3000);
+    });
+  }
+
+  function exportDefinition() {
+    if (!state.editDef) {
+      S.toast('Nothing to export', 'warning', 2000);
+      return;
     }
+
+    var blob = new Blob([JSON.stringify(state.editDef, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (state.editDef.id || 'definition') + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    S.toast('Exported: ' + (state.editDef.name || state.editDef.id), 'success', 2000);
+  }
+
+  function importDefinitionFile() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.addEventListener('change', function() {
+      if (!input.files.length) return;
+      var reader = new FileReader();
+      reader.onload = function() {
+        try {
+          var data = JSON.parse(reader.result);
+          if (data.groups && data.mapping) {
+            // It's a macro definition
+            state.editDef = data;
+            state.selectedDefId = data.id || null;
+            ensureGroupStructure(state.editDef);
+            state.dirty = true;
+            renderMappingEditor();
+            renderDSPPanel();
+            S.toast('Imported definition: ' + (data.name || data.id || 'unknown'), 'success', 2000);
+          } else if (data.id && data.macro && data.values) {
+            // It's a sound preset — upload directly
+            var filePath = 'macrosoundpresets/' + data.id + '.json';
+            fetch('/api/v1/samples?action=uploadconfig&path=' + encodeURIComponent(filePath), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data, null, 2),
+            }).then(function(r) {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              S.toast('Imported preset: ' + data.name, 'success', 2000);
+              return apiGet('/api/v1/macroapi/soundpresets');
+            }).then(function(presets) {
+              state.soundPresets = presets || [];
+              renderMappingEditor();
+            }).catch(function(err) {
+              S.toast('Import failed: ' + err.message, 'danger', 3000);
+            });
+          } else {
+            S.toast('Unrecognized JSON format', 'warning', 3000);
+          }
+        } catch (err) {
+          S.toast('Invalid JSON: ' + err.message, 'danger', 3000);
+        }
+      };
+      reader.readAsText(input.files[0]);
+    });
+    input.click();
   }
 
   // ─── Initialization ─────────────────────────────────────
 
   function init() {
-    state.machineDefinitions = generateMockMachineDefinitions();
-    state.dspPlugins = generateMockDSPPlugins();
+    loadAllData().then(function() {
+      renderTrackSelect();
+      setupTrackSelectEvents();
+      renderMachineDefSelect();
+      setupMachineDefSelectEvents();
+      renderMachineList();
+      setupMachineListEvents();
+      setupToolbarActions();
 
-    renderTrackSelect();
-    setupTrackSelectEvents();
-    renderMachineDefSelect();
-    renderMachineDefList();
-    setupMachineDefListEvents();
-    setupToolbarActions();
+      // Start with empty editor
+      renderMappingEditor();
+      renderDSPPanel();
 
-    // Start with empty mapping editor and DSP panel
-    renderMappingEditor();
-    renderDSPParams();
+      // Auto-select first definition if available
+      if (state.macroDefs.length > 0) {
+        selectMacroDefinition(state.macroDefs[0].id);
+        var select = document.getElementById('designer-machine-select');
+        if (select) select.value = state.macroDefs[0].id;
+      }
 
-    // Auto-select first machine definition
-    if (state.machineDefinitions.length > 0) {
-      selectMachineDefinition(state.machineDefinitions[0].name);
-    }
-
-    state.initialized = true;
+      state.initialized = true;
+    });
   }
 
   // ─── Exports ─────────────────────────────────────────────
@@ -610,6 +1084,13 @@
   window.TBD.designer = {
     init: init,
     state: state,
+    reload: function() {
+      loadAllData().then(function() {
+        renderMachineList();
+        renderMachineDefSelect();
+        if (state.selectedDefId) selectMacroDefinition(state.selectedDefId);
+      });
+    },
   };
 
 })();
