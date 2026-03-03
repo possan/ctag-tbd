@@ -133,10 +133,10 @@
     <!-- ═══ SOUND DESIGNER VIEW ═══ -->
     <div id="view-designer">
 
-      <!-- Designer Toolbar (simplified — no Track dropdown, track tabs are shared above) -->
+      <!-- Designer Toolbar: Machine selector + action buttons -->
       <div class="designer-toolbar">
-        <label>Definition:</label>
-        <sl-select id="designer-machine-select" size="small" style="min-width:240px;">
+        <label>Machine:</label>
+        <sl-select id="designer-machine-select" size="small" style="min-width:200px;">
         </sl-select>
         <div class="designer-toolbar-spacer"></div>
         <sl-button size="small" variant="primary" id="designer-save-btn">
@@ -153,21 +153,15 @@
       <!-- Designer 3-column layout -->
       <div class="designer-layout">
 
-        <!-- Left: Machine filter + Macro Definitions -->
+        <!-- Left: Macro Definitions list for selected machine -->
         <div class="machine-browser">
           <div class="machine-browser-header">
             <sl-icon name="cpu" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
             <span>Macro Definitions</span>
           </div>
-          <!-- Machine filter within the left panel -->
-          <div class="machine-filter" id="designer-machine-filter">
-            <label>Machine:</label>
-            <sl-select id="designer-machine-filter-select" size="small" placeholder="Select machine…" style="flex:1;">
-            </sl-select>
-          </div>
           <div class="section-help" id="designer-filter-help">
             <sl-icon name="info-circle"></sl-icon>
-            <p>Select a machine above, then pick a macro definition to edit or create new.</p>
+            <p>Pick a macro definition to edit or create new.</p>
           </div>
           <div class="machine-list" id="machine-list">
           </div>

@@ -66,10 +66,9 @@
     // Auto-select first machine for this track
     state.activeMachine = state.trackMachines.length > 0 ? state.trackMachines[0] : '';
 
-    renderMachineFilter();
+    renderMachineSelectToolbar();
     updateFilterHelp();
     renderMachineList();
-    renderMachineDefSelect();
     renderMappingEditor();
     renderDSPPanel();
 
@@ -77,8 +76,6 @@
     var filteredDefs = getFilteredDefs();
     if (filteredDefs.length > 0) {
       selectMacroDefinition(filteredDefs[0].id);
-      var select = document.getElementById('designer-machine-select');
-      if (select) select.value = filteredDefs[0].id;
     }
   }
 
@@ -89,21 +86,21 @@
     if (!p) return;
 
     if (!state.activeMachine) {
-      p.textContent = 'Showing all definitions for this track. Pick one to edit, or create new.';
+      p.textContent = 'Select a machine above to see and edit its macro definitions.';
     } else {
       var info = S.getMachineInfo(state.activeMachine);
       var machineName = info ? info.name : state.activeMachine;
-      p.textContent = 'Showing definitions for ' + machineName + '. Pick one to edit, or create new.';
+      p.textContent = 'Macro definitions for ' + machineName + '.';
     }
   }
 
-  // ─── Machine Filter ──────────────────────────────────────
+  // ─── Machine Select (toolbar) ────────────────────────────
 
-  function renderMachineFilter() {
-    var select = document.getElementById('designer-machine-filter-select');
+  function renderMachineSelectToolbar() {
+    var select = document.getElementById('designer-machine-select');
     if (!select) return;
 
-    var html = '<sl-option value="">Show All Machines</sl-option>';
+    var html = '';
     state.trackMachines.forEach(function(mid) {
       var info = S.getMachineInfo(mid);
       var name = info ? info.name : mid;
@@ -113,8 +110,8 @@
     select.value = state.activeMachine || '';
   }
 
-  function setupMachineFilterEvents() {
-    var select = document.getElementById('designer-machine-filter-select');
+  function setupMachineSelectToolbarEvents() {
+    var select = document.getElementById('designer-machine-select');
     if (!select) return;
 
     select.addEventListener('sl-change', function() {
@@ -125,7 +122,6 @@
 
       updateFilterHelp();
       renderMachineList();
-      renderMachineDefSelect();
       renderMappingEditor();
       renderDSPPanel();
 
@@ -133,8 +129,6 @@
       var filteredDefs = getFilteredDefs();
       if (filteredDefs.length > 0) {
         selectMacroDefinition(filteredDefs[0].id);
-        var toolbarSelect = document.getElementById('designer-machine-select');
-        if (toolbarSelect) toolbarSelect.value = filteredDefs[0].id;
       }
     });
   }
@@ -156,36 +150,7 @@
     });
   }
 
-  // ─── Machine Definition Select (toolbar) ─────────────────
 
-  function renderMachineDefSelect() {
-    var select = document.getElementById('designer-machine-select');
-    if (!select) return;
-
-    var filteredDefs = getFilteredDefs();
-    var html = '<sl-option value="">— New Definition —</sl-option>';
-    filteredDefs.forEach(function(def) {
-      var machineInfo = S.getMachineInfo(def.machine);
-      var machineName = machineInfo ? machineInfo.name : def.machine;
-      html += '<sl-option value="' + S.esc(def.id) + '">' +
-              S.esc(def.name || def.id) + ' [' + S.esc(machineName) + ']</sl-option>';
-    });
-    select.innerHTML = html;
-  }
-
-  function setupMachineDefSelectEvents() {
-    var select = document.getElementById('designer-machine-select');
-    if (!select) return;
-
-    select.addEventListener('sl-change', function() {
-      var defId = select.value;
-      if (defId) {
-        selectMacroDefinition(defId);
-      } else {
-        createNewDefinition();
-      }
-    });
-  }
 
   // ─── Machine List (left panel — FILTERED by machine) ───────
 
@@ -207,7 +172,9 @@
     var html = '';
 
     if (state.activeMachine) {
-      // Single machine selected — show defs directly without machine header
+      // Single machine selected — show defs with "Create New" button
+      html += '<button class="machine-list-add-btn" id="create-def-btn" style="width:calc(100% - 1.7rem);margin:0.4rem 0.85rem;padding:0.4rem;border:1px solid var(--sl-color-neutral-300);background:var(--sl-color-neutral-100);border-radius:var(--sl-border-radius-small);cursor:pointer;font-size:0.75rem;font-weight:600;color:var(--sl-color-primary-700);transition:all 0.12s;">+ Create New Definition</button>';
+      
       if (filteredDefs.length === 0) {
         html += '<div class="machine-item" style="opacity:0.4;cursor:default;padding:0.3rem 0.85rem;font-size:0.75rem;">No definitions yet</div>';
       }
@@ -278,15 +245,18 @@
     var container = document.getElementById('machine-list');
     if (!container) return;
 
+    // Handle "Create New Definition" button
     container.addEventListener('click', function(e) {
+      if (e.target.id === 'create-def-btn') {
+        createNewDefinition();
+        return;
+      }
+      
       var item = e.target.closest('.machine-item');
       if (!item) return;
       var defId = item.getAttribute('data-def-id');
       if (!defId) return;
       selectMacroDefinition(defId);
-
-      var select = document.getElementById('designer-machine-select');
-      if (select) select.value = defId;
     });
   }
 
@@ -393,25 +363,15 @@
 
     var html = '';
 
-    // Definition header
+    // Definition header (simplified — Machine is already in toolbar)
     html += '<div class="mapping-def-header">';
     html += '<div class="mapping-def-fields">';
     html += '<label>ID:</label>';
     html += '<input class="mapping-input def-id-input" value="' + S.esc(def.id) + '" placeholder="e.g. db-mypatch" />';
     html += '<label>Name:</label>';
-    html += '<input class="mapping-input def-name-input" value="' + S.esc(def.name) + '" placeholder="e.g. My Kick Patch" />';
-    html += '<label>Machine:</label>';
-    // Machine dropdown restricted to this track's machines
-    html += '<select class="mapping-select def-machine-select">';
-    if (state.trackMachines.length === 0) {
-      html += '<option value="">— No machines —</option>';
-    }
-    state.trackMachines.forEach(function(mid) {
-      var info = S.getMachineInfo(mid);
-      var sel = (mid === def.machine) ? ' selected' : '';
-      html += '<option value="' + S.esc(mid) + '"' + sel + '>' + S.esc(info ? info.name : mid) + ' (' + S.esc(mid) + ')</option>';
-    });
-    html += '</select>';
+    html += '<input class="mapping-input def-name-input" value="' + S.esc(def.name) + '" placeholder="e.g. My Patch" />';
+    // Machine is now maintained in toolbar, keep hidden input for data binding
+    html += '<input type="hidden" class="def-machine-select" value="' + S.esc(def.machine) + '" />';
     html += '</div>';
 
     // Action buttons
@@ -711,15 +671,9 @@
         if (state.editDef) { state.editDef.name = defNameInput.value; state.dirty = true; }
       });
     }
+    // Machine is now controlled from toolbar, no need for change listener
     if (defMachineSelect) {
-      defMachineSelect.addEventListener('change', function() {
-        if (state.editDef) {
-          state.editDef.machine = defMachineSelect.value;
-          state.dirty = true;
-          renderMappingEditor();
-          renderDSPPanel();
-        }
-      });
+      defMachineSelect.value = state.editDef ? state.editDef.machine : '';
     }
 
     // 1:1 mapping button
@@ -1189,8 +1143,7 @@
       onTrackSelected(idx, track);
     });
 
-    setupMachineFilterEvents();
-    setupMachineDefSelectEvents();
+    setupMachineSelectToolbarEvents();
     setupMachineListEvents();
     setupToolbarActions();
 

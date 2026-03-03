@@ -469,68 +469,69 @@ function renderKnobSVG(opts) {
   var max = opts.max || 127;
   var size = opts.size || 68;
   var color = opts.color || 'blue';
+  var isMacro = opts.macroKnob || false;
 
   var pct = max > min ? ((value - min) / (max - min)) : 0;
   pct = Math.max(0, Math.min(1, pct));
 
-  // Arc geometry: 270° sweep from 225° (7:30 position) to 135° (4:30 position)
+  // Knob center
   var cx = size / 2;
   var cy = size / 2;
-  var r = (size / 2) - 6;           // arc radius
-  var rInner = r - 10;              // inner circle radius
-  var strokeWidth = 4;
 
-  var startAngle = 225;
-  var endAngle = startAngle + 270;  // 495° = 135°
+  // Geometry
+  var outerRadius = (size / 2) - 2;          // outer dark circle
+  var indicatorRadius = outerRadius - 3;    // radius for indicator line
+  var centerRadius = (size / 2) * 0.35;     // inner lighter circle
 
-  // Value angle
-  var valueAngle = startAngle + (pct * 270);
+  // Rotation angle: -135° to +135° (270° range, centered at top)
+  var minAngle = -135;
+  var maxAngle = 135;
+  var valueAngle = minAngle + (pct * (maxAngle - minAngle));
+  var valueRad = (valueAngle - 90) * Math.PI / 180;
 
-  function polarToCartesian(angle) {
-    var rad = (angle - 90) * Math.PI / 180;
-    return {
-      x: cx + r * Math.cos(rad),
-      y: cy + r * Math.sin(rad)
-    };
-  }
+  // Indicator line endpoints
+  var x1 = cx + (indicatorRadius - 8) * Math.cos(valueRad);
+  var y1 = cy + (indicatorRadius - 8) * Math.sin(valueRad);
+  var x2 = cx + indicatorRadius * Math.cos(valueRad);
+  var y2 = cy + indicatorRadius * Math.sin(valueRad);
 
-  function describeArc(start, end) {
-    var sP = polarToCartesian(start);
-    var eP = polarToCartesian(end);
-    var sweep = (end - start) <= 180 ? 0 : 1;
-    return 'M ' + sP.x + ' ' + sP.y + ' A ' + r + ' ' + r + ' 0 ' + sweep + ' 1 ' + eP.x + ' ' + eP.y;
-  }
-
-  // Indicator dot position
-  var dotPos = polarToCartesian(valueAngle);
-
-  // Color palette
-  var trackColor, valueColor, dotColor;
-  if (color === 'amber') {
-    trackColor = 'var(--sl-color-neutral-300)';
-    valueColor = 'var(--sl-color-amber-500, #f59e0b)';
-    dotColor = 'var(--sl-color-amber-600, #d97706)';
+  // Color schemes
+  var outerBG, indicatorColor, centerBG;
+  
+  if (isMacro) {
+    // Macro knobs: orange/gold color
+    outerBG = 'var(--sl-color-orange-600, #ea580c)';
+    indicatorColor = 'var(--sl-color-warning-200, #fef08a)';
+    centerBG = 'var(--sl-color-orange-700, #c2410c)';
+  } else if (color === 'amber') {
+    // Designer preview knobs: warm orange/amber
+    outerBG = 'var(--sl-color-amber-700, #a16207)';
+    indicatorColor = 'var(--sl-color-amber-100, #fef3c7)';
+    centerBG = 'var(--sl-color-amber-800, #78350f)';
   } else {
-    trackColor = 'var(--sl-color-neutral-300)';
-    valueColor = 'var(--sl-color-primary-500)';
-    dotColor = 'var(--sl-color-primary-700)';
+    // Performer knobs (blue) - default
+    outerBG = 'var(--sl-color-primary-700, #1e40af)';
+    indicatorColor = 'var(--sl-color-primary-100, #eff6ff)';
+    centerBG = 'var(--sl-color-primary-900, #1e3a8a)';
   }
 
   var svg = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" class="knob-svg">';
 
-  // Background track arc (full 270°)
-  svg += '<path d="' + describeArc(startAngle, endAngle) + '" fill="none" stroke="' + trackColor + '" stroke-width="' + strokeWidth + '" stroke-linecap="round" />';
+  // Outer dark circle (knob background)
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + outerRadius + '" fill="' + outerBG + '" />';
 
-  // Value arc
-  if (pct > 0.005) {
-    svg += '<path d="' + describeArc(startAngle, valueAngle) + '" fill="none" stroke="' + valueColor + '" stroke-width="' + strokeWidth + '" stroke-linecap="round" />';
-  }
+  // Subtle shadow/depth circle
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + outerRadius + '" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="0.5" />';
 
-  // Inner circle (knob body)
-  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rInner + '" fill="var(--sl-color-neutral-50)" stroke="var(--sl-color-neutral-200)" stroke-width="1" />';
+  // Indicator line (thick white/light line showing current value)
+  svg += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" ';
+  svg += 'stroke="' + indicatorColor + '" stroke-width="2.5" stroke-linecap="round" />';
 
-  // Indicator dot
-  svg += '<circle cx="' + dotPos.x.toFixed(1) + '" cy="' + dotPos.y.toFixed(1) + '" r="3.5" fill="' + dotColor + '" />';
+  // Center highlight circle
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + centerRadius + '" fill="' + centerBG + '" />';
+
+  // Very subtle center dot
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (centerRadius * 0.4) + '" fill="' + indicatorColor + '" opacity="0.5" />';
 
   svg += '</svg>';
   return svg;
