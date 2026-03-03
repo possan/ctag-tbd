@@ -1,15 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
-// TBD-16 WebUI — Performer View (Real Data)
+// TBD-16 WebUI — Performer View
 // Persona: Performer / Artist
 //
-// Loads real data from the device API:
-//   - synthdefinitions.json  → tracks + machines + DSP CC params
-//   - macrodefinitions/*.json → macro parameter groups + output mappings
-//   - macrosoundpresets/*.json → sound preset values
+// Uses shared data from shared.js (synthdefs, macrodefs, soundpresets).
+// Shared track tabs handle track selection — this view handles:
+//   - Macro knob display for the active track
+//   - Sound preset browser (left sidebar)
+//   - Quick actions (right panel)
 //
 // Data flow:
-//   Macro Sound Presets → Macro Definitions → DSP CC values
-//   (Resolved by MacroTranslator on the device.)
+//   Track Selection → Machine selection → Macro Def → Knobs
+//   Sound Presets → Load knob values
 //
 // (c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
 // Licensed under LGPL 3.0.
@@ -21,11 +22,6 @@
 
   // ─── State ───────────────────────────────────────────────
   var state = {
-    synthDefs: null,         // From synthdefinitions.json: { tracks, machines }
-    tracks: [],              // Array of track objects from synthDefs
-    machines: [],            // Array of machine objects from synthDefs
-    macroDefs: [],           // All loaded macro definitions
-    soundPresets: [],        // All loaded sound presets
     activeTrack: -1,         // Currently selected track index
     activeMachine: '',       // Active machine id for selected track
     activeMacroDef: null,    // Active macro definition object
@@ -33,7 +29,6 @@
     paramValues: [],         // Current parameter values for active macro/preset
     presetSearchTerm: '',
     initialized: false,
-    loading: false,
   };
 
   // ─── API Helpers ──────────────────────────────────────────
@@ -56,103 +51,25 @@
     });
   }
 
-  // ─── Data Loading ─────────────────────────────────────────
+  // ─── Track Selection (driven by shared track tabs) ────────
 
-  function loadAllData() {
-    state.loading = true;
-    S.showLoading('Loading tracks & presets…');
-
-    return Promise.all([
-      apiGet('/api/v1/samples?getconfig=synthdefinitions.json'),
-      apiGet('/api/v1/macroapi/definitions'),
-      apiGet('/api/v1/macroapi/soundpresets'),
-    ]).then(function(results) {
-      state.synthDefs = results[0];
-      state.tracks = results[0].tracks || [];
-      state.machines = results[0].machines || [];
-      state.macroDefs = results[1] || [];
-      state.soundPresets = results[2] || [];
-      state.loading = false;
-      S.hideLoading();
-      console.log('[Performer] Loaded:', state.tracks.length, 'tracks,',
-                  state.macroDefs.length, 'macro defs,',
-                  state.soundPresets.length, 'sound presets');
-    }).catch(function(err) {
-      state.loading = false;
-      S.hideLoading();
-      console.error('[Performer] Load error:', err);
-      S.toast('Failed to load data: ' + err.message, 'danger', 4000);
-    });
-  }
-
-  // ─── Track Overview Strip ────────────────────────────────
-
-  function renderTrackOverview() {
-    var container = document.getElementById('track-overview');
-    if (!container) return;
-
-    var html = '';
-    state.tracks.forEach(function(track) {
-      var classes = 'track-strip';
-      if (track.index === state.activeTrack) classes += ' active';
-
-      // Show first non-"no*" machine as the default machine
-      var availMachines = (track.machines || []).filter(function(m) {
-        return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
-      });
-      var defaultMachine = availMachines.length > 0 ? availMachines[0] : '—';
-
-      html += '<div class="' + classes + '" data-track="' + track.index + '">';
-      html += '<span class="track-num">' + String(track.index + 1).padStart(2, '0') + '</span>';
-      html += '<span class="track-name">' + S.esc(track.name) + '</span>';
-      html += '<span class="track-machine">' + S.esc(defaultMachine) + '</span>';
-      html += '</div>';
-    });
-
-    container.innerHTML = html;
-  }
-
-  function setupTrackOverviewEvents() {
-    var container = document.getElementById('track-overview');
-    if (!container) return;
-
-    container.addEventListener('click', function(e) {
-      var strip = e.target.closest('.track-strip');
-      if (!strip) return;
-      var trackIdx = parseInt(strip.getAttribute('data-track'), 10);
-      selectTrack(trackIdx);
-    });
-  }
-
-  // ─── Track Selection ─────────────────────────────────────
-
-  function selectTrack(idx) {
-    var track = state.tracks.find(function(t) { return t.index === idx; });
-    if (!track) return;
-
+  function onTrackSelected(idx, track) {
     state.activeTrack = idx;
     state.activePreset = null;
 
-    // Update strip highlight
-    document.querySelectorAll('.track-strip').forEach(function(s) {
-      s.classList.toggle('active', parseInt(s.getAttribute('data-track'), 10) === idx);
-    });
-
-    // Get available machines for this track (excluding empty/no* machines)
-    var availMachines = (track.machines || []).filter(function(m) {
-      return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
-    });
+    // Get available machines for this track
+    var availMachines = S.getTrackMachines(track);
 
     // Default to first available machine
     var machineId = availMachines.length > 0 ? availMachines[0] : '';
     state.activeMachine = machineId;
 
     // Find matching macro definitions for this machine
-    var matchingDefs = state.macroDefs.filter(function(d) {
+    var matchingDefs = S.data.macroDefs.filter(function(d) {
       return d.machine === machineId;
     });
 
-    // Use first matching definition (or the allparams one if available)
+    // Prefer "allparams" definition, fallback to first
     var allParamsDef = matchingDefs.find(function(d) {
       return d.id.indexOf('allparams') !== -1;
     });
@@ -173,12 +90,6 @@
     renderPresetBrowser();
   }
 
-  // ─── Machine Selector ────────────────────────────────────
-
-  function getMachineInfo(machineId) {
-    return state.machines.find(function(m) { return m.id === machineId; }) || null;
-  }
-
   // ─── Macro Controls Rendering ────────────────────────────
 
   function renderMacroControls(track, macroDef, availMachines) {
@@ -190,33 +101,35 @@
         '<div class="empty-state" id="macro-empty">' +
         '<sl-icon name="sliders"></sl-icon>' +
         '<h3>No macro definition found</h3>' +
-        '<p>No macro definition available for machine "' + S.esc(state.activeMachine) + '"</p>' +
+        '<p>No macro definition available for instrument "' + S.esc(state.activeMachine) + '"</p>' +
         '</div>';
       return;
     }
 
     var html = '';
 
-    // Track info header with machine selector
+    // Track info header with CLEAR labels
     html += '<div class="track-info-header">';
     html += '<span class="track-badge">CH ' + String(track.index + 1).padStart(2, '0') + '</span>';
     html += '<span class="track-title">' + S.esc(track.name) + '</span>';
 
-    // Machine selector dropdown
-    html += '<sl-select id="performer-machine-select" size="small" value="' + S.esc(state.activeMachine) + '" style="min-width:140px; margin-left:0.5rem;">';
+    // Label: "Instrument:" for the machine selector
+    html += '<span class="track-info-label">Instrument:</span>';
+    html += '<sl-select id="performer-machine-select" size="small" value="' + S.esc(state.activeMachine) + '" style="min-width:140px;">';
     availMachines.forEach(function(machId) {
-      var info = getMachineInfo(machId);
+      var info = S.getMachineInfo(machId);
       var label = info ? info.name : machId;
       html += '<sl-option value="' + S.esc(machId) + '">' + S.esc(label) + '</sl-option>';
     });
     html += '</sl-select>';
 
-    // Macro definition selector (if multiple defs for this machine)
-    var matchingDefs = state.macroDefs.filter(function(d) {
+    // Label: "Knob Set:" for the macro definition selector (if multiple)
+    var matchingDefs = S.data.macroDefs.filter(function(d) {
       return d.machine === state.activeMachine;
     });
     if (matchingDefs.length > 1) {
-      html += '<sl-select id="performer-macrodef-select" size="small" value="' + S.esc(macroDef.id) + '" style="min-width:160px; margin-left:0.25rem;">';
+      html += '<span class="track-info-label">Knob Set:</span>';
+      html += '<sl-select id="performer-macrodef-select" size="small" value="' + S.esc(macroDef.id) + '" style="min-width:160px;">';
       matchingDefs.forEach(function(d) {
         html += '<sl-option value="' + S.esc(d.id) + '">' + S.esc(d.name) + '</sl-option>';
       });
@@ -226,9 +139,11 @@
     }
     html += '</div>';
 
-    // Render each macro group
+    // Render each macro group (knob pages)
     if (macroDef.groups) {
       macroDef.groups.forEach(function(group, gi) {
+        if (!group.parameters || group.parameters.length === 0) return;
+
         html += '<div class="macro-group" data-group="' + gi + '">';
 
         // Group header
@@ -275,7 +190,7 @@
         state.activeMachine = newMachine;
 
         // Find matching macro definitions for new machine
-        var matchingDefs = state.macroDefs.filter(function(d) {
+        var matchingDefs = S.data.macroDefs.filter(function(d) {
           return d.machine === newMachine;
         });
         var allParamsDef = matchingDefs.find(function(d) {
@@ -294,14 +209,11 @@
           });
         }
 
-        var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
-        var availMachines = (track.machines || []).filter(function(m) {
-          return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
-        });
+        var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+        var availMachines = S.getTrackMachines(track);
         renderMacroControls(track, def, availMachines);
         renderPresetBrowser();
 
-        // Notify device of machine change
         sendTrackUpdate({ track: state.activeTrack, machine: newMachine });
       });
     }
@@ -310,11 +222,10 @@
     if (macroDefSelect) {
       macroDefSelect.addEventListener('sl-change', function() {
         var defId = macroDefSelect.value;
-        var def = state.macroDefs.find(function(d) { return d.id === defId; });
+        var def = S.data.macroDefs.find(function(d) { return d.id === defId; });
         if (!def) return;
         state.activeMacroDef = def;
 
-        // Reset param values
         state.paramValues = [];
         if (def.groups) {
           def.groups.forEach(function(group) {
@@ -324,10 +235,8 @@
           });
         }
 
-        var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
-        var availMachines = (track.machines || []).filter(function(m) {
-          return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
-        });
+        var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+        var availMachines = S.getTrackMachines(track);
         renderMacroControls(track, def, availMachines);
         renderPresetBrowser();
 
@@ -439,15 +348,15 @@
     var container = document.getElementById('preset-list');
     if (!container) return;
 
-    // Filter presets: show those whose `macro` references a definition for the active machine
+    // Filter presets for the active machine
     var matchingDefIds = {};
-    state.macroDefs.forEach(function(d) {
+    S.data.macroDefs.forEach(function(d) {
       if (d.machine === state.activeMachine) {
         matchingDefIds[d.id] = true;
       }
     });
 
-    var presets = state.soundPresets.filter(function(p) {
+    var presets = S.data.soundPresets.filter(function(p) {
       return matchingDefIds[p.macro] || false;
     });
 
@@ -514,38 +423,31 @@
   }
 
   function loadPreset(presetId) {
-    var preset = state.soundPresets.find(function(p) { return p.id === presetId; });
+    var preset = S.data.soundPresets.find(function(p) { return p.id === presetId; });
     if (!preset) return;
 
     state.activePreset = preset;
 
-    // Find the macro definition this preset references
-    var def = state.macroDefs.find(function(d) { return d.id === preset.macro; });
+    var def = S.data.macroDefs.find(function(d) { return d.id === preset.macro; });
     if (def) {
       state.activeMacroDef = def;
       state.activeMachine = def.machine;
     }
 
-    // Apply preset values to param values
     if (preset.values && preset.values.length > 0) {
       state.paramValues = preset.values.slice();
     }
 
-    // Mark preset as active in browser
     document.querySelectorAll('.preset-item').forEach(function(p) {
       p.classList.toggle('active', p.getAttribute('data-preset-id') === presetId);
     });
 
-    // Re-render controls with preset values
-    var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
+    var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
     if (track) {
-      var availMachines = (track.machines || []).filter(function(m) {
-        return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
-      });
+      var availMachines = S.getTrackMachines(track);
       renderMacroControls(track, state.activeMacroDef, availMachines);
     }
 
-    // Send to device
     sendTrackUpdate({
       track: state.activeTrack,
       machine: state.activeMachine,
@@ -554,32 +456,6 @@
     });
 
     S.toast('Loaded: ' + preset.name, 'success', 2000);
-  }
-
-  // ─── Favorites ───────────────────────────────────────────
-
-  function renderFavorites() {
-    var container = document.getElementById('fav-row');
-    if (!container) return;
-
-    var html = '';
-    for (var i = 0; i < 10; i++) {
-      html += '<button class="fav-btn" data-fav="' + i + '" title="Favorite ' + (i + 1) + '">';
-      html += (i + 1);
-      html += '</button>';
-    }
-    container.innerHTML = html;
-  }
-
-  function setupFavoritesEvents() {
-    var container = document.getElementById('fav-row');
-    if (!container) return;
-    container.addEventListener('click', function(e) {
-      var btn = e.target.closest('.fav-btn');
-      if (!btn) return;
-      var idx = parseInt(btn.getAttribute('data-fav'), 10);
-      S.toast('Favorite ' + (idx + 1) + ' — coming soon', 'primary', 2000);
-    });
   }
 
   // ─── Quick Actions ───────────────────────────────────────
@@ -601,10 +477,8 @@
             });
           });
         }
-        var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
-        var availMachines = (track.machines || []).filter(function(m) {
-          return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
-        });
+        var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+        var availMachines = S.getTrackMachines(track);
         renderMacroControls(track, state.activeMacroDef, availMachines);
         sendParameterUpdate();
         S.toast('Randomized ' + track.name, 'success', 1500);
@@ -625,10 +499,8 @@
             });
           });
         }
-        var track = state.tracks.find(function(t) { return t.index === state.activeTrack; });
-        var availMachines = (track.machines || []).filter(function(m) {
-          return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
-        });
+        var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+        var availMachines = S.getTrackMachines(track);
         renderMacroControls(track, state.activeMacroDef, availMachines);
         sendParameterUpdate();
         S.toast('Initialized ' + track.name, 'success', 1500);
@@ -703,9 +575,8 @@
     }).then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       S.toast('Saved preset: ' + name, 'success', 2000);
-      return apiGet('/api/v1/macroapi/soundpresets');
-    }).then(function(presets) {
-      state.soundPresets = presets || [];
+      return S.reloadMacroData();
+    }).then(function() {
       renderPresetBrowser();
     }).catch(function(err) {
       S.toast('Save failed: ' + err.message, 'danger', 3000);
@@ -716,8 +587,8 @@
 
   function exportAllPresets() {
     var data = {
-      macroDefs: state.macroDefs,
-      soundPresets: state.soundPresets,
+      macroDefs: S.data.macroDefs,
+      soundPresets: S.data.soundPresets,
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var a = document.createElement('a');
@@ -765,9 +636,8 @@
     }).then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       S.toast('Imported: ' + preset.name, 'success', 2000);
-      return apiGet('/api/v1/macroapi/soundpresets');
-    }).then(function(presets) {
-      state.soundPresets = presets || [];
+      return S.reloadMacroData();
+    }).then(function() {
       renderPresetBrowser();
     }).catch(function(err) {
       S.toast('Import failed: ' + err.message, 'danger', 3000);
@@ -777,21 +647,20 @@
   // ─── Initialization ─────────────────────────────────────
 
   function init() {
-    loadAllData().then(function() {
-      renderTrackOverview();
-      setupTrackOverviewEvents();
-      setupPresetBrowserEvents();
-      renderFavorites();
-      setupFavoritesEvents();
-      setupQuickActions();
-
-      // Auto-select first instrument track
-      if (state.tracks.length > 0) {
-        selectTrack(state.tracks[0].index);
-      }
-
-      state.initialized = true;
+    // Register for shared track selection events
+    S.onTrackChange(function(idx, track) {
+      onTrackSelected(idx, track);
     });
+
+    setupPresetBrowserEvents();
+    setupQuickActions();
+
+    // Auto-select first track if data is already loaded
+    if (S.data.loaded && S.data.tracks.length > 0) {
+      S.selectTrack(S.data.tracks[0].index);
+    }
+
+    state.initialized = true;
   }
 
   // ─── Exports ─────────────────────────────────────────────
@@ -801,10 +670,10 @@
     init: init,
     state: state,
     reload: function() {
-      loadAllData().then(function() {
-        renderTrackOverview();
-        if (state.activeTrack >= 0) selectTrack(state.activeTrack);
-      });
+      if (state.activeTrack >= 0) {
+        var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+        if (track) onTrackSelected(state.activeTrack, track);
+      }
     },
   };
 

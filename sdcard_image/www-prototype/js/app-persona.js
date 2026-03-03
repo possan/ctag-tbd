@@ -182,21 +182,39 @@
       if (performerView) performerView.classList.remove('active');
     }
 
-    // 3. Init the active persona view
-    if (activePersona === 'performer') {
-      if (window.TBD.performer) window.TBD.performer.init();
-    } else {
-      if (window.TBD.designer) window.TBD.designer.init();
-    }
+    // 3. Load shared data, then render shared track overview & init views
+    S.loadSharedData().then(function() {
+      // Render the shared track overview (visible in both views)
+      S.renderTrackOverview();
+      S.setupTrackOverviewEvents();
 
-    // 4. Hide loading overlay
+      // Init the active persona view
+      if (activePersona === 'performer') {
+        if (window.TBD.performer) window.TBD.performer.init();
+      } else {
+        if (window.TBD.designer) window.TBD.designer.init();
+      }
+
+      // Auto-select first track if none selected
+      if (S.data.activeTrack < 0 && S.data.tracks.length > 0) {
+        S.selectTrack(S.data.tracks[0].index);
+      }
+
+      // Mark connection as alive
+      S.setConnected();
+
+      console.log('[TBD-16] Boot complete. Active persona:', activePersona);
+    }).catch(function(err) {
+      console.error('[TBD-16] Boot failed:', err);
+      // Still hide loading so user sees something
+    });
+
+    // 4. Hide loading overlay (will be shown again by loadSharedData if needed)
     var overlay = document.getElementById('loading-overlay');
     if (overlay) {
-      overlay.classList.add('hidden');
-      setTimeout(function() { overlay.remove(); }, 500);
+      // Don't remove the overlay — loadSharedData manages it
+      // Just ensure it starts showing while data loads
     }
-
-    console.log('[TBD-16] Boot complete. Active persona:', activePersona);
   }
 
   // ─── Start ───────────────────────────────────────────────

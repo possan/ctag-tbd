@@ -1,17 +1,17 @@
 // ═══════════════════════════════════════════════════════════════
-// TBD-16 WebUI — Sound Designer View (Real Data)
-// Persona: Sound Designer
+// TBD-16 WebUI — Sound Designer View
+// Persona: Sound Designer / Expert
 //
-// Loads and edits real macro definitions and sound presets:
-//   - synthdefinitions.json → machine list + DSP CC parameters
-//   - macrodefinitions/*.json → parameter groups + output mappings
-//   - macrosoundpresets/*.json → sound preset values
+// Uses shared data and shared track tabs from shared.js.
+// The left panel shows macro definitions FILTERED by the active
+// track's available machines — not all definitions globally.
 //
 // Workflow:
-//   1. Select a machine (DSP plugin) or existing macro definition
-//   2. Edit parameter groups (6 groups × 4 params)
-//   3. Edit output mappings (macro param → DSP CC, mul/div)
-//   4. Save macro definition → create/load sound presets
+//   1. Select a track via the shared track tabs
+//   2. Left panel shows macro definitions for that track's machines
+//   3. Pick a definition to edit (or create new)
+//   4. Edit parameter groups, output mappings, preview knobs
+//   5. Save
 //
 // (c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
 // Licensed under LGPL 3.0.
@@ -23,14 +23,10 @@
 
   // ─── State ───────────────────────────────────────────────
   var state = {
-    synthDefs: null,           // From synthdefinitions.json
-    tracks: [],                // All tracks
-    machines: [],              // All machine definitions (id, name, type, parameters[])
-    macroDefs: [],             // All loaded macro definitions
-    soundPresets: [],          // All loaded sound presets
     selectedDefId: null,       // Currently selected/edited macro definition id
     editDef: null,             // Working copy of the definition being edited
-    selectedTrack: 0,          // Track select in toolbar
+    activeTrack: -1,           // Active track index (from shared track tabs)
+    trackMachines: [],         // Machine IDs available for the active track
     dirty: false,              // Has unsaved changes
     initialized: false,
   };
@@ -55,52 +51,50 @@
     });
   }
 
-  // ─── Data Loading ─────────────────────────────────────────
+  // ─── Track Selection (from shared track tabs) ────────────
 
-  function loadAllData() {
-    S.showLoading('Loading definitions…');
+  function onTrackSelected(idx, track) {
+    state.activeTrack = idx;
+    state.trackMachines = S.getTrackMachines(track);
 
-    return Promise.all([
-      apiGet('/api/v1/samples?getconfig=synthdefinitions.json'),
-      apiGet('/api/v1/macroapi/definitions'),
-      apiGet('/api/v1/macroapi/soundpresets'),
-    ]).then(function(results) {
-      state.synthDefs = results[0];
-      state.tracks = results[0].tracks || [];
-      state.machines = results[0].machines || [];
-      state.macroDefs = results[1] || [];
-      state.soundPresets = results[2] || [];
-      S.hideLoading();
-      console.log('[Designer] Loaded:', state.machines.length, 'machines,',
-                  state.macroDefs.length, 'macro defs,',
-                  state.soundPresets.length, 'sound presets');
-    }).catch(function(err) {
-      S.hideLoading();
-      console.error('[Designer] Load error:', err);
-      S.toast('Failed to load data: ' + err.message, 'danger', 4000);
-    });
+    // Clear current selection
+    state.selectedDefId = null;
+    state.editDef = null;
+    state.dirty = false;
+
+    // Update the filter help text
+    var filterHelp = document.getElementById('designer-filter-help');
+    if (filterHelp) {
+      var machineNames = state.trackMachines.map(function(mid) {
+        var info = S.getMachineInfo(mid);
+        return info ? info.name : mid;
+      }).join(', ');
+      filterHelp.querySelector('p').textContent =
+        'Showing definitions for Ch ' + (idx + 1) + ' ' + S.esc(track.name) +
+        ' (' + (machineNames || 'no instruments') + '). Pick one to edit, or create new.';
+    }
+
+    renderMachineList();
+    renderMachineDefSelect();
+    renderMappingEditor();
+    renderDSPPanel();
+
+    // Auto-select first matching definition
+    var filteredDefs = getFilteredDefs();
+    if (filteredDefs.length > 0) {
+      selectMacroDefinition(filteredDefs[0].id);
+      var select = document.getElementById('designer-machine-select');
+      if (select) select.value = filteredDefs[0].id;
+    }
   }
 
-  // ─── Track Select (toolbar) ──────────────────────────────
-
-  function renderTrackSelect() {
-    var select = document.getElementById('designer-track-select');
-    if (!select) return;
-
-    var html = '';
-    state.tracks.forEach(function(t) {
-      html += '<sl-option value="' + t.index + '">Ch ' + (t.index + 1) + ': ' + S.esc(t.name) + ' (' + S.esc(t.type) + ')</sl-option>';
-    });
-    select.innerHTML = html;
-  }
-
-  function setupTrackSelectEvents() {
-    var select = document.getElementById('designer-track-select');
-    if (!select) return;
-    select.addEventListener('sl-change', function() {
-      state.selectedTrack = parseInt(select.value, 10);
-      // Update DSP panel to show this track's available machines
-      renderDSPPanel();
+  /**
+   * Get macro definitions filtered by the active track's machines.
+   */
+  function getFilteredDefs() {
+    if (!state.trackMachines || state.trackMachines.length === 0) return [];
+    return S.data.macroDefs.filter(function(d) {
+      return state.trackMachines.indexOf(d.machine) !== -1;
     });
   }
 
@@ -110,10 +104,13 @@
     var select = document.getElementById('designer-machine-select');
     if (!select) return;
 
+    var filteredDefs = getFilteredDefs();
     var html = '<sl-option value="">— New Definition —</sl-option>';
-    state.macroDefs.forEach(function(def) {
+    filteredDefs.forEach(function(def) {
+      var machineInfo = S.getMachineInfo(def.machine);
+      var machineName = machineInfo ? machineInfo.name : def.machine;
       html += '<sl-option value="' + S.esc(def.id) + '">' +
-              S.esc(def.name || def.id) + ' [' + S.esc(def.machine) + ']</sl-option>';
+              S.esc(def.name || def.id) + ' [' + S.esc(machineName) + ']</sl-option>';
     });
     select.innerHTML = html;
   }
@@ -132,15 +129,26 @@
     });
   }
 
-  // ─── Machine List (left panel) ───────────────────────────
+  // ─── Machine List (left panel — FILTERED by track) ───────
 
   function renderMachineList() {
     var container = document.getElementById('machine-list');
     if (!container) return;
 
-    // Group macro definitions by machine
+    var filteredDefs = getFilteredDefs();
+
+    if (state.trackMachines.length === 0) {
+      container.innerHTML =
+        '<div class="empty-state" style="padding:1.5rem;">' +
+        '<sl-icon name="cpu" style="font-size:1.5rem;"></sl-icon>' +
+        '<p style="font-size:0.78rem;">Select a track above to see its macro definitions</p>' +
+        '</div>';
+      return;
+    }
+
+    // Group by machine
     var byMachine = {};
-    state.macroDefs.forEach(function(def) {
+    filteredDefs.forEach(function(def) {
       var m = def.machine || 'unknown';
       if (!byMachine[m]) byMachine[m] = [];
       byMachine[m].push(def);
@@ -149,20 +157,24 @@
     var html = '';
 
     // Show each machine group
-    Object.keys(byMachine).sort().forEach(function(machineId) {
-      var machineInfo = state.machines.find(function(m) { return m.id === machineId; });
+    state.trackMachines.forEach(function(machineId) {
+      var machineInfo = S.getMachineInfo(machineId);
       var machineName = machineInfo ? machineInfo.name : machineId;
+      var defs = byMachine[machineId] || [];
 
       html += '<div class="machine-group">';
       html += '<div class="machine-group-header">' + S.esc(machineName) + ' <span style="opacity:0.5;">(' + S.esc(machineId) + ')</span></div>';
 
-      byMachine[machineId].forEach(function(def) {
+      if (defs.length === 0) {
+        html += '<div class="machine-item" style="opacity:0.4;cursor:default;padding:0.3rem 0.85rem;font-size:0.75rem;">No definitions yet</div>';
+      }
+
+      defs.forEach(function(def) {
         var isActive = state.selectedDefId === def.id;
         html += '<div class="machine-item' + (isActive ? ' active' : '') + '" data-def-id="' + S.esc(def.id) + '">';
         html += '<div class="machine-item-name">' + S.esc(def.name || def.id) + '</div>';
         html += '<div class="machine-item-meta">';
 
-        // Count mapped params
         var paramCount = 0;
         if (def.groups) {
           def.groups.forEach(function(g) { paramCount += (g.parameters || []).length; });
@@ -178,7 +190,7 @@
     });
 
     if (!html) {
-      html = '<div class="empty-state" style="padding:1rem;"><p style="font-size:0.78rem;">No macro definitions found</p></div>';
+      html = '<div class="empty-state" style="padding:1rem;"><p style="font-size:0.78rem;">No instruments on this track</p></div>';
     }
 
     container.innerHTML = html;
@@ -192,9 +204,9 @@
       var item = e.target.closest('.machine-item');
       if (!item) return;
       var defId = item.getAttribute('data-def-id');
+      if (!defId) return;
       selectMacroDefinition(defId);
 
-      // Also update the toolbar select
       var select = document.getElementById('designer-machine-select');
       if (select) select.value = defId;
     });
@@ -203,14 +215,13 @@
   // ─── Select / Edit a Macro Definition ────────────────────
 
   function selectMacroDefinition(defId) {
-    var def = state.macroDefs.find(function(d) { return d.id === defId; });
+    var def = S.data.macroDefs.find(function(d) { return d.id === defId; });
     if (!def) return;
 
     state.selectedDefId = defId;
-    state.editDef = JSON.parse(JSON.stringify(def)); // Deep clone for editing
+    state.editDef = JSON.parse(JSON.stringify(def)); // Deep clone
     state.dirty = false;
 
-    // Ensure groups structure (6 groups × 4 params)
     ensureGroupStructure(state.editDef);
 
     // Update machine list active state
@@ -223,11 +234,14 @@
   }
 
   function createNewDefinition() {
+    // Default machine to first of this track's machines
+    var defaultMachine = state.trackMachines.length > 0 ? state.trackMachines[0] : '';
+
     state.selectedDefId = null;
     state.editDef = {
       id: '',
       name: '',
-      machine: '',
+      machine: defaultMachine,
       groups: [],
       mapping: [],
     };
@@ -254,7 +268,6 @@
     var runningIdx = 0;
     def.groups.forEach(function(group) {
       if (!group.parameters) group.parameters = [];
-      // Don't auto-fill — show actual params (may be 0-4 per group)
       group.parameters.forEach(function(p) {
         if (p.idx === undefined) {
           p.idx = runningIdx;
@@ -291,10 +304,10 @@
     var def = state.editDef;
 
     // Get DSP params for the linked machine
-    var machineInfo = state.machines.find(function(m) { return m.id === def.machine; });
+    var machineInfo = S.getMachineInfo(def.machine);
     var machineParams = machineInfo ? (machineInfo.parameters || []) : [];
 
-    // Build DSP param CC options for mapping dropdowns
+    // Build DSP param CC options
     var ccOptions = '<option value="">—</option>';
     machineParams.forEach(function(p) {
       ccOptions += '<option value="' + p.ctrl + '">' + S.esc(p.name) + ' (CC ' + p.ctrl + ')</option>';
@@ -310,23 +323,26 @@
     html += '<label>Name:</label>';
     html += '<input class="mapping-input def-name-input" value="' + S.esc(def.name) + '" placeholder="e.g. My Kick Patch" />';
     html += '<label>Machine:</label>';
+    // Machine dropdown restricted to this track's machines
     html += '<select class="mapping-select def-machine-select">';
-    html += '<option value="">— Select —</option>';
-    state.machines.forEach(function(m) {
-      if (m.id === 'nodrum' || m.id === 'nosynth' || m.id === 'nofx') return;
-      var sel = (m.id === def.machine) ? ' selected' : '';
-      html += '<option value="' + S.esc(m.id) + '"' + sel + '>' + S.esc(m.name) + ' (' + S.esc(m.id) + ')</option>';
+    if (state.trackMachines.length === 0) {
+      html += '<option value="">— No machines —</option>';
+    }
+    state.trackMachines.forEach(function(mid) {
+      var info = S.getMachineInfo(mid);
+      var sel = (mid === def.machine) ? ' selected' : '';
+      html += '<option value="' + S.esc(mid) + '"' + sel + '>' + S.esc(info ? info.name : mid) + ' (' + S.esc(mid) + ')</option>';
     });
     html += '</select>';
     html += '</div>';
 
     // Action buttons
     html += '<div class="mapping-def-actions">';
-    html += '<button class="mapping-btn btn-1to1" title="Auto-create a 1:1 mapping from all machine CCs — great starting point">1:1 Map</button>';
+    html += '<button class="mapping-btn btn-1to1" title="Auto-create a 1:1 mapping from all machine CCs">1:1 Map</button>';
     html += '</div>';
     html += '</div>';
 
-    // ── Tabs: Knob Preview | Parameters | Output Mappings | Sound Presets ──
+    // ── Tabs ──
     html += '<div class="mapping-tabs">';
     html += '<button class="mapping-tab active" data-tab="preview"><sl-icon name="sliders" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Knob Preview</button>';
     html += '<button class="mapping-tab" data-tab="params"><sl-icon name="table" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Parameter Groups</button>';
@@ -343,7 +359,7 @@
     html += '<div class="mapping-tab-content" data-tab="params">';
     html += '<div class="tab-description">';
     html += '<sl-icon name="info-circle"></sl-icon>';
-    html += 'Define up to 6 pages of 4 knobs each. These are the controls a Performer sees. Each parameter has an index (idx), a display name, default value, range (min/max), resolution, and UI type.';
+    html += 'Define up to 6 pages of 4 knobs each. These are the controls a Performer sees.';
     html += '</div>';
     html += renderParameterGroups(def, ccOptions);
     html += '</div>';
@@ -352,7 +368,7 @@
     html += '<div class="mapping-tab-content" data-tab="mappings">';
     html += '<div class="tab-description">';
     html += '<sl-icon name="info-circle"></sl-icon>';
-    html += 'Each output mapping connects knob values to a DSP CC channel. The formula is: <code>finalValue = start + &Sigma;(paramValue &times; mul &divide; div)</code>. One knob can drive multiple CCs, and one CC can be driven by multiple knobs.';
+    html += 'Each output mapping connects knob values to a DSP CC channel. Formula: <code>finalValue = start + &Sigma;(paramValue &times; mul &divide; div)</code>.';
     html += '</div>';
     html += renderOutputMappings(def, machineParams);
     html += '</div>';
@@ -361,7 +377,7 @@
     html += '<div class="mapping-tab-content" data-tab="presets">';
     html += '<div class="tab-description">';
     html += '<sl-icon name="info-circle"></sl-icon>';
-    html += 'Sound presets store specific knob values for this definition. A Performer can quickly recall these to get a known-good starting sound.';
+    html += 'Sound presets store specific knob values for this definition. A Performer can quickly recall these.';
     html += '</div>';
     html += renderSoundPresetsForDef(def);
     html += '</div>';
@@ -370,7 +386,7 @@
     setupMappingEditorEvents(container);
   }
 
-  // ── Render: Knob Preview (same look as Performer) ──
+  // ── Render: Knob Preview ──
 
   function knobIndicatorStyleDesigner(pct) {
     var angle = (pct / 100) * 270 - 135;
@@ -388,7 +404,7 @@
     html += '<div class="preview-title"><sl-icon name="eye"></sl-icon> Performer Knob Preview</div>';
     html += '<div class="info-callout">';
     html += '<sl-icon name="lightbulb"></sl-icon>';
-    html += '<p>This shows how the macro definition will appear to a Performer. Each page becomes a collapsible group of knobs. Knobs display parameter names, default values, and ranges as defined in the Parameter Groups tab.</p>';
+    html += '<p>This shows how the macro definition will appear to a Performer. Each page becomes a collapsible group of knobs.</p>';
     html += '</div>';
 
     var hasParams = false;
@@ -448,14 +464,7 @@
 
       html += '<table class="mapping-table">';
       html += '<thead><tr>';
-      html += '<th>#</th>';
-      html += '<th>Name</th>';
-      html += '<th>Default</th>';
-      html += '<th>Min</th>';
-      html += '<th>Max</th>';
-      html += '<th>Res</th>';
-      html += '<th>UI</th>';
-      html += '<th></th>';
+      html += '<th>#</th><th>Name</th><th>Default</th><th>Min</th><th>Max</th><th>Res</th><th>UI</th><th></th>';
       html += '</tr></thead>';
       html += '<tbody>';
 
@@ -479,7 +488,6 @@
         html += '</tr>';
       });
 
-      // Empty row hint if no params
       if (!group.parameters || group.parameters.length === 0) {
         html += '<tr class="mapping-row-empty"><td colspan="8" style="text-align:center;opacity:0.4;padding:0.5rem;">No parameters — click "+ Param" to add</td></tr>';
       }
@@ -502,7 +510,6 @@
     html += '<button class="mapping-add-btn add-mapping-btn" title="Add output mapping">+ Mapping</button>';
     html += '</div>';
 
-    // Build param index→name map
     var paramNames = {};
     def.groups.forEach(function(g) {
       (g.parameters || []).forEach(function(p) {
@@ -510,7 +517,6 @@
       });
     });
 
-    // CC name map
     var ccNames = {};
     machineParams.forEach(function(p) {
       ccNames[p.ctrl] = p.name;
@@ -518,11 +524,7 @@
 
     html += '<table class="mapping-table mapping-output-table">';
     html += '<thead><tr>';
-    html += '<th>CC #</th>';
-    html += '<th>CC Name</th>';
-    html += '<th>Start</th>';
-    html += '<th>Sources (param × mul ÷ div)</th>';
-    html += '<th></th>';
+    html += '<th>CC #</th><th>CC Name</th><th>Start</th><th>Sources (param × mul ÷ div)</th><th></th>';
     html += '</tr></thead>';
     html += '<tbody>';
 
@@ -533,7 +535,6 @@
       html += '<td><input class="mapping-input mapping-start" type="number" value="' + (m.start || 0) + '" style="width:50px;" /></td>';
       html += '<td class="mapping-sources">';
 
-      // Render each source in the add[] array
       (m.add || []).forEach(function(add, ai) {
         html += '<span class="mapping-source" data-mapping="' + mi + '" data-add="' + ai + '">';
         html += S.esc(paramNames[add.src] || ('P' + add.src));
@@ -549,18 +550,17 @@
     });
 
     if (mappings.length === 0) {
-      html += '<tr class="mapping-row-empty"><td colspan="5" style="text-align:center;opacity:0.4;padding:0.75rem;">No output mappings yet. Click "+ Mapping" above, or use the "1:1 Map" button in the header to auto-generate mappings from the machine\'s CCs.</td></tr>';
+      html += '<tr class="mapping-row-empty"><td colspan="5" style="text-align:center;opacity:0.4;padding:0.75rem;">No output mappings yet. Click "+ Mapping" or use "1:1 Map" to auto-generate.</td></tr>';
     }
 
     html += '</tbody></table>';
-
     return html;
   }
 
-  // ── Render: Sound Presets for this definition ──
+  // ── Render: Sound Presets ──
 
   function renderSoundPresetsForDef(def) {
-    var matching = state.soundPresets.filter(function(p) {
+    var matching = S.data.soundPresets.filter(function(p) {
       return p.macro === def.id;
     });
 
@@ -575,7 +575,6 @@
       return html;
     }
 
-    // Build param index→name map
     var paramNames = {};
     def.groups.forEach(function(g) {
       (g.parameters || []).forEach(function(p) {
@@ -584,12 +583,7 @@
     });
 
     html += '<table class="mapping-table">';
-    html += '<thead><tr>';
-    html += '<th>Preset</th>';
-    html += '<th>Group</th>';
-    html += '<th>Values</th>';
-    html += '<th></th>';
-    html += '</tr></thead>';
+    html += '<thead><tr><th>Preset</th><th>Group</th><th>Values</th><th></th></tr></thead>';
     html += '<tbody>';
 
     matching.forEach(function(preset) {
@@ -613,7 +607,6 @@
     });
 
     html += '</tbody></table>';
-
     return html;
   }
 
@@ -656,7 +649,7 @@
         if (state.editDef) {
           state.editDef.machine = defMachineSelect.value;
           state.dirty = true;
-          renderMappingEditor(); // Re-render to update CC options
+          renderMappingEditor();
           renderDSPPanel();
         }
       });
@@ -702,13 +695,12 @@
       });
     });
 
-    // Add parameter button
+    // Add parameter
     container.querySelectorAll('.add-param-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var gi = parseInt(btn.getAttribute('data-group'), 10);
         if (!state.editDef || !state.editDef.groups[gi]) return;
 
-        // Find next available idx
         var maxIdx = -1;
         state.editDef.groups.forEach(function(g) {
           (g.parameters || []).forEach(function(p) {
@@ -719,18 +711,14 @@
         state.editDef.groups[gi].parameters.push({
           idx: maxIdx + 1,
           name: 'New Param',
-          def: 0,
-          min: 0,
-          max: 127,
-          res: 64,
-          ui: 'bignum',
+          def: 0, min: 0, max: 127, res: 64, ui: 'bignum',
         });
         state.dirty = true;
         renderMappingEditor();
       });
     });
 
-    // Remove parameter button
+    // Remove parameter
     container.querySelectorAll('.remove-param-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var gi = parseInt(btn.getAttribute('data-group'), 10);
@@ -755,7 +743,7 @@
             state.editDef.mapping[mi].start = parseInt(input.value, 10) || 0;
           }
           state.dirty = true;
-          renderMappingEditor(); // Re-render to update CC name
+          renderMappingEditor();
         });
       });
     });
@@ -811,7 +799,7 @@
       });
     });
 
-    // Create preset button
+    // Create preset
     var createPresetBtn = container.querySelector('.create-preset-btn');
     if (createPresetBtn) {
       createPresetBtn.addEventListener('click', function() {
@@ -819,7 +807,7 @@
       });
     }
 
-    // Delete preset buttons
+    // Delete preset
     container.querySelectorAll('.delete-preset-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var presetId = btn.getAttribute('data-preset-id');
@@ -836,7 +824,7 @@
       return;
     }
 
-    var machineInfo = state.machines.find(function(m) { return m.id === state.editDef.machine; });
+    var machineInfo = S.getMachineInfo(state.editDef.machine);
     if (!machineInfo || !machineInfo.parameters || machineInfo.parameters.length === 0) {
       S.toast('Machine has no CC parameters', 'warning', 2000);
       return;
@@ -848,7 +836,6 @@
 
     var params = machineInfo.parameters;
 
-    // Set ID and name if empty
     if (!state.editDef.id) {
       state.editDef.id = state.editDef.machine + '-allparams';
     }
@@ -856,7 +843,6 @@
       state.editDef.name = (machineInfo.name || state.editDef.machine) + ' All params';
     }
 
-    // Create groups: 4 params per group, across 6 groups max
     state.editDef.groups = [];
     var paramIdx = 0;
     for (var g = 0; g < 6 && paramIdx < params.length; g++) {
@@ -867,10 +853,7 @@
           idx: paramIdx,
           name: cc.name || ('CC' + cc.ctrl),
           def: cc.def || 0,
-          min: 0,
-          max: 127,
-          res: 64,
-          ui: 'bignum',
+          min: 0, max: 127, res: 64, ui: 'bignum',
         });
         paramIdx++;
       }
@@ -880,13 +863,10 @@
       });
     }
 
-    // Create 1:1 output mappings
     state.editDef.mapping = [];
     var allParams = [];
     state.editDef.groups.forEach(function(g) {
-      (g.parameters || []).forEach(function(p) {
-        allParams.push(p);
-      });
+      (g.parameters || []).forEach(function(p) { allParams.push(p); });
     });
 
     params.forEach(function(cc, i) {
@@ -919,7 +899,6 @@
     var group = prompt('Preset group:', state.editDef.machine);
     if (group === null) return;
 
-    // Collect default values from the definition
     var values = [];
     state.editDef.groups.forEach(function(g) {
       (g.parameters || []).forEach(function(p) {
@@ -945,9 +924,8 @@
     }).then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       S.toast('Created preset: ' + name, 'success', 2000);
-      return apiGet('/api/v1/macroapi/soundpresets');
-    }).then(function(presets) {
-      state.soundPresets = presets || [];
+      return S.reloadMacroData();
+    }).then(function() {
       renderMappingEditor();
     }).catch(function(err) {
       S.toast('Create failed: ' + err.message, 'danger', 3000);
@@ -963,9 +941,8 @@
       path: filePath,
     }).then(function() {
       S.toast('Deleted preset: ' + presetId, 'success', 2000);
-      return apiGet('/api/v1/macroapi/soundpresets');
-    }).then(function(presets) {
-      state.soundPresets = presets || [];
+      return S.reloadMacroData();
+    }).then(function() {
       renderMappingEditor();
     }).catch(function(err) {
       S.toast('Delete failed: ' + err.message, 'danger', 3000);
@@ -978,9 +955,8 @@
     var container = document.getElementById('dsp-param-list');
     if (!container) return;
 
-    // Show DSP params for the selected definition's machine
     var machineId = state.editDef ? state.editDef.machine : '';
-    var machineInfo = state.machines.find(function(m) { return m.id === machineId; });
+    var machineInfo = S.getMachineInfo(machineId);
 
     if (!machineInfo || !machineInfo.parameters || machineInfo.parameters.length === 0) {
       container.innerHTML =
@@ -991,7 +967,6 @@
       return;
     }
 
-    // Build a set of mapped ctrl numbers
     var mappedCtrls = {};
     if (state.editDef && state.editDef.mapping) {
       state.editDef.mapping.forEach(function(m) {
@@ -1068,11 +1043,8 @@
       if (!r.ok) throw new Error('HTTP ' + r.status);
       S.toast('Saved: ' + state.editDef.name, 'success', 2000);
       state.dirty = false;
-
-      // Reload definitions
-      return apiGet('/api/v1/macroapi/definitions');
-    }).then(function(defs) {
-      state.macroDefs = defs || [];
+      return S.reloadMacroData();
+    }).then(function() {
       renderMachineList();
       renderMachineDefSelect();
       S.hideLoading();
@@ -1108,7 +1080,6 @@
         try {
           var data = JSON.parse(reader.result);
           if (data.groups && data.mapping) {
-            // It's a macro definition
             state.editDef = data;
             state.selectedDefId = data.id || null;
             ensureGroupStructure(state.editDef);
@@ -1117,7 +1088,6 @@
             renderDSPPanel();
             S.toast('Imported definition: ' + (data.name || data.id || 'unknown'), 'success', 2000);
           } else if (data.id && data.macro && data.values) {
-            // It's a sound preset — upload directly
             var filePath = 'macrosoundpresets/' + data.id + '.json';
             fetch('/api/v1/samples?action=uploadconfig&path=' + encodeURIComponent(filePath), {
               method: 'POST',
@@ -1126,9 +1096,8 @@
             }).then(function(r) {
               if (!r.ok) throw new Error('HTTP ' + r.status);
               S.toast('Imported preset: ' + data.name, 'success', 2000);
-              return apiGet('/api/v1/macroapi/soundpresets');
-            }).then(function(presets) {
-              state.soundPresets = presets || [];
+              return S.reloadMacroData();
+            }).then(function() {
               renderMappingEditor();
             }).catch(function(err) {
               S.toast('Import failed: ' + err.message, 'danger', 3000);
@@ -1148,28 +1117,25 @@
   // ─── Initialization ─────────────────────────────────────
 
   function init() {
-    loadAllData().then(function() {
-      renderTrackSelect();
-      setupTrackSelectEvents();
-      renderMachineDefSelect();
-      setupMachineDefSelectEvents();
-      renderMachineList();
-      setupMachineListEvents();
-      setupToolbarActions();
-
-      // Start with empty editor
-      renderMappingEditor();
-      renderDSPPanel();
-
-      // Auto-select first definition if available
-      if (state.macroDefs.length > 0) {
-        selectMacroDefinition(state.macroDefs[0].id);
-        var select = document.getElementById('designer-machine-select');
-        if (select) select.value = state.macroDefs[0].id;
-      }
-
-      state.initialized = true;
+    // Register for shared track selection events
+    S.onTrackChange(function(idx, track) {
+      onTrackSelected(idx, track);
     });
+
+    setupMachineDefSelectEvents();
+    setupMachineListEvents();
+    setupToolbarActions();
+
+    // If a track is already selected (user was in Performer first), use it
+    if (S.data.activeTrack >= 0) {
+      var track = S.data.tracks.find(function(t) { return t.index === S.data.activeTrack; });
+      if (track) onTrackSelected(S.data.activeTrack, track);
+    } else if (S.data.tracks.length > 0) {
+      // Auto-select first track
+      S.selectTrack(S.data.tracks[0].index);
+    }
+
+    state.initialized = true;
   }
 
   // ─── Exports ─────────────────────────────────────────────
@@ -1179,11 +1145,10 @@
     init: init,
     state: state,
     reload: function() {
-      loadAllData().then(function() {
-        renderMachineList();
-        renderMachineDefSelect();
-        if (state.selectedDefId) selectMacroDefinition(state.selectedDefId);
-      });
+      if (state.activeTrack >= 0) {
+        var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+        if (track) onTrackSelected(state.activeTrack, track);
+      }
     },
   };
 

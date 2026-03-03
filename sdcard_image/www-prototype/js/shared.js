@@ -449,6 +449,160 @@ function loadWebAudioControls() {
   return Promise.resolve();
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  SHARED DATA STORE — both Performer and Designer use this
+// ═══════════════════════════════════════════════════════════════
+
+var sharedData = {
+  synthDefs: null,
+  tracks: [],
+  machines: [],
+  macroDefs: [],
+  soundPresets: [],
+  activeTrack: -1,
+  loaded: false,
+};
+
+var _trackChangeCallbacks = [];
+
+/**
+ * Load all data from the device (synthdefs, macrodefs, soundpresets).
+ * Called once at boot; both views read from sharedData.
+ */
+function loadSharedData() {
+  showLoading('Loading tracks & definitions…');
+  return Promise.all([
+    fetch('/api/v1/samples?getconfig=synthdefinitions.json').then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }),
+    fetch('/api/v1/macroapi/definitions').then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }),
+    fetch('/api/v1/macroapi/soundpresets').then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }),
+  ]).then(function(results) {
+    sharedData.synthDefs = results[0];
+    sharedData.tracks = results[0].tracks || [];
+    sharedData.machines = results[0].machines || [];
+    sharedData.macroDefs = results[1] || [];
+    sharedData.soundPresets = results[2] || [];
+    sharedData.loaded = true;
+    hideLoading();
+    console.log('[Shared] Loaded:', sharedData.tracks.length, 'tracks,',
+                sharedData.machines.length, 'machines,',
+                sharedData.macroDefs.length, 'macro defs,',
+                sharedData.soundPresets.length, 'sound presets');
+    return sharedData;
+  }).catch(function(err) {
+    hideLoading();
+    console.error('[Shared] Load error:', err);
+    toast('Failed to load data: ' + err.message, 'danger', 4000);
+    throw err;
+  });
+}
+
+/**
+ * Reload macro definitions and sound presets (after save).
+ */
+function reloadMacroData() {
+  return Promise.all([
+    fetch('/api/v1/macroapi/definitions').then(function(r) { return r.ok ? r.json() : []; }),
+    fetch('/api/v1/macroapi/soundpresets').then(function(r) { return r.ok ? r.json() : []; }),
+  ]).then(function(results) {
+    sharedData.macroDefs = results[0] || [];
+    sharedData.soundPresets = results[1] || [];
+    return sharedData;
+  });
+}
+
+/**
+ * Register a callback for track changes.
+ * Callback receives (trackIndex, track).
+ */
+function onTrackChange(callback) {
+  _trackChangeCallbacks.push(callback);
+}
+
+/**
+ * Select a track. Updates shared state and notifies all listeners.
+ */
+function selectSharedTrack(idx) {
+  var track = sharedData.tracks.find(function(t) { return t.index === idx; });
+  if (!track) return;
+
+  sharedData.activeTrack = idx;
+
+  // Update track strip visuals
+  document.querySelectorAll('.track-strip').forEach(function(s) {
+    s.classList.toggle('active', parseInt(s.getAttribute('data-track'), 10) === idx);
+  });
+
+  // Notify all registered listeners
+  _trackChangeCallbacks.forEach(function(cb) {
+    try { cb(idx, track); } catch(e) { console.error('Track change callback error:', e); }
+  });
+}
+
+/**
+ * Get machine info by id from shared data.
+ */
+function getMachineInfo(machineId) {
+  return sharedData.machines.find(function(m) { return m.id === machineId; }) || null;
+}
+
+/**
+ * Get available (non-empty) machines for a track.
+ */
+function getTrackMachines(track) {
+  return (track.machines || []).filter(function(m) {
+    return m !== 'nodrum' && m !== 'nosynth' && m !== 'nofx';
+  });
+}
+
+/**
+ * Render the shared track overview strip.
+ */
+function renderTrackOverview() {
+  var container = document.getElementById('track-overview');
+  if (!container) return;
+
+  var html = '';
+  sharedData.tracks.forEach(function(track) {
+    var classes = 'track-strip';
+    if (track.index === sharedData.activeTrack) classes += ' active';
+
+    var avail = getTrackMachines(track);
+    var defaultMachine = avail.length > 0 ? avail[0] : '—';
+
+    html += '<div class="' + classes + '" data-track="' + track.index + '">';
+    html += '<span class="track-num">' + String(track.index + 1).padStart(2, '0') + '</span>';
+    html += '<span class="track-name">' + esc(track.name) + '</span>';
+    html += '<span class="track-machine">' + esc(defaultMachine) + '</span>';
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+/**
+ * Set up click events on the shared track overview strip.
+ */
+function setupTrackOverviewEvents() {
+  var container = document.getElementById('track-overview');
+  if (!container) return;
+
+  container.addEventListener('click', function(e) {
+    var strip = e.target.closest('.track-strip');
+    if (!strip) return;
+    var trackIdx = parseInt(strip.getAttribute('data-track'), 10);
+    selectSharedTrack(trackIdx);
+  });
+}
+
 window.TBD = window.TBD || {};
 window.TBD.shared = {
   API_V1: API_V1,
@@ -479,4 +633,14 @@ window.TBD.shared = {
   loadWebAudioControls: loadWebAudioControls,
   showLoading: showLoading,
   hideLoading: hideLoading,
+  // Shared data & track management
+  data: sharedData,
+  loadSharedData: loadSharedData,
+  reloadMacroData: reloadMacroData,
+  onTrackChange: onTrackChange,
+  selectTrack: selectSharedTrack,
+  getMachineInfo: getMachineInfo,
+  getTrackMachines: getTrackMachines,
+  renderTrackOverview: renderTrackOverview,
+  setupTrackOverviewEvents: setupTrackOverviewEvents,
 };
