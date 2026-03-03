@@ -96,7 +96,7 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
                             if (trackdef != nullptr) {
                                 for(std::string mid : trackdef->macroMachineIds) {
                                     if (mid == macrodef->synthId) {
-                                        ESP_LOGI("MacroSoundPresetDataModel", "    Track %d has macro machine id %s", i, mid.c_str());
+                                        // ESP_LOGI("MacroSoundPresetDataModel", "    Track %d has macro machine id %s", i, mid.c_str());
                                         preset->validTracks.insert(i);
                                         group->validTracks.insert(i);
                                     }

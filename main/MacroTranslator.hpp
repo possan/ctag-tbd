@@ -18,6 +18,7 @@ namespace CTAG {
                 int8_t trackToMidiChannel[16];
                 uint8_t trackBaseCC[16];
                 uint16_t trackParameterValues[16][32];
+                uint16_t outputValues[16][32];
                 bool trackDirty[16];
                 std::string trackMachineId[16];
                 // std::string trackMacroId[16];

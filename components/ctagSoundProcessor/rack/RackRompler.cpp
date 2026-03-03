@@ -8,20 +8,20 @@ void RackRompler::Init(const PickSeqRackInitData *initdata) {
     rompler.Init(44100.f);
 
     initdata->rack->registerParamAndCC(initdata, "bank", 8, [&](const int val){ s1_bank = val;});
-    initdata->rack->registerParamAndCC(initdata, "slice", 9, [&](const int val){ s1_slice = val;});
+    initdata->rack->registerParamAndCC(initdata, "slice", 9, [&](const int val) { s1_slice = val; });
     initdata->rack->registerParamAndCC(initdata, "start", 10, [&](const int val){ s1_start = val;});
-    initdata->rack->registerParamAndCC(initdata, "end", 11, [&](const int val){ s1_end = val;});
-    
+    initdata->rack->registerParamAndCC(initdata, "end", 11, [&](const int val) { s1_end = val; });
+
     initdata->rack->registerParamAndCC(initdata, "fc", 12, [&](const int val){ s1_fc = val;});
     initdata->rack->registerParamAndCC(initdata, "fq", 13, [&](const int val){ s1_fq = val;});
     initdata->rack->registerParamAndCC(initdata, "ft", 14, [&](const int val){ s1_ft = val;});
     initdata->rack->registerParamAndCC(initdata, "brr", 15, [&](const int val){ s1_brr = val;});
-    
+
     initdata->rack->registerParamAndCC(initdata, "atk", 16, [&](const int val){ s1_atk = val;});
     initdata->rack->registerParamAndCC(initdata, "dcy", 17, [&](const int val){ s1_dcy = val;});
     initdata->rack->registerParamAndCC(initdata, "speed", 18, [&](const int val){ s1_speed = val;});
     initdata->rack->registerParamAndCC(initdata, "pitch", 19, [&](const int val){ s1_pitch = val;});
-    
+
     initdata->rack->registerParamAndCC(initdata, "lp", 20, [&](const int val){ s1_lp = val;});
     initdata->rack->registerParamAndCC(initdata, "lp_pp", 21, [&](const int val){ s1_lp_pp = val;});
     initdata->rack->registerParamAndCC(initdata, "lp_pos", 22, [&](const int val){ s1_lp_pos = val;});
@@ -59,7 +59,7 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     // timestretch target length
     // MK_INT_PAR_NOCV(ts_track_length, track_length, 128);
 
-    uint32_t firstNonWtSlice = data.firstNonWtSlice; // sampleRom.GetFirstNonWaveTableSlice();
+    uint32_t firstNonWtSlice = data.firstNonWtSlice;
     MK_INT_PAR_ABS_NOCV(iS1Bank, s1_bank, 128.f)
     CONSTRAIN(iS1Bank, 0, 31)
     MK_INT_PAR_ABS_NOCV(iS1Slice, s1_slice, 128.f) // midi cc
@@ -79,7 +79,7 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     MK_FLT_PAR_ABS_NOCV(iS1Pitch, s1_pitch, 4096.0f, 128.f) // midi cc
     if (rompler.params.timeStretchEnable) {
         rompler.params.pitch = iS1Pitch / 10.0;
-    } else { 
+    } else {
         rompler.params.pitch = midi_note;
     }
 
@@ -144,21 +144,21 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
         //     track_length
         // );
 
-        // printf("S1 slice=%ld ps=%1.1f pitch=%1.1f %1.1f %1.1f\n",
+        // printf("S2 slice=%ld ps=%1.1f pitch=%1.1f startoffrel=%1.1f lengthrel=%1.1f\n",
         //     rompler.params.slice,
         //     rompler.params.playbackSpeed,
         //     rompler.params.pitch,
         //     rompler.params.startOffsetRelative,
         //     rompler.params.lengthRelative);
 
-        // printf("S2 %1.1f %1.1f %1.1f %1.1f %d\n",
+        // printf("S3 a=%1.1f d=%1.1f fc=%1.1f fq=%1.1f ft=%d\n",
         //     (float)rompler.params.a,
         //     (float)rompler.params.d,
         //     (float)rompler.params.cutoff,
         //     (float)rompler.params.resonance,
         //     (int)rompler.params.filterType);
 
-        // printf("S3 %d %d %1.1f %1.1f %ld %d\n",
+        // printf("S4 lo=%d pipo=%d lm=%1.1f egfm=%1.1f bitred=%ld gate=%d\n",
         //     rompler.params.loop,
         //     rompler.params.loopPiPo,
         //     (float)rompler.params.loopMarker,

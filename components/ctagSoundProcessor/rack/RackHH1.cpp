@@ -7,11 +7,11 @@ using namespace CTAG::SP;
 void RackHH1::Init(const PickSeqRackInitData *initdata) {
     hh1.Init();
 
-    initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ hh1_f0 = val;});
-    initdata->rack->registerParamAndCC(initdata, "tone", 9, [&](const int val){ hh1_tone = val;});
-    initdata->rack->registerParamAndCC(initdata, "decay", 10, [&](const int val){ hh1_decay = val;});
-	initdata->rack->registerParamAndCC(initdata, "noise", 11, [&](const int val){ hh1_noise = val;});
-    initdata->rack->registerParamAndCC(initdata, "accent", 12, [&](const int val){ hh1_accent = val;});
+    initdata->rack->registerParamAndCC(initdata, "f0", 8, [&](const int val){ f0 = val;});
+    initdata->rack->registerParamAndCC(initdata, "tone", 9, [&](const int val){ tone = val;});
+    initdata->rack->registerParamAndCC(initdata, "decay", 10, [&](const int val){ decay = val;});
+	initdata->rack->registerParamAndCC(initdata, "noise", 11, [&](const int val){ noise = val;});
+    initdata->rack->registerParamAndCC(initdata, "accent", 12, [&](const int val){ accent = val;});
 
     this->enabled = false;
 }
@@ -33,11 +33,11 @@ void RackHH1::Process(const PicoSeqRackProcessData &data) {
     }
     midi_trig = false;
 
-    MK_FLT_PAR_ABS_NOCV(_accent, hh1_accent, 4095.f, 1.f)
-    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0, hh1_f0, 4095.f, 0.0005f, 0.1f)
-    MK_FLT_PAR_ABS_NOCV(_tone, hh1_tone, 4095.f, 1.f)
-    MK_FLT_PAR_ABS_NOCV(_decay, hh1_decay, 4095.f, 1.f)
-    MK_FLT_PAR_ABS_NOCV(_noise, hh1_noise, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(_accent, accent, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0, f0, 4095.f, 0.0005f, 0.1f)
+    MK_FLT_PAR_ABS_NOCV(_tone, tone, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(_decay, decay, 4095.f, 1.f)
+    MK_FLT_PAR_ABS_NOCV(_noise, noise, 4095.f, 1.f)
     hh1.Render(
         false,
         _trig,

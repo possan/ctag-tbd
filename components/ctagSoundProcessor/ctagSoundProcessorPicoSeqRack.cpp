@@ -335,6 +335,12 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         if (ch1_ab.enabled) {
             mixRenderOutputMono(ch1_ab.out, ch1.level, ch1.pan, ch1.send1, ch1.send2);
         }
+
+        ch1_smp.track_length = ch1.track_length;
+        ch1_smp.Process(idata);
+        if (ch1_smp.enabled) {
+            mixRenderOutputMono(ch1_smp.s1_out, ch1.level, ch1.pan, ch1.send1, ch1.send2);
+        }
     }
 
     // T2 = esp_timer_get_time();
@@ -347,15 +353,15 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
             mixRenderOutputMono(ch2_fmb1.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
         }
 
-        ch2_fmb2.Process(idata);
-        if (ch2_fmb2.enabled) {
-            mixRenderOutputMono(ch2_fmb2.out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
+        ch2_smp.track_length = ch2.track_length;
+        ch2_smp.Process(idata);
+        if (ch2_smp.enabled) {
+            mixRenderOutputMono(ch2_smp.s1_out, ch2.level, ch2.pan, ch2.send1, ch2.send2);
         }
     }
 
     // T = esp_timer_get_time();
     // ch2_render_time = T - T2;
-
 
     ch3.PreProcess(idata);
     if (ch3.enabled) {
@@ -367,6 +373,12 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         ch3_as.Process(idata);
         if (ch3_as.enabled) {
             mixRenderOutputMono(ch3_as.out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
+        }
+
+        ch3_smp.track_length = ch3.track_length;
+        ch3_smp.Process(idata);
+        if (ch3_smp.enabled) {
+            mixRenderOutputMono(ch3_smp.s1_out, ch3.level, ch3.pan, ch3.send1, ch3.send2);
         }
     }
 
@@ -384,17 +396,28 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         if (ch4_hh2.enabled) {
             mixRenderOutputMono(ch4_hh2.out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
         }
+
+        ch4_smp.track_length = ch4.track_length;
+        ch4_smp.Process(idata);
+        if (ch4_smp.enabled) {
+            mixRenderOutputMono(ch4_smp.s1_out, ch4.level, ch4.pan, ch4.send1, ch4.send2);
+        }
     }
 
     // T = esp_timer_get_time();
     // ch4_render_time = T - T2;
-
 
     ch5.PreProcess(idata);
     if (ch5.enabled) {
         ch5_rs.Process(idata);
         if (ch5_rs.enabled) {
             mixRenderOutputMono(ch5_rs.rs_out, ch5.level, ch5.pan, ch5.send1, ch5.send2);
+        }
+
+        ch5_smp.track_length = ch5.track_length;
+        ch5_smp.Process(idata);
+        if (ch5_smp.enabled) {
+            mixRenderOutputMono(ch5_smp.s1_out, ch5.level, ch5.pan, ch5.send1, ch5.send2);
         }
     }
 
@@ -407,6 +430,12 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         if (ch6_cl.enabled) {
             mixRenderOutputMono(ch6_cl.out, ch6.level, ch6.pan, ch6.send1, ch6.send2);
         }
+
+        ch6_smp.track_length = ch6.track_length;
+        ch6_smp.Process(idata);
+        if (ch6_smp.enabled) {
+            mixRenderOutputMono(ch6_smp.s1_out, ch6.level, ch6.pan, ch6.send1, ch6.send2);
+        }
     }
 
     // T = esp_timer_get_time();
@@ -414,10 +443,10 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch7.PreProcess(idata);
     if (ch7.enabled) {
-        ch7_ro.track_length = ch7.track_length;
-        ch7_ro.Process(idata);
-        if (ch7_ro.enabled) {
-            mixRenderOutputMono(ch7_ro.s1_out, ch7.level, ch7.pan, ch7.send1, ch7.send2);
+        ch7_smp.track_length = ch7.track_length;
+        ch7_smp.Process(idata);
+        if (ch7_smp.enabled) {
+            mixRenderOutputMono(ch7_smp.s1_out, ch7.level, ch7.pan, ch7.send1, ch7.send2);
         }
     }
 
@@ -426,23 +455,27 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch8.PreProcess(idata);
     if (ch8.enabled) {
-        ch8_ro.track_length = ch8.track_length;
-        ch8_ro.Process(idata);
-        if (ch8_ro.enabled) {
-            mixRenderOutputMono(ch8_ro.s1_out, ch8.level, ch8.pan, ch8.send1, ch8.send2);
+        ch8_smp.track_length = ch8.track_length;
+        ch8_smp.Process(idata);
+        if (ch8_smp.enabled) {
+            mixRenderOutputMono(ch8_smp.s1_out, ch8.level, ch8.pan, ch8.send1, ch8.send2);
         }
     }
 
     // T = esp_timer_get_time();
     // ch8_render_time = T - T2;
 
-
-
     ch9.PreProcess(idata);
     if (ch9.enabled) {
         ch9_td3.Process(idata);
         if (ch9_td3.enabled) {
             mixRenderOutputMono(ch9_td3.td3_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
+        }
+
+        ch9_smp.track_length = ch9.track_length;
+        ch9_smp.Process(idata);
+        if (ch9_smp.enabled) {
+            mixRenderOutputMono(ch9_smp.s1_out, ch9.level, ch9.pan, ch9.send1, ch9.send2);
         }
     }
 
@@ -455,6 +488,12 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         if (ch10_td3.enabled) {
             mixRenderOutputMono(ch10_td3.td3_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
         }
+
+        ch10_smp.track_length = ch10.track_length;
+        ch10_smp.Process(idata);
+        if (ch10_smp.enabled) {
+            mixRenderOutputMono(ch10_smp.s1_out, ch10.level, ch10.pan, ch10.send1, ch10.send2);
+        }
     }
 
     // T = esp_timer_get_time();
@@ -465,6 +504,12 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         ch11_mo.Process(idata);
         if (ch11_mo.enabled) {
             mixRenderOutputMono(ch11_mo.mo_out, ch11.level, ch11.pan, ch11.send1, ch11.send2);
+        }
+
+        ch11_smp.track_length = ch11.track_length;
+        ch11_smp.Process(idata);
+        if (ch11_smp.enabled) {
+            mixRenderOutputMono(ch11_smp.s1_out, ch11.level, ch11.pan, ch11.send1, ch11.send2);
         }
     }
 
@@ -482,6 +527,12 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         if (ch12_mo.enabled) {
             mixRenderOutputMono(ch12_mo.mo_out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
         }
+
+        ch12_smp.track_length = ch12.track_length;
+        ch12_smp.Process(idata);
+        if (ch12_smp.enabled) {
+            mixRenderOutputMono(ch12_smp.s1_out, ch12.level, ch12.pan, ch12.send1, ch12.send2);
+        }
     }
 
     // T = esp_timer_get_time();
@@ -489,10 +540,10 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch13.PreProcess(idata);
     if (ch13.enabled) {
-        ch13_ro.track_length = ch13.track_length;
-        ch13_ro.Process(idata);
-        if (ch13_ro.enabled) {
-            mixRenderOutputMono(ch13_ro.s1_out, ch13.level, ch13.pan, ch13.send1, ch13.send2);
+        ch13_smp.track_length = ch13.track_length;
+        ch13_smp.Process(idata);
+        if (ch13_smp.enabled) {
+            mixRenderOutputMono(ch13_smp.s1_out, ch13.level, ch13.pan, ch13.send1, ch13.send2);
         }
     }
 
@@ -501,10 +552,10 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 
     ch14.PreProcess(idata);
     if (ch14.enabled) {
-        ch14_ro.track_length = ch14.track_length;
-        ch14_ro.Process(idata);
-        if (ch14_ro.enabled) {
-            mixRenderOutputMono(ch14_ro.s1_out, ch14.level, ch14.pan, ch14.send1, ch14.send2);
+        ch14_smp.track_length = ch14.track_length;
+        ch14_smp.Process(idata);
+        if (ch14_smp.enabled) {
+            mixRenderOutputMono(ch14_smp.s1_out, ch14.level, ch14.pan, ch14.send1, ch14.send2);
         }
     }
 
@@ -516,6 +567,12 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
         ch15_pp.Process(idata);
         if (ch15_pp.enabled) {
             mixRenderOutputStereo(ch15_pp.pp_out_stereo, ch15.level, ch15.pan, ch15.send1, ch15.send2);
+        }
+
+        ch15_smp.track_length = ch15.track_length;
+        ch15_smp.Process(idata);
+        if (ch15_smp.enabled) {
+            mixRenderOutputMono(ch15_smp.s1_out, ch15.level, ch15.pan, ch15.send1, ch15.send2);
         }
     }
 
@@ -575,65 +632,13 @@ void ctagSoundProcessorPicoSeqRack::Process(const ProcessData& data){
 }
 
 void ctagSoundProcessorPicoSeqRack::registerParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter) {
-    string fullId = string(initdata->prefix) + string(suffix);
-    pMapParCC.emplace(CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc), setter);
+    // string fullId = string(initdata->prefix) + string(suffix);
+    uint16_t key = CC_TO_MAP_KEY(initdata->midi_channel, initdata->cc_base + cc);
+    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Registering param %s//%s, key %d for CC %d+%d", 
+    //     string(initdata->prefix).c_str(), suffix, key, initdata->cc_base, cc);
+    pMapParCC.emplace(key, vector<function<void(const int)>>());
+    pMapParCC[key].push_back(setter);
 }
-
-void ctagSoundProcessorPicoSeqRack::_handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel) {
-    // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: note off %d, %d, %d", channel, note, vel);
-
-    if (channel == 0) {
-        if (ch9_td3.enabled) {
-            ch9_td3.noteOff(note, 0);
-        }
-    }
-    else if (channel == 1) {
-        if (ch10_td3.enabled) {
-            ch10_td3.noteOff(note, 0);
-        }
-    }
-    else if (channel == 2) {
-        if (ch11_mo.enabled) {
-            ch11_mo.noteOff(note, 0);
-        }
-    }
-    else if (channel == 3) {
-        if (ch12_mo.enabled) {
-            ch12_mo.noteOff(note, 0);
-        }
-        else if (ch12_wtosc.enabled) {
-            ch12_wtosc.noteOff(note, 0);
-        }
-    }
-    else if (channel == 4) {
-        if (ch13_ro.enabled) {
-            ch13_ro.noteOff(note, 0);
-        }
-    }
-    else if (channel == 5) {
-        if (ch14_ro.enabled) {
-            ch14_ro.noteOff(note, 0);
-        }
-    }
-    else if (channel == 6) {
-        if (ch15_pp.enabled) {
-            ch15_pp.noteOff(note, 0);
-        }
-    }
-    else if (channel == 9) {
-        // most drum rack doesn't care about note offs'
-    }
-    else if (channel == 11) {
-        ch7_ro.noteOff(note, 0);
-    }
-    else if (channel == 12) {
-        ch8_ro.noteOff(note, 0);
-    }
-};
-
-void ctagSoundProcessorPicoSeqRack::_handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel) {
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: aftertouch %d, %d, %d", channel, note, vel);
-};
 
 void ctagSoundProcessorPicoSeqRack::handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value) {
     int cv_value = ((int)value * 4096) / 128;
@@ -641,22 +646,17 @@ void ctagSoundProcessorPicoSeqRack::handleMidiControlChange(const uint8_t channe
 
     auto it = pMapParCC.find(key);
     if (it != pMapParCC.end()) {
-        // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: CC %d, %d, %d (Set)", channel, control, value);
+        // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: CC %d, %d, %d (cv %d) (Set)", channel, control, value, cv_value);
         // TODO: Write directly to devices?.
-        (it->second)(cv_value);
+        for(auto& listener : it->second){
+            listener(cv_value);
+            // if (dev->handlesCC(channel, control)){
+            //     dev->setParameterForCC(control, cv_value);
+            // }
+        }
     } else {
         // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: CC %d, %d, %d (Unhandled)", channel, control, value);
     }
-};
-
-void ctagSoundProcessorPicoSeqRack::_handleMidiPatchChange(const uint8_t channel, const uint8_t patch) {
-    // override if needed
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: patch change %d, %d", channel, patch);
-};
-
-void ctagSoundProcessorPicoSeqRack::_handleMidiPitchBend(const uint8_t channel, const uint16_t bend) {
-    // override if needed
-    ESP_LOGI("ctagSoundProcessorPicoSeqRack", "MIDI: pitch bend %d, %d", channel, bend);
 };
 
 static void dumpMemoryUsage() {
@@ -698,52 +698,57 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch1_"; ch1.Init(&dri);
     dri.prefix = "ch1_db_"; ch1_db.Init(&dri);
     dri.prefix = "ch1_ab_"; ch1_ab.Init(&dri);
+    dri.prefix = "ch1_smp_"; ch1_smp.Init(&dri);
     ch1_render_time = 0;
 
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 0");
     // dumpMemoryUsage();
 
     dri.midi_channel = 9;
-    dri.cc_base = 20;
+    dri.cc_base = 40;
     dri.prefix = "ch2_"; ch2.Init(&dri);
     dri.prefix = "ch2_fmb1_"; ch2_fmb1.Init(&dri);
-    dri.prefix = "ch2_fbm2_"; ch2_fmb2.Init(&dri);
+    dri.prefix = "ch2_smp_"; ch2_smp.Init(&dri);
     ch2_render_time = 0;
 
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 1");
     // dumpMemoryUsage();
 
     dri.midi_channel = 9;
-    dri.cc_base = 40;
+    dri.cc_base = 80;
     dri.prefix = "ch3_"; ch3.Init(&dri);
     dri.prefix = "ch3_ds_"; ch3_ds.Init(&dri);
     dri.prefix = "ch3_as_"; ch3_as.Init(&dri);
+    dri.prefix = "ch3_smp_"; ch3_smp.Init(&dri);
     ch3_render_time = 0;
 
     // dumpMemoryUsage();
 
-    dri.midi_channel = 9;
-    dri.cc_base = 60;
+    dri.midi_channel = 10;
+    dri.cc_base = 0;
     dri.prefix = "ch4_"; ch4.Init(&dri);
     dri.prefix = "ch4_hh1_"; ch4_hh1.Init(&dri);
     dri.prefix = "ch4_hh2_"; ch4_hh2.Init(&dri);
+    dri.prefix = "ch4_smp_"; ch4_smp.Init(&dri);
     ch4_render_time = 0;
 
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 2");
     // dumpMemoryUsage();
 
-    dri.midi_channel = 9;
-    dri.cc_base = 80;
+    dri.midi_channel = 10;
+    dri.cc_base = 40;
     dri.prefix = "ch5_"; ch5.Init(&dri);
     dri.prefix = "ch5_rs_"; ch5_rs.Init(&dri);
+    dri.prefix = "ch5_smp_"; ch5_smp.Init(&dri);
     ch5_render_time = 0;
 
     // dumpMemoryUsage();
 
-    dri.midi_channel = 9;
-    dri.cc_base = 100;
+    dri.midi_channel = 10;
+    dri.cc_base = 80;
     dri.prefix = "ch6_"; ch6.Init(&dri);
     dri.prefix = "ch6_cl_"; ch6_cl.Init(&dri);
+    dri.prefix = "ch6_smp_"; ch6_smp.Init(&dri);
     ch6_render_time = 0;
 
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 3");
@@ -752,15 +757,15 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.midi_channel = 11;
     dri.cc_base = 0;
     dri.prefix = "ch7_"; ch7.Init(&dri);
-    dri.prefix = "ch7_smp_"; ch7_ro.Init(&dri);
+    dri.prefix = "ch7_smp_"; ch7_smp.Init(&dri);
     ch7_render_time = 0;
 
     // dumpMemoryUsage();
 
-    dri.midi_channel = 12;
-    dri.cc_base = 0;
+    dri.midi_channel = 11;
+    dri.cc_base = 40;
     dri.prefix = "ch8_"; ch8.Init(&dri);
-    dri.prefix = "ch8_smp_"; ch8_ro.Init(&dri);
+    dri.prefix = "ch8_smp_"; ch8_smp.Init(&dri);
     ch8_render_time = 0;
 
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 4");
@@ -770,6 +775,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.cc_base = 0;
     dri.prefix = "ch9_"; ch9.Init(&dri);
     dri.prefix = "ch9_tbd03_"; ch9_td3.Init(&dri);
+    dri.prefix = "ch9_smp_"; ch9_smp.Init(&dri);
     ch9_render_time = 0;
 
     // dumpMemoryUsage();
@@ -778,6 +784,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.cc_base = 0;
     dri.prefix = "ch10_"; ch10.Init(&dri);
     dri.prefix = "ch10_tbd03_"; ch10_td3.Init(&dri);
+    dri.prefix = "ch10_smp_"; ch10_smp.Init(&dri);
     ch10_render_time = 0;
 
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 5");
@@ -787,6 +794,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.cc_base = 0;
     dri.prefix = "ch11_"; ch11.Init(&dri);
     dri.prefix = "ch11_mo_"; ch11_mo.Init(&dri);
+    dri.prefix = "ch11_smp_"; ch11_smp.Init(&dri);
     ch11_render_time = 0;
     // dumpMemoryUsage();
 
@@ -795,6 +803,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.prefix = "ch12_"; ch12.Init(&dri);
     dri.prefix = "ch12_wtosc_"; ch12_wtosc.Init(&dri);
     dri.prefix = "ch12_mo_"; ch12_mo.Init(&dri);
+    dri.prefix = "ch12_smp_"; ch12_smp.Init(&dri);
     ch12_render_time = 0;
 
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 6");
@@ -803,14 +812,14 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.midi_channel = 4;
     dri.cc_base = 0;
     dri.prefix = "ch13_"; ch13.Init(&dri);
-    dri.prefix = "ch13_smp_"; ch13_ro.Init(&dri);
+    dri.prefix = "ch13_smp_"; ch13_smp.Init(&dri);
     ch13_render_time = 0;
     // dumpMemoryUsage();
 
     dri.midi_channel = 5;
     dri.cc_base = 0;
     dri.prefix = "ch14_"; ch14.Init(&dri);
-    dri.prefix = "ch14_smp_"; ch14_ro.Init(&dri);
+    dri.prefix = "ch14_smp_"; ch14_smp.Init(&dri);
     ch14_render_time = 0;
 
     // ESP_LOGI("ctagSoundProcessorPicoSeqRack", "Dummy 7");
@@ -819,6 +828,7 @@ void ctagSoundProcessorPicoSeqRack::Init(std::size_t blockSize, void* blockPtr){
     dri.cc_base = 0;
     dri.prefix = "ch15_"; ch15.Init(&dri);
     dri.prefix = "ch15_pp_"; ch15_pp.Init(&dri);
+    dri.prefix = "ch15_smp_"; ch15_smp.Init(&dri);
     ch15_render_time = 0;
     // dumpMemoryUsage();
 
@@ -897,7 +907,7 @@ ctagSoundProcessorPicoSeqRack::~ctagSoundProcessorPicoSeqRack(){
 }
 
 #define DEFINE_GLOBAL_PARAM(name, channel, cc, parametername) \
-    pMapParCC.emplace(CC_TO_MAP_KEY(channel, cc), [&](const int val){ parametername = val;});
+    pMapParCC.emplace(CC_TO_MAP_KEY(channel, cc), vector<function<void(const int)>>{[&](const int val){ parametername = val;}});
 
 void ctagSoundProcessorPicoSeqRack::knowYourself(){
     // autogenerated code here
@@ -1045,87 +1055,97 @@ void ctagSoundProcessorPicoSeqRack::_parseIncomingMidiMessages(const uint8_t *bu
 
 void ctagSoundProcessorPicoSeqRack::setTrackMachine(const uint8_t trackIndex, const std::string machineId) {
     // printf("PicoSeqRack: setTrackMachine(%d, \"%s\")\n",
-    //     trackIndex, machineId.c_str());
+    // trackIndex, machineId.c_str());
 
     if (trackIndex == 0) {
         ch1.enabled = !machineId.empty();
         ch1_db.enabled = machineId == "db";
         ch1_ab.enabled = machineId == "ab";
-        // printf("  ch1=%d, ch1_db=%d, ch1_ab=%d\n", ch1.enabled, ch1_db.enabled, ch1_ab.enabled);
+        ch1_smp.enabled = machineId == "ro";
+        // printf("  ch1=%d, ch1_db=%d, ch1_ab=%d, ch1_ro=%d\n", ch1.enabled, ch1_db.enabled, ch1_ab.enabled, ch1_smp.enabled);
     }
     else if (trackIndex == 1) {
         ch2.enabled = !machineId.empty();
         ch2_fmb1.enabled = machineId == "fmb";
-        ch2_fmb2.enabled = machineId == "fmb2";
-        // printf("  ch2=%d, ch2_fmb1=%d, ch2_fmb2=%d\n", ch2.enabled, ch2_fmb1.enabled, ch2_fmb2.enabled);
+        ch2_smp.enabled = machineId == "ro";
+        // printf("  ch2=%d, ch2_fmb1=%d, ch2_ro=%d\n", ch2.enabled, ch2_fmb1.enabled, ch2_smp.enabled);
     }
     else if (trackIndex == 2) {
         ch3.enabled = !machineId.empty();
         ch3_ds.enabled = machineId == "ds";
         ch3_as.enabled = machineId == "as";
-        // printf("  ch3=%d, ch3_ds=%d, ch3_as=%d\n", ch3.enabled, ch3_ds.enabled, ch3_as.enabled);
+        ch3_smp.enabled = machineId == "ro";
+        // printf("  ch3=%d, ch3_ds=%d, ch3_as=%d, ch3_ro=%d\n", ch3.enabled, ch3_ds.enabled, ch3_as.enabled, ch3_smp.enabled);
     }
     else if (trackIndex == 3) {
         ch4.enabled = !machineId.empty();
         ch4_hh1.enabled = machineId == "hh1";
         ch4_hh2.enabled = machineId == "hh2";
-        // printf("  ch4=%d, ch4_hh1=%d, ch4_hh2=%d\n", ch4.enabled, ch4_hh1.enabled, ch4_hh2.enabled);
+        ch4_smp.enabled = machineId == "ro";
+        // printf("  ch4=%d, ch4_hh1=%d, ch4_hh2=%d, ch4_ro=%d\n", ch4.enabled, ch4_hh1.enabled, ch4_hh2.enabled, ch4_smp.enabled);
     }
     else if (trackIndex == 4) {
         ch5.enabled = !machineId.empty();
         ch5_rs.enabled = machineId == "rs";
-        // printf("  ch5=%d, ch5_rs=%d\n", ch5.enabled, ch5_rs.enabled);
+        ch5_smp.enabled = machineId == "ro";
+        // printf("  ch5=%d, ch5_rs=%d, ch5_ro=%d\n", ch5.enabled, ch5_rs.enabled, ch5_smp.enabled);
     }
     else if (trackIndex == 5) {
         ch6.enabled = !machineId.empty();
         ch6_cl.enabled = machineId == "cl";
+        ch6_smp.enabled = machineId == "ro";
         // printf("  ch6=%d, ch6_cl=%d\n", ch6.enabled, ch6_cl.enabled);
     }
     else if (trackIndex == 6) {
         ch7.enabled = !machineId.empty();
-        ch7_ro.enabled = machineId == "ro";
-        // printf("  ch7=%d, ch7_ro=%d\n", ch7.enabled, ch7_ro.enabled);
+        ch7_smp.enabled = machineId == "ro";
+        // printf("  ch7=%d, ch7_ro=%d\n", ch7.enabled, ch7_smp.enabled);
     }
     else if (trackIndex == 7) {
         ch8.enabled = !machineId.empty();
-        ch8_ro.enabled = machineId == "ro";
-        // printf("  ch8=%d, ch8_ro=%d\n", ch8.enabled, ch8_ro.enabled);
+        ch8_smp.enabled = machineId == "ro";
+        // printf("  ch8=%d, ch8_ro=%d\n", ch8.enabled, ch8_smp.enabled);
     }
     else if (trackIndex == 8) {
         ch9.enabled = !machineId.empty();
         ch9_td3.enabled = machineId == "td3";
-        // printf("  ch9=%d, ch9_td3=%d\n", ch9.enabled, ch9_td3.enabled);
+        ch9_smp.enabled = machineId == "ro";
+        // printf("  ch9=%d, ch9_td3=%d, ch9_ro=%d\n", ch9.enabled, ch9_td3.enabled, ch9_smp.enabled);
     }
     else if (trackIndex == 9) {
         ch10.enabled = !machineId.empty();
         ch10_td3.enabled = machineId == "td3";
-        // printf("  ch10=%d, ch10_td3=%d\n", ch10.enabled, ch10_td3.enabled);
+        ch10_smp.enabled = machineId == "ro";
+        // printf("  ch10=%d, ch10_td3=%d, ch10_smp=%d\n", ch10.enabled, ch10_td3.enabled, ch10_smp.enabled);
     }
     else if (trackIndex == 10) {
         ch11.enabled = !machineId.empty();
         ch11_mo.enabled = machineId == "mo";
-        // printf("  ch11=%d, ch11_mo=%d\n", ch11.enabled, ch11_mo.enabled);
+        ch11_smp.enabled = machineId == "ro";
+        // printf("  ch11=%d, ch11_mo=%d, ch11_ro=%d\n", ch11.enabled, ch11_mo.enabled, ch11_smp.enabled);
     }
     else if (trackIndex == 11) {
         ch12.enabled = !machineId.empty();
         ch12_wtosc.enabled = machineId == "wtosc";
         ch12_mo.enabled = machineId == "mo";
-        // printf("  ch12=%d, ch12_wtosc=%d, ch12_mo=%d\n", ch12.enabled, ch12_wtosc.enabled, ch12_mo.enabled);
+        ch12_smp.enabled = machineId == "ro";
+        // printf("  ch12=%d, ch12_wtosc=%d, ch12_mo=%d, ch12_ro=%d\n", ch12.enabled, ch12_wtosc.enabled, ch12_mo.enabled, ch12_smp.enabled);
     }
     else if (trackIndex == 12) {
         ch13.enabled = !machineId.empty();
-        ch13_ro.enabled = machineId == "ro";
-        // printf("  ch13=%d, ch13_ro=%d\n", ch13.enabled, ch13_ro.enabled);
+        ch13_smp.enabled = machineId == "ro";
+        // printf("  ch13=%d, ch13_ro=%d\n", ch13.enabled, ch13_smp.enabled);
     }
     else if (trackIndex == 13) {
         ch14.enabled = !machineId.empty();
-        ch14_ro.enabled = machineId == "ro";
-        // printf("  ch14=%d, ch14_ro=%d\n", ch14.enabled, ch14_ro.enabled);
+        ch14_smp.enabled = machineId == "ro";
+        // printf("  ch14=%d, ch14_ro=%d\n", ch14.enabled, ch14_smp.enabled);
     }
     else if (trackIndex == 14) {
         ch15.enabled = !machineId.empty();
         ch15_pp.enabled = machineId == "pp";
-        // printf("  ch15=%d, ch15_pp=%d\n", ch15.enabled, ch15_pp.enabled);
+        ch15_smp.enabled = machineId == "ro";
+        // printf("  ch15=%d, ch15_pp=%d, ch15_ro=%d\n", ch15.enabled, ch15_pp.enabled, ch15_smp.enabled);
     }
     else if (trackIndex == 15) {
         ch16.enabled = !machineId.empty();
@@ -1135,6 +1155,7 @@ void ctagSoundProcessorPicoSeqRack::setTrackMachine(const uint8_t trackIndex, co
 }
 
 void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint8_t note, uint8_t velocity) {
+    // printf("PicoSeqRack: handleMidiNoteOn(channel=%d, note=%d, velocity=%d)\n", channel, note, velocity);
     if (channel == 9) {
         if (note == 36) {
             if (ch1_ab.enabled) {
@@ -1143,10 +1164,18 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
                     ch1_ab.trigger();
                 }
             }
-            else  if (ch1_db.enabled) {
+            if (ch1_db.enabled) {
                 // printf("ch1_db triggered by note %d, velocity %d\n", note, velocity);
                 if (velocity > 0) {
                     ch1_db.trigger();
+                }
+            }
+            if (ch1_smp.enabled) {
+                // printf("ch1_ro triggered by note %d, velocity %d\n", note, velocity);
+                if (velocity > 0) {
+                    ch1_smp.noteOn(36, velocity);
+                } else {
+                    ch1_smp.noteOff(36, 0);
                 }
             }
         }
@@ -1157,10 +1186,12 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
                     ch2_fmb1.trigger();
                 }
             }
-            else if (ch2_fmb2.enabled) {
-                // printf("ch2_fmb2 triggered by note %d, velocity %d\n", note, velocity);
+            if (ch2_smp.enabled) {
+                // printf("ch2_ro triggered by note %d, velocity %d\n", note, velocity);
                 if (velocity > 0) {
-                    ch2_fmb2.trigger();
+                    ch2_smp.noteOn(36, velocity);
+                } else {
+                    ch2_smp.noteOff(36, 0);
                 }
             }
         }
@@ -1171,183 +1202,304 @@ void ctagSoundProcessorPicoSeqRack::handleMidiNoteOn(const uint8_t channel, uint
                     ch3_as.trigger();
                 }
             }
-            else if (ch3_ds.enabled) {
+            if (ch3_ds.enabled) {
                 // printf("ch3_ds triggered by note %d, velocity %d\n", note, velocity);
                 if (velocity > 0) {
                     ch3_ds.trigger();
                 }
             }
+            if (ch3_smp.enabled) {
+                // printf("ch3_ro triggered by note %d, velocity %d\n", note, velocity);
+                if (velocity > 0) {
+                    ch3_smp.noteOn(36, velocity);
+                } else {
+                    ch3_smp.noteOff(36, 0);
+                }
+            }
         }
-        else if (note == 39) {
+    } else if (channel == 10) {
+        if (note == 36) {
             if (ch4_hh1.enabled) {
                 // printf("ch4_hh1 triggered by note %d, velocity %d\n", note, velocity);
                 if (velocity > 0) {
                     ch4_hh1.trigger();
                 }
             }
-            else if (ch4_hh2.enabled) {
+            if (ch4_hh2.enabled) {
                 // printf("ch4_hh2 triggered by note %d, velocity %d\n", note, velocity);
                 if (velocity > 0) {
                     ch4_hh2.trigger();
                 }
             }
+            if (ch4_smp.enabled) {
+                    // printf("ch4_ro triggered by note %d, velocity %d\n", note, velocity);
+                if (velocity > 0) {
+                    ch4_smp.noteOn(36, velocity);
+                } else {
+                    ch4_smp.noteOff(36, 0);
+                }
+            }
         }
-        else if (note == 40) {
+        else if (note == 37) {
             if (ch5_rs.enabled) {
                 // printf("ch5_rs triggered by note %d, velocity %d\n", note, velocity);
                 if (velocity > 0) {
                     ch5_rs.trigger();
                 }
             }
+            if (ch5_smp.enabled) {
+                // printf("ch5_ro triggered by note %d, velocity %d\n", note, velocity);
+                if (velocity > 0) {
+                    ch5_smp.noteOn(36, velocity);
+                } else {
+                    ch5_smp.noteOff(36, 0);
+                }
+            }
         }
-        else if (note == 41) {
+        else if (note == 38) {
             if (ch6_cl.enabled) {
-                // printf("ch6_cl triggered by note %d, velocity %d\n", note, velocity);
-                ch6_cl.trigger();
+                if (velocity > 0) {
+                    // printf("ch6_cl triggered by note %d, velocity %d\n", note, velocity);
+                    ch6_cl.trigger();
+                }
+            }
+            if (ch6_smp.enabled) {
+                // printf("ch6_ro triggered by note %d, velocity %d\n", note, velocity);
+                if (velocity > 0) {
+                    ch6_smp.noteOn(36, velocity);
+                } else {
+                    ch6_smp.noteOff(36, 0);
+                }
             }
         }
-    }
-    else if (channel == 11) {
-        if (ch7_ro.enabled) {
-            // printf("ch7_ro triggered by note %d, velocity %d\n", note, velocity);
-            if (velocity == 0) {
-                ch7_ro.noteOff(note, 0);
-            } else {
-                ch7_ro.noteOn(note, velocity);
+    } else if (channel == 11) {
+        if (note == 36) {
+            if (ch7_smp.enabled) {
+                // printf("ch7_ro triggered by note %d, velocity %d\n", note, velocity);
+                if (velocity > 0) {
+                    ch7_smp.noteOn(36, velocity);
+                } else {
+                    ch7_smp.noteOff(36, 0);
+                }
             }
         }
-    }
-    else if (channel == 12) {
-        if (ch8_ro.enabled) {
-            // printf("ch8_ro triggered by note %d, velocity %d\n", note, velocity);
-            if (velocity == 0) {
-                ch8_ro.noteOff(note, 0);
-            } else {
-                ch8_ro.noteOn(note, velocity);
+        else if (note == 37) {
+            if (ch8_smp.enabled) {
+                // printf("ch8_ro triggered by note %d, velocity %d\n", note, velocity);
+                if (velocity > 0) {
+                    ch8_smp.noteOn(36, velocity);
+                } else {
+                    ch8_smp.noteOff(36, 0);
+                }
             }
         }
     }
     else if (channel == 0) {
         if (ch9_td3.enabled) {
             //  printf("ch9    _td3 triggered by note %d, velocity %d\n", note, velocity);
-            if (velocity == 0) {
-                ch9_td3.noteOff(note, 0);
-            } else {
+            if (velocity > 0) {
                 ch9_td3.noteOn(note, velocity);
+            } else {
+                ch9_td3.noteOff(note, 0);
+            }
+        }
+        if (ch9_smp.enabled) {
+            // printf("ch9_ro triggered by note %d, velocity %d\n", note, velocity);
+            if (velocity > 0) {
+                ch9_smp.noteOn(note, velocity);
+            } else {
+                ch9_smp.noteOff(note, 0);
             }
         }
     }
     else if (channel == 1) {
         if (ch10_td3.enabled) {
             // printf("ch10_td3 triggered by note %d, velocity %d\n", note, velocity);
-            if (velocity == 0) {
-                ch10_td3.noteOff(note, 0);
-            } else {
+            if (velocity > 0) {
                 ch10_td3.noteOn(note, velocity);
+            } else {
+                ch10_td3.noteOff(note, 0);
+            }
+        }
+        if (ch10_smp.enabled) {
+            // printf("ch10_smp triggered by note %d, velocity %d\n", note, velocity);
+            if (velocity > 0) {
+                ch10_smp.noteOn(note, velocity);
+            } else {
+                ch10_smp.noteOff(note, 0);
             }
         }
     }
     else if (channel == 2) {
         if (ch11_mo.enabled) {
             // printf("ch11_mo triggered by note %d, velocity %d\n", note, velocity);
-            if (velocity == 0) {
-                ch11_mo.noteOff(note, 0);
-            } else {
+            if (velocity > 0) {
                 ch11_mo.noteOn(note, velocity);
+            } else {
+                ch11_mo.noteOff(note, 0);
+            }
+        }
+        if (ch11_smp.enabled) {
+            // printf("ch11_ro triggered by note %d, velocity %d\n", note, velocity);
+            if (velocity > 0) {
+                ch11_smp.noteOn(note, velocity);
+            } else {
+                ch11_smp.noteOff(note, 0);
             }
         }
     }
     else if (channel == 3) {
         if (ch12_mo.enabled) {
             // printf("ch12_mo triggered by note %d, velocity %d\n", note, velocity);
-            if (velocity == 0) {
-                ch12_mo.noteOff(note, 0);
+            if (velocity > 0) {
+                ch12_mo.noteOn(note, velocity);
             } else {
                 ch12_mo.noteOn(note, velocity);
             }
         }
-    }
-
-    else if (channel == 4) {
-        if (ch13_ro.enabled) {
-            // printf("ch13_ro triggered by note %d, velocity %d\n", note, velocity);
-            if (velocity == 0) {
-                ch13_ro.noteOff(note, 0);
+        if (ch12_smp.enabled) {
+            // printf("ch12_ro triggered by note %d, velocity %d\n", note, velocity);
+            if (velocity > 0) {
+                ch12_smp.noteOn(note, velocity);
             } else {
-                ch13_ro.noteOn(note, velocity);
+                ch12_smp.noteOff(note, 0);
+            }
+        }
+    }
+    else if (channel == 4) {
+        if (ch13_smp.enabled) {
+            // printf("ch13_ro triggered by note %d, velocity %d\n", note, velocity);
+            if (velocity > 0) {
+                ch13_smp.noteOn(note, velocity);
+            } else {
+                ch13_smp.noteOff(note, 0);
             }
         }
     }
     else if (channel == 5) {
-        if (ch14_ro.enabled) {
+        if (ch14_smp.enabled) {
             // printf("ch14_ro triggered by note %d, velocity %d\n", note, velocity);
-            if (velocity == 0) {
-                ch14_ro.noteOff(note, 0);
+            if (velocity > 0) {
+                ch14_smp.noteOn(note, velocity);
             } else {
-                ch14_ro.noteOn(note, velocity);
+                ch14_smp.noteOff(note, 0);
             }
         }
     }
     else if (channel == 6) {
         if (ch15_pp.enabled) {
             // printf("ch15_pp triggered by note %d, velocity %d\n", note, velocity);
-            if (velocity == 0) {
-                ch15_pp.noteOff(note, 0);
-            } else {
+            if (velocity > 0) {
                 ch15_pp.noteOn(note, velocity);
+            } else {
+                ch15_pp.noteOff(note, 0);
             }
         }
-
+        if (ch15_smp.enabled) {
+            // printf("ch15_ro triggered by note %d, velocity %d\n", note, velocity);
+            if (velocity > 0) {
+                ch15_smp.noteOn(note, velocity);
+            } else {
+                ch15_smp.noteOff(note, 0);
+            }
+        }
     }
-    // else if (channel == 15) {
-    // ch16 is audio in, which has no notes
-    // }
 }
 
 void ctagSoundProcessorPicoSeqRack::handleMidiNoteOff(const uint8_t channel, uint8_t note, uint8_t velocity) {
-    if (channel == 11) {
-        if (ch7_ro.enabled) {
-            ch7_ro.noteOff(note, 0);
+    // printf("PicoSeqRack: handleMidiNoteOff(channel=%d, note=%d, velocity=%d)\n", channel, note, velocity);
+    if (channel == 9) {
+        if (note == 36) {
+            if (ch1_smp.enabled) {
+                ch1_smp.noteOff(36, 0);
+            }
         }
-    }
-    else if (channel == 12) {
-        if (ch8_ro.enabled) {
-            ch8_ro.noteOff(note, 0);
+        if (note == 37) {
+            if (ch2_smp.enabled) {
+                ch2_smp.noteOff(36, 0);
+            }
+        }
+        if (note == 38) {
+            if (ch3_smp.enabled) {
+                ch3_smp.noteOff(36, 0);
+            }
+        }
+    } else if (channel == 10) {
+        if (note == 36) {
+            if (ch4_smp.enabled) {
+                ch4_smp.noteOff(36, 0);
+            }
+        }
+        if (note == 37) {
+            if (ch5_smp.enabled) {
+                ch5_smp.noteOff(36, 0);
+            }
+        }
+        if (note == 38) {
+            if (ch6_smp.enabled) {
+                ch6_smp.noteOff(36, 0);
+            }
+        }
+    } else if (channel == 11) {
+        if (note == 36) {
+            if (ch7_smp.enabled) {
+                ch7_smp.noteOff(36, 0);
+            }
+        }
+        if (note == 37) {
+            if (ch8_smp.enabled) {
+                ch8_smp.noteOff(36, 0);
+            }
         }
     }
     else if (channel == 0) {
         if (ch9_td3.enabled) {
             ch9_td3.noteOff(note, 0);
         }
+        if (ch9_smp.enabled) {
+            ch9_smp.noteOff(note, 0);
+        }
     }
     else if (channel == 1) {
         if (ch10_td3.enabled) {
             ch10_td3.noteOff(note, 0);
+        }
+        if (ch10_smp.enabled) {
+            ch10_smp.noteOff(note, 0);
         }
     }
     else if (channel == 2) {
         if (ch11_mo.enabled) {
             ch11_mo.noteOff(note, 0);
         }
+        if (ch11_smp.enabled) {
+            ch11_smp.noteOff(note, 0);
+        }
     }
     else if (channel == 3) {
         if (ch12_mo.enabled) {
             ch12_mo.noteOff(note, 0);
         }
+        if (ch12_smp.enabled) {
+            ch12_smp.noteOff(note, 0);
+        }
     }
     else if (channel == 4) {
-        if (ch13_ro.enabled) {
-            ch13_ro.noteOff(note, 0);
+        if (ch13_smp.enabled) {
+            ch13_smp.noteOff(note, 0);
         }
     }
     else if (channel == 5) {
-        if (ch14_ro.enabled) {
-            ch14_ro.noteOff(note, 0);
+        if (ch14_smp.enabled) {
+            ch14_smp.noteOff(note, 0);
         }
     }
     else if (channel == 6) {
         if (ch15_pp.enabled) {
             ch15_pp.noteOff(note, 0);
+        }
+        if (ch15_smp.enabled) {
+            ch15_smp.noteOff(note, 0);
         }
     }
 }
