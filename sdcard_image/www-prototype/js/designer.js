@@ -428,6 +428,8 @@
 
   function renderKnobPreview(def) {
     var html = '';
+    var mappingInfo = S.analyzeMappings(def);
+
     html += '<div class="designer-knob-preview">';
     html += '<div class="preview-title"><sl-icon name="eye"></sl-icon> Performer Knob Preview</div>';
     html += '<div class="info-callout">';
@@ -451,13 +453,40 @@
         var value = param.def || 0;
         var min = param.min || 0;
         var max = param.max || 127;
+        var isMacro = S.isMacroKnob(mappingInfo, param.idx);
+        var knobColor = isMacro ? 'macro' : 'normal';
+        var cellClass = 'macro-knob-cell' + (isMacro ? ' is-macro' : '');
 
-        html += '<div class="macro-knob-cell">';
-        html += '<div class="macro-knob">';
-        html += S.renderKnobSVG({ value: value, min: min, max: max, color: 'amber', size: 68 });
+        html += '<div class="' + cellClass + '" data-param-idx="' + param.idx + '">';
+        html += '<div class="macro-knob" ';
+        html += 'data-value="' + value + '" data-min="' + min + '" data-max="' + max + '" data-idx="' + param.idx + '" data-color="' + knobColor + '">';
+        html += S.renderKnobSVG({ value: value, min: min, max: max, color: knobColor, size: 52 });
         html += '</div>';
         html += '<span class="macro-knob-label">' + S.esc(param.name || ('P' + param.idx)) + '</span>';
         html += '<span class="macro-knob-value">' + value + '</span>';
+        // Show curve indicator if non-linear
+        if (param.curve && param.curve !== 'linear') {
+          html += '<span class="curve-badge">' + S.esc(param.curve) + '</span>';
+        }
+
+        // Show mapping targets with real-time computed values
+        var targets = mappingInfo[param.idx] || [];
+        if (targets.length > 0) {
+          var outputs = S.computeMappingOutputs(def, param.idx, value);
+          html += '<div class="knob-target-panel' + (isMacro ? ' is-macro' : '') + '" data-knob-idx="' + param.idx + '">';
+          if (isMacro) {
+            html += '<div class="knob-target-badge">MACRO</div>';
+          }
+          outputs.forEach(function(o) {
+            html += '<div class="knob-target-row" data-ctrl="' + o.ctrl + '">';
+            html += '<span class="knob-target-name">' + S.esc(o.name) + '</span>';
+            html += '<span class="knob-target-bar"><span class="knob-target-fill" style="width:' + o.pct + '%"></span></span>';
+            html += '<span class="knob-target-val">' + o.value + '</span>';
+            html += '</div>';
+          });
+          html += '</div>';
+        }
+
         html += '</div>';
       });
 
@@ -491,18 +520,26 @@
 
       html += '<table class="mapping-table">';
       html += '<thead><tr>';
-      html += '<th>#</th><th>Name</th><th>Default</th><th>Min</th><th>Max</th><th>Res</th><th>UI</th><th></th>';
+      html += '<th>#</th><th>Name</th><th>Default</th><th>Min</th><th>Max</th><th>Res</th><th>Curve</th><th>UI</th><th></th>';
       html += '</tr></thead>';
       html += '<tbody>';
 
       (group.parameters || []).forEach(function(param, pi) {
         html += '<tr class="mapping-row" data-group="' + gi + '" data-param="' + pi + '">';
         html += '<td class="mapping-slot">' + param.idx + '</td>';
-        html += '<td><input class="mapping-input param-name" value="' + S.esc(param.name) + '" /></td>';
+        html += '<td><input class="mapping-input param-name" value="' + S.esc(param.name) + '" style="width:120px;text-align:left;" /></td>';
         html += '<td><input class="mapping-input param-def" type="number" value="' + (param.def || 0) + '" style="width:50px;" /></td>';
         html += '<td><input class="mapping-input param-min" type="number" value="' + (param.min || 0) + '" style="width:50px;" /></td>';
         html += '<td><input class="mapping-input param-max" type="number" value="' + (param.max || 127) + '" style="width:50px;" /></td>';
         html += '<td><input class="mapping-input param-res" type="number" value="' + (param.res || 64) + '" style="width:50px;" /></td>';
+        html += '<td>';
+        html += '<select class="mapping-select param-curve">';
+        ['linear', 'log', 'exp', 'scurve'].forEach(function(curve) {
+          var sel = (param.curve === curve) ? ' selected' : '';
+          html += '<option value="' + curve + '"' + sel + '>' + curve + '</option>';
+        });
+        html += '</select>';
+        html += '</td>';
         html += '<td>';
         html += '<select class="mapping-select param-ui">';
         ['bignum', 'slider', 'toggle', 'selector'].forEach(function(ui) {
@@ -516,7 +553,7 @@
       });
 
       if (!group.parameters || group.parameters.length === 0) {
-        html += '<tr class="mapping-row-empty"><td colspan="8" style="text-align:center;opacity:0.4;padding:0.5rem;">No parameters — click "+ Param" to add</td></tr>';
+        html += '<tr class="mapping-row-empty"><td colspan="9" style="text-align:center;opacity:0.4;padding:0.5rem;">No parameters — click "+ Param" to add</td></tr>';
       }
 
       html += '</tbody></table>';
@@ -656,6 +693,80 @@
       });
     });
 
+    // ── Helper: update target panel values in-place ──
+    function updateTargetPanel(cell, def, paramIdx, knobValue) {
+      var panel = cell.querySelector('.knob-target-panel');
+      if (!panel) return;
+      var outputs = S.computeMappingOutputs(def, paramIdx, knobValue);
+      outputs.forEach(function(o) {
+        var row = panel.querySelector('.knob-target-row[data-ctrl="' + o.ctrl + '"]');
+        if (!row) return;
+        var valEl = row.querySelector('.knob-target-val');
+        var fillEl = row.querySelector('.knob-target-fill');
+        if (valEl) valEl.textContent = o.value;
+        if (fillEl) fillEl.style.width = o.pct + '%';
+      });
+    }
+
+    // ── Interactive knobs in designer preview ──
+    container.querySelectorAll('.designer-knob-preview .macro-knob').forEach(function(knob) {
+      var cell = knob.closest('.macro-knob-cell');
+      if (!cell) return;
+      var valueEl = cell.querySelector('.macro-knob-value');
+      var min = parseInt(knob.getAttribute('data-min'), 10) || 0;
+      var max = parseInt(knob.getAttribute('data-max'), 10) || 127;
+      var paramIdx = parseInt(knob.getAttribute('data-idx'), 10);
+      var startY = 0;
+      var startVal = 0;
+
+      function onPointerDown(e) {
+        e.preventDefault();
+        knob.classList.add('dragging');
+        startY = e.clientY;
+        startVal = parseInt(knob.getAttribute('data-value'), 10) || 0;
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+      }
+
+      function onPointerMove(e) {
+        var dy = startY - e.clientY;
+        var range = max - min;
+        var sensitivity = range / 200;
+        var newVal = Math.round(startVal + dy * sensitivity);
+        newVal = Math.max(min, Math.min(max, newVal));
+
+        knob.setAttribute('data-value', newVal);
+        if (valueEl) valueEl.textContent = newVal;
+
+        var knobColor = knob.getAttribute('data-color') || 'normal';
+        knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: knobColor, size: 52 });
+
+        // Update target panel real-time values
+        if (state.editDef) {
+          updateTargetPanel(cell, state.editDef, paramIdx, newVal);
+        }
+      }
+
+      function onPointerUp() {
+        knob.classList.remove('dragging');
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+
+        // Update the editDef's default value to reflect the change
+        var value = parseInt(knob.getAttribute('data-value'), 10);
+        if (state.editDef) {
+          state.editDef.groups.forEach(function(g) {
+            (g.parameters || []).forEach(function(p) {
+              if (p.idx === paramIdx) p.def = value;
+            });
+          });
+          state.dirty = true;
+        }
+      }
+
+      knob.addEventListener('pointerdown', onPointerDown);
+    });
+
     // Definition header fields
     var defIdInput = container.querySelector('.def-id-input');
     var defNameInput = container.querySelector('.def-name-input');
@@ -710,6 +821,7 @@
           if (input.classList.contains('param-min')) param.min = parseInt(input.value, 10) || 0;
           if (input.classList.contains('param-max')) param.max = parseInt(input.value, 10) || 127;
           if (input.classList.contains('param-res')) param.res = parseInt(input.value, 10) || 64;
+          if (input.classList.contains('param-curve')) param.curve = input.value;
           if (input.classList.contains('param-ui')) param.ui = input.value;
           state.dirty = true;
         });
@@ -732,7 +844,7 @@
         state.editDef.groups[gi].parameters.push({
           idx: maxIdx + 1,
           name: 'New Param',
-          def: 0, min: 0, max: 127, res: 64, ui: 'bignum',
+          def: 0, min: 0, max: 127, res: 64, curve: 'linear', ui: 'bignum',
         });
         state.dirty = true;
         renderMappingEditor();
@@ -874,7 +986,7 @@
           idx: paramIdx,
           name: cc.name || ('CC' + cc.ctrl),
           def: cc.def || 0,
-          min: 0, max: 127, res: 64, ui: 'bignum',
+          min: 0, max: 127, res: 64, curve: 'linear', ui: 'bignum',
         });
         paramIdx++;
       }

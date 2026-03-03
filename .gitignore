@@ -1,4 +1,40 @@
+# ESP-IDF build output
 build/
+
+# ESP-IDF managed components (auto-downloaded by idf_component_manager, like node_modules)
+managed_components/
+
+# ESP-IDF lock file (regenerated automatically)
+dependencies.lock
+
+# ESP-IDF config
+sdkconfig
+sdkconfig.old
+
+# Compiled firmware artefacts
+*.map
+*.elf
+*.bin
+*.hex
+*.uf2
+
+# IDEs
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+midi_test_env/
+
+# Backup files
+*.bak
 /hw/pcb/*.bak
-/hw/pcb/*.bak
+
+# Web build output
 www/preseteditor/dist

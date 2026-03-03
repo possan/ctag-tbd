@@ -140,6 +140,8 @@
     html += '</div>';
 
     // Render each macro group (knob pages)
+    var mappingInfo = S.analyzeMappings(macroDef);
+
     if (macroDef.groups) {
       macroDef.groups.forEach(function(group, gi) {
         if (!group.parameters || group.parameters.length === 0) return;
@@ -158,15 +160,40 @@
           var value = state.paramValues[param.idx] !== undefined ? state.paramValues[param.idx] : (param.def || 0);
           var min = param.min || 0;
           var max = param.max || 127;
-          var pct = max > min ? Math.round(((value - min) / (max - min)) * 100) : 0;
+          var isMacro = S.isMacroKnob(mappingInfo, param.idx);
+          var knobColor = isMacro ? 'macro' : 'normal';
+          var cellClass = 'macro-knob-cell' + (isMacro ? ' is-macro' : '');
 
-          html += '<div class="macro-knob-cell" data-param-idx="' + param.idx + '">';
+          html += '<div class="' + cellClass + '" data-param-idx="' + param.idx + '">';
           html += '<div class="macro-knob" ';
-          html += 'data-value="' + value + '" data-min="' + min + '" data-max="' + max + '" data-idx="' + param.idx + '">';
-          html += S.renderKnobSVG({ value: value, min: min, max: max, color: 'blue', size: 68 });
+          html += 'data-value="' + value + '" data-min="' + min + '" data-max="' + max + '" data-idx="' + param.idx + '" data-color="' + knobColor + '">';
+          html += S.renderKnobSVG({ value: value, min: min, max: max, color: knobColor, size: 52 });
           html += '</div>';
           html += '<span class="macro-knob-label">' + S.esc(param.name) + '</span>';
           html += '<span class="macro-knob-value">' + value + '</span>';
+
+          // Show mapping targets with real-time computed values
+          var targets = mappingInfo[param.idx] || [];
+          if (targets.length > 0) {
+            var outputs = S.computeMappingOutputs(macroDef, param.idx, value);
+            html += '<div class="knob-target-panel' + (isMacro ? ' is-macro' : '') + '" data-knob-idx="' + param.idx + '">';
+            if (isMacro) {
+              html += '<div class="knob-target-badge">MACRO</div>';
+            }
+            outputs.forEach(function(o) {
+              html += '<div class="knob-target-row" data-ctrl="' + o.ctrl + '">';
+              html += '<span class="knob-target-name">' + S.esc(o.name) + '</span>';
+              html += '<span class="knob-target-bar"><span class="knob-target-fill" style="width:' + o.pct + '%"></span></span>';
+              html += '<span class="knob-target-val">' + o.value + '</span>';
+              html += '</div>';
+            });
+            html += '</div>';
+          }
+          // Show curve indicator if non-linear
+          if (param.curve && param.curve !== 'linear') {
+            html += '<span class="curve-badge">' + S.esc(param.curve) + '</span>';
+          }
+
           html += '</div>';
         });
         html += '</div>';
@@ -283,8 +310,25 @@
         valueEl.textContent = newVal;
         state.paramValues[paramIdx] = newVal;
 
-        // Re-render the SVG knob
-        knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: 'blue', size: 68 });
+        // Re-render the SVG knob with correct color
+        var knobColor = knob.getAttribute('data-color') || 'normal';
+        knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: knobColor, size: 52 });
+
+        // Update target panel real-time values
+        if (state.activeMacroDef) {
+          var panel = cell.querySelector('.knob-target-panel');
+          if (panel) {
+            var outputs = S.computeMappingOutputs(state.activeMacroDef, paramIdx, newVal);
+            outputs.forEach(function(o) {
+              var row = panel.querySelector('.knob-target-row[data-ctrl="' + o.ctrl + '"]');
+              if (!row) return;
+              var valEl = row.querySelector('.knob-target-val');
+              var fillEl = row.querySelector('.knob-target-fill');
+              if (valEl) valEl.textContent = o.value;
+              if (fillEl) fillEl.style.width = o.pct + '%';
+            });
+          }
+        }
       }
 
       function onPointerUp() {

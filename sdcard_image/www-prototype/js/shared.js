@@ -450,91 +450,165 @@ function loadWebAudioControls() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  SVG KNOB RENDERER — shared between Performer & Designer
+//  SVG KNOB RENDERER — matching webaudio-controls style
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Render an SVG arc knob.
- * @param {object} opts
- * @param {number} opts.value - Current value
- * @param {number} opts.min - Min value (default 0)
- * @param {number} opts.max - Max value (default 127)
- * @param {string} opts.color - Arc color: 'blue' (default, performer) or 'amber' (designer preview)
- * @param {number} opts.size - SVG size in px (default 68)
- * @returns {string} SVG markup string
+ * Render an SVG rotary knob matching the webaudio-controls style.
+ *
+ * opts.value   – current value (default 0)
+ * opts.min     – minimum value (default 0)
+ * opts.max     – maximum value (default 127)
+ * opts.size    – pixel diameter (default 52)
+ * opts.color   – 'normal' (dark charcoal) | 'macro' (orange/gold)
+ *
+ * A "macro knob" controls 2+ DSP parameters via the mapping formula.
  */
 function renderKnobSVG(opts) {
   var value = opts.value || 0;
   var min = opts.min || 0;
   var max = opts.max || 127;
-  var size = opts.size || 68;
-  var color = opts.color || 'blue';
-  var isMacro = opts.macroKnob || false;
+  var size = opts.size || 52;
+  var color = opts.color || 'normal';
 
   var pct = max > min ? ((value - min) / (max - min)) : 0;
   pct = Math.max(0, Math.min(1, pct));
 
-  // Knob center
   var cx = size / 2;
   var cy = size / 2;
+  var r = (size / 2) - 2;
 
-  // Geometry
-  var outerRadius = (size / 2) - 2;          // outer dark circle
-  var indicatorRadius = outerRadius - 3;    // radius for indicator line
-  var centerRadius = (size / 2) * 0.35;     // inner lighter circle
+  // Rotation: 270° sweep from -135° to +135° (bottom-left to bottom-right)
+  var angle = -135 + pct * 270;
+  var rad = angle * Math.PI / 180;
 
-  // Rotation angle: -135° to +135° (270° range, centered at top)
-  var minAngle = -135;
-  var maxAngle = 135;
-  var valueAngle = minAngle + (pct * (maxAngle - minAngle));
-  var valueRad = (valueAngle - 90) * Math.PI / 180;
+  // Indicator line: from ~40% radius to ~88% radius
+  var x1 = cx + r * 0.40 * Math.sin(rad);
+  var y1 = cy - r * 0.40 * Math.cos(rad);
+  var x2 = cx + r * 0.88 * Math.sin(rad);
+  var y2 = cy - r * 0.88 * Math.cos(rad);
 
-  // Indicator line endpoints
-  var x1 = cx + (indicatorRadius - 8) * Math.cos(valueRad);
-  var y1 = cy + (indicatorRadius - 8) * Math.sin(valueRad);
-  var x2 = cx + indicatorRadius * Math.cos(valueRad);
-  var y2 = cy + indicatorRadius * Math.sin(valueRad);
-
-  // Color schemes
-  var outerBG, indicatorColor, centerBG;
-  
-  if (isMacro) {
-    // Macro knobs: orange/gold color
-    outerBG = 'var(--sl-color-orange-600, #ea580c)';
-    indicatorColor = 'var(--sl-color-warning-200, #fef08a)';
-    centerBG = 'var(--sl-color-orange-700, #c2410c)';
-  } else if (color === 'amber') {
-    // Designer preview knobs: warm orange/amber
-    outerBG = 'var(--sl-color-amber-700, #a16207)';
-    indicatorColor = 'var(--sl-color-amber-100, #fef3c7)';
-    centerBG = 'var(--sl-color-amber-800, #78350f)';
+  // Color schemes — matching webaudio-controls colors attribute
+  // colors = "indicator ; outerFill ; centerFill"
+  var indicator, outerFill, centerFill, outerStroke;
+  if (color === 'macro') {
+    // Orange/gold for macro knobs (controls 2+ DSP params)
+    indicator  = '#fef3c7';  // warm light yellow
+    outerFill  = '#92400e';  // amber-800
+    centerFill = '#b45309';  // amber-700
+    outerStroke = '#78350f'; // amber-900
   } else {
-    // Performer knobs (blue) - default
-    outerBG = 'var(--sl-color-primary-700, #1e40af)';
-    indicatorColor = 'var(--sl-color-primary-100, #eff6ff)';
-    centerBG = 'var(--sl-color-primary-900, #1e3a8a)';
+    // Dark charcoal for normal knobs (1:1 mapping)
+    indicator  = '#ccc';
+    outerFill  = '#484848';
+    centerFill = '#525252';
+    outerStroke = '#3a3a3a';
   }
 
-  var svg = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" class="knob-svg">';
+  // Use unique gradient IDs to avoid conflicts when multiple knobs are rendered
+  var uid = 'k' + Math.random().toString(36).substr(2, 5);
 
-  // Outer dark circle (knob background)
-  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + outerRadius + '" fill="' + outerBG + '" />';
+  var svg = '';
+  svg += '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" class="knob-svg">';
 
-  // Subtle shadow/depth circle
-  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + outerRadius + '" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="0.5" />';
+  // Definitions for gradients
+  svg += '<defs>';
+  // Radial gradient: center lighter, edge darker
+  svg += '<radialGradient id="' + uid + 'g" cx="50%" cy="50%">';
+  svg += '<stop offset="0%" stop-color="' + centerFill + '"/>';
+  svg += '<stop offset="100%" stop-color="' + outerFill + '"/>';
+  svg += '</radialGradient>';
+  // Subtle bottom shadow
+  svg += '<linearGradient id="' + uid + 's" x1="0" y1="0" x2="0" y2="1">';
+  svg += '<stop offset="0%" stop-color="#000" stop-opacity="0"/>';
+  svg += '<stop offset="100%" stop-color="#000" stop-opacity="0.15"/>';
+  svg += '</linearGradient>';
+  svg += '</defs>';
 
-  // Indicator line (thick white/light line showing current value)
+  // Outer shadow halo
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + outerFill + '" opacity="0.2"/>';
+
+  // Main knob body with gradient
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r - 1) + '" fill="url(#' + uid + 'g)"/>';
+
+  // Bottom shadow overlay
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r - 1) + '" fill="url(#' + uid + 's)"/>';
+
+  // Edge ring
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r - 1) + '" fill="none" stroke="' + outerStroke + '" stroke-width="0.5"/>';
+
+  // Indicator tick line
   svg += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" ';
-  svg += 'stroke="' + indicatorColor + '" stroke-width="2.5" stroke-linecap="round" />';
-
-  // Center highlight circle
-  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + centerRadius + '" fill="' + centerBG + '" />';
-
-  // Very subtle center dot
-  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (centerRadius * 0.4) + '" fill="' + indicatorColor + '" opacity="0.5" />';
+  svg += 'stroke="' + indicator + '" stroke-width="2.5" stroke-linecap="butt"/>';
 
   svg += '</svg>';
   return svg;
+}
+
+/**
+ * Analyze a macro definition's mappings to determine which virtual knob
+ * indices are "macro" (control 2+ DSP parameters).
+ * Returns: { paramIdx: [{ ctrl, start, mul, div }, ...], ... }
+ */
+function analyzeMappings(def) {
+  var result = {};
+  if (!def || !def.mapping) return result;
+
+  def.mapping.forEach(function(m) {
+    if (!m.add) return;
+    m.add.forEach(function(a) {
+      if (!result[a.src]) result[a.src] = [];
+      result[a.src].push({ ctrl: m.ctrl, start: m.start || 0, mul: a.mul, div: a.div });
+    });
+  });
+  return result;
+}
+
+/**
+ * Check if a virtual parameter is a "macro knob" (controls 2+ DSP params).
+ */
+function isMacroKnob(mappingAnalysis, paramIdx) {
+  var entries = mappingAnalysis[paramIdx];
+  return entries && entries.length >= 2;
+}
+
+/**
+ * Compute the real CC output values for a given knob value.
+ * Returns an array of { ctrl, name, value, pct } for each mapping target.
+ *   ctrl  — CC number
+ *   name  — human-readable DSP param name
+ *   value — computed output (0-127)
+ *   pct   — percentage of 127 (for bar display)
+ */
+function computeMappingOutputs(def, paramIdx, knobValue) {
+  if (!def || !def.mapping) return [];
+  var results = [];
+  def.mapping.forEach(function(m) {
+    if (!m.add) return;
+    m.add.forEach(function(a) {
+      if (a.src !== paramIdx) return;
+      var val = (m.start || 0) + Math.round(knobValue * a.mul / a.div);
+      val = Math.max(0, Math.min(127, val));
+      results.push({
+        ctrl: m.ctrl,
+        name: resolveCCName(def.machine, m.ctrl),
+        value: val,
+        pct: Math.round(val / 127 * 100)
+      });
+    });
+  });
+  return results;
+}
+
+/**
+ * Resolve a CC number to the human-readable parameter name for a given machine.
+ * Returns the parameter name (e.g. "Freq") or "CC <n>" if not found.
+ */
+function resolveCCName(machineId, ctrl) {
+  var info = getMachineInfo(machineId);
+  if (!info || !info.parameters) return 'CC ' + ctrl;
+  var param = info.parameters.find(function(p) { return p.ctrl === ctrl; });
+  return param ? param.name : 'CC ' + ctrl;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -721,8 +795,12 @@ window.TBD.shared = {
   loadWebAudioControls: loadWebAudioControls,
   showLoading: showLoading,
   hideLoading: hideLoading,
-  // SVG knob renderer
+  // SVG knob renderer + mapping analysis
   renderKnobSVG: renderKnobSVG,
+  analyzeMappings: analyzeMappings,
+  isMacroKnob: isMacroKnob,
+  resolveCCName: resolveCCName,
+  computeMappingOutputs: computeMappingOutputs,
   // Shared data & track management
   data: sharedData,
   loadSharedData: loadSharedData,
