@@ -153,15 +153,21 @@
       <!-- Designer 3-column layout -->
       <div class="designer-layout">
 
-        <!-- Left: Macro Definitions (filtered by selected track's instrument) -->
+        <!-- Left: Machine filter + Macro Definitions -->
         <div class="machine-browser">
           <div class="machine-browser-header">
             <sl-icon name="cpu" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
             <span>Macro Definitions</span>
           </div>
+          <!-- Machine filter within the left panel -->
+          <div class="machine-filter" id="designer-machine-filter">
+            <label>Machine:</label>
+            <sl-select id="designer-machine-filter-select" size="small" placeholder="Select machine…" style="flex:1;">
+            </sl-select>
+          </div>
           <div class="section-help" id="designer-filter-help">
             <sl-icon name="info-circle"></sl-icon>
-            <p>Showing definitions for the selected track's instruments. Pick one to edit, or create new.</p>
+            <p>Select a machine above, then pick a macro definition to edit or create new.</p>
           </div>
           <div class="machine-list" id="machine-list">
           </div>

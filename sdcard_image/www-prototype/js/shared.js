@@ -450,6 +450,93 @@ function loadWebAudioControls() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  SVG KNOB RENDERER — shared between Performer & Designer
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Render an SVG arc knob.
+ * @param {object} opts
+ * @param {number} opts.value - Current value
+ * @param {number} opts.min - Min value (default 0)
+ * @param {number} opts.max - Max value (default 127)
+ * @param {string} opts.color - Arc color: 'blue' (default, performer) or 'amber' (designer preview)
+ * @param {number} opts.size - SVG size in px (default 68)
+ * @returns {string} SVG markup string
+ */
+function renderKnobSVG(opts) {
+  var value = opts.value || 0;
+  var min = opts.min || 0;
+  var max = opts.max || 127;
+  var size = opts.size || 68;
+  var color = opts.color || 'blue';
+
+  var pct = max > min ? ((value - min) / (max - min)) : 0;
+  pct = Math.max(0, Math.min(1, pct));
+
+  // Arc geometry: 270° sweep from 225° (7:30 position) to 135° (4:30 position)
+  var cx = size / 2;
+  var cy = size / 2;
+  var r = (size / 2) - 6;           // arc radius
+  var rInner = r - 10;              // inner circle radius
+  var strokeWidth = 4;
+
+  var startAngle = 225;
+  var endAngle = startAngle + 270;  // 495° = 135°
+
+  // Value angle
+  var valueAngle = startAngle + (pct * 270);
+
+  function polarToCartesian(angle) {
+    var rad = (angle - 90) * Math.PI / 180;
+    return {
+      x: cx + r * Math.cos(rad),
+      y: cy + r * Math.sin(rad)
+    };
+  }
+
+  function describeArc(start, end) {
+    var sP = polarToCartesian(start);
+    var eP = polarToCartesian(end);
+    var sweep = (end - start) <= 180 ? 0 : 1;
+    return 'M ' + sP.x + ' ' + sP.y + ' A ' + r + ' ' + r + ' 0 ' + sweep + ' 1 ' + eP.x + ' ' + eP.y;
+  }
+
+  // Indicator dot position
+  var dotPos = polarToCartesian(valueAngle);
+
+  // Color palette
+  var trackColor, valueColor, dotColor;
+  if (color === 'amber') {
+    trackColor = 'var(--sl-color-neutral-300)';
+    valueColor = 'var(--sl-color-amber-500, #f59e0b)';
+    dotColor = 'var(--sl-color-amber-600, #d97706)';
+  } else {
+    trackColor = 'var(--sl-color-neutral-300)';
+    valueColor = 'var(--sl-color-primary-500)';
+    dotColor = 'var(--sl-color-primary-700)';
+  }
+
+  var svg = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" class="knob-svg">';
+
+  // Background track arc (full 270°)
+  svg += '<path d="' + describeArc(startAngle, endAngle) + '" fill="none" stroke="' + trackColor + '" stroke-width="' + strokeWidth + '" stroke-linecap="round" />';
+
+  // Value arc
+  if (pct > 0.005) {
+    svg += '<path d="' + describeArc(startAngle, valueAngle) + '" fill="none" stroke="' + valueColor + '" stroke-width="' + strokeWidth + '" stroke-linecap="round" />';
+  }
+
+  // Inner circle (knob body)
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rInner + '" fill="var(--sl-color-neutral-50)" stroke="var(--sl-color-neutral-200)" stroke-width="1" />';
+
+  // Indicator dot
+  svg += '<circle cx="' + dotPos.x.toFixed(1) + '" cy="' + dotPos.y.toFixed(1) + '" r="3.5" fill="' + dotColor + '" />';
+
+  svg += '</svg>';
+  return svg;
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  SHARED DATA STORE — both Performer and Designer use this
 // ═══════════════════════════════════════════════════════════════
 
@@ -633,6 +720,8 @@ window.TBD.shared = {
   loadWebAudioControls: loadWebAudioControls,
   showLoading: showLoading,
   hideLoading: hideLoading,
+  // SVG knob renderer
+  renderKnobSVG: renderKnobSVG,
   // Shared data & track management
   data: sharedData,
   loadSharedData: loadSharedData,

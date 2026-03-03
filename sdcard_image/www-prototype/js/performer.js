@@ -101,7 +101,7 @@
         '<div class="empty-state" id="macro-empty">' +
         '<sl-icon name="sliders"></sl-icon>' +
         '<h3>No macro definition found</h3>' +
-        '<p>No macro definition available for instrument "' + S.esc(state.activeMachine) + '"</p>' +
+        '<p>No macro definition available for machine "' + S.esc(state.activeMachine) + '"</p>' +
         '</div>';
       return;
     }
@@ -113,8 +113,8 @@
     html += '<span class="track-badge">CH ' + String(track.index + 1).padStart(2, '0') + '</span>';
     html += '<span class="track-title">' + S.esc(track.name) + '</span>';
 
-    // Label: "Instrument:" for the machine selector
-    html += '<span class="track-info-label">Instrument:</span>';
+    // Label: "Machine:" for the machine selector
+    html += '<span class="track-info-label">Machine:</span>';
     html += '<sl-select id="performer-machine-select" size="small" value="' + S.esc(state.activeMachine) + '" style="min-width:140px;">';
     availMachines.forEach(function(machId) {
       var info = S.getMachineInfo(machId);
@@ -128,7 +128,7 @@
       return d.machine === state.activeMachine;
     });
     if (matchingDefs.length > 1) {
-      html += '<span class="track-info-label">Knob Set:</span>';
+      html += '<span class="track-info-label">Macro Def:</span>';
       html += '<sl-select id="performer-macrodef-select" size="small" value="' + S.esc(macroDef.id) + '" style="min-width:160px;">';
       matchingDefs.forEach(function(d) {
         html += '<sl-option value="' + S.esc(d.id) + '">' + S.esc(d.name) + '</sl-option>';
@@ -161,9 +161,9 @@
           var pct = max > min ? Math.round(((value - min) / (max - min)) * 100) : 0;
 
           html += '<div class="macro-knob-cell" data-param-idx="' + param.idx + '">';
-          html += '<div class="macro-knob" style="--knob-pct:' + pct + '" ';
+          html += '<div class="macro-knob" ';
           html += 'data-value="' + value + '" data-min="' + min + '" data-max="' + max + '" data-idx="' + param.idx + '">';
-          html += '<span class="knob-indicator" style="' + knobIndicatorStyle(pct) + '"></span>';
+          html += S.renderKnobSVG({ value: value, min: min, max: max, color: 'blue', size: 68 });
           html += '</div>';
           html += '<span class="macro-knob-label">' + S.esc(param.name) + '</span>';
           html += '<span class="macro-knob-value">' + value + '</span>';
@@ -245,18 +245,6 @@
     }
   }
 
-  /**
-   * Calculate CSS position for the knob indicator dot.
-   */
-  function knobIndicatorStyle(pct) {
-    var angle = 225 + (pct / 100) * 270;
-    var rad = (angle * Math.PI) / 180;
-    var radius = 27;
-    var cx = 34 + Math.cos(rad) * radius - 3;
-    var cy = 34 + Math.sin(rad) * radius - 3;
-    return 'left:' + cx.toFixed(1) + 'px;top:' + cy.toFixed(1) + 'px;';
-  }
-
   function setupMacroGroupEvents(container) {
     container.querySelectorAll('.macro-group-header').forEach(function(header) {
       header.addEventListener('click', function() {
@@ -292,13 +280,11 @@
         newVal = Math.max(min, Math.min(max, newVal));
 
         knob.setAttribute('data-value', newVal);
-        var pct = max > min ? Math.round(((newVal - min) / (max - min)) * 100) : 0;
-        knob.style.setProperty('--knob-pct', pct);
         valueEl.textContent = newVal;
         state.paramValues[paramIdx] = newVal;
 
-        var indicator = knob.querySelector('.knob-indicator');
-        if (indicator) indicator.style.cssText = knobIndicatorStyle(pct);
+        // Re-render the SVG knob
+        knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: 'blue', size: 68 });
       }
 
       function onPointerUp() {

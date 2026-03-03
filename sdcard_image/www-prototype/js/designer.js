@@ -27,6 +27,7 @@
     editDef: null,             // Working copy of the definition being edited
     activeTrack: -1,           // Active track index (from shared track tabs)
     trackMachines: [],         // Machine IDs available for the active track
+    activeMachine: '',         // Currently filtered machine id (or '' for all)
     dirty: false,              // Has unsaved changes
     initialized: false,
   };
@@ -62,18 +63,11 @@
     state.editDef = null;
     state.dirty = false;
 
-    // Update the filter help text
-    var filterHelp = document.getElementById('designer-filter-help');
-    if (filterHelp) {
-      var machineNames = state.trackMachines.map(function(mid) {
-        var info = S.getMachineInfo(mid);
-        return info ? info.name : mid;
-      }).join(', ');
-      filterHelp.querySelector('p').textContent =
-        'Showing definitions for Ch ' + (idx + 1) + ' ' + S.esc(track.name) +
-        ' (' + (machineNames || 'no instruments') + '). Pick one to edit, or create new.';
-    }
+    // Auto-select first machine for this track
+    state.activeMachine = state.trackMachines.length > 0 ? state.trackMachines[0] : '';
 
+    renderMachineFilter();
+    updateFilterHelp();
     renderMachineList();
     renderMachineDefSelect();
     renderMappingEditor();
@@ -88,11 +82,75 @@
     }
   }
 
+  function updateFilterHelp() {
+    var filterHelp = document.getElementById('designer-filter-help');
+    if (!filterHelp) return;
+    var p = filterHelp.querySelector('p');
+    if (!p) return;
+
+    if (!state.activeMachine) {
+      p.textContent = 'Showing all definitions for this track. Pick one to edit, or create new.';
+    } else {
+      var info = S.getMachineInfo(state.activeMachine);
+      var machineName = info ? info.name : state.activeMachine;
+      p.textContent = 'Showing definitions for ' + machineName + '. Pick one to edit, or create new.';
+    }
+  }
+
+  // ─── Machine Filter ──────────────────────────────────────
+
+  function renderMachineFilter() {
+    var select = document.getElementById('designer-machine-filter-select');
+    if (!select) return;
+
+    var html = '<sl-option value="">Show All Machines</sl-option>';
+    state.trackMachines.forEach(function(mid) {
+      var info = S.getMachineInfo(mid);
+      var name = info ? info.name : mid;
+      html += '<sl-option value="' + S.esc(mid) + '">' + S.esc(name) + '</sl-option>';
+    });
+    select.innerHTML = html;
+    select.value = state.activeMachine || '';
+  }
+
+  function setupMachineFilterEvents() {
+    var select = document.getElementById('designer-machine-filter-select');
+    if (!select) return;
+
+    select.addEventListener('sl-change', function() {
+      state.activeMachine = select.value || '';
+      state.selectedDefId = null;
+      state.editDef = null;
+      state.dirty = false;
+
+      updateFilterHelp();
+      renderMachineList();
+      renderMachineDefSelect();
+      renderMappingEditor();
+      renderDSPPanel();
+
+      // Auto-select first matching definition
+      var filteredDefs = getFilteredDefs();
+      if (filteredDefs.length > 0) {
+        selectMacroDefinition(filteredDefs[0].id);
+        var toolbarSelect = document.getElementById('designer-machine-select');
+        if (toolbarSelect) toolbarSelect.value = filteredDefs[0].id;
+      }
+    });
+  }
+
   /**
-   * Get macro definitions filtered by the active track's machines.
+   * Get macro definitions filtered by active machine (or all track machines).
    */
   function getFilteredDefs() {
     if (!state.trackMachines || state.trackMachines.length === 0) return [];
+    if (state.activeMachine) {
+      // Filter to specific machine
+      return S.data.macroDefs.filter(function(d) {
+        return d.machine === state.activeMachine;
+      });
+    }
+    // Show all for this track's machines
     return S.data.macroDefs.filter(function(d) {
       return state.trackMachines.indexOf(d.machine) !== -1;
     });
@@ -129,7 +187,7 @@
     });
   }
 
-  // ─── Machine List (left panel — FILTERED by track) ───────
+  // ─── Machine List (left panel — FILTERED by machine) ───────
 
   function renderMachineList() {
     var container = document.getElementById('machine-list');
@@ -146,35 +204,18 @@
       return;
     }
 
-    // Group by machine
-    var byMachine = {};
-    filteredDefs.forEach(function(def) {
-      var m = def.machine || 'unknown';
-      if (!byMachine[m]) byMachine[m] = [];
-      byMachine[m].push(def);
-    });
-
     var html = '';
 
-    // Show each machine group
-    state.trackMachines.forEach(function(machineId) {
-      var machineInfo = S.getMachineInfo(machineId);
-      var machineName = machineInfo ? machineInfo.name : machineId;
-      var defs = byMachine[machineId] || [];
-
-      html += '<div class="machine-group">';
-      html += '<div class="machine-group-header">' + S.esc(machineName) + ' <span style="opacity:0.5;">(' + S.esc(machineId) + ')</span></div>';
-
-      if (defs.length === 0) {
+    if (state.activeMachine) {
+      // Single machine selected — show defs directly without machine header
+      if (filteredDefs.length === 0) {
         html += '<div class="machine-item" style="opacity:0.4;cursor:default;padding:0.3rem 0.85rem;font-size:0.75rem;">No definitions yet</div>';
       }
-
-      defs.forEach(function(def) {
+      filteredDefs.forEach(function(def) {
         var isActive = state.selectedDefId === def.id;
         html += '<div class="machine-item' + (isActive ? ' active' : '') + '" data-def-id="' + S.esc(def.id) + '">';
         html += '<div class="machine-item-name">' + S.esc(def.name || def.id) + '</div>';
         html += '<div class="machine-item-meta">';
-
         var paramCount = 0;
         if (def.groups) {
           def.groups.forEach(function(g) { paramCount += (g.parameters || []).length; });
@@ -185,12 +226,49 @@
         html += '</div>';
         html += '</div>';
       });
+    } else {
+      // "Show All" — group by machine
+      var byMachine = {};
+      filteredDefs.forEach(function(def) {
+        var m = def.machine || 'unknown';
+        if (!byMachine[m]) byMachine[m] = [];
+        byMachine[m].push(def);
+      });
 
-      html += '</div>';
-    });
+      state.trackMachines.forEach(function(machineId) {
+        var machineInfo = S.getMachineInfo(machineId);
+        var machineName = machineInfo ? machineInfo.name : machineId;
+        var defs = byMachine[machineId] || [];
+
+        html += '<div class="machine-group">';
+        html += '<div class="machine-group-header">' + S.esc(machineName) + ' <span style="opacity:0.5;">(' + S.esc(machineId) + ')</span></div>';
+
+        if (defs.length === 0) {
+          html += '<div class="machine-item" style="opacity:0.4;cursor:default;padding:0.3rem 0.85rem;font-size:0.75rem;">No definitions yet</div>';
+        }
+
+        defs.forEach(function(def) {
+          var isActive = state.selectedDefId === def.id;
+          html += '<div class="machine-item' + (isActive ? ' active' : '') + '" data-def-id="' + S.esc(def.id) + '">';
+          html += '<div class="machine-item-name">' + S.esc(def.name || def.id) + '</div>';
+          html += '<div class="machine-item-meta">';
+          var paramCount = 0;
+          if (def.groups) {
+            def.groups.forEach(function(g) { paramCount += (g.parameters || []).length; });
+          }
+          var mappingCount = (def.mapping || []).length;
+          html += '<span>' + paramCount + ' params</span>';
+          html += '<span>' + mappingCount + ' mappings</span>';
+          html += '</div>';
+          html += '</div>';
+        });
+
+        html += '</div>';
+      });
+    }
 
     if (!html) {
-      html = '<div class="empty-state" style="padding:1rem;"><p style="font-size:0.78rem;">No instruments on this track</p></div>';
+      html = '<div class="empty-state" style="padding:1rem;"><p style="font-size:0.78rem;">No machines on this track</p></div>';
     }
 
     container.innerHTML = html;
@@ -234,8 +312,8 @@
   }
 
   function createNewDefinition() {
-    // Default machine to first of this track's machines
-    var defaultMachine = state.trackMachines.length > 0 ? state.trackMachines[0] : '';
+    // Default machine to the currently filtered machine, or first on track
+    var defaultMachine = state.activeMachine || (state.trackMachines.length > 0 ? state.trackMachines[0] : '');
 
     state.selectedDefId = null;
     state.editDef = {
@@ -388,16 +466,6 @@
 
   // ── Render: Knob Preview ──
 
-  function knobIndicatorStyleDesigner(pct) {
-    var angle = (pct / 100) * 270 - 135;
-    var rad = angle * Math.PI / 180;
-    var r = 28;
-    var cx = 34, cy = 34;
-    var x = cx + r * Math.sin(rad);
-    var y = cy - r * Math.cos(rad);
-    return 'left:' + x + 'px;top:' + y + 'px;';
-  }
-
   function renderKnobPreview(def) {
     var html = '';
     html += '<div class="designer-knob-preview">';
@@ -423,11 +491,10 @@
         var value = param.def || 0;
         var min = param.min || 0;
         var max = param.max || 127;
-        var pct = max > min ? Math.round(((value - min) / (max - min)) * 100) : 0;
 
         html += '<div class="macro-knob-cell">';
-        html += '<div class="macro-knob" style="--knob-pct:' + pct + '">';
-        html += '<span class="knob-indicator" style="' + knobIndicatorStyleDesigner(pct) + '"></span>';
+        html += '<div class="macro-knob">';
+        html += S.renderKnobSVG({ value: value, min: min, max: max, color: 'amber', size: 68 });
         html += '</div>';
         html += '<span class="macro-knob-label">' + S.esc(param.name || ('P' + param.idx)) + '</span>';
         html += '<span class="macro-knob-value">' + value + '</span>';
@@ -1122,6 +1189,7 @@
       onTrackSelected(idx, track);
     });
 
+    setupMachineFilterEvents();
     setupMachineDefSelectEvents();
     setupMachineListEvents();
     setupToolbarActions();
