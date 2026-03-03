@@ -1,28 +1,23 @@
-# ESP-IDF build output
+# ESP-IDF specific
 build/
-
-# ESP-IDF managed components (auto-downloaded by idf_component_manager, like node_modules)
-managed_components/
-
-# ESP-IDF lock file (regenerated automatically)
-dependencies.lock
-
-# ESP-IDF config
 sdkconfig
 sdkconfig.old
-
-# Compiled firmware artefacts
+dependencies.lock
+managed_components/
 *.map
 *.elf
 *.bin
 *.hex
 *.uf2
 
+# Allow documentation firmware files
+!docs/_static/firmware/**/*.bin
+!docs/_static/firmware/**/*.uf2
+
 # IDEs
+.vscode/
 .idea/
 *.swp
-
-# macOS
 .DS_Store
 
 # Virtual environments
@@ -34,7 +29,28 @@ midi_test_env/
 
 # Backup files
 *.bak
+
+# Hardware
 /hw/pcb/*.bak
 
-# Web build output
-www/preseteditor/dist
+# Sphinx build output
+docs/_build/
+
+# Local planning docs (not for publication)
+docs/HARDWARE_DOCS_PLAN.md
+
+# Temporary commit message file
+.commitmsg
+
+# Shoelace vendor bundle (downloaded from npm, not source)
+# Re-install with: npm install @shoelace-style/shoelace@2.20.1
+# then copy cdn/ contents to sdcard_image/www/shoelace/
+# Ignore everything inside shoelace…
+sdcard_image/www/shoelace/*
+# …but allow the themes directory…
+!sdcard_image/www/shoelace/themes/
+# …ignore everything inside themes…
+sdcard_image/www/shoelace/themes/*
+# …except the dark theme CSS needed for SD card deployment
+!sdcard_image/www/shoelace/themes/dark.css
+!sdcard_image/www/shoelace/themes/dark.css.gz
