@@ -98,6 +98,7 @@
     if (savedTheme === 'light') {
       document.documentElement.classList.add('sl-theme-light');
       document.documentElement.classList.remove('sl-theme-dark');
+      themeBtn.name = 'sun-fill';
     }
 
     themeBtn.addEventListener('click', function() {
@@ -106,10 +107,12 @@
         document.documentElement.classList.remove('sl-theme-light');
         document.documentElement.classList.add('sl-theme-dark');
         try { localStorage.setItem('tbd-theme', 'dark'); } catch (e) { /* ignore */ }
+        themeBtn.name = 'moon-fill';
       } else {
         document.documentElement.classList.add('sl-theme-light');
         document.documentElement.classList.remove('sl-theme-dark');
         try { localStorage.setItem('tbd-theme', 'light'); } catch (e) { /* ignore */ }
+        themeBtn.name = 'sun-fill';
       }
     });
   }

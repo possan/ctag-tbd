@@ -275,8 +275,15 @@
       container.innerHTML =
         '<div class="empty-state" id="mapping-empty">' +
         '<sl-icon name="diagram-3"></sl-icon>' +
-        '<h3>No Machine Selected</h3>' +
-        '<p>Select a macro definition from the left panel to view & edit parameter mappings</p>' +
+        '<h3>Select a Macro Definition</h3>' +
+        '<p>Pick a definition from the left panel to edit how DSP parameters are exposed as performer knobs.</p>' +
+        '<div class="info-callout" style="margin-top:1rem;max-width:450px;">' +
+        '<sl-icon name="lightbulb"></sl-icon>' +
+        '<p><strong>What is a Macro Definition?</strong><br>' +
+        'It maps a machine\'s raw DSP control-change (CC) parameters ' +
+        'to user-friendly knob pages that a performer sees. You can combine, ' +
+        'scale, and offset multiple CC values from a single knob.</p>' +
+        '</div>' +
         '</div>';
       return;
     }
@@ -315,34 +322,116 @@
 
     // Action buttons
     html += '<div class="mapping-def-actions">';
-    html += '<button class="mapping-btn btn-1to1" title="Create 1:1 mapping from all machine CCs">1:1 Map</button>';
+    html += '<button class="mapping-btn btn-1to1" title="Auto-create a 1:1 mapping from all machine CCs — great starting point">1:1 Map</button>';
     html += '</div>';
     html += '</div>';
 
-    // ── Tabs: Parameters | Output Mappings | Sound Presets ──
+    // ── Tabs: Knob Preview | Parameters | Output Mappings | Sound Presets ──
     html += '<div class="mapping-tabs">';
-    html += '<button class="mapping-tab active" data-tab="params">Parameter Groups</button>';
-    html += '<button class="mapping-tab" data-tab="mappings">Output Mappings (' + (def.mapping || []).length + ')</button>';
-    html += '<button class="mapping-tab" data-tab="presets">Sound Presets</button>';
+    html += '<button class="mapping-tab active" data-tab="preview"><sl-icon name="sliders" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Knob Preview</button>';
+    html += '<button class="mapping-tab" data-tab="params"><sl-icon name="table" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Parameter Groups</button>';
+    html += '<button class="mapping-tab" data-tab="mappings"><sl-icon name="arrow-left-right" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Output Mappings (' + (def.mapping || []).length + ')</button>';
+    html += '<button class="mapping-tab" data-tab="presets"><sl-icon name="collection" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Sound Presets</button>';
+    html += '</div>';
+
+    // ── TAB: Knob Preview ──
+    html += '<div class="mapping-tab-content active" data-tab="preview">';
+    html += renderKnobPreview(def);
     html += '</div>';
 
     // ── TAB: Parameter Groups ──
-    html += '<div class="mapping-tab-content active" data-tab="params">';
+    html += '<div class="mapping-tab-content" data-tab="params">';
+    html += '<div class="tab-description">';
+    html += '<sl-icon name="info-circle"></sl-icon>';
+    html += 'Define up to 6 pages of 4 knobs each. These are the controls a Performer sees. Each parameter has an index (idx), a display name, default value, range (min/max), resolution, and UI type.';
+    html += '</div>';
     html += renderParameterGroups(def, ccOptions);
     html += '</div>';
 
     // ── TAB: Output Mappings ──
     html += '<div class="mapping-tab-content" data-tab="mappings">';
+    html += '<div class="tab-description">';
+    html += '<sl-icon name="info-circle"></sl-icon>';
+    html += 'Each output mapping connects knob values to a DSP CC channel. The formula is: <code>finalValue = start + &Sigma;(paramValue &times; mul &divide; div)</code>. One knob can drive multiple CCs, and one CC can be driven by multiple knobs.';
+    html += '</div>';
     html += renderOutputMappings(def, machineParams);
     html += '</div>';
 
     // ── TAB: Sound Presets ──
     html += '<div class="mapping-tab-content" data-tab="presets">';
+    html += '<div class="tab-description">';
+    html += '<sl-icon name="info-circle"></sl-icon>';
+    html += 'Sound presets store specific knob values for this definition. A Performer can quickly recall these to get a known-good starting sound.';
+    html += '</div>';
     html += renderSoundPresetsForDef(def);
     html += '</div>';
 
     container.innerHTML = html;
     setupMappingEditorEvents(container);
+  }
+
+  // ── Render: Knob Preview (same look as Performer) ──
+
+  function knobIndicatorStyleDesigner(pct) {
+    var angle = (pct / 100) * 270 - 135;
+    var rad = angle * Math.PI / 180;
+    var r = 28;
+    var cx = 34, cy = 34;
+    var x = cx + r * Math.sin(rad);
+    var y = cy - r * Math.cos(rad);
+    return 'left:' + x + 'px;top:' + y + 'px;';
+  }
+
+  function renderKnobPreview(def) {
+    var html = '';
+    html += '<div class="designer-knob-preview">';
+    html += '<div class="preview-title"><sl-icon name="eye"></sl-icon> Performer Knob Preview</div>';
+    html += '<div class="info-callout">';
+    html += '<sl-icon name="lightbulb"></sl-icon>';
+    html += '<p>This shows how the macro definition will appear to a Performer. Each page becomes a collapsible group of knobs. Knobs display parameter names, default values, and ranges as defined in the Parameter Groups tab.</p>';
+    html += '</div>';
+
+    var hasParams = false;
+    def.groups.forEach(function(group, gi) {
+      if (!group.parameters || group.parameters.length === 0) return;
+      hasParams = true;
+
+      html += '<div class="macro-group" data-group="' + gi + '">';
+      html += '<div class="macro-group-header">';
+      html += '<sl-icon name="chevron-down" class="macro-group-chevron"></sl-icon>';
+      html += '<span class="macro-group-name">' + S.esc(group.name || ('Page ' + (gi + 1))) + '</span>';
+      html += '</div>';
+      html += '<div class="macro-group-body">';
+
+      group.parameters.forEach(function(param) {
+        var value = param.def || 0;
+        var min = param.min || 0;
+        var max = param.max || 127;
+        var pct = max > min ? Math.round(((value - min) / (max - min)) * 100) : 0;
+
+        html += '<div class="macro-knob-cell">';
+        html += '<div class="macro-knob" style="--knob-pct:' + pct + '">';
+        html += '<span class="knob-indicator" style="' + knobIndicatorStyleDesigner(pct) + '"></span>';
+        html += '</div>';
+        html += '<span class="macro-knob-label">' + S.esc(param.name || ('P' + param.idx)) + '</span>';
+        html += '<span class="macro-knob-value">' + value + '</span>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+      html += '</div>';
+    });
+
+    if (!hasParams) {
+      html += '<div class="empty-state" style="padding:2rem;">';
+      html += '<sl-icon name="sliders" style="font-size:2rem;"></sl-icon>';
+      html += '<h3>No Parameters Defined</h3>';
+      html += '<p>Add parameters in the "Parameter Groups" tab to see a knob preview here.</p>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
   }
 
   // ── Render: Parameter Groups ──
@@ -409,11 +498,9 @@
     var html = '';
 
     html += '<div class="mapping-output-header">';
-    html += '<span>Output Mappings: macro parameter values → DSP CC values via formula</span>';
+    html += '<span>' + mappings.length + ' Output Mapping' + (mappings.length !== 1 ? 's' : '') + '</span>';
     html += '<button class="mapping-add-btn add-mapping-btn" title="Add output mapping">+ Mapping</button>';
     html += '</div>';
-
-    html += '<div style="font-size:0.72rem;color:var(--sl-color-neutral-400);margin-bottom:0.5rem;">Formula: finalValue = start + Σ(paramValue × mul ÷ div)</div>';
 
     // Build param index→name map
     var paramNames = {};
@@ -462,7 +549,7 @@
     });
 
     if (mappings.length === 0) {
-      html += '<tr class="mapping-row-empty"><td colspan="5" style="text-align:center;opacity:0.4;padding:0.5rem;">No output mappings</td></tr>';
+      html += '<tr class="mapping-row-empty"><td colspan="5" style="text-align:center;opacity:0.4;padding:0.75rem;">No output mappings yet. Click "+ Mapping" above, or use the "1:1 Map" button in the header to auto-generate mappings from the machine\'s CCs.</td></tr>';
     }
 
     html += '</tbody></table>';
@@ -539,6 +626,13 @@
         var tabId = tab.getAttribute('data-tab');
         container.querySelectorAll('.mapping-tab').forEach(function(t) { t.classList.toggle('active', t.getAttribute('data-tab') === tabId); });
         container.querySelectorAll('.mapping-tab-content').forEach(function(c) { c.classList.toggle('active', c.getAttribute('data-tab') === tabId); });
+      });
+    });
+
+    // Knob preview group collapse/expand
+    container.querySelectorAll('.designer-knob-preview .macro-group-header').forEach(function(header) {
+      header.addEventListener('click', function() {
+        header.closest('.macro-group').classList.toggle('collapsed');
       });
     });
 

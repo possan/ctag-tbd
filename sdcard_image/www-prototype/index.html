@@ -14,6 +14,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TBD-16</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="shoelace/themes/light.css?v=2">
   <link rel="stylesheet" href="shoelace/themes/dark.css?v=2">
   <script type="module" src="js/shoelace-bundle.js?v=4"></script>
   <link rel="stylesheet" href="css/app.css?v=1">
@@ -68,6 +69,10 @@
             <sl-icon name="collection" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
             <span>Sound Presets</span>
           </div>
+          <div class="section-help">
+            <sl-icon name="info-circle"></sl-icon>
+            <p>Tap a preset to load its knob values for the selected track.</p>
+          </div>
           <div class="preset-browser-search">
             <sl-input placeholder="Search presets…" size="small" clearable id="preset-search">
               <sl-icon slot="prefix" name="search"></sl-icon>
@@ -83,7 +88,7 @@
           <div class="empty-state" id="macro-empty">
             <sl-icon name="sliders"></sl-icon>
             <h3>Select a Track</h3>
-            <p>Choose a track from the strip above to see its macro controls</p>
+            <p>Choose a track from the channel strip above to see its macro knobs and sound controls</p>
           </div>
           <!-- Populated by JS when a track is selected -->
         </div>
@@ -163,7 +168,11 @@
         <div class="machine-browser">
           <div class="machine-browser-header">
             <sl-icon name="cpu" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
-            <span>Machines</span>
+            <span>Macro Definitions</span>
+          </div>
+          <div class="section-help">
+            <sl-icon name="info-circle"></sl-icon>
+            <p>Each entry maps a machine's DSP parameters to user-facing knobs. Pick one to edit, or create new.</p>
           </div>
           <div class="machine-list" id="machine-list">
           </div>
@@ -173,8 +182,8 @@
         <div class="mapping-editor" id="mapping-editor">
           <div class="empty-state" id="mapping-empty">
             <sl-icon name="diagram-3"></sl-icon>
-            <h3>No Machine Selected</h3>
-            <p>Select a machine definition from the left panel to view & edit parameter mappings</p>
+            <h3>Select a Macro Definition</h3>
+            <p>Pick a definition from the left panel to edit how DSP parameters are exposed as performer knobs</p>
           </div>
         </div>
 
@@ -184,10 +193,14 @@
             <sl-icon name="motherboard" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
             <span>DSP Parameters</span>
           </div>
+          <div class="section-help">
+            <sl-icon name="info-circle"></sl-icon>
+            <p>Raw CC parameters of the selected machine. Mapped params show a link icon.</p>
+          </div>
           <div class="dsp-param-list" id="dsp-param-list">
             <div class="empty-state" style="padding:1.5rem;">
               <sl-icon name="cpu" style="font-size:1.5rem;"></sl-icon>
-              <p style="font-size:0.78rem;">Select a track to see its raw DSP parameters</p>
+              <p style="font-size:0.78rem;">Select a definition to see its machine's DSP parameters</p>
             </div>
           </div>
         </div>

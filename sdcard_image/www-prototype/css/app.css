@@ -872,3 +872,132 @@ body {
   .persona-switcher { margin-left: 0.5rem; }
   .persona-btn { padding: 0.35rem 0.6rem; font-size: 0.68rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═══════════════════════════════════════════════════════════ */
+.sl-theme-light .macro-knob::after {
+  background: var(--sl-color-neutral-0);
+  border-color: var(--sl-color-neutral-300);
+}
+.sl-theme-light .mapping-input {
+  background: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-900);
+  border-color: var(--sl-color-neutral-300);
+}
+.sl-theme-light .mapping-select {
+  background: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-900);
+  border-color: var(--sl-color-neutral-300);
+}
+.sl-theme-light .macro-knob {
+  border-color: var(--sl-color-neutral-400);
+}
+.sl-theme-light .track-num {
+  background: var(--sl-color-neutral-700);
+  color: var(--sl-color-neutral-0);
+}
+.sl-theme-light .mapping-source {
+  background: var(--sl-color-primary-50);
+  color: var(--sl-color-primary-800);
+}
+.sl-theme-light .preset-value-chip {
+  background: var(--sl-color-neutral-200);
+  color: var(--sl-color-neutral-800);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTEXTUAL HELP / UX DESCRIPTIONS
+   ═══════════════════════════════════════════════════════════ */
+.section-help {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--sl-color-neutral-500);
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid var(--sl-color-neutral-200);
+  background: color-mix(in srgb, var(--sl-color-primary-600) 4%, var(--sl-color-neutral-50));
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.section-help sl-icon {
+  font-size: 0.85rem;
+  color: var(--sl-color-primary-500);
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+.section-help p { margin: 0; }
+
+/* Workflow step badges */
+.workflow-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  border-radius: 50%;
+  background: var(--sl-color-primary-600);
+  color: #fff;
+  flex-shrink: 0;
+  margin-right: 0.3rem;
+}
+
+/* Info callout box */
+.info-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: var(--sl-border-radius-medium);
+  background: color-mix(in srgb, var(--sl-color-primary-600) 8%, var(--sl-color-neutral-50));
+  border: 1px solid color-mix(in srgb, var(--sl-color-primary-600) 20%, var(--sl-color-neutral-200));
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--sl-color-neutral-600);
+}
+.info-callout sl-icon {
+  font-size: 0.85rem;
+  color: var(--sl-color-primary-500);
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+.info-callout p { margin: 0; }
+
+/* Knob preview in designer */
+.designer-knob-preview {
+  padding: 1rem;
+}
+.designer-knob-preview .preview-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sl-color-neutral-600);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.designer-knob-preview .preview-title sl-icon {
+  color: var(--sl-color-primary-500);
+}
+
+/* Tab description below tab bar */
+.tab-description {
+  font-size: 0.72rem;
+  color: var(--sl-color-neutral-500);
+  padding: 0.4rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--sl-color-neutral-100);
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.tab-description sl-icon {
+  font-size: 0.75rem;
+  color: var(--sl-color-neutral-400);
+  flex-shrink: 0;
+}

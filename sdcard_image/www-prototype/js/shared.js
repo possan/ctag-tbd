@@ -270,20 +270,13 @@ function applyTheme(theme) {
   if (theme === 'light') {
     html.classList.remove('sl-theme-dark');
     html.classList.add('sl-theme-light');
-    if (btn) {
-      btn.name = '';
-      btn.src = 'data:image/svg+xml,' + encodeURIComponent(SUN_FILL_SVG);
-    }
+    if (btn) btn.name = 'sun-fill';
   } else {
     html.classList.remove('sl-theme-light');
     html.classList.add('sl-theme-dark');
-    if (btn) {
-      btn.src = '';
-      btn.name = 'moon-fill';
-    }
+    if (btn) btn.name = 'moon-fill';
   }
-  var link = document.querySelector('link[href*="/shoelace/themes/"]');
-  if (link) link.href = '/shoelace/themes/' + theme + '.css?v=2';
+  // Both themes are loaded in HTML; only the class toggles which one is active
   localStorage.setItem('tbd-theme', theme);
 }
 
