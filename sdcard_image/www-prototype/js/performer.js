@@ -147,6 +147,9 @@
         html += '<button class="mapping-btn btn-save-def" title="Save this definition"><sl-icon name="floppy" style="font-size:0.7rem;"></sl-icon> Save</button>';
         html += '<button class="mapping-btn btn-export-def" title="Export as JSON"><sl-icon name="download" style="font-size:0.7rem;"></sl-icon> Export</button>';
         html += '<button class="mapping-btn btn-import-def" title="Import from JSON"><sl-icon name="upload" style="font-size:0.7rem;"></sl-icon> Import</button>';
+        if (!isNew) {
+          html += '<button class="mapping-btn btn-delete-def" title="Delete this definition" style="border-color:var(--sl-color-danger-300);color:var(--sl-color-danger-600);"><sl-icon name="trash3" style="font-size:0.7rem;"></sl-icon> Delete</button>';
+        }
         html += '</div>';
         html += '</div>';
       }
@@ -278,6 +281,14 @@
     if (importBtn) {
       importBtn.addEventListener('click', function() {
         if (D.importDefinitionFile) D.importDefinitionFile();
+      });
+    }
+    var deleteDefBtn = document.querySelector('#track-info-bar .btn-delete-def');
+    if (deleteDefBtn) {
+      deleteDefBtn.addEventListener('click', function() {
+        if (D.state && D.state.selectedDefId) {
+          if (D.deleteDefinition) D.deleteDefinition(D.state.selectedDefId);
+        }
       });
     }
   }
@@ -488,6 +499,9 @@
         html += '<div class="preset-item' + (isActive ? ' active' : '') + '" data-preset-id="' + S.esc(p.id) + '">';
         html += '<span class="preset-item-name">' + S.esc(p.name) + '</span>';
         html += '<span class="preset-item-machine">' + S.esc(p.macro) + '</span>';
+        html += '<button class="preset-item-delete" data-delete-preset-id="' + S.esc(p.id) + '" title="Delete preset">';
+        html += '<sl-icon name="trash3"></sl-icon>';
+        html += '</button>';
         html += '</div>';
       });
     });
@@ -536,6 +550,14 @@
     var list = document.getElementById('preset-list');
     if (list) {
       list.addEventListener('click', function(e) {
+        // Handle delete button click
+        var deleteBtn = e.target.closest('.preset-item-delete');
+        if (deleteBtn) {
+          e.stopPropagation();
+          var presetId = deleteBtn.getAttribute('data-delete-preset-id');
+          if (presetId) deletePreset(presetId);
+          return;
+        }
         var item = e.target.closest('.preset-item');
         if (!item) return;
         var presetId = item.getAttribute('data-preset-id');
@@ -755,6 +777,64 @@
     requestAnimationFrame(function() {
       dialog.show();
     });
+  }
+
+  // ─── Delete Preset ────────────────────────────────────────
+
+  function deletePreset(presetId) {
+    var preset = S.data.soundPresets.find(function(p) { return p.id === presetId; });
+    var displayName = preset ? preset.name : presetId;
+
+    var old = document.getElementById('delete-preset-dialog');
+    if (old) old.remove();
+
+    var dialog = document.createElement('sl-dialog');
+    dialog.id = 'delete-preset-dialog';
+    dialog.label = 'Delete Sound Preset';
+    dialog.setAttribute('style', '--width:24rem;');
+
+    dialog.innerHTML = '<p style="font-size:0.85rem;margin:0;">Are you sure you want to delete <strong>' + S.esc(displayName) + '</strong>?</p>'
+      + '<p style="font-size:0.75rem;color:var(--sl-color-neutral-500);margin:0.5rem 0 0;">This action cannot be undone.</p>';
+
+    var cancelBtn = document.createElement('sl-button');
+    cancelBtn.setAttribute('slot', 'footer');
+    cancelBtn.setAttribute('variant', 'default');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', function() { dialog.hide(); });
+
+    var deleteBtn = document.createElement('sl-button');
+    deleteBtn.setAttribute('slot', 'footer');
+    deleteBtn.setAttribute('variant', 'danger');
+    deleteBtn.innerHTML = '<sl-icon name="trash3" slot="prefix"></sl-icon> Delete';
+    deleteBtn.addEventListener('click', function() {
+      deleteBtn.setAttribute('loading', '');
+      var filePath = 'macrosoundpresets/' + presetId + '.json';
+      S.apiPostJSON('/api/v1/samples?action=manage', { action: 'deleteconfig', path: filePath })
+      .then(function() {
+        dialog.hide();
+        // If the deleted preset was active, clear it
+        if (state.activePreset && state.activePreset.id === presetId) {
+          state.activePreset = null;
+        }
+        S.toast('Deleted preset: ' + displayName, 'success', 2000);
+        return S.reloadMacroData();
+      }).then(function() {
+        renderPresetBrowser();
+        // Also refresh designer if it's active
+        if (window.TBD.designer && window.TBD.designer.reload) {
+          window.TBD.designer.reload();
+        }
+      }).catch(function(err) {
+        deleteBtn.removeAttribute('loading');
+        S.toast('Delete failed: ' + err.message, 'danger', 3000);
+      });
+    });
+
+    dialog.appendChild(cancelBtn);
+    dialog.appendChild(deleteBtn);
+    document.body.appendChild(dialog);
+    dialog.addEventListener('sl-after-hide', function() { dialog.remove(); });
+    requestAnimationFrame(function() { dialog.show(); });
   }
 
   // ─── Export / Import (for presets mode) ───────────────────

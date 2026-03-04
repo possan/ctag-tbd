@@ -528,6 +528,34 @@
           "type": "cc",
           "ctrl": 14,
           "def": 8
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -577,6 +605,34 @@
           "type": "cc",
           "ctrl": 13,
           "def": 2
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -640,6 +696,34 @@
           "type": "cc",
           "ctrl": 15,
           "def": 1
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -682,6 +766,34 @@
           "type": "cc",
           "ctrl": 12,
           "def": 32
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -724,6 +836,34 @@
           "type": "cc",
           "ctrl": 12,
           "def": 32
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -766,6 +906,34 @@
           "type": "cc",
           "ctrl": 12,
           "def": 32
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -808,6 +976,34 @@
           "type": "cc",
           "ctrl": 12,
           "def": 32
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -850,6 +1046,34 @@
           "type": "cc",
           "ctrl": 12,
           "def": 32
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -892,6 +1116,34 @@
           "type": "cc",
           "ctrl": 12,
           "def": 4
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -1025,6 +1277,34 @@
           "type": "cc",
           "ctrl": 25,
           "def": 64
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -1144,6 +1424,34 @@
           "type": "cc",
           "ctrl": 23,
           "def": 0
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -1241,6 +1549,34 @@
           "name": "Bit Red",
           "type": "cc",
           "ctrl": 20,
+          "def": 0
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
           "def": 0
         }
       ]
@@ -1389,6 +1725,34 @@
           "type": "cc",
           "ctrl": 28,
           "def": 0
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -1522,6 +1886,34 @@
           "type": "cc",
           "ctrl": 25,
           "def": 32
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },
@@ -1535,6 +1927,34 @@
           "name": "MIDI Channel",
           "type": "cc",
           "ctrl": 8,
+          "def": 0
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
           "def": 0
         }
       ]
@@ -1557,6 +1977,34 @@
           "type": "cc",
           "ctrl": 9,
           "def": 36
+        },
+        {
+          "id": "mix-level",
+          "name": "Level",
+          "type": "cc",
+          "ctrl": 1,
+          "def": 64
+        },
+        {
+          "id": "mix-pan",
+          "name": "Pan",
+          "type": "cc",
+          "ctrl": 2,
+          "def": 64
+        },
+        {
+          "id": "mix-fx1",
+          "name": "FX Send 1",
+          "type": "cc",
+          "ctrl": 3,
+          "def": 0
+        },
+        {
+          "id": "mix-fx2",
+          "name": "FX Send 2",
+          "type": "cc",
+          "ctrl": 4,
+          "def": 0
         }
       ]
     },

@@ -1,1 +1,358 @@
-{"id":"mo-allparams","name":"Macro osc All param","machine":"mo","groups":[{"name":"Page 1","parameters":[{"idx":0,"name":"Bank","def":0,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":1,"name":"P0","def":0,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":2,"name":"P1","def":0,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":3,"name":"Waveshape","def":0,"min":0,"max":127,"res":64,"ui":"bignum"}]},{"name":"Page 2","parameters":[{"idx":4,"name":"P0 A","def":0,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":5,"name":"P1 A","def":0,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":6,"name":"FM A","def":0,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":7,"name":"Q Scale","def":32,"min":0,"max":127,"res":64,"ui":"bignum"}]},{"name":"Page 3","parameters":[{"idx":8,"name":"Attack","def":0,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":9,"name":"Decay","def":32,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":10,"name":"Loop Env","def":0,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":11,"name":"Decim","def":0,"min":0,"max":127,"res":64,"ui":"bignum"}]},{"name":"Page 4","parameters":[{"idx":12,"name":"Bit Red","def":0,"min":0,"max":127,"res":64,"ui":"bignum"}]}],"mapping":[{"ctrl":8,"start":0,"add":[{"src":0,"mul":1,"div":1}]},{"ctrl":9,"start":0,"add":[{"src":1,"mul":1,"div":1}]},{"ctrl":10,"start":0,"add":[{"src":2,"mul":1,"div":1}]},{"ctrl":11,"start":0,"add":[{"src":3,"mul":1,"div":1}]},{"ctrl":12,"start":0,"add":[{"src":4,"mul":1,"div":1}]},{"ctrl":13,"start":0,"add":[{"src":5,"mul":1,"div":1}]},{"ctrl":14,"start":0,"add":[{"src":6,"mul":1,"div":1}]},{"ctrl":15,"start":0,"add":[{"src":7,"mul":1,"div":1}]},{"ctrl":16,"start":0,"add":[{"src":8,"mul":1,"div":1}]},{"ctrl":17,"start":0,"add":[{"src":9,"mul":1,"div":1}]},{"ctrl":18,"start":0,"add":[{"src":10,"mul":1,"div":1}]},{"ctrl":19,"start":0,"add":[{"src":11,"mul":1,"div":1}]},{"ctrl":20,"start":0,"add":[{"src":12,"mul":1,"div":1}]}]}
+{
+  "id": "mo-allparams",
+  "name": "Macro osc All param",
+  "machine": "mo",
+  "groups": [
+    {
+      "name": "Page 1",
+      "parameters": [
+        {
+          "idx": 0,
+          "name": "Bank",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 1,
+          "name": "P0",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 2,
+          "name": "P1",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 3,
+          "name": "Waveshape",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        }
+      ]
+    },
+    {
+      "name": "Page 2",
+      "parameters": [
+        {
+          "idx": 4,
+          "name": "P0 A",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 5,
+          "name": "P1 A",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 6,
+          "name": "FM A",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 7,
+          "name": "Q Scale",
+          "def": 32,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        }
+      ]
+    },
+    {
+      "name": "Page 3",
+      "parameters": [
+        {
+          "idx": 8,
+          "name": "Attack",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 9,
+          "name": "Decay",
+          "def": 32,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 10,
+          "name": "Loop Env",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 11,
+          "name": "Decim",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        }
+      ]
+    },
+    {
+      "name": "Page 4",
+      "parameters": [
+        {
+          "idx": 12,
+          "name": "Bit Red",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        }
+      ]
+    },
+    {
+      "name": "Mix",
+      "parameters": [
+        {
+          "name": "Level",
+          "idx": 13,
+          "def": 64
+        },
+        {
+          "name": "Pan",
+          "idx": 14,
+          "def": 64
+        },
+        {
+          "name": "FX Send 1",
+          "idx": 15,
+          "def": 0
+        },
+        {
+          "name": "FX Send 2",
+          "idx": 16,
+          "def": 0
+        }
+      ]
+    }
+  ],
+  "mapping": [
+    {
+      "ctrl": 8,
+      "start": 0,
+      "add": [
+        {
+          "src": 0,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 9,
+      "start": 0,
+      "add": [
+        {
+          "src": 1,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 10,
+      "start": 0,
+      "add": [
+        {
+          "src": 2,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 11,
+      "start": 0,
+      "add": [
+        {
+          "src": 3,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 12,
+      "start": 0,
+      "add": [
+        {
+          "src": 4,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 13,
+      "start": 0,
+      "add": [
+        {
+          "src": 5,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 14,
+      "start": 0,
+      "add": [
+        {
+          "src": 6,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 15,
+      "start": 0,
+      "add": [
+        {
+          "src": 7,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 16,
+      "start": 0,
+      "add": [
+        {
+          "src": 8,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 17,
+      "start": 0,
+      "add": [
+        {
+          "src": 9,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 18,
+      "start": 0,
+      "add": [
+        {
+          "src": 10,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 19,
+      "start": 0,
+      "add": [
+        {
+          "src": 11,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 20,
+      "start": 0,
+      "add": [
+        {
+          "src": 12,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 1,
+      "start": 0,
+      "add": [
+        {
+          "src": 13,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 2,
+      "start": 0,
+      "add": [
+        {
+          "src": 14,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 3,
+      "start": 0,
+      "add": [
+        {
+          "src": 15,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 4,
+      "start": 0,
+      "add": [
+        {
+          "src": 16,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    }
+  ]
+}

@@ -132,6 +132,9 @@
         def.groups.forEach(function(g) { paramCount += (g.parameters || []).length; });
       }
       html += '<span class="preset-item-machine">' + paramCount + 'P / ' + (def.mapping || []).length + 'M</span>';
+      html += '<button class="preset-item-delete" data-delete-def-id="' + S.esc(def.id) + '" title="Delete definition">';
+      html += '<sl-icon name="trash3"></sl-icon>';
+      html += '</button>';
       html += '</div>';
     });
 
@@ -145,6 +148,14 @@
     container.addEventListener('click', function(e) {
       if (e.target.id === 'create-def-btn' || e.target.closest('#create-def-btn')) {
         createNewDefinition();
+        return;
+      }
+      // Handle delete button click
+      var deleteBtn = e.target.closest('.preset-item-delete');
+      if (deleteBtn) {
+        e.stopPropagation();
+        var defId = deleteBtn.getAttribute('data-delete-def-id');
+        if (defId) deleteDefinition(defId);
         return;
       }
       var item = e.target.closest('.preset-item');
@@ -1435,6 +1446,79 @@
     requestAnimationFrame(function() { dialog.show(); });
   }
 
+  // ─── Delete Macro Definition ────────────────────────────────
+
+  function deleteDefinition(defId) {
+    var def = S.data.macroDefs.find(function(d) { return d.id === defId; });
+    var displayName = def ? (def.name || def.id) : defId;
+
+    // Check if any sound presets use this definition
+    var dependentPresets = S.data.soundPresets.filter(function(p) { return p.macro === defId; });
+
+    var old = document.getElementById('delete-def-dialog');
+    if (old) old.remove();
+
+    var dialog = document.createElement('sl-dialog');
+    dialog.id = 'delete-def-dialog';
+    dialog.label = 'Delete Macro Definition';
+    dialog.setAttribute('style', '--width:26rem;');
+
+    var warningHtml = '';
+    if (dependentPresets.length > 0) {
+      warningHtml = '<div style="margin-top:0.75rem;padding:0.5rem 0.65rem;background:var(--sl-color-warning-100);border:1px solid var(--sl-color-warning-300);border-radius:4px;font-size:0.75rem;color:var(--sl-color-warning-700);">'
+        + '<sl-icon name="exclamation-triangle" style="font-size:0.75rem;"></sl-icon> '
+        + '<strong>' + dependentPresets.length + ' sound preset' + (dependentPresets.length > 1 ? 's' : '') + '</strong> use this macro definition and will become orphaned.'
+        + '</div>';
+    }
+
+    dialog.innerHTML = '<p style="font-size:0.85rem;margin:0;">Are you sure you want to delete the macro definition <strong>' + S.esc(displayName) + '</strong>?</p>'
+      + '<p style="font-size:0.75rem;color:var(--sl-color-neutral-500);margin:0.5rem 0 0;">This action cannot be undone.</p>'
+      + warningHtml;
+
+    var cancelBtn = document.createElement('sl-button');
+    cancelBtn.setAttribute('slot', 'footer');
+    cancelBtn.setAttribute('variant', 'default');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', function() { dialog.hide(); });
+
+    var deleteBtn = document.createElement('sl-button');
+    deleteBtn.setAttribute('slot', 'footer');
+    deleteBtn.setAttribute('variant', 'danger');
+    deleteBtn.innerHTML = '<sl-icon name="trash3" slot="prefix"></sl-icon> Delete';
+    deleteBtn.addEventListener('click', function() {
+      deleteBtn.setAttribute('loading', '');
+      var filePath = 'macrodefinitions/' + defId + '.json';
+      apiPost('/api/v1/samples?action=manage', { action: 'deleteconfig', path: filePath })
+      .then(function() {
+        dialog.hide();
+        // If the deleted def was being edited, clear state
+        if (state.selectedDefId === defId) {
+          state.selectedDefId = null;
+          state.editDef = null;
+          state.dirty = false;
+        }
+        S.toast('Deleted macro: ' + displayName, 'success', 2000);
+        return S.reloadMacroData();
+      }).then(function() {
+        renderDefinitionList();
+        renderMacroBuilderSection();
+        // Refresh performer preset browser and track info
+        if (window.TBD.performer && window.TBD.performer.reload) {
+          window.TBD.performer.reload();
+        }
+      }).catch(function(err) {
+        deleteBtn.removeAttribute('loading');
+        S.toast('Delete failed: ' + err.message, 'danger', 3000);
+      });
+    });
+
+    dialog.appendChild(cancelBtn);
+    dialog.appendChild(deleteBtn);
+    document.body.appendChild(dialog);
+    dialog.addEventListener('sl-after-hide', function() { dialog.remove(); });
+    requestAnimationFrame(function() { dialog.show(); });
+  }
+
   // ─── Toolbar Actions (called by app.js) ──────────────────
 
   function saveDefinition() {
@@ -1554,6 +1638,7 @@
     state: state,
     onMachineChanged: onMachineChanged,
     saveDefinition: saveDefinition,
+    deleteDefinition: deleteDefinition,
     exportDefinition: exportDefinition,
     importDefinitionFile: importDefinitionFile,
     reload: function() {

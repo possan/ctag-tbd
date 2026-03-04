@@ -286,6 +286,24 @@ body {
   white-space: nowrap;
 }
 
+/* ── Delete button on sidebar list items ── */
+.preset-item-delete {
+  display: none;
+  align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  color: var(--sl-color-neutral-400);
+  padding: 0.15rem 0.25rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.preset-item:hover .preset-item-delete { display: flex; }
+.preset-item-delete:hover {
+  color: var(--sl-color-danger-600);
+  background: var(--sl-color-danger-100);
+}
+
 /* ── Preset filter bar (chip + count) ── */
 .preset-filter-bar {
   display: flex; align-items: center; gap: 0.5rem;
@@ -447,6 +465,52 @@ body {
 }
 .macro-group.collapsed .macro-group-chevron { transform: rotate(-90deg); }
 .macro-group.collapsed .macro-group-body { display: none; }
+
+/* Mix page — inverted dark card with light knobs */
+.macro-group.is-mix {
+  background: #1e293b;           /* slate-800 */
+  border-color: #334155;         /* slate-700 */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+.macro-group.is-mix .macro-group-header {
+  background: #0f172a;           /* slate-900 */
+  border-bottom-color: #334155;
+}
+.macro-group.is-mix .macro-group-header:hover {
+  background: #1e293b;
+}
+.macro-group.is-mix .macro-group-page-label {
+  color: #94a3b8;                /* slate-400 */
+}
+.macro-group.is-mix .macro-group-name {
+  color: #e2e8f0;                /* slate-200 */
+  letter-spacing: 0.04em;
+}
+.macro-group.is-mix .macro-group-chevron {
+  color: #64748b;                /* slate-500 */
+}
+.macro-group.is-mix .macro-knob-label {
+  color: #cbd5e1;                /* slate-300 */
+}
+.macro-group.is-mix .macro-knob-value {
+  color: #94a3b8;                /* slate-400 */
+}
+.macro-group.is-mix .macro-knob-cell:hover {
+  background: rgba(255,255,255,0.06);
+}
+.macro-group.is-mix .knob-target-name {
+  color: #94a3b8;
+}
+.macro-group.is-mix .knob-target-bar {
+  background: #334155;
+}
+.macro-group.is-mix .knob-target-range {
+  background: #475569;
+}
+.macro-group.is-mix .knob-target-hint {
+  color: #94a3b8;
+}
+
 .macro-group-name {
   font-size: 0.78rem; font-weight: 700;
   color: var(--sl-color-neutral-800);
@@ -928,6 +992,11 @@ details[open].dsp-collapsible > .dsp-collapsible-summary::before {
   background: var(--sl-color-primary-100);
   border-color: var(--sl-color-primary-400);
   color: var(--sl-color-primary-700);
+}
+.mapping-btn.btn-delete-def:hover {
+  background: var(--sl-color-danger-100);
+  border-color: var(--sl-color-danger-500);
+  color: var(--sl-color-danger-700);
 }
 
 /* ── Designer: Tabs ──────────────────────────────────── */

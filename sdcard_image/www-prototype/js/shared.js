@@ -497,6 +497,12 @@ function renderKnobSVG(opts) {
     outerFill  = '#92400e';  // amber-800
     centerFill = '#b45309';  // amber-700
     outerStroke = '#78350f'; // amber-900
+  } else if (color === 'mix') {
+    // Light/silver knobs for the inverted Mix page
+    indicator  = '#334155';  // dark slate indicator
+    outerFill  = '#cbd5e1';  // slate-300
+    centerFill = '#e2e8f0';  // slate-200
+    outerStroke = '#94a3b8'; // slate-400
   } else {
     // Dark charcoal for normal knobs (1:1 mapping)
     indicator  = '#ccc';
@@ -786,17 +792,20 @@ function renderKnobGroups(def, paramValues, options) {
   var mappingInfo = analyzeMappings(def);
   var html = '';
   var hasParams = false;
+  var visiblePageNum = 0;  // count only groups that have parameters
 
   def.groups.forEach(function(group, gi) {
     if (!group.parameters || group.parameters.length === 0) return;
     hasParams = true;
+    visiblePageNum++;
+    var isMixGroup = (group.name === 'Mix');
 
-    html += '<div class="macro-group" data-group="' + gi + '">';
+    html += '<div class="macro-group' + (isMixGroup ? ' is-mix' : '') + '" data-group="' + gi + '">';
 
     // Group header — Page N / Name
     html += '<div class="macro-group-header">';
     html += '<sl-icon name="chevron-down" class="macro-group-chevron"></sl-icon>';
-    html += '<span class="macro-group-page-label">Page ' + (gi + 1) + '</span>';
+    html += '<span class="macro-group-page-label">Page ' + visiblePageNum + '</span>';
     html += '<span class="macro-group-name">' + esc(group.name || '') + '</span>';
     html += '</div>';
 
@@ -809,8 +818,8 @@ function renderKnobGroups(def, paramValues, options) {
       var min = param.min || 0;
       var max = param.max || 127;
       var isMacro = isMacroKnob(mappingInfo, param.idx);
-      var knobColor = isMacro ? 'macro' : 'normal';
-      var cellClass = 'macro-knob-cell' + (isMacro ? ' is-macro' : '');
+      var knobColor = isMixGroup ? 'mix' : (isMacro ? 'macro' : 'normal');
+      var cellClass = 'macro-knob-cell' + (isMacro ? ' is-macro' : '') + (isMixGroup ? ' is-mix' : '');
 
       // Name ABOVE → Knob → Value BELOW
       html += '<div class="' + cellClass + '" data-param-idx="' + param.idx + '">';
