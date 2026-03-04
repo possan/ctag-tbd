@@ -61,6 +61,7 @@ void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string sy
     trackToMidiChannel[trackIndex] = trackDef->midiChannel;
     // midiChannelToTrack[trackDef->midiChannel] = trackIndex;
     trackBaseCC[trackIndex] = trackDef->baseCC;
+    ESP_LOGI("MacroTranslator", "Track %d base cc is %d", trackIndex, trackBaseCC[trackIndex]);
 
     idx = 0;
     for(auto par : synthDef->parameters) {
@@ -401,7 +402,6 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
                 for(auto om : def->outputMappings) {
                     int32_t finalvalue = om.startValue;
 
-                    int cc = om.ctrl + trackBaseCC[t];
                     for(auto src : om.sources) {
                         int val = trackParameterValues[t][src.parameterIndex];
                         if (src.divider > 0) {
@@ -410,17 +410,23 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
                             finalvalue += val * src.multiplier;
                         }
                     }
-
+                    
                     // TODO: support NRPM
-
+                    
                     if (finalvalue < 0) finalvalue = 0;
                     if (finalvalue > 127) finalvalue = 127;
-
+                    
                     int midichannel = trackToMidiChannel[t];
                     // ESP_LOGI("MacroTranslator", "Track %d: (ch %d) setting synth parameter %d to %d (CC %d)",
                     //     t, midichannel, idx, finalvalue, cc);
-                    if (cc != -1) {
-                        soundProcessor->handleMidiControlChange(midichannel, cc, finalvalue);
+                    if (om.ctrl  != -1) {
+                        // if (finalvalue != outputValues[t][idx]) {
+                        outputValues[t][idx] = finalvalue;
+                        // ESP_LOGD("MacroTranslator", "Track %d: (ch %d) setting synth parameter %d to %d (CC %d)",
+                        //     t, midichannel, idx, finalvalue, cc);
+                        int finalcc = om.ctrl + trackBaseCC[t];
+                        soundProcessor->handleMidiControlChange(midichannel, finalcc, finalvalue);
+                        // }
                     }
                     idx ++;
                 }

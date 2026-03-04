@@ -102,12 +102,12 @@ namespace CTAG {
 			// void registerMacroParamAndCC(const PickSeqRackInitData *initdata, const char *suffix, int cc, function<DrumRackParameterSetter> setter);
 
 			void _parseIncomingMidiMessages(const uint8_t *buf, const size_t len);
-            void _handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel);
-            void _handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel);
-            void _handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value);
-            void _handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel);
-            void _handleMidiPatchChange(const uint8_t channel, const uint8_t patch);
-            void _handleMidiPitchBend(const uint8_t channel, const uint16_t bend);
+            // void _handleMidiNoteOn(const uint8_t channel, const uint8_t note, const uint8_t vel);
+            // void _handleMidiNoteOff(const uint8_t channel, const uint8_t note, const uint8_t vel);
+            // void _handleMidiControlChange(const uint8_t channel, const uint8_t control, const uint8_t value);
+            // void _handleMidiAftertouch(const uint8_t channel, const uint8_t note, const uint8_t vel);
+            // void _handleMidiPatchChange(const uint8_t channel, const uint8_t patch);
+            // void _handleMidiPitchBend(const uint8_t channel, const uint16_t bend);
 
 			void setTrackMachine(const uint8_t trackIndex, const std::string machineId);
 
@@ -122,73 +122,83 @@ namespace CTAG {
 
             // map<const uint8_t, string> pMapCC;
             // map<const uint8_t, string> pMapMacroCC;
-			map<const uint16_t, function<void(const int)>> pMapParCC;
+			map<const uint16_t, vector<function<void(const int)>>> pMapParCC;
 			// map<const uint8_t, function<void(const int)>> pMapMacroParCC;
 
 			// rack components
 			RackChannelMixer ch1;
 			RackDBD ch1_db;
 			RackABD ch1_ab;
+			RackRompler ch1_smp;
 			uint32_t ch1_render_time;
 
 			RackChannelMixer ch2;
 			RackFMB ch2_fmb1;
-			RackFMB ch2_fmb2;
+			RackRompler ch2_smp;
 			uint32_t ch2_render_time;
 
 			RackChannelMixer ch3;
 			RackDSD ch3_ds;
 			RackASD ch3_as;
+			RackRompler ch3_smp;
 			uint32_t ch3_render_time;
 
 			RackChannelMixer ch4;
 			RackHH1 ch4_hh1;
 			RackHH2 ch4_hh2;
+			RackRompler ch4_smp;
 			uint32_t ch4_render_time;
 
 			RackChannelMixer ch5;
 			RackRimshot ch5_rs;
+			RackRompler ch5_smp;
 			uint32_t ch5_render_time;
 
 			RackChannelMixer ch6;
 			RackClap ch6_cl;
+			RackRompler ch6_smp;
 			uint32_t ch6_render_time;
 
-			RackRompler ch7_ro;
+			RackRompler ch7_smp;
 			RackChannelMixer ch7;
 			uint32_t ch7_render_time;
 
-			RackRompler ch8_ro;
+			RackRompler ch8_smp;
 			RackChannelMixer ch8;
 			uint32_t ch8_render_time;
 
 			RackTBD03 ch9_td3;
 			RackChannelMixer ch9;
+			RackRompler ch9_smp;
 			uint32_t ch9_render_time;
 
 			RackTBD03 ch10_td3;
+			RackRompler ch10_smp;
 			RackChannelMixer ch10;
 			uint32_t ch10_render_time;
 
 			RackMO ch11_mo;
+			RackRompler ch11_smp;
 			RackChannelMixer ch11;
 			uint32_t ch11_render_time;
 
 			RackWTOsc ch12_wtosc;
 			RackMO ch12_mo;
+			RackRompler ch12_smp;
 			RackChannelMixer ch12;
 			uint32_t ch12_render_time;
 
 			RackChannelMixer ch13;
-			RackRompler ch13_ro;
+			RackRompler ch13_smp;
 			uint32_t ch13_render_time;
 
 			RackChannelMixer ch14;
-			RackRompler ch14_ro;
+			RackRompler ch14_smp;
 			uint32_t ch14_render_time;
 
 			RackChannelMixer ch15;
 			RackPolyPad ch15_pp;
+			RackRompler ch15_smp;
 			uint32_t ch15_render_time;
 
 			RackInput ch16_in;

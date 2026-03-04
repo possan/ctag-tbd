@@ -21,21 +21,17 @@ void RackHH2::trigger() {
 }
 
 void RackHH2::Process(const PicoSeqRackProcessData &data) {
-    // MK_BOOL_PAR_NOCV(_trig, trigger)
-    bool _trig = midi_trig;
-    if (_trig != trig_prev) {
-        // if (_trig) {
-        //     printf("HH2\n");
-        // }
-        trig_prev = _trig;
-    }
-    midi_trig = false;
-
     if (!this->enabled) {
         return;
     }
 
     std::fill_n(out, BUF_SZ, 0.f);
+
+    bool _trig = midi_trig;
+    if (_trig != trig_prev) {
+        trig_prev = _trig;
+    }
+    midi_trig = false;
 
     MK_FLT_PAR_ABS_NOCV(_accent, accent, 4095.f, 1.f)
     MK_FLT_PAR_ABS_MIN_MAX_NOCV(_f0, f0, 4095.f, .00001f, .1f)

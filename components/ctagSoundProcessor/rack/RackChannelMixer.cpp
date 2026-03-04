@@ -30,7 +30,7 @@ void RackChannelMixer::PreProcess(const PicoSeqRackProcessData &data) {
     MK_FLT_PAR_ABS_NOCV(fTrackLength, mix_track_length, 4096.f, 128.f);
 
 	if (fLev != this->level) {
-		ESP_LOGI("RackChannelMixer", "Level changed from %f to %f", this->level, fLev);
+		// ESP_LOGI("RackChannelMixer", "Level changed from %f to %f", this->level, fLev);
 		this->level = fLev;
 	}
 
@@ -38,14 +38,14 @@ void RackChannelMixer::PreProcess(const PicoSeqRackProcessData &data) {
 
 	fPan = fPan * 2.0f - 1.0f;
 	if (fPan != this->pan) {
-		ESP_LOGI("RackChannelMixer", "Pan changed from %f to %f", this->pan, fPan);
+		// ESP_LOGI("RackChannelMixer", "Pan changed from %f to %f", this->pan, fPan);
 		this->pan = fPan;
 	}
 
 	fTrackLength = (int)floor(fTrackLength);
 	if (fTrackLength != this->track_length) {
-		ESP_LOGI("RackChannelMixer", "Track length changed from %d to %d",
-			this->track_length, (int)fTrackLength);
+		// ESP_LOGI("RackChannelMixer", "Track length changed from %d to %d",
+			// this->track_length, (int)fTrackLength);
 		this->track_length = (int)fTrackLength;
 	}
 
