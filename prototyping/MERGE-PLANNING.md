@@ -288,3 +288,90 @@ Comment we don't need these for now as we don't deploy docs from this branch.
 ---
 
 *Generated: 2026-03-04 | Branch comparison: `feature/webui-persona-prototype` → `feature/webui-general-ui-rework`*
+
+---
+
+## Execution Log
+
+### Merge Execution — 2026-03-04
+
+**Branch:** `feature/webui-merge-planning` (created from `feature/webui-persona-prototype`)  
+**Commit:** `af1fa8d2` — *"Integrate webui-general-ui-rework content per MERGE-PLANNING.md"*  
+**238 files changed in the merge commit.**
+
+All decisions in sections 1–11 above were executed. Key actions taken:
+
+#### Restored from Branch B (`feature/webui-general-ui-rework`):
+- `docs/` — all 159 documentation files (RST/Sphinx site) restored
+- `tests/apitest/` and `tests/webui/` — shell-based API test suite + WebUI test runner
+- `sdcard_image/www/` — completely replaced with B's modern Shoelace SPA (discarded A's old jQuery/OnsenUI multi-page app). Content: `index.html`, `js/shoelace-bundle.js`, `js/app-bundle.js`, `js/app.js`, `js/plugin-manager.js`, `js/sample-manager.js`, `js/shared.js`, `js/display-hints.js`, `img/`, `shoelace/themes/`
+- `prototyping/archived/` + `prototyping/DEPLOYMENT-RULES.md` + `prototyping/WEBUI-STATUS-AND-ROADMAP.md`
+- `simulator/` — B's richer `WebServer.cpp` and fuller `www/ui.html` (568 lines vs our stripped 287-line version)
+- `README.md` — B's version (note: macOS case-insensitive FS bug caused `rm readme.md` to delete `README.md`; fixed by re-checking out from B)
+- `.gitignore`, `partitions_example.csv` (B's 5 MB `ota_0` partition, up from 4 MB), `create_sd_archive.sh`, `LICENSE`
+
+#### Manually merged:
+- `main/RestServer.cpp` — B's version as base (preserves `set_api_headers()` with keep-alive comment preventing ESP32 socket exhaustion) + grafted in from A: `#include "MacroAPI.hpp"`, `set_cors_headers()` static method, `cors_options_handler`, `/api/v1/macroapi` GET/POST routes, CORS OPTIONS preflight route for `/*`
+- `main/RestServer.hpp` — B's base + added `static void set_cors_headers(httpd_req_t *req);` declaration
+- `.gitignore` — B's base + added `www/preseteditor/dist` entry
+
+#### Preserved from Branch A (our work, not touched):
+- `sdcard_image/www-prototype/` — full Persona/Performer/Designer WebUI prototype
+- `sdcard_image/data/macrodefinitions/` — 33 macro definition files
+- `sdcard_image/data/macrosoundpresets/` — 58 sound presets
+- `sdcard_image/data/synthdefinitions.json` — 23 machine definitions with Mix params
+- All `main/Macro*.cpp/.hpp`, `main/Synth*.cpp/.hpp`, `main/Track*.cpp/.hpp`, `main/SpiProtocol*`
+- `components/ctagSoundProcessor/rack/` — all 20 Rack DSP units
+- `components/ctagSoundProcessor/ctagSoundProcessorPicoSeqRack.cpp/.hpp`
+- `www/preseteditor/` — TypeScript Vite preset editor tool
+- `tests/test_dsp_json_alignment.py`
+- All modified firmware files where A is leading: `SPManager.cpp`, `SampleAPI.cpp`, `SpiAPI.cpp/.hpp`, `Control.cpp/.hpp`, `components/ctagSoundProcessor/ctagSPDataModel.cpp`, `ctagSoundProcessor.hpp`, `ctagSampleRomModel.cpp/.hpp`
+- `CMakeLists.txt` (root) — our version which adds PicoSeqRack sources
+
+#### Key technical findings during diff analysis:
+- `Control.cpp/.hpp`: A changed `Update()` signature from `void Update(void **data, uint32_t ledStatus)` to `int Update(void *sendbuffer, void **receivebuffer)` — bidirectional SPI protocol; A is correct
+- `ctagSoundProcessor.hpp`: A adds virtual MIDI methods (`handleMidiNoteOn`, `handleMidiNoteOff`, `handleMidiControlChange`, etc.) and `ProcessData` struct fields (`midi_bytes[400]`, `sequencer_tempo`, `sequencer_quantum`) required by PicoSeqRack — A is leading
+- `SampleAPI.cpp`: A is strictly additive (adds `scan_json_files`, `getconfig`, `configfiles` listing) on top of B's baseline — A is correct
+- `ota_1` partition overflow warning: expected and documented in `docs/plugins/building.rst` (ota_1 at 1 MB is too small for OTA updates, ota_0 at 5 MB is fine for initial flash)
+
+#### Post-merge verification:
+- `tests/test_dsp_json_alignment.py` — **119/128 passing** (same pass rate as before merge; 9 pre-existing failures in db/ab/td3/wtosc label mismatches unrelated to merge)
+- GitHub Workflows (`.github/workflows/`) — **not restored** per user decision ("we don't need these for now")
+
+---
+
+### Post-Merge Tasks — 2026-03-04
+
+**Commit:** `56b62bf1` — *"Move root planning/doc markdown files into prototyping/"*
+
+#### 1. Root markdown files moved to `prototyping/`
+All planning/documentation markdown files that had accumulated in the repo root were moved here using `git mv` (preserving history):
+- `MACRO-AND-PRESET-CONCEPT.md`
+- `MACRO-PRESET-ALIGNMENT.md`
+- `MEMORY-ANALYSIS.md`
+- `MERGE-PLANNING.md` ← this file
+- `SMART-HELPER-PROPOSAL.md`
+- `versions.md`
+
+`README.md` was left at the repo root as intended.
+
+#### 2. Firmware build verified ✅
+Built from the merged branch using ESP-IDF v5.5.1:
+```bash
+source ~/esp/esp-idf/export.sh
+idf.py build
+```
+- **Result:** `build/ctag-tbd.bin` generated successfully (1544/1544 build steps)
+- **Warnings:** Only pre-existing warnings (unused vars, MIN/MAX redefinition, `volatile++` deprecation in `SPManager.cpp`) — no new issues introduced by the merge
+- **Partition warning:** `ota_1` overflow (`0x248560` overflow) — expected, documented
+
+#### 3. SD card archive script verified ✅
+```bash
+bash create_sd_archive.sh /path/to/repo /path/to/repo/build /opt/homebrew/bin/xxh128sum
+```
+- **Result:** `build/tbd-sd-card.zip` (25 MB) generated successfully
+- **Hash:** `84f6eeb5803f5a536966749916cdf291` (written to `build/tbd-sd-card-hash.txt`)
+- **Contents:** gzipped www/ (Shoelace SPA), data/, dbup/ (backup of data/), tbdsamples/
+- Note: script requires absolute paths (it uses `cd` internally, breaking relative paths)
+
+**Final state of `feature/webui-merge-planning`:** clean working tree, all pushed to `origin/feature/webui-merge-planning`.
