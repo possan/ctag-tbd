@@ -248,12 +248,18 @@ body {
 }
 .macro-group-header {
   display: flex; align-items: center;
-  padding: 0.55rem 0.85rem;
-  background: var(--sl-color-neutral-200);
+  padding: 0.4rem 0.6rem;
+  background: var(--sl-color-neutral-100);
+  border-bottom: 1px solid var(--sl-color-neutral-200);
   gap: 0.5rem;
   cursor: pointer; user-select: none;
 }
-.macro-group-header:hover { background: var(--sl-color-neutral-300); }
+.macro-group-header:hover { background: var(--sl-color-neutral-150, #e5e7eb); }
+.macro-group-page-label {
+  font-size: 0.78rem; font-weight: 700;
+  color: var(--sl-color-neutral-600);
+  white-space: nowrap;
+}
 .macro-group-chevron {
   font-size: 0.6rem; color: var(--sl-color-neutral-500);
   transition: transform 0.2s;
@@ -261,8 +267,8 @@ body {
 .macro-group.collapsed .macro-group-chevron { transform: rotate(-90deg); }
 .macro-group.collapsed .macro-group-body { display: none; }
 .macro-group-name {
-  font-size: 0.82rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.04em; color: var(--sl-color-neutral-700);
+  font-size: 0.78rem; font-weight: 700;
+  color: var(--sl-color-neutral-800);
 }
 .macro-group-body {
   padding: 1rem;
@@ -276,14 +282,15 @@ body {
   }
 }
 
-/* Individual macro knob cell */
+/* Individual macro knob cell — Name above, Knob, Value below */
 .macro-knob-cell {
   display: flex; flex-direction: column;
-  align-items: center; gap: 0.25rem;
-  padding: 0.5rem 0.4rem;
+  align-items: center; gap: 0.15rem;
+  padding: 0.6rem 0.35rem 0.5rem;
   border-radius: var(--sl-border-radius-medium);
   transition: background 0.12s;
   min-width: 0;
+  text-align: center;
 }
 .macro-knob-cell:hover { background: var(--sl-color-neutral-100); }
 
@@ -296,25 +303,40 @@ body {
   background: rgba(180, 83, 9, 0.10);
 }
 
+/* Name ABOVE the knob */
 .macro-knob-label {
-  font-size: 0.72rem; font-weight: 600;
-  color: var(--sl-color-neutral-600);
+  font-size: 0.82rem; font-weight: 600;
+  color: var(--sl-color-neutral-700);
   text-align: center; max-width: 100%;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.2;
+  min-height: 1.4em;
+  order: 1;
 }
+/* Value BELOW the knob */
 .macro-knob-value {
-  font-size: 0.7rem; font-weight: 700;
-  color: var(--sl-color-primary-600);
+  font-size: 0.78rem; font-weight: 500;
+  color: var(--sl-color-neutral-500);
   font-variant-numeric: tabular-nums;
+  order: 3;
+}
+.macro-knob-value.is-macro {
+  color: #b45309;
+  font-weight: 700;
 }
 
 /* SVG-based knob */
 .macro-knob {
-  width: 52px; height: 52px;
+  width: 64px; height: 64px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   cursor: grab; position: relative;
   user-select: none; touch-action: none;
+  order: 2;
 }
 .macro-knob:hover svg circle:last-of-type {
   filter: brightness(1.1);
@@ -333,13 +355,14 @@ body {
   background: var(--sl-color-neutral-50);
   border-radius: 5px;
   border: 1px solid var(--sl-color-neutral-150, #e5e7eb);
+  order: 4;
 }
 .knob-target-panel.is-macro {
   background: rgba(180, 83, 9, 0.04);
   border-color: rgba(180, 83, 9, 0.15);
 }
 .knob-target-badge {
-  font-size: 0.5rem; font-weight: 800;
+  font-size: 0.6rem; font-weight: 800;
   text-transform: uppercase; letter-spacing: 0.08em;
   color: #b45309;
   text-align: center;
@@ -348,12 +371,12 @@ body {
 .knob-target-row {
   display: flex; align-items: center;
   gap: 0.3rem;
-  height: 1rem;
+  height: 1.15rem;
 }
 .knob-target-name {
-  font-size: 0.58rem; font-weight: 600;
+  font-size: 0.68rem; font-weight: 600;
   color: var(--sl-color-neutral-600);
-  min-width: 2.5rem;
+  min-width: 2.8rem;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
@@ -362,29 +385,47 @@ body {
 }
 .knob-target-bar {
   flex: 1;
-  height: 4px;
+  height: 5px;
   background: var(--sl-color-neutral-200);
-  border-radius: 2px;
-  overflow: hidden;
+  border-radius: 2.5px;
+  overflow: visible;
   min-width: 1.5rem;
+  position: relative;
 }
-.knob-target-fill {
-  display: block;
-  height: 100%;
-  border-radius: 2px;
-  background: var(--sl-color-neutral-400);
-  transition: width 0.06s ease-out;
+/* Range zone highlight — shows usable CC range */
+.knob-target-range {
+  position: absolute; top: 0; height: 100%;
+  background: var(--sl-color-neutral-300);
+  border-radius: 2.5px;
+  pointer-events: none;
 }
-.knob-target-panel.is-macro .knob-target-fill {
+.knob-target-panel.is-macro .knob-target-range {
+  background: rgba(217, 119, 6, 0.2);
+}
+/* Value dot — marks current CC position on the track */
+.knob-target-dot {
+  position: absolute; top: 50%;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--sl-color-neutral-500);
+  border: 1.5px solid var(--sl-color-neutral-0);
+  box-shadow: 0 0 0 1px var(--sl-color-neutral-300);
+  transform: translate(-50%, -50%);
+  transition: left 0.06s ease-out;
+  z-index: 2;
+  pointer-events: none;
+}
+.knob-target-panel.is-macro .knob-target-dot {
   background: #d97706;
+  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.3);
 }
 .knob-target-panel.is-macro .knob-target-name {
   color: #92400e;
 }
 .knob-target-val {
-  font-size: 0.58rem; font-weight: 700;
+  font-size: 0.68rem; font-weight: 700;
   color: var(--sl-color-neutral-600);
-  min-width: 1.3rem;
+  min-width: 2.5rem;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -402,6 +443,20 @@ body {
   border-radius: 3px;
   border: 1px solid var(--sl-color-neutral-200);
   margin-top: 0.1rem;
+}
+.knob-target-14bit {
+  font-size: 0.48rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--sl-color-primary-700);
+  background: var(--sl-color-primary-50);
+  padding: 0.06rem 0.25rem;
+  border-radius: 3px;
+  border: 1px solid var(--sl-color-primary-200);
+  margin-left: 0.15rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+  align-self: center;
 }
 
 /* ── Performer Actions Panel (right) ────────────────── */
@@ -589,6 +644,13 @@ body {
   color: var(--sl-color-neutral-500);
   border-bottom: 1px solid var(--sl-color-neutral-200);
   white-space: nowrap;
+}
+.th-info {
+  cursor: help;
+  font-size: 0.75rem;
+  color: var(--sl-color-primary-500);
+  vertical-align: middle;
+  margin-left: 0.15rem;
 }
 .mapping-table td {
   padding: 0.3rem 0.6rem;
@@ -825,8 +887,9 @@ body {
 }
 .mapping-remove-btn, .remove-param-btn, .remove-mapping-btn, .delete-preset-btn {
   background: none; border: none; cursor: pointer;
-  color: var(--sl-color-neutral-400); font-size: 0.85rem;
-  padding: 0.1rem; transition: color 0.15s;
+  color: var(--sl-color-neutral-400); font-size: 1.1rem;
+  padding: 0.1rem 0.25rem; transition: color 0.15s;
+  line-height: 1;
 }
 .mapping-remove-btn:hover, .remove-param-btn:hover, .remove-mapping-btn:hover, .delete-preset-btn:hover {
   color: var(--sl-color-danger-600);
@@ -875,6 +938,541 @@ body {
   font-family: monospace; font-size: 0.72rem;
   color: var(--sl-color-neutral-400); text-align: center;
   width: 28px;
+}
+
+/* ── Designer: Macro Builder Page Sections ──────────── */
+
+/* Page section (one per knob group/page) */
+.mb-page-section {
+  margin-bottom: 1rem;
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mb-page-content {
+  display: flex; flex-direction: column; gap: 0.4rem;
+  padding: 0.4rem;
+}
+.mb-page-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--sl-color-neutral-100);
+  border-bottom: 1px solid var(--sl-color-neutral-200);
+  font-size: 0.78rem; font-weight: 700;
+  color: var(--sl-color-neutral-700);
+}
+.mb-page-section + .mb-page-section {
+  margin-top: 0.5rem;
+}
+.mb-page-icon {
+  color: var(--sl-color-neutral-400);
+}
+.mb-page-label {
+  font-weight: 700; font-size: 0.78rem;
+  color: var(--sl-color-neutral-600);
+  white-space: nowrap;
+}
+.mb-group-name {
+  font-weight: 700; font-size: 0.78rem;
+  width: 120px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--sl-color-neutral-800);
+}
+.mb-group-name:focus {
+  border-color: var(--sl-color-primary-400);
+  background: var(--sl-color-neutral-0);
+}
+.mb-page-info {
+  font-size: 0.62rem; font-weight: 600;
+  color: var(--sl-color-neutral-400);
+  white-space: nowrap;
+}
+.mb-empty-group {
+  text-align: center; padding: 0.75rem;
+  font-size: 0.72rem; color: var(--sl-color-neutral-400);
+  font-style: italic;
+}
+.mb-no-mappings {
+  text-align: center; padding: 0.4rem;
+  font-size: 0.68rem; color: var(--sl-color-neutral-400);
+  font-style: italic;
+}
+
+/* Properties row (compact inline parameter editing) */
+.mb-props-row {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  background: var(--sl-color-neutral-50);
+  border-bottom: 1px solid var(--sl-color-neutral-150, #e5e7eb);
+  flex-wrap: wrap;
+}
+.mb-prop {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  font-size: 0.68rem; font-weight: 600;
+  color: var(--sl-color-neutral-500);
+  white-space: nowrap;
+}
+.mb-prop input[type="number"] {
+  width: 46px; font-size: 0.68rem;
+  text-align: center;
+  padding: 0.15rem 0.2rem;
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.mb-prop select {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.3rem;
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: 4px;
+  background: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-600);
+  cursor: pointer;
+}
+
+/* Knob name input (in card header) */
+.mb-param-name {
+  font-weight: 700 !important; font-size: 0.7rem !important;
+  width: auto;
+  min-width: 60px;
+  max-width: 120px;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: var(--sl-color-neutral-700) !important;
+  padding: 0.1rem 0.2rem !important;
+  text-align: center;
+  line-height: 1.2;
+}
+.mb-param-name:focus {
+  border-color: var(--sl-color-primary-400) !important;
+  background: var(--sl-color-neutral-0) !important;
+}
+
+/* ── Designer: Output Mapping Cards (range sliders) ──── */
+
+/* Knob-grouped card (one card per source knob) */
+.om-knob-card {
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: 6px;
+  background: var(--sl-color-neutral-0);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+.om-knob-card.is-macro {
+  border-color: rgba(180, 83, 9, 0.25);
+  background: rgba(180, 83, 9, 0.02);
+}
+/* Sortable states */
+.om-knob-card.sortable-ghost {
+  opacity: 0.3;
+}
+.om-knob-card.sortable-chosen {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+/* Drag handle */
+.om-drag-handle {
+  cursor: grab;
+  color: var(--sl-color-neutral-400);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.15rem 0.1rem;
+  user-select: none;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+.om-drag-handle:hover {
+  color: var(--sl-color-neutral-700);
+}
+.om-drag-handle:active {
+  cursor: grabbing;
+}
+/* Knob position badge */
+.om-knob-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--sl-color-neutral-500);
+  background: var(--sl-color-neutral-100);
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: 3px;
+  padding: 0.1rem 0.35rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.om-knob-card.is-macro .om-knob-badge {
+  color: #92400e;
+  background: rgba(180, 83, 9, 0.08);
+  border-color: rgba(180, 83, 9, 0.2);
+}
+.om-knob-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--sl-color-neutral-50);
+  border-bottom: 1px solid var(--sl-color-neutral-150, #e5e7eb);
+}
+.om-knob-card.is-macro .om-knob-header {
+  background: rgba(180, 83, 9, 0.04);
+  border-bottom-color: rgba(180, 83, 9, 0.15);
+}
+.om-card-spacer {
+  flex: 1;
+}
+.om-macro-badge {
+  flex-shrink: 0;
+}
+.mapping-add-cc-for-knob {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.3rem;
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: 4px;
+  background: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-500);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mapping-add-cc-for-knob:hover {
+  border-color: var(--sl-color-primary-400);
+  color: var(--sl-color-primary-600);
+}
+
+/* Interactive knob wrapper */
+.om-knob {
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.om-knob:active, .om-knob.dragging {
+  cursor: grabbing;
+}
+.om-knob-svg-sm {
+  flex-shrink: 0;
+  width: 24px; height: 24px;
+}
+
+.om-knob-info {
+  display: flex; flex-direction: column; gap: 0.1rem;
+  min-width: 0;
+}
+/* Vertical cell in card header: name / knob / value */
+.om-knob-cell {
+  display: flex; flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.25rem 0;
+}
+.om-knob-cell .mb-param-name {
+  text-align: center;
+  width: auto;
+  min-width: 60px;
+  max-width: 120px;
+}
+
+.om-knob-name {
+  font-size: 0.82rem; font-weight: 700;
+  color: var(--sl-color-neutral-800);
+}
+.om-knob-value {
+  font-size: 0.68rem; font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--sl-color-neutral-500);
+}
+.om-knob-value.is-macro {
+  color: #b45309;
+  font-weight: 700;
+}
+.om-knob-body {
+  padding: 0.4rem 0.6rem 0.5rem;
+  display: flex; flex-direction: column; gap: 0;
+}
+/* Dividers between CC mapping groups inside a knob card.
+   Each CC row may be followed by a semantic-row hint, so we
+   target the second (and later) om-cc-row to add a top border. */
+.om-knob-body > .om-cc-row ~ .om-cc-row {
+  border-top: 1px solid var(--sl-color-neutral-150, #e5e7eb);
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+}
+.om-knob-card.is-macro .om-knob-body > .om-cc-row ~ .om-cc-row {
+  border-top-color: rgba(180, 83, 9, 0.12);
+}
+/* Semantic row (range info) gets a small bottom margin */
+.om-knob-body > .om-semantic-row {
+  margin-bottom: 0.15rem;
+}
+/* When a semantic-row sits between two CC rows, the subsequent
+   CC row that follows also needs the divider */
+.om-knob-body > .om-semantic-row + .om-cc-row {
+  border-top: 1px solid var(--sl-color-neutral-150, #e5e7eb);
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+}
+.om-knob-card.is-macro .om-knob-body > .om-semantic-row + .om-cc-row {
+  border-top-color: rgba(180, 83, 9, 0.12);
+}
+
+/* Inline param label (non-macro rows) */
+.om-param-label {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--sl-color-neutral-800);
+  white-space: nowrap;
+  min-width: 3rem;
+}
+
+/* Row actions (+ map to CC for non-macro) */
+.om-row-actions {
+  display: flex; align-items: center;
+  padding: 0.1rem 0 0.1rem 2.2rem;
+}
+.om-row-actions .mapping-select {
+  font-size: 0.62rem;
+  padding: 0.1rem 0.2rem;
+}
+
+/* Generic card (multi-source + constants) */
+.om-card {
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  background: var(--sl-color-neutral-0);
+  overflow: hidden;
+}
+.om-multi-card {
+  border-color: var(--sl-color-primary-200);
+}
+.om-constants-card {
+  border-style: dashed;
+}
+.om-card-header {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--sl-color-neutral-50);
+  border-bottom: 1px solid var(--sl-color-neutral-150, #e5e7eb);
+  font-size: 0.72rem;
+}
+.om-card-spacer { flex: 1; }
+.om-range-badge {
+  font-size: 0.6rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--sl-color-primary-700);
+  background: var(--sl-color-primary-50);
+  padding: 0.1rem 0.4rem; border-radius: 8px;
+  white-space: nowrap;
+}
+.om-card-body {
+  padding: 0.4rem 0.6rem;
+  display: flex; flex-direction: column; gap: 0.25rem;
+}
+
+/* CC target row */
+.om-cc-row {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0;
+}
+.om-cc-label {
+  font-size: 0.65rem; font-weight: 700;
+  font-family: monospace;
+  color: var(--sl-color-neutral-500);
+  white-space: nowrap;
+  min-width: 2.5rem;
+}
+.om-cc-name {
+  font-weight: 600; color: var(--sl-color-neutral-700);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 3rem; max-width: 5rem;
+}
+
+/* Semantic range annotation */
+.om-semantic-row {
+  display: flex; align-items: center; gap: 0.35rem;
+  padding-left: 5.5rem;
+  margin-top: -0.1rem;
+  margin-bottom: 0.15rem;
+}
+.om-semantic-range {
+  font-size: 0.6rem; font-weight: 500;
+  color: var(--sl-color-neutral-500);
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+.om-scale-hint {
+  font-size: 0.58rem; font-weight: 600;
+  color: var(--sl-color-primary-600);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+.om-scale-hint:hover {
+  color: var(--sl-color-primary-700);
+  text-decoration: underline;
+}
+.om-semantic-val {
+  font-size: 0.6rem; font-weight: 500;
+  color: var(--sl-color-neutral-500);
+  font-style: italic;
+}
+
+/* Source rows (multi-source cards) */
+.om-source-row, .om-constant-row, .om-base-row {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.72rem;
+}
+.om-src-name {
+  font-size: 0.65rem; font-weight: 600;
+  color: var(--sl-color-primary-700);
+  background: var(--sl-color-primary-50);
+  padding: 0.1rem 0.35rem; border-radius: 3px;
+  min-width: 2.8rem; text-align: center;
+  white-space: nowrap;
+}
+.om-src-label, .om-contrib-label {
+  font-size: 0.62rem; font-weight: 600;
+  color: var(--sl-color-neutral-500);
+  min-width: 2rem; text-align: center;
+}
+
+/* Range track and fill */
+.om-range-track {
+  position: relative; flex: 1;
+  height: 8px; min-width: 80px;
+  background: var(--sl-color-neutral-200);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.om-range-fill {
+  position: absolute; top: 0; height: 100%;
+  background: var(--sl-color-primary-300);
+  border-radius: 4px;
+  pointer-events: none;
+  transition: left 0.05s ease-out, width 0.05s ease-out;
+}
+.om-knob-card.is-macro .om-range-fill {
+  background: rgba(217, 119, 6, 0.35);
+}
+
+/* Range thumbs */
+.om-range-thumb {
+  position: absolute; top: 50%;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--sl-color-primary-600);
+  border: 2px solid var(--sl-color-neutral-0);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transform: translate(-50%, -50%);
+  cursor: grab; z-index: 2;
+  transition: left 0.05s ease-out;
+  touch-action: none;
+}
+.om-knob-card.is-macro .om-range-thumb {
+  background: #b45309;
+}
+.om-range-thumb:hover {
+  background: var(--sl-color-primary-700);
+  box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+}
+.om-range-thumb:active, .om-range-thumb.dragging {
+  cursor: grabbing;
+  background: var(--sl-color-primary-800);
+}
+
+/* Value dot — shows computed CC value position on the range track */
+.om-value-dot {
+  position: absolute; top: 50%;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--sl-color-warning-600, #d97706);
+  border: 2px solid var(--sl-color-neutral-0);
+  box-shadow: 0 0 4px rgba(217, 119, 6, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+  transition: left 0.08s ease-out;
+}
+.om-knob-card:not(.is-macro) .om-value-dot {
+  background: var(--sl-color-neutral-600);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.25);
+}
+
+/* Constant mapping mark (single dot on track) */
+.om-range-mark {
+  position: absolute; top: 50%;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--sl-color-neutral-500);
+  border: 2px solid var(--sl-color-neutral-0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  transform: translate(-50%, -50%);
+}
+
+/* Curve select (compact inline dropdown) */
+.om-curve-select {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.25rem;
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: 3px;
+  background: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-600);
+  cursor: pointer;
+}
+.om-curve-select:hover {
+  border-color: var(--sl-color-primary-400);
+}
+
+/* Fixed value input (constants) */
+.om-fixed-input {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Range low/high inputs — wider + readable */
+.om-range-low, .om-range-high {
+  width: 44px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: 0.2rem 0.2rem;
+}
+.om-range-low.is-14bit, .om-range-high.is-14bit,
+.om-fixed-input.is-14bit, .mapping-start.is-14bit {
+  width: 56px;
+}
+
+/* 14-bit toggle */
+.om-bit-toggle {
+  display: inline-flex; align-items: center; gap: 0.15rem;
+  cursor: pointer;
+  font-size: 0.58rem; font-weight: 600;
+  color: var(--sl-color-neutral-400);
+  white-space: nowrap;
+  user-select: none;
+}
+.om-bit-toggle input[type="checkbox"] {
+  width: 12px; height: 12px;
+  margin: 0; cursor: pointer;
+  accent-color: var(--sl-color-primary-600);
+}
+.om-bit-toggle:has(input:checked) {
+  color: var(--sl-color-primary-700);
+  font-weight: 700;
+}
+
+/* Remove source button */
+.mapping-remove-src-btn {
+  background: none; border: none;
+  cursor: pointer; font-size: 0.75rem;
+  color: var(--sl-color-neutral-400);
+  padding: 0.1rem 0.2rem;
+  transition: color 0.15s;
+  line-height: 1;
+}
+.mapping-remove-src-btn:hover {
+  color: var(--sl-color-danger-600);
 }
 
 /* ── Designer: Sound Preset Chips ────────────────────── */
@@ -1064,4 +1662,114 @@ body {
   font-size: 0.75rem;
   color: var(--sl-color-neutral-400);
   flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   QUICK START GUIDE DIALOG
+   ═══════════════════════════════════════════════════════════ */
+#quickstart-dialog::part(body) {
+  padding: 0.75rem 1.25rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+#quickstart-dialog::part(title) {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.qs-guide { font-size: 0.82rem; line-height: 1.6; color: var(--sl-color-neutral-800); }
+.qs-intro {
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--sl-border-radius-medium);
+  background: color-mix(in srgb, var(--sl-color-primary-600) 8%, var(--sl-color-neutral-50));
+  border: 1px solid color-mix(in srgb, var(--sl-color-primary-600) 20%, var(--sl-color-neutral-200));
+}
+.qs-intro p { margin: 0; }
+.qs-section {
+  margin-bottom: 0.6rem;
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: var(--sl-border-radius-medium);
+  overflow: hidden;
+}
+.qs-section summary {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--sl-color-neutral-100);
+  border-bottom: 1px solid var(--sl-color-neutral-200);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  user-select: none;
+  list-style: none;
+  transition: background 0.15s;
+}
+.qs-section summary::-webkit-details-marker { display: none; }
+.qs-section summary::before {
+  content: '▶';
+  font-size: 0.55rem;
+  transition: transform 0.2s;
+  color: var(--sl-color-neutral-500);
+}
+.qs-section[open] summary::before { transform: rotate(90deg); }
+.qs-section summary:hover { background: var(--sl-color-neutral-200); }
+.qs-section summary sl-icon {
+  font-size: 0.85rem;
+  color: var(--sl-color-primary-600);
+}
+.qs-body {
+  padding: 0.75rem 1rem;
+}
+.qs-body h4 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin: 1rem 0 0.4rem;
+  color: var(--sl-color-neutral-700);
+  border-bottom: 1px solid var(--sl-color-neutral-100);
+  padding-bottom: 0.25rem;
+}
+.qs-body h5 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  color: var(--sl-color-primary-700);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.qs-body h5 sl-icon {
+  font-size: 0.72rem;
+  color: var(--sl-color-primary-500);
+}
+.qs-body ol, .qs-body ul {
+  padding-left: 1.3rem;
+  margin: 0.3rem 0 0.5rem;
+}
+.qs-body li { margin-bottom: 0.3rem; }
+.qs-body p { margin: 0.3rem 0; }
+.qs-body code {
+  background: var(--sl-color-neutral-200);
+  border-radius: 3px;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.78rem;
+  font-family: monospace;
+}
+.qs-tab-section {
+  margin: 0.75rem 0;
+  padding: 0.6rem 0.75rem;
+  background: color-mix(in srgb, var(--sl-color-neutral-100) 60%, transparent);
+  border-radius: var(--sl-border-radius-medium);
+  border-left: 3px solid var(--sl-color-primary-400);
+}
+.qs-formula {
+  text-align: center;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+.qs-formula code {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  background: var(--sl-color-neutral-200);
+  border-radius: var(--sl-border-radius-small);
 }

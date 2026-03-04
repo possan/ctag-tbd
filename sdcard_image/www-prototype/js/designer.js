@@ -366,10 +366,10 @@
     // Definition header (simplified — Machine is already in toolbar)
     html += '<div class="mapping-def-header">';
     html += '<div class="mapping-def-fields">';
-    html += '<label>ID:</label>';
-    html += '<input class="mapping-input def-id-input" value="' + S.esc(def.id) + '" placeholder="e.g. db-mypatch" />';
-    html += '<label>Name:</label>';
+    html += '<label>NAME:</label>';
     html += '<input class="mapping-input def-name-input" value="' + S.esc(def.name) + '" placeholder="e.g. My Patch" />';
+    html += '<label>ID:</label>';
+    html += '<input class="mapping-input def-id-input" value="' + S.esc(def.id) + '" placeholder="auto-generated from name" ' + (state.selectedDefId ? '' : 'readonly') + ' />';
     // Machine is now maintained in toolbar, keep hidden input for data binding
     html += '<input type="hidden" class="def-machine-select" value="' + S.esc(def.machine) + '" />';
     html += '</div>';
@@ -383,8 +383,7 @@
     // ── Tabs ──
     html += '<div class="mapping-tabs">';
     html += '<button class="mapping-tab active" data-tab="preview"><sl-icon name="sliders" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Knob Preview</button>';
-    html += '<button class="mapping-tab" data-tab="params"><sl-icon name="table" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Parameter Groups</button>';
-    html += '<button class="mapping-tab" data-tab="mappings"><sl-icon name="arrow-left-right" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Output Mappings (' + (def.mapping || []).length + ')</button>';
+    html += '<button class="mapping-tab" data-tab="builder"><sl-icon name="wrench" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Macro Builder</button>';
     html += '<button class="mapping-tab" data-tab="presets"><sl-icon name="collection" style="font-size:0.7rem;margin-right:0.2rem;"></sl-icon> Sound Presets</button>';
     html += '</div>';
 
@@ -393,22 +392,13 @@
     html += renderKnobPreview(def);
     html += '</div>';
 
-    // ── TAB: Parameter Groups ──
-    html += '<div class="mapping-tab-content" data-tab="params">';
+    // ── TAB: Macro Builder (merged Parameter Groups + Output Mappings) ──
+    html += '<div class="mapping-tab-content" data-tab="builder">';
     html += '<div class="tab-description">';
     html += '<sl-icon name="info-circle"></sl-icon>';
-    html += 'Define up to 6 pages of 4 knobs each. These are the controls a Performer sees.';
+    html += 'Define knobs (up to 6 pages \u00d7 4 knobs) and map them to DSP parameters. Drag knobs to preview. The colored dot on each range track shows the current computed CC value.';
     html += '</div>';
-    html += renderParameterGroups(def, ccOptions);
-    html += '</div>';
-
-    // ── TAB: Output Mappings ──
-    html += '<div class="mapping-tab-content" data-tab="mappings">';
-    html += '<div class="tab-description">';
-    html += '<sl-icon name="info-circle"></sl-icon>';
-    html += 'Each output mapping connects knob values to a DSP CC channel. Formula: <code>finalValue = start + &Sigma;(paramValue &times; mul &divide; div)</code>.';
-    html += '</div>';
-    html += renderOutputMappings(def, machineParams);
+    html += renderMacroBuilder(def, machineParams);
     html += '</div>';
 
     // ── TAB: Sound Presets ──
@@ -445,7 +435,8 @@
       html += '<div class="macro-group" data-group="' + gi + '">';
       html += '<div class="macro-group-header">';
       html += '<sl-icon name="chevron-down" class="macro-group-chevron"></sl-icon>';
-      html += '<span class="macro-group-name">' + S.esc(group.name || ('Page ' + (gi + 1))) + '</span>';
+      html += '<span class="macro-group-page-label">Page ' + (gi + 1) + '</span>';
+      html += '<span class="macro-group-name">' + S.esc(group.name || '') + '</span>';
       html += '</div>';
       html += '<div class="macro-group-body">';
 
@@ -458,31 +449,78 @@
         var cellClass = 'macro-knob-cell' + (isMacro ? ' is-macro' : '');
 
         html += '<div class="' + cellClass + '" data-param-idx="' + param.idx + '">';
+        html += '<span class="macro-knob-label">' + S.esc(param.name || ('P' + param.idx)) + '</span>';
         html += '<div class="macro-knob" ';
         html += 'data-value="' + value + '" data-min="' + min + '" data-max="' + max + '" data-idx="' + param.idx + '" data-color="' + knobColor + '">';
-        html += S.renderKnobSVG({ value: value, min: min, max: max, color: knobColor, size: 52 });
+        html += S.renderKnobSVG({ value: value, min: min, max: max, color: knobColor, size: 64 });
         html += '</div>';
-        html += '<span class="macro-knob-label">' + S.esc(param.name || ('P' + param.idx)) + '</span>';
-        html += '<span class="macro-knob-value">' + value + '</span>';
-        // Show curve indicator if non-linear
-        if (param.curve && param.curve !== 'linear') {
-          html += '<span class="curve-badge">' + S.esc(param.curve) + '</span>';
-        }
+        html += '<span class="macro-knob-value' + (isMacro ? ' is-macro' : '') + '">' + value + '</span>';
 
-        // Show mapping targets with real-time computed values
+        // Show mapping targets with real-time computed values and range bars
         var targets = mappingInfo[param.idx] || [];
         if (targets.length > 0) {
           var outputs = S.computeMappingOutputs(def, param.idx, value);
-          html += '<div class="knob-target-panel' + (isMacro ? ' is-macro' : '') + '" data-knob-idx="' + param.idx + '">';
-          if (isMacro) {
-            html += '<div class="knob-target-badge">MACRO</div>';
-          }
+          var panelClass = isMacro ? 'knob-target-panel is-macro' : 'knob-target-panel';
+          html += '<div class="' + panelClass + '" data-knob-idx="' + param.idx + '">';
+          if (isMacro) html += '<div class="knob-target-badge">MACRO</div>';
+
           outputs.forEach(function(o) {
+            // Compute the range for this target
+            var mapping = def.mapping.find(function(mm) { return mm.ctrl === o.ctrl; });
+            var rangeLow = 0, rangeHigh = 127;
+            var sourceCurve = '';
+            if (mapping && mapping.add) {
+              var singleSrc = mapping.add.length === 1;
+              if (singleSrc) {
+                rangeLow = mapping.start || 0;
+                var a = mapping.add[0];
+                rangeHigh = rangeLow + Math.round(127 * (a.mul || 1) / (a.div || 1));
+                rangeHigh = Math.min(127, rangeHigh);
+                sourceCurve = a.curve || '';
+              } else {
+                // Multi-source: show total range
+                rangeLow = mapping.start || 0;
+                rangeHigh = rangeLow;
+                mapping.add.forEach(function(a) {
+                  rangeHigh += Math.round(127 * (a.mul || 1) / (a.div || 1));
+                  // Find curve for this specific source
+                  if (a.src === param.idx) sourceCurve = a.curve || '';
+                });
+                rangeHigh = Math.min(127, rangeHigh);
+              }
+            }
+            var rangeLowPct = rangeLow / 127 * 100;
+            var rangeWidthPct = (rangeHigh - rangeLow) / 127 * 100;
+            var valuePct = o.value / 127 * 100;
+
             html += '<div class="knob-target-row" data-ctrl="' + o.ctrl + '">';
             html += '<span class="knob-target-name">' + S.esc(o.name) + '</span>';
-            html += '<span class="knob-target-bar"><span class="knob-target-fill" style="width:' + o.pct + '%"></span></span>';
-            html += '<span class="knob-target-val">' + o.value + '</span>';
+            html += '<span class="knob-target-bar">';
+            html += '<span class="knob-target-range" style="left:' + rangeLowPct + '%;width:' + rangeWidthPct + '%"></span>';
+            html += '<span class="knob-target-dot" style="left:' + valuePct + '%"></span>';
+            html += '</span>';
+            // Format value with display hints if available
+            var targetDH = window.TBD && window.TBD.displayHints;
+            var targetFmt = String(o.value);
+            if (targetDH && def.machine) {
+              var targetParamId = def.machine + '_' + S.esc(o.name).replace(/[- ]/g, '_');
+              var targetHint = targetDH.resolveHint(targetParamId, o.name);
+              if (targetHint) {
+                var physVal = targetDH.rawToDisplay(o.value, 0, 127, targetHint);
+                targetFmt = targetDH.formatDisplayValue(physVal, targetHint);
+              }
+            }
+            html += '<span class="knob-target-val">' + targetFmt + '</span>';
+            // Show 14-bit badge if applicable
+            if (mapping && mapping.bits === 14) {
+              html += '<span class="knob-target-14bit">14-bit</span>';
+            }
             html += '</div>';
+
+            // Show curve badge if non-linear (from mapping source, not parameter)
+            if (sourceCurve && sourceCurve !== 'linear') {
+              html += '<span class="curve-badge">' + S.esc(sourceCurve) + '</span>';
+            }
           });
           html += '</div>';
         }
@@ -498,7 +536,7 @@
       html += '<div class="empty-state" style="padding:2rem;">';
       html += '<sl-icon name="sliders" style="font-size:2rem;"></sl-icon>';
       html += '<h3>No Parameters Defined</h3>';
-      html += '<p>Add parameters in the "Parameter Groups" tab to see a knob preview here.</p>';
+      html += '<p>Add parameters in the "Macro Builder" tab to see a knob preview here.</p>';
       html += '</div>';
     }
 
@@ -506,122 +544,416 @@
     return html;
   }
 
-  // ── Render: Parameter Groups ──
+  // ── Render: Macro Builder (merged Parameter Groups + Output Mappings) ──
 
-  function renderParameterGroups(def, ccOptions) {
+  function renderMacroBuilder(def, machineParams) {
+    var mappings = def.mapping || [];
+    var DH = window.TBD && window.TBD.displayHints;
     var html = '';
 
+    // Build lookup maps
+    var paramsByIdx = {};
+    def.groups.forEach(function(g) {
+      (g.parameters || []).forEach(function(p) {
+        paramsByIdx[p.idx] = p;
+      });
+    });
+
+    var ccLookup = {};
+    machineParams.forEach(function(p) {
+      ccLookup[p.ctrl] = p;
+    });
+
+    // ── Group mappings by source knob ──
+    var paramMappings = {};  // paramIdx → [{mi, ai, mapping}]
+    var constants = [];
+    var multiSourceMappings = [];
+
+    mappings.forEach(function(m, mi) {
+      var sources = m.add || [];
+      if (sources.length === 0) {
+        constants.push({ mi: mi, mapping: m });
+      } else if (sources.length === 1) {
+        var src = sources[0].src;
+        if (!paramMappings[src]) paramMappings[src] = [];
+        paramMappings[src].push({ mi: mi, ai: 0, mapping: m });
+      } else {
+        multiSourceMappings.push({ mi: mi, mapping: m });
+        // Also index multi-source entries per param for display in knob cards
+        sources.forEach(function(a, ai) {
+          if (!paramMappings[a.src]) paramMappings[a.src] = [];
+          paramMappings[a.src].push({ mi: mi, ai: ai, mapping: m });
+        });
+      }
+    });
+
+    // Helper: format CC number with zero-padding
+    function fmtCC(ctrl) {
+      return 'CC\u2009' + String(ctrl).padStart(2, '0');
+    }
+
+    // Helper: get display hint + formatted range string for a CC param
+    function getSemanticInfo(ctrl, rangeLow, rangeHigh) {
+      var mp = ccLookup[ctrl];
+      if (!mp || !DH) return { unit: '', rangeStr: '', hint: null };
+      var paramId = (def.machine || '') + '_' + (mp.id || '').replace(/-/g, '_');
+      var hint = DH.resolveHint(paramId, mp.name, mp);
+      if (!hint) return { unit: '', rangeStr: '', hint: null };
+
+      var physLow = DH.rawToDisplay(rangeLow, 0, 127, hint);
+      var physHigh = DH.rawToDisplay(rangeHigh, 0, 127, hint);
+      var fmtLow = DH.formatDisplayValue(physLow, hint);
+      var fmtHigh = DH.formatDisplayValue(physHigh, hint);
+      return {
+        unit: hint.unit || '',
+        rangeStr: fmtLow + ' \u2192 ' + fmtHigh,
+        hint: hint,
+        scale: hint.scale || 'lin'
+      };
+    }
+
+    // Helper: render an interactive knob wrapped in om-knob div
+    function renderKnob(paramIdx, param, size, color) {
+      var val = param ? (param.def || 0) : 0;
+      var mn = param ? (param.min || 0) : 0;
+      var mx = param ? (param.max || 127) : 127;
+      var name = param ? (param.name || ('P' + paramIdx)) : ('P' + paramIdx);
+      var h = '<div class="om-knob om-knob-interactive" data-value="' + val + '" data-min="' + mn + '" data-max="' + mx + '" data-idx="' + paramIdx + '" data-color="' + color + '" title="' + S.esc(name) + ' \u2014 drag up/down">';
+      h += S.renderKnobSVG({ value: val, min: mn, max: mx, color: color, size: size });
+      h += '</div>';
+      return h;
+    }
+
+    // Helper: compute value dot CC position for a parameter + mapping
+    function computeValueDot(param, mapping, ai) {
+      var addEntry = mapping.add[ai];
+      if (!addEntry) return null;
+      var is14 = mapping.bits === 14;
+      var maxCC = is14 ? 16383 : 127;
+      var start = mapping.start || 0;
+      var mul = addEntry.mul || 1;
+      var div = addEntry.div || 1;
+      var paramVal = param ? (param.def || 0) : 0;
+      var ccVal = start + Math.round(paramVal * mul / div);
+      ccVal = Math.max(0, Math.min(maxCC, ccVal));
+      return { cc: ccVal, maxCC: maxCC };
+    }
+
+    // Helper: render a single CC target row with range slider + value dot + 14-bit toggle
+    function renderCCRow(mi, ai, m, addEntry) {
+      var ctrl = m.ctrl;
+      var mp = ccLookup[ctrl];
+      var ccName = mp ? mp.name : '?';
+      var is14 = m.bits === 14;
+      var maxCC = is14 ? 16383 : 127;
+      var range = sourceToRange(m, ai);
+      var curve = addEntry.curve || 'linear';
+      var lowPct = range.low / maxCC * 100;
+      var highPct = range.high / maxCC * 100;
+      var sem = getSemanticInfo(ctrl, range.low, range.high);
+
+      // Compute value dot for the source param
+      var srcParam = paramsByIdx[addEntry.src];
+      var dot = computeValueDot(srcParam, m, ai);
+
+      var r = '';
+      r += '<div class="om-cc-row" data-mapping-idx="' + mi + '" data-add="' + ai + '">';
+
+      // CC label + name
+      r += '<span class="om-cc-label">' + fmtCC(ctrl) + '</span>';
+      r += '<span class="om-cc-name">' + S.esc(ccName) + '</span>';
+
+      // Range low input
+      r += '<input type="number" class="mapping-input om-range-low' + (is14 ? ' is-14bit' : '') + '" value="' + range.low + '" min="0" max="' + maxCC + '" data-mapping="' + mi + '" data-add="' + ai + '" title="Low' + (is14 ? ' (0\u201316383)' : ' (0\u2013127)') + '" />';
+
+      // Range track with thumbs + value dot
+      r += '<div class="om-range-track" data-mapping="' + mi + '" data-add="' + ai + '">';
+      r += '<div class="om-range-fill" style="left:' + lowPct + '%;width:' + (highPct - lowPct) + '%"></div>';
+      r += '<div class="om-range-thumb om-thumb-low" style="left:' + lowPct + '%" data-mapping="' + mi + '" data-add="' + ai + '"></div>';
+      r += '<div class="om-range-thumb om-thumb-high" style="left:' + highPct + '%" data-mapping="' + mi + '" data-add="' + ai + '"></div>';
+      if (dot) {
+        var dotPct = (dot.maxCC > 0) ? (dot.cc / dot.maxCC * 100) : 0;
+        r += '<div class="om-value-dot" style="left:' + dotPct + '%" data-mapping="' + mi + '" data-add="' + ai + '" title="Current CC value: ' + dot.cc + '"></div>';
+      }
+      r += '</div>';
+
+      // Range high input
+      r += '<input type="number" class="mapping-input om-range-high' + (is14 ? ' is-14bit' : '') + '" value="' + range.high + '" min="0" max="' + maxCC + '" data-mapping="' + mi + '" data-add="' + ai + '" title="High' + (is14 ? ' (0\u201316383)' : ' (0\u2013127)') + '" />';
+
+      // Curve select
+      r += '<select class="mapping-select om-curve-select" data-mapping="' + mi + '" data-add="' + ai + '" title="Response curve">';
+      ['linear','log','exp','scurve'].forEach(function(c) {
+        r += '<option value="' + c + '"' + (curve === c ? ' selected' : '') + '>' + c + '</option>';
+      });
+      r += '</select>';
+
+      // 14-bit toggle
+      r += '<label class="om-bit-toggle" title="Enable 14-bit CC (0\u201316383) for higher precision">';
+      r += '<input type="checkbox" class="om-14bit-check" data-mapping="' + mi + '"' + (is14 ? ' checked' : '') + ' />';
+      r += '<span>14-bit</span>';
+      r += '</label>';
+
+      // Remove mapping button
+      r += '<button class="mapping-remove-btn remove-mapping-btn" data-mapping="' + mi + '" title="Remove this CC mapping">\u00d7</button>';
+      r += '</div>';
+
+      // Semantic range info + scale hint (only show log badge if mapping curve is 'linear' — to hint that a log curve would be better)
+      if (sem.rangeStr) {
+        r += '<div class="om-semantic-row">';
+        r += '<span class="om-semantic-range">' + sem.rangeStr + '</span>';
+        if (sem.scale === 'log' && curve === 'linear') {
+          r += '<a class="om-scale-hint om-scale-fix" href="#" data-mapping="' + mi + '" data-add="' + ai + '" title="This DSP parameter has a logarithmic scale. Click to switch the curve to log.">\ud83d\udca1 use log curve</a>';
+        }
+        r += '</div>';
+      }
+
+      return r;
+    }
+
+    // ── Render page sections (groups) ──
     def.groups.forEach(function(group, gi) {
-      html += '<div class="mapping-group" data-group-idx="' + gi + '">';
-      html += '<div class="mapping-group-title">';
-      html += '<input class="mapping-input group-name-input" value="' + S.esc(group.name) + '" data-group="' + gi + '" placeholder="Group name" />';
-      html += '<button class="mapping-add-btn add-param-btn" data-group="' + gi + '" title="Add parameter">+ Param</button>';
+      html += '<div class="mb-page-section" data-group-idx="' + gi + '">';
+      html += '<div class="mb-page-header">';
+      html += '<span class="mb-page-icon"><sl-icon name="grid-3x3-gap" style="font-size:0.7rem;"></sl-icon></span>';
+      html += '<span class="mb-page-label">Page ' + (gi + 1) + '</span>';
+      html += '<input class="mapping-input mb-group-name" value="' + S.esc(group.name) + '" data-group="' + gi + '" placeholder="Name (optional)" />';
+      html += '<span class="mb-page-info">' + (group.parameters || []).length + '/4 knobs</span>';
+      html += '<div class="om-card-spacer"></div>';
+      if ((group.parameters || []).length < 4) {
+        html += '<button class="mapping-add-btn mb-add-knob-btn" data-group="' + gi + '" title="Add a new knob parameter">+ Add Knob</button>';
+      }
       html += '</div>';
 
-      html += '<table class="mapping-table">';
-      html += '<thead><tr>';
-      html += '<th>#</th><th>Name</th><th>Default</th><th>Min</th><th>Max</th><th>Res</th><th>Curve</th><th>UI</th><th></th>';
-      html += '</tr></thead>';
-      html += '<tbody>';
-
+      html += '<div class="mb-page-content">';
+      // Render each parameter as a knob card
       (group.parameters || []).forEach(function(param, pi) {
-        html += '<tr class="mapping-row" data-group="' + gi + '" data-param="' + pi + '">';
-        html += '<td class="mapping-slot">' + param.idx + '</td>';
-        html += '<td><input class="mapping-input param-name" value="' + S.esc(param.name) + '" style="width:120px;text-align:left;" /></td>';
-        html += '<td><input class="mapping-input param-def" type="number" value="' + (param.def || 0) + '" style="width:50px;" /></td>';
-        html += '<td><input class="mapping-input param-min" type="number" value="' + (param.min || 0) + '" style="width:50px;" /></td>';
-        html += '<td><input class="mapping-input param-max" type="number" value="' + (param.max || 127) + '" style="width:50px;" /></td>';
-        html += '<td><input class="mapping-input param-res" type="number" value="' + (param.res || 64) + '" style="width:50px;" /></td>';
-        html += '<td>';
-        html += '<select class="mapping-select param-curve">';
-        ['linear', 'log', 'exp', 'scurve'].forEach(function(curve) {
-          var sel = (param.curve === curve) ? ' selected' : '';
-          html += '<option value="' + curve + '"' + sel + '>' + curve + '</option>';
+        var paramIdx = param.idx;
+        var entries = paramMappings[paramIdx] || [];
+        var isMacro = entries.length >= 2;
+        var knobColor = isMacro ? 'macro' : 'normal';
+
+        html += '<div class="om-knob-card' + (isMacro ? ' is-macro' : '') + '" data-group="' + gi + '" data-param="' + pi + '" data-param-idx="' + paramIdx + '">';
+
+        // ── Card header: drag handle + knob badge + name/knob/value + actions ──
+        html += '<div class="om-knob-header">';
+        html += '<span class="om-drag-handle" title="Drag to reorder">⫶</span>';
+        html += '<span class="om-knob-badge">Knob ' + (pi + 1) + '</span>';
+        html += '<div class="om-knob-cell">';
+        html += '<input class="mapping-input mb-param-name" value="' + S.esc(param.name) + '" data-group="' + gi + '" data-param="' + pi + '" placeholder="Knob name" />';
+        html += renderKnob(paramIdx, param, 64, knobColor);
+        html += '<span class="om-knob-value' + (isMacro ? ' is-macro' : '') + '">' + (param.def || 0) + '</span>';
+        html += '</div>';
+        html += '<div class="om-card-spacer"></div>';
+        if (isMacro) {
+          html += '<sl-badge class="om-macro-badge" variant="warning" size="small">MACRO \u00b7 ' + entries.length + '</sl-badge>';
+        }
+        html += '<select class="mapping-select mapping-add-cc-for-knob" data-src-idx="' + paramIdx + '" title="Map this knob to another CC">';
+        html += '<option value="">+ map to CC\u2026</option>';
+        machineParams.forEach(function(mp) {
+          html += '<option value="' + mp.ctrl + '">' + fmtCC(mp.ctrl) + ' ' + S.esc(mp.name) + '</option>';
         });
         html += '</select>';
-        html += '</td>';
-        html += '<td>';
-        html += '<select class="mapping-select param-ui">';
+        html += '<button class="mapping-remove-btn mb-remove-knob-btn" data-group="' + gi + '" data-param="' + pi + '" data-param-idx="' + paramIdx + '" title="Remove this knob">\u00d7</button>';
+        html += '</div>';
+
+        // ── Properties row ──
+        html += '<div class="mb-props-row">';
+        html += '<label class="mb-prop"><span>def</span><input type="number" class="mapping-input mb-prop-def" value="' + (param.def || 0) + '" data-group="' + gi + '" data-param="' + pi + '" /></label>';
+        html += '<label class="mb-prop"><span>min</span><input type="number" class="mapping-input mb-prop-min" value="' + (param.min || 0) + '" data-group="' + gi + '" data-param="' + pi + '" /></label>';
+        html += '<label class="mb-prop"><span>max</span><input type="number" class="mapping-input mb-prop-max" value="' + (param.max || 127) + '" data-group="' + gi + '" data-param="' + pi + '" /></label>';
+        html += '<label class="mb-prop"><span>res</span><input type="number" class="mapping-input mb-prop-res" value="' + (param.res || 64) + '" data-group="' + gi + '" data-param="' + pi + '" /></label>';
+        html += '<label class="mb-prop"><span>ui</span><select class="mapping-select mb-prop-ui" data-group="' + gi + '" data-param="' + pi + '">';
         ['bignum', 'slider', 'toggle', 'selector'].forEach(function(ui) {
-          var sel = (param.ui === ui) ? ' selected' : '';
-          html += '<option value="' + ui + '"' + sel + '>' + ui + '</option>';
+          html += '<option value="' + ui + '"' + (param.ui === ui ? ' selected' : '') + '>' + ui + '</option>';
         });
-        html += '</select>';
-        html += '</td>';
-        html += '<td><button class="mapping-remove-btn remove-param-btn" data-group="' + gi + '" data-param="' + pi + '" title="Remove"><sl-icon name="x-circle"></sl-icon></button></td>';
-        html += '</tr>';
+        html += '</select></label>';
+        html += '</div>';
+
+        // ── CC mapping rows ──
+        html += '<div class="om-knob-body">';
+        if (entries.length === 0) {
+          html += '<div class="mb-no-mappings">No CC mappings \u2014 use "+ map to CC\u2026" above</div>';
+        }
+        entries.forEach(function(entry) {
+          html += renderCCRow(entry.mi, entry.ai, entry.mapping, entry.mapping.add[entry.ai]);
+        });
+
+        // (+ map to CC dropdown is now in the card header)
+        html += '</div>'; // om-knob-body
+        html += '</div>'; // om-knob-card
       });
 
       if (!group.parameters || group.parameters.length === 0) {
-        html += '<tr class="mapping-row-empty"><td colspan="9" style="text-align:center;opacity:0.4;padding:0.5rem;">No parameters — click "+ Param" to add</td></tr>';
+        html += '<div class="mb-empty-group">No knobs in this page \u2014 click "+ Add Knob" to create one</div>';
       }
+      html += '</div>'; // mb-page-content
 
-      html += '</tbody></table>';
-      html += '</div>';
+      html += '</div>'; // mb-page-section
     });
+
+    // Add Page button
+    if (def.groups.length < 6) {
+      html += '<div style="text-align:center;margin:0.6rem 0;">';
+      html += '<button class="mapping-add-btn mb-add-group-btn" title="Add a new knob page (up to 6)">+ Add Page</button>';
+      html += '</div>';
+    }
+
+    // ── Render constants (locked parameters) card ──
+    if (constants.length > 0) {
+      html += '<div class="om-card om-constants-card">';
+      html += '<div class="om-card-header">';
+      html += '<sl-icon name="lock" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>';
+      html += '<span class="om-cc-name" style="font-weight:700;">Locked Parameters</span>';
+      html += '<div class="om-card-spacer"></div>';
+      html += '<sl-badge variant="neutral" size="small">' + constants.length + ' locked</sl-badge>';
+      html += '</div>';
+      html += '<div class="om-card-body">';
+
+      constants.forEach(function(entry) {
+        var m = entry.mapping;
+        var mi = entry.mi;
+        var ctrl = m.ctrl;
+        var mp = ccLookup[ctrl];
+        var ccName = mp ? mp.name : '?';
+        var is14 = m.bits === 14;
+        var maxCC = is14 ? 16383 : 127;
+        var fixedVal = m.start || 0;
+        var fixedPct = fixedVal / maxCC * 100;
+        var sem = getSemanticInfo(ctrl, fixedVal, fixedVal);
+
+        html += '<div class="om-constant-row" data-mapping-idx="' + mi + '">';
+        html += '<span class="om-cc-label">' + fmtCC(ctrl) + '</span>';
+        html += '<span class="om-cc-name">' + S.esc(ccName) + '</span>';
+        html += '<input type="number" class="mapping-input om-fixed-input' + (is14 ? ' is-14bit' : '') + '" value="' + fixedVal + '" min="0" max="' + maxCC + '" data-mapping="' + mi + '" />';
+        html += '<div class="om-range-track" title="Fixed CC value">';
+        html += '<div class="om-range-mark" style="left:' + fixedPct + '%"></div>';
+        html += '</div>';
+        if (sem.rangeStr) {
+          html += '<span class="om-semantic-val">' + S.esc(sem.rangeStr.split(' \u2192 ')[0]) + '</span>';
+        }
+        html += '<label class="om-bit-toggle" title="Enable 14-bit CC">';
+        html += '<input type="checkbox" class="om-14bit-check" data-mapping="' + mi + '"' + (is14 ? ' checked' : '') + ' />';
+        html += '<span>14-bit</span>';
+        html += '</label>';
+        html += '<button class="mapping-remove-btn remove-mapping-btn" data-mapping="' + mi + '" title="Remove"><sl-icon name="x-circle"></sl-icon></button>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+      html += '</div>';
+    }
+
+    // ── Unmapped CC add dropdown ──
+    html += '<div style="margin-top:0.5rem;text-align:center;">';
+    html += '<select class="mapping-select add-unmapped-cc-select" title="Add a constant (locked) CC mapping">';
+    html += '<option value="">+ add locked CC\u2026</option>';
+    machineParams.forEach(function(mp) {
+      var alreadyMapped = mappings.some(function(m) { return m.ctrl === mp.ctrl; });
+      if (!alreadyMapped) {
+        html += '<option value="' + mp.ctrl + '">' + fmtCC(mp.ctrl) + ' ' + S.esc(mp.name) + '</option>';
+      }
+    });
+    html += '</select>';
+    html += '</div>';
 
     return html;
   }
 
-  // ── Render: Output Mappings ──
+  // ── Helpers: range ↔ start/mul/div conversion ──
 
-  function renderOutputMappings(def, machineParams) {
-    var mappings = def.mapping || [];
-    var html = '';
-
-    html += '<div class="mapping-output-header">';
-    html += '<span>' + mappings.length + ' Output Mapping' + (mappings.length !== 1 ? 's' : '') + '</span>';
-    html += '<button class="mapping-add-btn add-mapping-btn" title="Add output mapping">+ Mapping</button>';
-    html += '</div>';
-
-    var paramNames = {};
-    def.groups.forEach(function(g) {
-      (g.parameters || []).forEach(function(p) {
-        paramNames[p.idx] = p.name || ('Param ' + p.idx);
-      });
-    });
-
-    var ccNames = {};
-    machineParams.forEach(function(p) {
-      ccNames[p.ctrl] = p.name;
-    });
-
-    html += '<table class="mapping-table mapping-output-table">';
-    html += '<thead><tr>';
-    html += '<th>CC #</th><th>CC Name</th><th>Start</th><th>Sources (param × mul ÷ div)</th><th></th>';
-    html += '</tr></thead>';
-    html += '<tbody>';
-
-    mappings.forEach(function(m, mi) {
-      html += '<tr class="mapping-row" data-mapping-idx="' + mi + '">';
-      html += '<td><input class="mapping-input mapping-ctrl" type="number" value="' + (m.ctrl || 0) + '" style="width:50px;" /></td>';
-      html += '<td class="mapping-cc-name">' + S.esc(ccNames[m.ctrl] || '?') + '</td>';
-      html += '<td><input class="mapping-input mapping-start" type="number" value="' + (m.start || 0) + '" style="width:50px;" /></td>';
-      html += '<td class="mapping-sources">';
-
-      (m.add || []).forEach(function(add, ai) {
-        html += '<span class="mapping-source" data-mapping="' + mi + '" data-add="' + ai + '">';
-        html += S.esc(paramNames[add.src] || ('P' + add.src));
-        html += ' × ' + add.mul + ' ÷ ' + add.div;
-        html += ' <button class="mapping-remove-src-btn" data-mapping="' + mi + '" data-add="' + ai + '">×</button>';
-        html += '</span>';
-      });
-      html += '<button class="mapping-add-src-btn" data-mapping="' + mi + '" title="Add source">+src</button>';
-
-      html += '</td>';
-      html += '<td><button class="mapping-remove-btn remove-mapping-btn" data-mapping="' + mi + '" title="Remove mapping"><sl-icon name="x-circle"></sl-icon></button></td>';
-      html += '</tr>';
-    });
-
-    if (mappings.length === 0) {
-      html += '<tr class="mapping-row-empty"><td colspan="5" style="text-align:center;opacity:0.4;padding:0.75rem;">No output mappings yet. Click "+ Mapping" or use "1:1 Map" to auto-generate.</td></tr>';
+  /**
+   * Convert a mapping + source index to low/high CC range for the UI.
+   * Single source: low = start, high = start + 127*mul/div
+   * Multi source: shows per-source contribution (0 to max)
+   * Respects mapping.bits for 14-bit CC support.
+   */
+  function sourceToRange(mapping, addIdx) {
+    var add = (mapping.add || [])[addIdx];
+    var maxCC = (mapping.bits === 14) ? 16383 : 127;
+    if (!add) return { low: mapping.start || 0, high: mapping.start || 0 };
+    var mul = add.mul || 1;
+    var div = add.div || 1;
+    var singleSource = (mapping.add || []).length === 1;
+    if (singleSource) {
+      var low = mapping.start || 0;
+      var high = low + Math.round(127 * mul / div);
+      return { low: Math.max(0, Math.min(maxCC, low)), high: Math.max(0, Math.min(maxCC, high)) };
+    } else {
+      // Per-source contribution (0 to max_contribution)
+      var maxC = Math.round(127 * mul / div);
+      return { low: 0, high: Math.max(0, Math.min(maxCC, maxC)), base: mapping.start || 0 };
     }
+  }
 
-    html += '</tbody></table>';
-    return html;
+  /**
+   * Write low/high back to mapping start/mul/div.
+   */
+  function rangeToSource(mapping, addIdx, low, high) {
+    var singleSource = (mapping.add || []).length === 1;
+    if (singleSource) {
+      mapping.start = low;
+      mapping.add[addIdx].mul = high - low;
+      mapping.add[addIdx].div = 127;
+    } else {
+      // Multi-source: only update this source's contribution
+      mapping.add[addIdx].mul = high;
+      mapping.add[addIdx].div = 127;
+    }
   }
 
   // ── Render: Sound Presets ──
+
+  // ─── Sortable: Knob reordering within pages ──────────────
+
+  var knobSortableInstances = [];
+
+  function setupKnobSortables(container) {
+    // Destroy previous instances
+    knobSortableInstances.forEach(function(s) { try { s.destroy(); } catch(e) {} });
+    knobSortableInstances = [];
+
+    if (typeof Sortable === 'undefined') return;
+
+    container.querySelectorAll('.mb-page-content').forEach(function(pageContent) {
+      var section = pageContent.closest('.mb-page-section');
+      if (!section) return;
+      var gi = parseInt(section.getAttribute('data-group-idx'), 10);
+
+      var inst = Sortable.create(pageContent, {
+        handle: '.om-drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        draggable: '.om-knob-card',
+        onEnd: function(evt) {
+          if (evt.oldIndex !== evt.newIndex) {
+            reorderKnobInGroup(gi, evt.oldIndex, evt.newIndex);
+          }
+        },
+      });
+      knobSortableInstances.push(inst);
+    });
+  }
+
+  /**
+   * Move a knob from oldPos to newPos within a page group.
+   * The param.idx values stay unchanged (they are the mapping identity keys).
+   * Only the array position changes, which determines display order.
+   * Re-renders editor so Knob Preview also reflects the new order.
+   */
+  function reorderKnobInGroup(groupIdx, oldPos, newPos) {
+    if (!state.editDef) return;
+    var group = state.editDef.groups[groupIdx];
+    if (!group || !group.parameters) return;
+
+    // Splice to reorder — param.idx values are NOT changed (they're mapping keys)
+    var moved = group.parameters.splice(oldPos, 1)[0];
+    group.parameters.splice(newPos, 0, moved);
+
+    state.dirty = true;
+    renderMappingEditor();
+    renderDSPPanel();
+  }
 
   function renderSoundPresetsForDef(def) {
     var matching = S.data.soundPresets.filter(function(p) {
@@ -651,20 +983,21 @@
     html += '<tbody>';
 
     matching.forEach(function(preset) {
-      html += '<tr class="mapping-row">';
-      html += '<td>' + S.esc(preset.name || preset.id) + '</td>';
-      html += '<td>' + S.esc(preset.group || '—') + '</td>';
+      html += '<tr class="mapping-row" data-preset-id="' + S.esc(preset.id) + '">';
+      html += '<td><input class="mapping-input preset-name-input" value="' + S.esc(preset.name || preset.id) + '" data-preset-id="' + S.esc(preset.id) + '" style="width:120px;" /></td>';
+      html += '<td><input class="mapping-input preset-group-input" value="' + S.esc(preset.group || '') + '" data-preset-id="' + S.esc(preset.id) + '" style="width:80px;" /></td>';
       html += '<td class="preset-values-cell">';
       if (preset.values && preset.values.length > 0) {
         preset.values.forEach(function(v, vi) {
           var pName = paramNames[vi] || vi;
-          html += '<span class="preset-value-chip" title="' + S.esc(String(pName)) + '">' + v + '</span>';
+          html += '<input class="mapping-input preset-value-input" type="number" value="' + v + '" data-preset-id="' + S.esc(preset.id) + '" data-value-idx="' + vi + '" title="' + S.esc(String(pName)) + '" style="width:42px;" />';
         });
       } else {
         html += '<span style="opacity:0.4;">empty</span>';
       }
       html += '</td>';
-      html += '<td>';
+      html += '<td style="display:flex;gap:0.25rem;">';
+      html += '<button class="mapping-btn save-preset-btn" data-preset-id="' + S.esc(preset.id) + '" title="Save changes" style="font-size:0.65rem;padding:0.15rem 0.4rem;"><sl-icon name="floppy"></sl-icon></button>';
       html += '<button class="mapping-remove-btn delete-preset-btn" data-preset-id="' + S.esc(preset.id) + '" title="Delete"><sl-icon name="trash"></sl-icon></button>';
       html += '</td>';
       html += '</tr>';
@@ -698,13 +1031,25 @@
       var panel = cell.querySelector('.knob-target-panel');
       if (!panel) return;
       var outputs = S.computeMappingOutputs(def, paramIdx, knobValue);
+      var targetDH = window.TBD && window.TBD.displayHints;
       outputs.forEach(function(o) {
         var row = panel.querySelector('.knob-target-row[data-ctrl="' + o.ctrl + '"]');
         if (!row) return;
         var valEl = row.querySelector('.knob-target-val');
-        var fillEl = row.querySelector('.knob-target-fill');
-        if (valEl) valEl.textContent = o.value;
-        if (fillEl) fillEl.style.width = o.pct + '%';
+        var dotEl = row.querySelector('.knob-target-dot');
+        if (valEl) {
+          var fmt = String(o.value);
+          if (targetDH && def.machine) {
+            var pid = def.machine + '_' + o.name.replace(/[- ]/g, '_');
+            var hint = targetDH.resolveHint(pid, o.name);
+            if (hint) {
+              var physVal = targetDH.rawToDisplay(o.value, 0, 127, hint);
+              fmt = targetDH.formatDisplayValue(physVal, hint);
+            }
+          }
+          valEl.textContent = fmt;
+        }
+        if (dotEl) dotEl.style.left = (o.value / 127 * 100) + '%';
       });
     }
 
@@ -739,7 +1084,7 @@
         if (valueEl) valueEl.textContent = newVal;
 
         var knobColor = knob.getAttribute('data-color') || 'normal';
-        knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: knobColor, size: 52 });
+        knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: knobColor, size: 64 });
 
         // Update target panel real-time values
         if (state.editDef) {
@@ -778,6 +1123,20 @@
       });
     }
     if (defNameInput) {
+      defNameInput.addEventListener('input', function() {
+        if (state.editDef) {
+          state.editDef.name = defNameInput.value;
+          state.dirty = true;
+          // Auto-generate ID from name for new definitions
+          if (!state.selectedDefId && defIdInput) {
+            var machinePrefix = state.editDef.machine ? (state.editDef.machine.substring(0, 2) + '-') : '';
+            var slug = defNameInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            var autoId = machinePrefix + slug;
+            state.editDef.id = autoId;
+            defIdInput.value = autoId;
+          }
+        }
+      });
       defNameInput.addEventListener('change', function() {
         if (state.editDef) { state.editDef.name = defNameInput.value; state.dirty = true; }
       });
@@ -795,8 +1154,8 @@
       });
     }
 
-    // Group name changes
-    container.querySelectorAll('.group-name-input').forEach(function(input) {
+    // ── Macro Builder: group name changes ──
+    container.querySelectorAll('.mb-group-name').forEach(function(input) {
       input.addEventListener('change', function() {
         var gi = parseInt(input.getAttribute('data-group'), 10);
         if (state.editDef && state.editDef.groups[gi]) {
@@ -806,33 +1165,48 @@
       });
     });
 
-    // Parameter field changes
-    container.querySelectorAll('.mapping-row[data-group][data-param]').forEach(function(row) {
-      var gi = parseInt(row.getAttribute('data-group'), 10);
-      var pi = parseInt(row.getAttribute('data-param'), 10);
-
-      row.querySelectorAll('input, select').forEach(function(input) {
-        input.addEventListener('change', function() {
-          if (!state.editDef) return;
-          var param = state.editDef.groups[gi].parameters[pi];
-          if (!param) return;
-          if (input.classList.contains('param-name')) param.name = input.value;
-          if (input.classList.contains('param-def')) param.def = parseInt(input.value, 10) || 0;
-          if (input.classList.contains('param-min')) param.min = parseInt(input.value, 10) || 0;
-          if (input.classList.contains('param-max')) param.max = parseInt(input.value, 10) || 127;
-          if (input.classList.contains('param-res')) param.res = parseInt(input.value, 10) || 64;
-          if (input.classList.contains('param-curve')) param.curve = input.value;
-          if (input.classList.contains('param-ui')) param.ui = input.value;
-          state.dirty = true;
-        });
+    // Macro Builder: parameter property changes (name, def, min, max, res, ui)
+    container.querySelectorAll('.mb-param-name').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var gi = parseInt(input.getAttribute('data-group'), 10);
+        var pi = parseInt(input.getAttribute('data-param'), 10);
+        if (!state.editDef || !state.editDef.groups[gi]) return;
+        var param = state.editDef.groups[gi].parameters[pi];
+        if (param) { param.name = input.value; state.dirty = true; }
+      });
+    });
+    container.querySelectorAll('.mb-prop-def, .mb-prop-min, .mb-prop-max, .mb-prop-res').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var gi = parseInt(input.getAttribute('data-group'), 10);
+        var pi = parseInt(input.getAttribute('data-param'), 10);
+        if (!state.editDef || !state.editDef.groups[gi]) return;
+        var param = state.editDef.groups[gi].parameters[pi];
+        if (!param) return;
+        var v = parseInt(input.value, 10) || 0;
+        if (input.classList.contains('mb-prop-def')) param.def = v;
+        if (input.classList.contains('mb-prop-min')) param.min = v;
+        if (input.classList.contains('mb-prop-max')) param.max = v;
+        if (input.classList.contains('mb-prop-res')) param.res = v;
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+    container.querySelectorAll('.mb-prop-ui').forEach(function(select) {
+      select.addEventListener('change', function() {
+        var gi = parseInt(select.getAttribute('data-group'), 10);
+        var pi = parseInt(select.getAttribute('data-param'), 10);
+        if (!state.editDef || !state.editDef.groups[gi]) return;
+        var param = state.editDef.groups[gi].parameters[pi];
+        if (param) { param.ui = select.value; state.dirty = true; }
       });
     });
 
-    // Add parameter
-    container.querySelectorAll('.add-param-btn').forEach(function(btn) {
+    // Macro Builder: add knob to a group
+    container.querySelectorAll('.mb-add-knob-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var gi = parseInt(btn.getAttribute('data-group'), 10);
         if (!state.editDef || !state.editDef.groups[gi]) return;
+        if ((state.editDef.groups[gi].parameters || []).length >= 4) return;
 
         var maxIdx = -1;
         state.editDef.groups.forEach(function(g) {
@@ -843,7 +1217,7 @@
 
         state.editDef.groups[gi].parameters.push({
           idx: maxIdx + 1,
-          name: 'New Param',
+          name: 'New Knob',
           def: 0, min: 0, max: 127, res: 64, curve: 'linear', ui: 'bignum',
         });
         state.dirty = true;
@@ -851,42 +1225,316 @@
       });
     });
 
-    // Remove parameter
-    container.querySelectorAll('.remove-param-btn').forEach(function(btn) {
+    // Macro Builder: remove knob (and its mappings)
+    container.querySelectorAll('.mb-remove-knob-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var gi = parseInt(btn.getAttribute('data-group'), 10);
         var pi = parseInt(btn.getAttribute('data-param'), 10);
+        var paramIdx = parseInt(btn.getAttribute('data-param-idx'), 10);
         if (!state.editDef || !state.editDef.groups[gi]) return;
+
+        // Remove the parameter
         state.editDef.groups[gi].parameters.splice(pi, 1);
+
+        // Remove all mappings that reference this paramIdx as a source
+        if (state.editDef.mapping) {
+          state.editDef.mapping = state.editDef.mapping.filter(function(m) {
+            if (!m.add || m.add.length === 0) return true;
+            // Remove sources referencing this param
+            m.add = m.add.filter(function(a) { return a.src !== paramIdx; });
+            // Keep the mapping if it still has sources or is a constant
+            return m.add.length > 0 || (m.start !== undefined);
+          });
+        }
         state.dirty = true;
         renderMappingEditor();
       });
     });
 
-    // Output mapping field changes
-    container.querySelectorAll('.mapping-row[data-mapping-idx]').forEach(function(row) {
-      var mi = parseInt(row.getAttribute('data-mapping-idx'), 10);
-      row.querySelectorAll('input').forEach(function(input) {
-        input.addEventListener('change', function() {
-          if (!state.editDef || !state.editDef.mapping[mi]) return;
-          if (input.classList.contains('mapping-ctrl')) {
-            state.editDef.mapping[mi].ctrl = parseInt(input.value, 10) || 0;
-          }
-          if (input.classList.contains('mapping-start')) {
-            state.editDef.mapping[mi].start = parseInt(input.value, 10) || 0;
-          }
-          state.dirty = true;
-          renderMappingEditor();
+    // ── Sortable.js: make knob cards within each page draggable ──
+    setupKnobSortables(container);
+
+    // Macro Builder: add page
+    container.querySelectorAll('.mb-add-group-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!state.editDef) return;
+        if (state.editDef.groups.length >= 6) return;
+        state.editDef.groups.push({
+          name: 'Page ' + (state.editDef.groups.length + 1),
+          parameters: [],
         });
+        state.dirty = true;
+        renderMappingEditor();
       });
     });
 
-    // Add output mapping
-    var addMappingBtn = container.querySelector('.add-mapping-btn');
-    if (addMappingBtn) {
-      addMappingBtn.addEventListener('click', function() {
+    // ── Output mapping / CC row event handlers ──
+
+    // Interactive knob drag (updates value dots in real-time)
+    container.querySelectorAll('.om-knob-interactive').forEach(function(knob) {
+      var paramIdx = parseInt(knob.getAttribute('data-idx'), 10);
+      var min = parseInt(knob.getAttribute('data-min'), 10) || 0;
+      var max = parseInt(knob.getAttribute('data-max'), 10) || 127;
+      var startY = 0;
+      var startVal = 0;
+
+      knob.addEventListener('pointerdown', function(e) {
+        e.preventDefault();
+        knob.classList.add('dragging');
+        startY = e.clientY;
+        startVal = parseInt(knob.getAttribute('data-value'), 10) || 0;
+
+        function onMove(ev) {
+          var dy = startY - ev.clientY;
+          var range = max - min;
+          var sensitivity = range / 200;
+          var newVal = Math.round(startVal + dy * sensitivity);
+          newVal = Math.max(min, Math.min(max, newVal));
+
+          knob.setAttribute('data-value', newVal);
+          var color = knob.getAttribute('data-color') || 'normal';
+          var size = knob.querySelector('.knob-svg') ? parseInt(knob.querySelector('.knob-svg').getAttribute('width'), 10) : 32;
+          knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: color, size: size });
+
+          // Update value display
+          var card = knob.closest('.om-knob-card');
+          if (card) {
+            var valEl = card.querySelector('.om-knob-value');
+            if (valEl) valEl.textContent = newVal;
+
+            // Update def input
+            var defInput = card.querySelector('.mb-prop-def');
+            if (defInput) defInput.value = newVal;
+
+            // ── Move value dots on all CC rows in this card ──
+            card.querySelectorAll('.om-value-dot').forEach(function(dot) {
+              var mi = parseInt(dot.getAttribute('data-mapping'), 10);
+              var ai = parseInt(dot.getAttribute('data-add'), 10);
+              if (!state.editDef || !state.editDef.mapping[mi]) return;
+              var mapping = state.editDef.mapping[mi];
+              var addEntry = mapping.add && mapping.add[ai];
+              if (!addEntry) return;
+              var is14 = mapping.bits === 14;
+              var maxCC = is14 ? 16383 : 127;
+              var start = mapping.start || 0;
+              var mul = addEntry.mul || 1;
+              var div = addEntry.div || 1;
+              var ccVal = start + Math.round(newVal * mul / div);
+              ccVal = Math.max(0, Math.min(maxCC, ccVal));
+              dot.style.left = (ccVal / maxCC * 100) + '%';
+              dot.title = 'Current CC value: ' + ccVal;
+            });
+          }
+
+          // Update editDef param default
+          if (state.editDef) {
+            state.editDef.groups.forEach(function(g) {
+              (g.parameters || []).forEach(function(p) {
+                if (p.idx === paramIdx) p.def = newVal;
+              });
+            });
+            state.dirty = true;
+          }
+        }
+
+        function onUp() {
+          knob.classList.remove('dragging');
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+        }
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      });
+    });
+
+    // Range low/high input changes (knob-card CC rows)
+    container.querySelectorAll('.om-range-low, .om-range-high').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var mi = parseInt(input.getAttribute('data-mapping'), 10);
+        var ai = parseInt(input.getAttribute('data-add'), 10);
+        if (!state.editDef || !state.editDef.mapping[mi]) return;
+        var mapping = state.editDef.mapping[mi];
+        var maxCC = (mapping.bits === 14) ? 16383 : 127;
+
+        // Find sibling inputs in the same row
+        var row = input.closest('.om-cc-row, .om-source-row');
+        var lowInput = row ? row.querySelector('.om-range-low') : null;
+        var highInput = row ? row.querySelector('.om-range-high') : null;
+        var low = Math.max(0, Math.min(maxCC, parseInt(lowInput ? lowInput.value : 0, 10) || 0));
+        var high = Math.max(0, Math.min(maxCC, parseInt(highInput ? highInput.value : maxCC, 10) || 0));
+        if (low > high) { var tmp = low; low = high; high = tmp; }
+        rangeToSource(mapping, ai, low, high);
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // Curve select changes
+    container.querySelectorAll('.om-curve-select').forEach(function(select) {
+      select.addEventListener('change', function() {
+        var mi = parseInt(select.getAttribute('data-mapping'), 10);
+        var ai = parseInt(select.getAttribute('data-add'), 10);
+        if (!state.editDef || !state.editDef.mapping[mi]) return;
+        var addEntry = state.editDef.mapping[mi].add[ai];
+        if (addEntry) {
+          addEntry.curve = select.value;
+          state.dirty = true;
+        }
+      });
+    });
+
+    // Scale hint auto-fix (click to switch curve to log)
+    container.querySelectorAll('.om-scale-fix').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        var mi = parseInt(link.getAttribute('data-mapping'), 10);
+        var ai = parseInt(link.getAttribute('data-add'), 10);
+        if (!state.editDef || !state.editDef.mapping[mi]) return;
+        var addEntry = state.editDef.mapping[mi].add[ai];
+        if (addEntry) {
+          addEntry.curve = 'log';
+          state.dirty = true;
+          renderMappingEditor();
+        }
+      });
+    });
+
+    // Fixed value inputs (constant mappings)
+    container.querySelectorAll('.om-fixed-input').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var mi = parseInt(input.getAttribute('data-mapping'), 10);
+        if (!state.editDef || !state.editDef.mapping[mi]) return;
+        var maxCC = (state.editDef.mapping[mi].bits === 14) ? 16383 : 127;
+        state.editDef.mapping[mi].start = Math.max(0, Math.min(maxCC, parseInt(input.value, 10) || 0));
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // Base start inputs (multi-source cards)
+    container.querySelectorAll('.om-multi-card .mapping-start').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var mi = parseInt(input.getAttribute('data-mapping'), 10);
+        if (!state.editDef || !state.editDef.mapping[mi]) return;
+        var maxCC = (state.editDef.mapping[mi].bits === 14) ? 16383 : 127;
+        state.editDef.mapping[mi].start = Math.max(0, Math.min(maxCC, parseInt(input.value, 10) || 0));
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // 14-bit toggle
+    container.querySelectorAll('.om-14bit-check').forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        var mi = parseInt(checkbox.getAttribute('data-mapping'), 10);
+        if (!state.editDef || !state.editDef.mapping[mi]) return;
+        var mapping = state.editDef.mapping[mi];
+        if (checkbox.checked) {
+          mapping.bits = 14;
+        } else {
+          delete mapping.bits;
+          // Clamp values back to 7-bit range
+          if (mapping.start > 127) mapping.start = 127;
+          (mapping.add || []).forEach(function(a) {
+            if (a.mul > 127) a.mul = 127;
+          });
+        }
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // Range slider thumb drag
+    container.querySelectorAll('.om-range-thumb').forEach(function(thumb) {
+      thumb.addEventListener('pointerdown', function(e) {
+        e.preventDefault();
+        thumb.setPointerCapture(e.pointerId);
+        thumb.classList.add('dragging');
+
+        var mi = parseInt(thumb.getAttribute('data-mapping'), 10);
+        var ai = parseInt(thumb.getAttribute('data-add'), 10);
+        var isLow = thumb.classList.contains('om-thumb-low');
+        var track = thumb.closest('.om-range-track');
+        if (!track) return;
+
+        var parentRow = thumb.closest('.om-cc-row, .om-source-row');
+
+        function onMove(ev) {
+          if (!state.editDef || !state.editDef.mapping[mi]) return;
+          var mapping = state.editDef.mapping[mi];
+          var maxCC = (mapping.bits === 14) ? 16383 : 127;
+
+          var rect = track.getBoundingClientRect();
+          var pct = (ev.clientX - rect.left) / rect.width;
+          pct = Math.max(0, Math.min(1, pct));
+          var ccVal = Math.round(pct * maxCC);
+
+          var range = sourceToRange(mapping, ai);
+          var low = range.low, high = range.high;
+
+          if (isLow) {
+            low = Math.min(ccVal, high);
+          } else {
+            high = Math.max(ccVal, low);
+          }
+
+          rangeToSource(mapping, ai, low, high);
+          state.dirty = true;
+
+          // Update visuals without full re-render
+          var newRange = sourceToRange(mapping, ai);
+          var lowPct = newRange.low / maxCC * 100;
+          var highPct = newRange.high / maxCC * 100;
+          var fill = track.querySelector('.om-range-fill');
+          var thumbLow = track.querySelector('.om-thumb-low');
+          var thumbHigh = track.querySelector('.om-thumb-high');
+
+          if (fill) { fill.style.left = lowPct + '%'; fill.style.width = (highPct - lowPct) + '%'; }
+          if (thumbLow) thumbLow.style.left = lowPct + '%';
+          if (thumbHigh) thumbHigh.style.left = highPct + '%';
+
+          if (parentRow) {
+            var lowInput = parentRow.querySelector('.om-range-low');
+            var highInput = parentRow.querySelector('.om-range-high');
+            if (lowInput) lowInput.value = newRange.low;
+            if (highInput) highInput.value = newRange.high;
+          }
+        }
+
+        function onUp() {
+          thumb.classList.remove('dragging');
+          thumb.removeEventListener('pointermove', onMove);
+          thumb.removeEventListener('pointerup', onUp);
+          renderMappingEditor();
+        }
+
+        thumb.addEventListener('pointermove', onMove);
+        thumb.addEventListener('pointerup', onUp);
+      });
+    });
+
+    // Add CC mapping for an existing knob (dropdown in knob card header)
+    container.querySelectorAll('.mapping-add-cc-for-knob').forEach(function(select) {
+      select.addEventListener('change', function() {
         if (!state.editDef) return;
-        state.editDef.mapping.push({ ctrl: 0, start: 0, add: [] });
+        var ctrl = parseInt(select.value, 10);
+        var srcIdx = parseInt(select.getAttribute('data-src-idx'), 10);
+        if (isNaN(ctrl) || isNaN(srcIdx)) return;
+        state.editDef.mapping.push({ ctrl: ctrl, start: 0, add: [{ src: srcIdx, mul: 1, div: 1 }] });
+        state.dirty = true;
+        renderMappingEditor();
+      });
+    });
+
+    // Add unmapped CC as constant (dropdown at bottom)
+    var unmappedSelect = container.querySelector('.add-unmapped-cc-select');
+    if (unmappedSelect) {
+      unmappedSelect.addEventListener('change', function() {
+        if (!state.editDef) return;
+        var ctrl = parseInt(unmappedSelect.value, 10);
+        if (isNaN(ctrl)) return;
+        state.editDef.mapping.push({ ctrl: ctrl, start: 0, add: [] });
         state.dirty = true;
         renderMappingEditor();
       });
@@ -903,17 +1551,13 @@
       });
     });
 
-    // Add source to mapping
-    container.querySelectorAll('.mapping-add-src-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var mi = parseInt(btn.getAttribute('data-mapping'), 10);
+    // Add source to mapping (multi-source cards)
+    container.querySelectorAll('.mapping-add-src-select').forEach(function(select) {
+      select.addEventListener('change', function() {
+        var mi = parseInt(select.getAttribute('data-mapping'), 10);
         if (!state.editDef || !state.editDef.mapping[mi]) return;
-
-        var srcStr = prompt('Source param index (0-23):');
-        if (srcStr === null) return;
-        var src = parseInt(srcStr, 10);
+        var src = parseInt(select.value, 10);
         if (isNaN(src)) return;
-
         state.editDef.mapping[mi].add.push({ src: src, mul: 1, div: 1 });
         state.dirty = true;
         renderMappingEditor();
@@ -939,6 +1583,14 @@
         createSoundPresetForDef();
       });
     }
+
+    // Save edited preset values
+    container.querySelectorAll('.save-preset-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var presetId = btn.getAttribute('data-preset-id');
+        saveEditedPreset(presetId, container);
+      });
+    });
 
     // Delete preset
     container.querySelectorAll('.delete-preset-btn').forEach(function(btn) {
@@ -1062,6 +1714,48 @@
       renderMappingEditor();
     }).catch(function(err) {
       S.toast('Create failed: ' + err.message, 'danger', 3000);
+    });
+  }
+
+  /**
+   * Save an edited preset — reads updated values from the inline inputs.
+   */
+  function saveEditedPreset(presetId, container) {
+    var preset = S.data.soundPresets.find(function(p) { return p.id === presetId; });
+    if (!preset) {
+      S.toast('Preset not found', 'danger', 2000);
+      return;
+    }
+
+    // Read updated name
+    var nameInput = container.querySelector('.preset-name-input[data-preset-id="' + presetId + '"]');
+    if (nameInput) preset.name = nameInput.value;
+
+    // Read updated group
+    var groupInput = container.querySelector('.preset-group-input[data-preset-id="' + presetId + '"]');
+    if (groupInput) preset.group = groupInput.value;
+
+    // Read updated values
+    container.querySelectorAll('.preset-value-input[data-preset-id="' + presetId + '"]').forEach(function(input) {
+      var vi = parseInt(input.getAttribute('data-value-idx'), 10);
+      preset.values[vi] = parseInt(input.value, 10) || 0;
+    });
+
+    var jsonStr = JSON.stringify(preset, null, 2);
+    var filePath = 'macrosoundpresets/' + presetId + '.json';
+
+    fetch('/api/v1/samples?action=uploadconfig&path=' + encodeURIComponent(filePath), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStr,
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      S.toast('Saved preset: ' + preset.name, 'success', 2000);
+      return S.reloadMacroData();
+    }).then(function() {
+      renderMappingEditor();
+    }).catch(function(err) {
+      S.toast('Save failed: ' + err.message, 'danger', 3000);
     });
   }
 

@@ -128,6 +128,34 @@
     });
   }
 
+  // ─── Quick Start Guide ──────────────────────────────────
+
+  function setupQuickStart() {
+    var btn = document.getElementById('quickstart-btn');
+    var dialog = document.getElementById('quickstart-dialog');
+    var closeBtn = document.getElementById('qs-close-btn');
+    if (!btn || !dialog) return;
+
+    btn.addEventListener('click', function() {
+      dialog.show();
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        dialog.hide();
+      });
+    }
+
+    // Show on first visit
+    try {
+      if (!localStorage.getItem('tbd-qs-seen')) {
+        // Delay slightly so Shoelace components are upgraded
+        setTimeout(function() { dialog.show(); }, 800);
+        localStorage.setItem('tbd-qs-seen', '1');
+      }
+    } catch (e) { /* ignore */ }
+  }
+
   // ─── Connection Status ───────────────────────────────────
 
   function updateConnectionStatus(connected) {
@@ -163,6 +191,7 @@
     setupSettings();
     setupPersonaSwitcher();
     setupConnectionMonitor();
+    setupQuickStart();
 
     // 2. Restore last persona or default to performer
     var savedPersona = null;

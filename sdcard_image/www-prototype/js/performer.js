@@ -148,10 +148,11 @@
 
         html += '<div class="macro-group" data-group="' + gi + '">';
 
-        // Group header
+        // Group header — matches Designer's "Page N / Name" pattern
         html += '<div class="macro-group-header">';
         html += '<sl-icon name="chevron-down" class="macro-group-chevron"></sl-icon>';
-        html += '<span class="macro-group-name">' + S.esc(group.name) + '</span>';
+        html += '<span class="macro-group-page-label">Page ' + (gi + 1) + '</span>';
+        html += '<span class="macro-group-name">' + S.esc(group.name || '') + '</span>';
         html += '</div>';
 
         // Group body with knob grid (4 columns)
@@ -164,15 +165,16 @@
           var knobColor = isMacro ? 'macro' : 'normal';
           var cellClass = 'macro-knob-cell' + (isMacro ? ' is-macro' : '');
 
+          // Name ABOVE → Knob → Value BELOW (matches Designer's Knob Preview)
           html += '<div class="' + cellClass + '" data-param-idx="' + param.idx + '">';
+          html += '<span class="macro-knob-label">' + S.esc(param.name) + '</span>';
           html += '<div class="macro-knob" ';
           html += 'data-value="' + value + '" data-min="' + min + '" data-max="' + max + '" data-idx="' + param.idx + '" data-color="' + knobColor + '">';
-          html += S.renderKnobSVG({ value: value, min: min, max: max, color: knobColor, size: 52 });
+          html += S.renderKnobSVG({ value: value, min: min, max: max, color: knobColor, size: 64 });
           html += '</div>';
-          html += '<span class="macro-knob-label">' + S.esc(param.name) + '</span>';
-          html += '<span class="macro-knob-value">' + value + '</span>';
+          html += '<span class="macro-knob-value' + (isMacro ? ' is-macro' : '') + '">' + value + '</span>';
 
-          // Show mapping targets with real-time computed values
+          // Show mapping targets with range bars + value dots + display hints
           var targets = mappingInfo[param.idx] || [];
           if (targets.length > 0) {
             var outputs = S.computeMappingOutputs(macroDef, param.idx, value);
@@ -181,17 +183,63 @@
               html += '<div class="knob-target-badge">MACRO</div>';
             }
             outputs.forEach(function(o) {
+              // Compute the range for this target (matching Designer's Knob Preview)
+              var mapping = macroDef.mapping.find(function(mm) { return mm.ctrl === o.ctrl; });
+              var rangeLow = 0, rangeHigh = 127;
+              var sourceCurve = '';
+              if (mapping && mapping.add) {
+                var singleSrc = mapping.add.length === 1;
+                if (singleSrc) {
+                  rangeLow = mapping.start || 0;
+                  var a = mapping.add[0];
+                  rangeHigh = rangeLow + Math.round(127 * (a.mul || 1) / (a.div || 1));
+                  rangeHigh = Math.min(127, rangeHigh);
+                  sourceCurve = a.curve || '';
+                } else {
+                  rangeLow = mapping.start || 0;
+                  rangeHigh = rangeLow;
+                  mapping.add.forEach(function(a) {
+                    rangeHigh += Math.round(127 * (a.mul || 1) / (a.div || 1));
+                    if (a.src === param.idx) sourceCurve = a.curve || '';
+                  });
+                  rangeHigh = Math.min(127, rangeHigh);
+                }
+              }
+              var rangeLowPct = rangeLow / 127 * 100;
+              var rangeWidthPct = (rangeHigh - rangeLow) / 127 * 100;
+              var valuePct = o.value / 127 * 100;
+
               html += '<div class="knob-target-row" data-ctrl="' + o.ctrl + '">';
               html += '<span class="knob-target-name">' + S.esc(o.name) + '</span>';
-              html += '<span class="knob-target-bar"><span class="knob-target-fill" style="width:' + o.pct + '%"></span></span>';
-              html += '<span class="knob-target-val">' + o.value + '</span>';
+              html += '<span class="knob-target-bar">';
+              html += '<span class="knob-target-range" style="left:' + rangeLowPct + '%;width:' + rangeWidthPct + '%"></span>';
+              html += '<span class="knob-target-dot" style="left:' + valuePct + '%"></span>';
+              html += '</span>';
+
+              // Format value with display hints if available
+              var targetDH = window.TBD && window.TBD.displayHints;
+              var targetFmt = String(o.value);
+              if (targetDH && macroDef.machine) {
+                var targetParamId = macroDef.machine + '_' + S.esc(o.name).replace(/[- ]/g, '_');
+                var targetHint = targetDH.resolveHint(targetParamId, o.name);
+                if (targetHint) {
+                  var physVal = targetDH.rawToDisplay(o.value, 0, 127, targetHint);
+                  targetFmt = targetDH.formatDisplayValue(physVal, targetHint);
+                }
+              }
+              html += '<span class="knob-target-val">' + targetFmt + '</span>';
+              // Show 14-bit badge if applicable
+              if (mapping && mapping.bits === 14) {
+                html += '<span class="knob-target-14bit">14-bit</span>';
+              }
               html += '</div>';
+
+              // Show curve badge if non-linear (from mapping source, not parameter)
+              if (sourceCurve && sourceCurve !== 'linear') {
+                html += '<span class="curve-badge">' + S.esc(sourceCurve) + '</span>';
+              }
             });
             html += '</div>';
-          }
-          // Show curve indicator if non-linear
-          if (param.curve && param.curve !== 'linear') {
-            html += '<span class="curve-badge">' + S.esc(param.curve) + '</span>';
           }
 
           html += '</div>';
@@ -312,20 +360,32 @@
 
         // Re-render the SVG knob with correct color
         var knobColor = knob.getAttribute('data-color') || 'normal';
-        knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: knobColor, size: 52 });
+        knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: knobColor, size: 64 });
 
-        // Update target panel real-time values
+        // Update target panel real-time values with display hints
         if (state.activeMacroDef) {
           var panel = cell.querySelector('.knob-target-panel');
           if (panel) {
             var outputs = S.computeMappingOutputs(state.activeMacroDef, paramIdx, newVal);
+            var targetDH = window.TBD && window.TBD.displayHints;
             outputs.forEach(function(o) {
               var row = panel.querySelector('.knob-target-row[data-ctrl="' + o.ctrl + '"]');
               if (!row) return;
               var valEl = row.querySelector('.knob-target-val');
-              var fillEl = row.querySelector('.knob-target-fill');
-              if (valEl) valEl.textContent = o.value;
-              if (fillEl) fillEl.style.width = o.pct + '%';
+              var dotEl = row.querySelector('.knob-target-dot');
+              if (valEl) {
+                var fmt = String(o.value);
+                if (targetDH && state.activeMacroDef.machine) {
+                  var pid = state.activeMacroDef.machine + '_' + o.name.replace(/[- ]/g, '_');
+                  var hint = targetDH.resolveHint(pid, o.name);
+                  if (hint) {
+                    var physVal = targetDH.rawToDisplay(o.value, 0, 127, hint);
+                    fmt = targetDH.formatDisplayValue(physVal, hint);
+                  }
+                }
+                valEl.textContent = fmt;
+              }
+              if (dotEl) dotEl.style.left = (o.value / 127 * 100) + '%';
             });
           }
         }

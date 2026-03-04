@@ -176,6 +176,7 @@ Macro definition files live at `/sdcard/data/macrodefinitions/<id>.json`.
 | `mapping` | array | Output mapping rules |
 | `mapping[].ctrl` | number | Target CC offset (relative to the track's `basecc`) |
 | `mapping[].start` | number | Constant base value for this CC |
+| `mapping[].bits` | number? | CC resolution: `7` (default, 0–127) or `14` (0–16383). When 14-bit, the firmware sends a CC pair (MSB on `ctrl`, LSB on `ctrl + 32`). |
 | `mapping[].add` | array? | Additive sources (omit or empty for constant-only) |
 | `mapping[].add[].src` | number | Source virtual parameter index |
 | `mapping[].add[].mul` | number | Multiplier (numerator of scaling fraction) |
@@ -1057,3 +1058,395 @@ The macro/preset system runs **alongside** the existing `mui-*.jsn` / `mp-*.jsn`
 | **Group / Page** | A UI grouping of up to 4 virtual parameters within a macro definition. Up to 6 pages per macro. |
 | **CC Offset (`ctrl`)** | The MIDI CC number relative to the track's `basecc`. The actual CC sent is `basecc + ctrl`. |
 | **MacroTranslator** | The C++ component that evaluates mapping formulas and forwards results to the DSP engine. |
+
+---
+
+## 16. Adding 14-bit CC Support
+
+### 16.1 The Precision Problem
+
+The current macro system uses **7-bit MIDI CC** (0–127). After scaling through the mapping formula, the DSP engine expands this to 0–4095 via `value * 4096 / 128`. This means each CC step maps to ~32 internal steps — a rounding quantization that can cause audible "zipper noise" on smooth, continuous parameters like filter cutoff sweeps or fine pitch tuning.
+
+For a concrete example: if a frequency parameter spans 20–22000 Hz across 0–127, each CC step jumps ~173 Hz. This is far too coarse for musical pitch control in the low registers.
+
+### 16.2 What 14-bit CC Provides
+
+MIDI 14-bit CC (also known as CC pairs or high-resolution CC) uses two CC messages to transmit a single 16384-step value:
+
+| Component | CC Range | Role |
+|-----------|----------|------|
+| **MSB** (Most Significant Byte) | CC 0–31 | Upper 7 bits (coarse) |
+| **LSB** (Least Significant Byte) | CC 32–63 | Lower 7 bits (fine) |
+
+The combined value is: `value14 = (MSB << 7) | LSB`, giving 0–16383.
+
+This provides **128× more precision** than 7-bit CC:
+
+| Metric | 7-bit | 14-bit | Improvement |
+|--------|-------|--------|-------------|
+| Steps | 128 | 16,384 | 128× |
+| Internal resolution (after scaling to 4095) | ~32 steps per CC step | ~4 steps per CC step | 8× |
+| Frequency precision (20–22000 Hz) | ~173 Hz per step | ~1.35 Hz per step | 128× |
+
+### 16.3 Current Firmware Status
+
+The firmware already has the **function signature** for 14-bit CC:
+
+```cpp
+// ctagSoundProcessorPicoSeqRack.hpp, line 118
+void handleMidiControlChangePair(const uint8_t channel, uint8_t firstcontrol, uint16_t value);
+```
+
+However, the **implementation is empty**:
+
+```cpp
+// ctagSoundProcessorPicoSeqRack.cpp, line 1355
+void ctagSoundProcessorPicoSeqRack::handleMidiControlChangePair(
+    const uint8_t channel, uint8_t firstcontrol, uint16_t value) {
+    // Empty — not yet implemented
+}
+```
+
+### 16.4 Implementation Plan: 14-bit as Optional (Recommended Approach)
+
+Making 14-bit CC an **opt-in option per mapping entry** (rather than the new default) is recommended because:
+
+1. **Backward compatibility** — Existing macro definitions and external MIDI controllers continue working unchanged
+2. **CC range preservation** — 14-bit CC uses pairs (CC 0+32, CC 1+33, etc.), which consumes double the CC address space. Not all machines have enough CCs to spare.
+3. **Simplicity** — Most parameters (booleans, selectors, coarse controls) don't benefit from 14-bit resolution
+
+#### Step 1: Extend the JSON Format
+
+Add an optional `"bits"` field to the output mapping:
+
+```json
+{
+  "ctrl": 12,
+  "start": 0,
+  "bits": 14,
+  "add": [{ "src": 0, "mul": 1, "div": 1 }]
+}
+```
+
+When `"bits": 14`:
+- The mapping formula operates in 0–16383 range instead of 0–127
+- Virtual parameter values are still 0–127 but the `mul`/`div` ratio has finer scaling
+- The result is sent via `handleMidiControlChangePair()` instead of `handleMidiControlChange()`
+- Omit the field (or set `"bits": 7`) for standard 7-bit resolution
+
+> **Already implemented in WebUI:** The Output Mappings tab shows a "7b/14b" toggle per CC row. Toggling to 14-bit sets `bits: 14` in the mapping data and expands all range inputs to 0–16383.
+
+#### Step 2: Update `MacroDeviceOutputMapping`
+
+```cpp
+// In MacroDeviceDefinition.hpp
+class MacroDeviceOutputMapping {
+public:
+    uint8_t ctrl;
+    int32_t startValue;
+    uint8_t bits = 7;  // <-- NEW: 7 (default) or 14 for hi-res CC pair
+    std::vector<MacroDeviceOutputMappingSource> sources;
+};
+```
+
+Parse `"bits"` during deserialization, defaulting to `7`.
+
+#### Step 3: Update `MacroTranslator::TranslateInput()`
+
+```cpp
+for (auto om : def->outputMappings) {
+    int32_t finalvalue = om.startValue;
+    int cc = om.ctrl + trackBaseCC[t];
+
+    for (auto src : om.sources) {
+        int val = trackParameterValues[t][src.parameterIndex];
+        if (src.divider > 0) {
+            finalvalue += (val * src.multiplier) / src.divider;
+        } else {
+            finalvalue += val * src.multiplier;
+        }
+    }
+
+    int midichannel = trackToMidiChannel[t];
+
+    if (om.bits == 14) {
+        // 14-bit mode: clamp to 0–16383, use CC pair
+        if (finalvalue < 0) finalvalue = 0;
+        if (finalvalue > 16383) finalvalue = 16383;
+        if (cc != -1) {
+            soundProcessor->handleMidiControlChangePair(
+                midichannel, cc, (uint16_t)finalvalue);
+        }
+    } else {
+        // Standard 7-bit mode
+        if (finalvalue < 0) finalvalue = 0;
+        if (finalvalue > 127) finalvalue = 127;
+        if (cc != -1) {
+            soundProcessor->handleMidiControlChange(
+                midichannel, cc, finalvalue);
+        }
+    }
+}
+```
+
+#### Step 4: Implement `handleMidiControlChangePair()`
+
+```cpp
+void ctagSoundProcessorPicoSeqRack::handleMidiControlChangePair(
+    const uint8_t channel, uint8_t firstcontrol, uint16_t value) {
+    // Direct 14-bit to internal scaling: 0–16383 → 0–4095
+    int cv_value = (int)value * 4096 / 16384;  // = value / 4
+    int key = CC_TO_MAP_KEY(channel, firstcontrol);
+
+    auto it = pMapParCC.find(key);
+    if (it != pMapParCC.end()) {
+        (it->second)(cv_value);
+    }
+}
+```
+
+Note: The internal range is still 0–4095 (the DSP engine's `atomic<int16_t>` storage doesn't change). The benefit of 14-bit is that the mapping formula has finer granularity before clamping — smooth sweeps without stepping.
+
+#### Step 5: Update Virtual Parameter Range
+
+For 14-bit mappings, virtual parameter values could optionally extend beyond 0–127. Two approaches:
+
+| Approach | Virtual range | Mapping range | Complexity |
+|----------|---------------|---------------|------------|
+| **A: Keep 0–127** | 0–127 | Use larger `mul` values (e.g. `mul=128, div=1` for full 14-bit) | Simple, backward compatible |
+| **B: Extend to 0–16383** | 0–16383 | `mul=1, div=1` for 1:1 | More precise but changes the preset value format |
+
+**Approach A is recommended** because it keeps preset value arrays compact and compatible with existing presets.
+
+#### Step 6: Update WebUI
+
+**✅ Implemented.** The Output Mappings tab has a "7b/14b" toggle checkbox per CC row. When enabled:
+- The mapping entry gets `"bits": 14`
+- Range inputs expand to 0–16383 (with wider input fields via `.is-14bit` CSS class)
+- The `sourceToRange()` formula clamps to 16383 instead of 127
+- Toggling back to 7-bit removes the `bits` field and clamps any out-of-range values to 127
+
+### 16.5 Alternative: 14-bit as New Default
+
+Making 14-bit the **default** has these trade-offs:
+
+| Pro | Con |
+|-----|-----|
+| Maximum precision everywhere | Doubles CC address space usage |
+| No opt-in needed | Breaks existing external MIDI controller mappings |
+| Simpler code path (one mode) | Boolean/selector params waste 14-bit resolution |
+
+**Verdict:** Not recommended as the default. The opt-in `"hires"` flag gives precision where it matters without breaking anything.
+
+### 16.6 Example: Hi-Res Filter Cutoff
+
+```json
+{
+  "id": "td3-hires-filter",
+  "name": "TBD03 Hi-Res Filter",
+  "machine": "td3",
+  "groups": [
+    {
+      "name": "Filter",
+      "parameters": [
+        { "idx": 0, "name": "Cutoff", "def": 64, "min": 0, "max": 127, "res": 64, "ui": "bignum" },
+        { "idx": 1, "name": "Reso",   "def": 30, "min": 0, "max": 127, "res": 64, "ui": "bignum" }
+      ]
+    }
+  ],
+  "mapping": [
+    { "ctrl": 12, "start": 0, "bits": 14, "add": [{ "src": 0, "mul": 128, "div": 1 }] },
+    { "ctrl": 13, "start": 0, "add": [{ "src": 1, "mul": 1, "div": 1 }] }
+  ]
+}
+```
+
+Here, the Cutoff knob (0–127) is scaled by `mul=128` to produce 0–16256 (near full 14-bit range), sent via CC pair. The Resonance knob stays 7-bit because it doesn't need fine control.
+
+---
+
+## 17. WebUI Quick Start Guide
+
+The WebUI includes a built-in Quick Start Guide dialog (accessible via the ⓘ button in the header bar, and shown automatically on first visit). Below is the complete content of that guide for reference.
+
+---
+
+### 17.1 Overview
+
+The TBD-16 WebUI has two personas — **Performer** and **Sound Designer** — each optimized for a different workflow. Use the toggle in the header to switch between them. Keyboard shortcuts: `Ctrl/Cmd + 1` = Performer, `Ctrl/Cmd + 2` = Sound Designer.
+
+### 17.2 Performer View
+
+The Performer view is for **playing, auditioning, and tweaking sounds**. You don't need to understand DSP parameters — just browse presets and turn knobs.
+
+1. **Select a Track** — Click a track tab in the channel strip at the top. Each track corresponds to one voice in the TBD-16 (kick, snare, hi-hat, synth, FX…).
+2. **Browse Sound Presets** — The left sidebar shows presets grouped by category. Tap a preset to load it instantly. Use the search bar to filter.
+3. **Tweak Knobs** — The center panel shows the macro knobs (up to 6 pages × 4 knobs). Drag a knob to change its value. Each knob may control one *or several* DSP parameters behind the scenes.
+4. **Save Your Sound** — Happy with your tweaked values? Click *Save As…* in the right panel to create a personal preset you can recall later.
+5. **Quick Actions** — Use *Randomize* for inspiration, *Init Preset* to reset to factory defaults, *Mute / Solo* for mixing.
+
+### 17.3 Sound Designer View
+
+The Sound Designer view is where you **create and edit macro definitions** — the mapping layer that turns raw DSP CC parameters into intuitive performer knobs. Think of it as *building the instrument's front panel*.
+
+#### Step-by-Step Workflow
+
+1. **Select a Track** — Just like in Performer view, click a track tab. The Machine dropdown in the toolbar filters to machines available on that track.
+2. **Pick or Create a Macro Definition** — The left panel lists existing definitions for the selected machine. Click one to edit it, or click *"+ Create New Definition"*.
+3. **Set NAME and ID** — Give your definition a human-readable name. The ID is auto-generated from the name (for new definitions). The ID becomes the filename on the SD card.
+
+#### The Four Tabs
+
+**Knob Preview** — Shows exactly how the Performer will see your definition — knob pages, values, and real-time mapping outputs. Drag the knobs to see how target CC values change. Knobs marked *MACRO* (blue) control multiple DSP parameters simultaneously — these are the most powerful creative controls you can design.
+
+**Parameter Groups** — Define up to 6 pages of 4 knobs each (= 24 virtual parameters max). Each parameter has:
+- **Name** — What the Performer sees (e.g. "Punch", "Body", "Brightness")
+- **Default / Min / Max** — Value range in the virtual 0–127 space
+- **Res** — Resolution hint (step size for fine control)
+- **Curve** — Response curve: `linear` (default), `log` (more resolution at low end — good for frequency), `exp` (more at high end — good for volume), `scurve` (gentle at extremes)
+- **UI** — Presentation type: `bignum` (knob + large number), `slider` (horizontal fader), `toggle` (on/off switch), `selector` (dropdown)
+
+**Output Mappings** — This is the heart of sound design. Each row maps your virtual knob values to a DSP CC channel using the formula: `finalValue = start + Σ(paramValue × mul ÷ div)`. Key mapping patterns:
+- **1:1 Passthrough** — One knob → one CC. Use `mul=1, div=1`. The "1:1 Map" button auto-generates this for all CCs.
+- **Scaled** — `mul=3, div=10` maps 30% of the knob range to a CC. Useful for subtle control.
+- **Constant Lock** — Only set `start` (no sources). The CC is fixed regardless of knob positions. Perfect for locking a parameter to a "sweet spot".
+- **Many-to-One (MACRO knob)** — Add multiple sources to one CC. Example: a "Punch" knob drives fm_env × 1/2 and fm_dcy × 1/4 and accent × 1/5 simultaneously.
+- **One-to-Many** — Use the same source knob in multiple mapping rows. One knob value feeds into several CCs at different ratios.
+
+**Sound Presets** — Create preset snapshots for your macro definition. Each preset stores specific knob values that a Performer can recall instantly.
+
+#### The Right Panel — DSP Parameters
+
+Shows all raw CC parameters of the selected machine. A link icon indicates a parameter is already mapped. Use this as a reference when building your output mappings.
+
+### 17.4 Understanding the Signal Chain
+
+When you set a knob to a value, here's what happens:
+
+1. **Virtual Parameter** (0–127) — the knob value in the UI
+2. **Mapping Formula** — computes `start + Σ(value × mul ÷ div)` → produces a CC value (0–127)
+3. **MIDI CC** → sent to the DSP engine, which scales 0–127 → 0–4095 internally
+4. **DSP Float** → the engine converts 0–4095 to physical units (Hz, dB, ratios) via hardcoded scaling
+
+**Key insight:** You cannot change the physical range of a DSP parameter from a macro definition. The DSP scaling is fixed in firmware. What you *can* control is which *portion* of the 0–127 CC range your virtual knob covers, and how multiple knobs combine.
+
+**Precision:** The system uses 7-bit MIDI CC (128 steps). For critical parameters, limit the CC range via `start` and scaling to concentrate precision where it matters. Future 14-bit CC support (see Section 16) will provide 128× more precision.
+
+### 17.5 Tips for Creating Great Macro Definitions
+
+1. **Start from "1:1 Map"** — Use the auto-generate button to create a baseline, then remove parameters the performer doesn't need and lock them to good values.
+2. **Think in musical concepts** — Instead of "CC 12" and "CC 13", name knobs "Brightness" or "Character". A performer should never have to think about CC numbers.
+3. **Use MACRO knobs for "meta-controls"** — The most powerful feature is combining multiple CCs into one knob. A single "Punch" knob that drives attack time, FM depth, and accent at different ratios feels like magic to a performer.
+4. **Lock the "boring" parameters** — Every machine has parameters that have one good value. Use constant mappings (`start` with no sources) to lock them. Fewer knobs = faster workflow.
+5. **Test with the Knob Preview** — Drag knobs in the preview and watch the MACRO target bars. If a knob barely moves a target, increase its `mul`. If it slams from 0 to 127, decrease it or increase `div`.
+6. **Create contrasting presets** — Don't just save subtle variations. Make presets that sound dramatically different — this helps performers quickly audition your macro definition's range.
+7. **Use the `start` value for sweet-spot offsets** — If a DSP parameter sounds best between CC 20–80, set `start=20` and scale the source to add 0–60.
+
+---
+
+## 18. Range Slider UX for Output Mappings
+
+### 18.1 Problem
+
+The original output mapping UI exposed raw `start`, `mul`, and `div` fields — a formula-based interface (`ccValue = start + Σ(paramValue × mul ÷ div)`) that requires the user to understand the math behind the mapping system. This is hostile to the "best possible UX" goal because sound designers think in **CC output ranges**, not in multipliers and divisors.
+
+### 18.2 Concept: Dual-Handle Range Sliders
+
+Replace `start / mul / div` with a visual **dual-handle range slider** per mapping source. The slider represents the 0–127 CC output scale and lets the user drag two handles to set the **low** and **high** bounds of the usable CC range.
+
+**Mental model for the sound designer:**
+- "I want the **Body** knob to control **Decay** (CC 9) using only the range **8–71**."
+- Left handle → 8 (CC value when knob is at minimum)
+- Right handle → 71 (CC value when knob is at maximum)
+
+**Internal conversion (transparent to user):**
+```
+low  = start
+high = start + round(127 × mul ÷ div)
+
+Reverse:
+start = low
+mul   = high − low
+div   = 127
+```
+
+No JSON format changes needed — the range slider values map directly to the existing `start/mul/div` fields.
+
+### 18.3 UI Layout — Card-Based Design
+
+Each output mapping is rendered as a **card** instead of a table row:
+
+```
+╔══ [CC 9] Decay ═══════════════════════ [8 – 71] ════ [×] ═╗
+║ Body  [8|──────═══════════──────|71]  [linear ▼]  [×]      ║
+║ [+ add source knob ▼]                                       ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+- **Card header:** CC number input, CC target name, total range badge, remove button
+- **Source row:** Source name badge, low input, range track with thumbs, high input, curve dropdown, remove source button
+- **Footer:** Add source dropdown
+
+### 18.4 Three Mapping Variants
+
+| Variant | Description | UI |
+|---------|-------------|-----|
+| **Single-source** | One knob → one CC. Most common case. | Dual-handle range slider `[low ═══ high]` |
+| **Multi-source** | Multiple knobs → one CC (additive). | Base value input + per-source contribution slider (0 → max) |
+| **Constant** | No source, fixed CC value. | Single value input with position mark on track |
+
+### 18.5 Curve Moved to Mapping Source Level
+
+**Previous:** Curve (linear/log/exp/scurve) was a property of the virtual parameter (the knob). All mappings from that knob shared the same curve.
+
+**New:** Curve is a property of each **mapping source entry**. Each CC target from the same knob can have its own response curve.
+
+**Why this matters:**
+A "Body" knob controlling both Decay (CC 9) and Tone (CC 10):
+- Body → Decay: `curve: log` — fast initial response, fine control at long values
+- Body → Tone: `curve: exp` — gradual at first, rapid brightness change at the top
+
+This gives the sound designer precise control over how each CC target responds to the knob's movement, which was impossible with a per-parameter curve.
+
+**JSON impact:** The `curve` field moves from `groups[].parameters[].curve` to `mapping[].add[].curve`. Backward compatible — if `add[].curve` is absent, defaults to `linear`.
+
+### 18.6 Knob Preview Integration
+
+The Performer Knob Preview now shows **range-aware target bars** for all knobs (not just MACROs):
+
+```
+Body  40          Pitch  64
+MACRO               │
+Decay [░░|████▌░|░░░░] 28    Freq [████████████████] 64
+Tone  [░░░|██████▌|░░] 52
+```
+
+- **Range zone** (lighter background) shows the usable CC range [low–high]
+- **Fill bar** shows the current computed CC value
+- **Curve badge** appears when a source uses a non-linear curve
+- All knobs now show target bars, including single-target (1:1) mappings
+
+### 18.7 Interaction: Pointer-Based Thumb Dragging
+
+The range slider thumbs support full pointer capture for smooth dragging:
+
+1. `pointerdown` on thumb → captures pointer, enters drag mode
+2. `pointermove` → calculates CC value from mouse position on track, constrains low ≤ high
+3. Visual update is immediate (no full re-render during drag)
+4. `pointerup` → releases pointer, triggers full re-render to sync all panels
+
+Number inputs beside the slider provide keyboard-accessible precise editing. Typing a value updates the slider, and vice versa.
+
+### 18.8 Multi-Source Contribution Model
+
+When multiple sources feed one CC output, the range slider shows per-source **contribution** rather than absolute CC range, because `start` (the base) is shared:
+
+```
+CC 9 (Decay):
+  Base: [8]                                    ← always-present offset
+  Body:   0 [═════════════════▌░░░] 63         ← contributes 0–63
+  Punch:  0 [═══════▌░░░░░░░░░░░░] 31         ← contributes 0–31
+  Total range: 8–102
+```
+
+Conversion: each source's `max_contribution = round(127 × mul ÷ div)`. The `start` field is shown as a separate "Base" input.

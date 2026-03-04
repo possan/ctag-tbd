@@ -45,6 +45,7 @@
     <div class="header-spacer"></div>
 
     <div class="header-right">
+      <sl-icon-button name="info-circle" label="Quick Start Guide" id="quickstart-btn" style="font-size:1rem;"></sl-icon-button>
       <sl-icon-button name="gear" label="Settings" id="config-btn" style="font-size:1rem;"></sl-icon-button>
       <sl-icon-button name="moon-fill" label="Toggle theme" id="theme-toggle" style="font-size:1rem;"></sl-icon-button>
     </div>
@@ -211,7 +212,131 @@
 <!-- Toast stack -->
 <div class="toast-stack" id="toast-stack"></div>
 
+<!-- ─── Quick Start Guide Dialog ────────────────────────── -->
+<sl-dialog label="Quick Start Guide" id="quickstart-dialog" style="--width:56rem;">
+  <div class="qs-guide">
+    <div class="qs-intro">
+      <p><strong>Welcome to the TBD-16 WebUI!</strong> This interface has two personas — <em>Performer</em> and <em>Sound Designer</em> — each optimized for a different workflow. Use the toggle in the header to switch between them.</p>
+    </div>
+
+    <!-- Performer Tab -->
+    <details class="qs-section" open>
+      <summary><sl-icon name="music-note-beamed"></sl-icon> Performer View</summary>
+      <div class="qs-body">
+        <p>The Performer view is for <strong>playing, auditioning, and tweaking sounds</strong>. You don't need to understand DSP parameters — just browse presets and turn knobs.</p>
+        <ol>
+          <li><strong>Select a Track</strong> — Click a track tab in the channel strip at the top. Each track corresponds to one voice in the TBD-16 (kick, snare, hi-hat, synth, FX…).</li>
+          <li><strong>Browse Sound Presets</strong> — The left sidebar shows presets grouped by category. Tap a preset to load it instantly. Use the search bar to filter.</li>
+          <li><strong>Tweak Knobs</strong> — The center panel shows the macro knobs (up to 6 pages × 4 knobs). Drag a knob to change its value. Each knob may control one <em>or several</em> DSP parameters behind the scenes.</li>
+          <li><strong>Save Your Sound</strong> — Happy with your tweaked values? Click <em>Save As…</em> in the right panel to create a personal preset you can recall later.</li>
+          <li><strong>Quick Actions</strong> — Use <em>Randomize</em> for inspiration, <em>Init Preset</em> to reset to factory defaults, <em>Mute / Solo</em> for mixing.</li>
+        </ol>
+      </div>
+    </details>
+
+    <!-- Sound Designer Tab -->
+    <details class="qs-section">
+      <summary><sl-icon name="wrench-adjustable"></sl-icon> Sound Designer View</summary>
+      <div class="qs-body">
+        <p>The Sound Designer view is where you <strong>create and edit macro definitions</strong> — the mapping layer that turns raw DSP CC parameters into intuitive performer knobs. Think of it as <em>building the instrument's front panel</em>.</p>
+
+        <h4>Step-by-Step Workflow</h4>
+        <ol>
+          <li><strong>Select a Track</strong> — Just like in Performer view, click a track tab. The Machine dropdown in the toolbar filters to machines available on that track.</li>
+          <li><strong>Pick or Create a Macro Definition</strong> — The left panel lists existing definitions for the selected machine. Click one to edit it, or click <em>"+ Create New Definition"</em>.</li>
+          <li><strong>Set NAME and ID</strong> — Give your definition a human-readable name. The ID is auto-generated from the name (for new definitions). The ID becomes the filename on the SD card.</li>
+        </ol>
+
+        <h4>The Four Tabs</h4>
+
+        <div class="qs-tab-section">
+          <h5><sl-icon name="sliders"></sl-icon> Knob Preview</h5>
+          <p>Shows exactly how the Performer will see your definition — knob pages, values, and real-time mapping outputs. <strong>Drag the knobs</strong> to see how target CC values change. Knobs marked <em>MACRO</em> (blue) control multiple DSP parameters simultaneously — these are the most powerful creative controls you can design.</p>
+        </div>
+
+        <div class="qs-tab-section">
+          <h5><sl-icon name="table"></sl-icon> Parameter Groups</h5>
+          <p>Define up to <strong>6 pages of 4 knobs each</strong> (= 24 virtual parameters max). Each parameter has:</p>
+          <ul>
+            <li><strong>Name</strong> — What the Performer sees (e.g. "Punch", "Body", "Brightness")</li>
+            <li><strong>Default / Min / Max</strong> — Value range in the virtual 0–127 space</li>
+            <li><strong>Res</strong> — Resolution hint (step size for fine control)</li>
+            <li><strong>Curve</strong> — Response curve: <code>linear</code> (default), <code>log</code> (more resolution at low end — good for frequency), <code>exp</code> (more at high end — good for volume), <code>scurve</code> (gentle at extremes)</li>
+            <li><strong>UI</strong> — Presentation type: <code>bignum</code> (knob + large number), <code>slider</code> (horizontal fader), <code>toggle</code> (on/off switch), <code>selector</code> (dropdown)</li>
+          </ul>
+        </div>
+
+        <div class="qs-tab-section">
+          <h5><sl-icon name="arrow-left-right"></sl-icon> Output Mappings</h5>
+          <p>This is <strong>the heart of sound design</strong>. Each row maps your virtual knob values to a DSP CC channel using the formula:</p>
+          <p class="qs-formula"><code>finalValue = start + Σ(paramValue × mul ÷ div)</code></p>
+          <p>Key mapping patterns:</p>
+          <ul>
+            <li><strong>1:1 Passthrough</strong> — One knob → one CC. Use <code>mul=1, div=1</code>. The "1:1 Map" button auto-generates this for all CCs.</li>
+            <li><strong>Scaled</strong> — <code>mul=3, div=10</code> maps 30% of the knob range to a CC. Useful for subtle control.</li>
+            <li><strong>Constant Lock</strong> — Only set <code>start</code> (no sources). The CC is fixed regardless of knob positions. Perfect for locking a parameter to a "sweet spot".</li>
+            <li><strong>Many-to-One (MACRO knob)</strong> — Add <em>multiple sources</em> to one CC. Example: a "Punch" knob drives fm_env × 1/2 <em>and</em> fm_dcy × 1/4 <em>and</em> accent × 1/5 simultaneously.</li>
+            <li><strong>One-to-Many</strong> — Use the same source knob in multiple mapping rows. One knob value feeds into several CCs at different ratios.</li>
+          </ul>
+          <p><strong>Tip:</strong> Use the <code>start</code> field to offset a CC value. If you want CC 8 to range from 19–85 instead of 0–127, set <code>start=19</code> and scale accordingly.</p>
+        </div>
+
+        <div class="qs-tab-section">
+          <h5><sl-icon name="collection"></sl-icon> Sound Presets</h5>
+          <p>Create preset snapshots for your macro definition. Each preset stores specific knob values that a Performer can recall instantly. Good practice:</p>
+          <ul>
+            <li>Create 4–8 presets covering different sonic characters</li>
+            <li>Group them logically (e.g. "808 Kicks", "Ambient Pads")</li>
+            <li>Make presets sound <em>different enough</em> to be worth switching between</li>
+          </ul>
+        </div>
+
+        <h4>The Right Panel — DSP Parameters</h4>
+        <p>Shows all raw CC parameters of the selected machine. A <sl-icon name="link" style="font-size:0.8rem;"></sl-icon> link icon indicates a parameter is already mapped. Use this as a reference when building your output mappings — it shows what each CC controls on the DSP level.</p>
+      </div>
+    </details>
+
+    <!-- Understanding the Signal Chain -->
+    <details class="qs-section">
+      <summary><sl-icon name="diagram-3"></sl-icon> Understanding the Signal Chain</summary>
+      <div class="qs-body">
+        <p>When you set a knob to a value, here's what happens under the hood:</p>
+        <ol>
+          <li><strong>Virtual Parameter</strong> (0–127) — the knob value you see in the UI</li>
+          <li><strong>Mapping Formula</strong> — computes <code>start + Σ(value × mul ÷ div)</code> → produces a CC value (0–127)</li>
+          <li><strong>MIDI CC</strong> → sent to the DSP engine, which scales 0–127 → 0–4095 internally</li>
+          <li><strong>DSP Float</strong> → the engine converts 0–4095 to physical units (Hz, dB, ratios) via hardcoded scaling in the firmware</li>
+        </ol>
+        <p><strong>Key insight:</strong> You cannot change the physical range of a DSP parameter from a macro definition. The DSP scaling (e.g. "frequency maps to 0.0005–0.01") is fixed in firmware. What you <em>can</em> control is which <em>portion</em> of the 0–127 CC range your virtual knob covers, and how multiple knobs combine.</p>
+
+        <h4>Precision Considerations</h4>
+        <p>The current system uses <strong>7-bit MIDI CC</strong> (0–127), giving 128 discrete steps per parameter. After the mapping formula, the DSP engine scales this to 0–4095 (roughly 32 steps of internal resolution per CC step). For most parameters this is fine, but for critical parameters like filter cutoff sweeping a wide range, you may want to limit the CC range via <code>start</code> and scaling to concentrate precision where it matters.</p>
+        <p><strong>Future: 14-bit CC support</strong> — The firmware already declares <code>handleMidiControlChangePair()</code> for 14-bit MIDI CC resolution (0–16383). When implemented, this will provide 128× more precision — 16,384 steps instead of 128. The macro system could use MIDI CC pairs (CC 0–31 for MSB + CC 32–63 for LSB) to achieve this. This would be especially valuable for frequency sweeps, filter cutoffs, and any parameter requiring smooth, zipper-free control.</p>
+      </div>
+    </details>
+
+    <!-- Tips for great macro definitions -->
+    <details class="qs-section">
+      <summary><sl-icon name="lightbulb"></sl-icon> Tips for Creating Great Macro Definitions</summary>
+      <div class="qs-body">
+        <ol>
+          <li><strong>Start from "1:1 Map"</strong> — Use the auto-generate button to create a baseline, then remove parameters the performer doesn't need and lock them to good values.</li>
+          <li><strong>Think in terms of musical concepts</strong> — Instead of "CC 12" and "CC 13", name knobs "Brightness" or "Character". A performer should never have to think about CC numbers.</li>
+          <li><strong>Use MACRO knobs for "meta-controls"</strong> — The most powerful feature is combining multiple CCs into one knob. A single "Punch" knob that drives attack time, FM depth, and accent at different ratios feels like magic to a performer.</li>
+          <li><strong>Lock the "boring" parameters</strong> — Every machine has parameters that have one good value. Use constant mappings (<code>start</code> with no sources) to lock them. Fewer knobs = faster workflow.</li>
+          <li><strong>Test with the Knob Preview</strong> — Drag knobs in the preview and watch the MACRO target bars. If a knob barely moves a target, increase its <code>mul</code>. If it slams from 0 to 127, decrease it or increase <code>div</code>.</li>
+          <li><strong>Create contrasting presets</strong> — Don't just save subtle variations. Make presets that sound dramatically different — this helps performers quickly audition your macro definition's range.</li>
+          <li><strong>Use the <code>start</code> value for sweet-spot offsets</strong> — If a DSP parameter sounds best between CC 20–80, set <code>start=20</code> and scale the source to add 0–60.</li>
+        </ol>
+      </div>
+    </details>
+  </div>
+
+  <sl-button slot="footer" variant="primary" id="qs-close-btn">Got it!</sl-button>
+</sl-dialog>
+
 <!-- ─── Scripts ─────────────────────────────────────────── -->
+<script src="js/Sortable.min.js"></script>
 <script src="js/shared.js?v=7"></script>
 <script src="js/display-hints.js?v=6"></script>
 <script src="js/performer.js?v=7"></script>
