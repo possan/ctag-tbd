@@ -1,7 +1,8 @@
 <!--
-  dadamachines TBD-16 — Persona-based WebUI Prototype
-  Two-persona design: Performer (default) | Sound Designer
-  Shared layout: Header → Track Tabs → View Content
+  dadamachines TBD-16 — Unified WebUI
+  Single streamlined view with sidebar tabs for Presets / Macros.
+  The center panel always shows interactive knob controls.
+  When editing macro definitions, the Macro Builder appears below the knobs.
 
   (c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
 
@@ -18,7 +19,7 @@
   <link rel="stylesheet" href="shoelace/themes/light.css?v=3">
   <link rel="stylesheet" href="shoelace/themes/dark.css?v=3">
   <script type="module" src="js/shoelace-bundle.js?v=4"></script>
-  <link rel="stylesheet" href="css/app.css?v=4">
+  <link rel="stylesheet" href="css/app.css?v=5">
 </head>
 <body>
 <div class="app">
@@ -33,15 +34,6 @@
       </span>
     </div>
 
-    <div class="persona-switcher">
-      <button class="persona-btn active" data-persona="performer" id="btn-performer">
-        <sl-icon name="music-note-beamed"></sl-icon> Performer
-      </button>
-      <button class="persona-btn" data-persona="designer" id="btn-designer">
-        <sl-icon name="wrench-adjustable"></sl-icon> Sound Designer
-      </button>
-    </div>
-
     <div class="header-spacer"></div>
 
     <div class="header-right">
@@ -51,153 +43,113 @@
     </div>
   </header>
 
-  <!-- ─── Shared Track Overview Strip (visible in BOTH views) ─── -->
+  <!-- ─── Shared Track Overview Strip ─── -->
   <div class="track-overview" id="track-overview">
-    <!-- Populated by shared.js — same track tabs in Performer and Designer -->
+    <!-- Populated by shared.js -->
   </div>
 
-  <!-- ─── View Content ─────────────────────────────────── -->
-  <div class="app-main">
+  <!-- ─── Main Content: Sidebar + Center ─── -->
+  <div class="app-layout">
 
-    <!-- ═══ PERFORMER VIEW ═══ -->
-    <div id="view-performer" class="active">
-      <div class="performer-main">
+    <!-- ═══ LEFT SIDEBAR ═══ -->
+    <div class="sidebar" id="sidebar">
 
-        <!-- Left: Sound Presets sidebar -->
-        <div class="preset-browser" id="preset-browser">
-          <div class="preset-browser-header">
-            <sl-icon name="collection" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
-            <span>Sound Presets</span>
-          </div>
-          <div class="section-help">
-            <sl-icon name="info-circle"></sl-icon>
-            <p>Saved snapshots of knob values. Tap a preset to instantly recall its sound for the selected track.</p>
-          </div>
-          <div class="preset-browser-search">
-            <sl-input placeholder="Search presets…" size="small" clearable id="preset-search">
-              <sl-icon slot="prefix" name="search"></sl-icon>
-            </sl-input>
-          </div>
-          <div class="preset-list" id="preset-list">
-            <!-- Populated by JS -->
-          </div>
+      <!-- Sidebar tab buttons -->
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" data-tab="presets">
+          <sl-icon name="music-note-beamed"></sl-icon> Presets
+        </button>
+        <button class="sidebar-tab" data-tab="macros">
+          <sl-icon name="sliders"></sl-icon> Macros
+        </button>
+      </div>
+
+      <!-- ── Presets tab content ── -->
+      <div class="sidebar-content active" data-tab="presets">
+        <div class="sidebar-search">
+          <sl-input placeholder="Search presets…" size="small" clearable id="preset-search">
+            <sl-icon slot="prefix" name="search"></sl-icon>
+          </sl-input>
         </div>
-
-        <!-- Center: Macro Controls -->
-        <div class="macro-controls" id="macro-controls">
-          <div class="empty-state" id="macro-empty">
-            <sl-icon name="sliders"></sl-icon>
-            <h3>Select a Track</h3>
-            <p>Choose a track from the channel strip above to see its sound controls</p>
-          </div>
-          <!-- Populated by JS when a track is selected -->
+        <div class="sidebar-list" id="preset-list">
+          <!-- Populated by JS -->
         </div>
-
-        <!-- Right: Compact Actions Panel (no Favorites) -->
-        <div class="performer-actions">
-          <div class="action-section">
-            <h3>Preset</h3>
-            <button class="action-btn" id="qa-save-preset">
+        <div class="sidebar-actions">
+          <div class="sidebar-actions-row">
+            <button class="sidebar-action-btn primary" id="qa-save-preset">
               <sl-icon name="floppy"></sl-icon> Save As…
             </button>
-            <button class="action-btn" id="qa-randomize">
-              <sl-icon name="shuffle"></sl-icon> Randomize
+          </div>
+          <div class="sidebar-actions-row">
+            <button class="sidebar-action-btn" id="qa-randomize">
+              <sl-icon name="sliders"></sl-icon> Randomize
             </button>
-            <button class="action-btn" id="qa-init">
-              <sl-icon name="arrow-counterclockwise"></sl-icon> Init Preset
+            <button class="sidebar-action-btn" id="qa-init">
+              <sl-icon name="x-lg"></sl-icon> Init
             </button>
           </div>
+          <div class="sidebar-actions-row">
+            <button class="sidebar-action-btn" id="qa-export-presets">
+              <sl-icon name="download"></sl-icon> Export
+            </button>
+            <button class="sidebar-action-btn" id="qa-import-presets">
+              <sl-icon name="upload"></sl-icon> Import
+            </button>
+          </div>
+        </div>
+      </div>
 
-          <div class="action-section">
-            <h3>Track</h3>
-            <button class="action-btn" id="qa-mute-track">
-              <sl-icon name="volume-mute"></sl-icon> Mute Track
-            </button>
-            <button class="action-btn" id="qa-solo-track">
-              <sl-icon name="star"></sl-icon> Solo Track
-            </button>
-          </div>
-
-          <div class="action-section">
-            <h3>Import / Export</h3>
-            <button class="action-btn" id="qa-export">
-              <sl-icon name="download"></sl-icon> Export All
-            </button>
-            <button class="action-btn" id="qa-import">
-              <sl-icon name="upload"></sl-icon> Import All
-            </button>
-          </div>
+      <!-- ── Macros tab content ── -->
+      <div class="sidebar-content" data-tab="macros">
+        <div class="sidebar-list" id="definition-list">
+          <!-- Populated by JS -->
         </div>
       </div>
     </div>
 
-    <!-- ═══ SOUND DESIGNER VIEW ═══ -->
-    <div id="view-designer">
+    <!-- ═══ CENTER PANEL ═══ -->
+    <div class="center-panel" id="center-panel">
 
-      <!-- Designer Toolbar: Machine selector + action buttons -->
-      <div class="designer-toolbar">
-        <label>Machine:</label>
-        <sl-select id="designer-machine-select" size="small" style="min-width:200px;">
-        </sl-select>
-        <div class="designer-toolbar-spacer"></div>
-        <sl-button size="small" variant="primary" id="designer-save-btn">
-          <sl-icon slot="prefix" name="floppy"></sl-icon> Save Definition
-        </sl-button>
-        <sl-button size="small" variant="neutral" id="designer-export-btn">
-          <sl-icon slot="prefix" name="download"></sl-icon> Export JSON
-        </sl-button>
-        <sl-button size="small" variant="neutral" id="designer-import-btn">
-          <sl-icon slot="prefix" name="upload"></sl-icon> Import JSON
-        </sl-button>
+      <!-- Track info bar (populated by performer.js) -->
+      <div id="track-info-bar"></div>
+
+      <!-- Macro definition header — visible in Macros mode, above sub-tabs -->
+      <div id="macro-def-header" class="hidden">
+        <!-- Populated by designer.js: NAME, ID, Save, Export, Import -->
       </div>
 
-      <!-- Designer 3-column layout -->
-      <div class="designer-layout">
+      <!-- Sub-tabs for Macros mode -->
+      <div id="center-subtabs" class="center-subtabs hidden">
+        <button class="center-subtab active" data-subtab="knob-preview">
+          <sl-icon name="sliders" style="font-size:0.8rem;"></sl-icon> Knob Preview
+        </button>
+        <button class="center-subtab" data-subtab="macro-builder">
+          <sl-icon name="sliders" style="font-size:0.8rem;"></sl-icon> Macro Builder
+        </button>
+      </div>
 
-        <!-- Left: Macro Definitions list for selected machine -->
-        <div class="machine-browser">
-          <div class="machine-browser-header">
-            <sl-icon name="cpu" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
-            <span>Macro Definitions</span>
-          </div>
-          <div class="section-help" id="designer-filter-help">
-            <sl-icon name="info-circle"></sl-icon>
-            <p>Pick a macro definition to edit or create new.</p>
-          </div>
-          <div class="machine-list" id="machine-list">
-          </div>
-        </div>
-
-        <!-- Center: Mapping Editor -->
-        <div class="mapping-editor" id="mapping-editor">
-          <div class="empty-state" id="mapping-empty">
-            <sl-icon name="diagram-3"></sl-icon>
-            <h3>Select a Macro Definition</h3>
-            <p>Pick a definition from the left panel to edit how DSP parameters are exposed as performer knobs</p>
-          </div>
-        </div>
-
-        <!-- Right: DSP Parameters Panel -->
-        <div class="dsp-panel">
-          <div class="dsp-panel-header">
-            <sl-icon name="motherboard" style="font-size:0.85rem;color:var(--sl-color-neutral-500);"></sl-icon>
-            <span>DSP Parameters</span>
-          </div>
-          <div class="section-help">
-            <sl-icon name="info-circle"></sl-icon>
-            <p>Raw CC parameters of the selected machine. Mapped params show a link icon.</p>
-          </div>
-          <div class="dsp-param-list" id="dsp-param-list">
-            <div class="empty-state" style="padding:1.5rem;">
-              <sl-icon name="cpu" style="font-size:1.5rem;"></sl-icon>
-              <p style="font-size:0.78rem;">Select a definition to see its machine's DSP parameters</p>
-            </div>
-          </div>
+      <!-- Knob Controls -->
+      <div id="knob-controls">
+        <div class="empty-state" id="knob-empty">
+          <sl-icon name="sliders"></sl-icon>
+          <h3>Select a Track</h3>
+          <p>Choose a track from the channel strip above to see its sound controls</p>
         </div>
       </div>
+
+      <!-- Sound Presets for Definition — visible in Macros mode + Knob Preview sub-tab -->
+      <div id="knob-preview-extras" class="hidden">
+        <!-- Populated by designer.js: Sound Presets for this Definition -->
+      </div>
+
+      <!-- Macro Builder — visible when Macros tab + Macro Builder sub-tab -->
+      <div id="macro-builder-section" class="hidden">
+        <!-- Populated by designer.js -->
+      </div>
+
     </div>
 
-  </div> <!-- .app-main -->
+  </div> <!-- .app-layout -->
 
 </div> <!-- .app -->
 
@@ -216,117 +168,81 @@
 <sl-dialog label="Quick Start Guide" id="quickstart-dialog" style="--width:56rem;">
   <div class="qs-guide">
     <div class="qs-intro">
-      <p><strong>Welcome to the TBD-16 WebUI!</strong> This interface has two personas — <em>Performer</em> and <em>Sound Designer</em> — each optimized for a different workflow. Use the toggle in the header to switch between them.</p>
+      <p><strong>Welcome to TBD-16!</strong> A 16-track drum machine &amp; synth workstation. Use the <strong>channel strip</strong> at the top to pick a voice, then use the two sidebar modes to play or design sounds.</p>
     </div>
 
-    <!-- Performer Tab -->
     <details class="qs-section" open>
-      <summary><sl-icon name="music-note-beamed"></sl-icon> Performer View</summary>
+      <summary><sl-icon name="music-note-beamed"></sl-icon> Presets (Performer Mode)</summary>
       <div class="qs-body">
-        <p>The Performer view is for <strong>playing, auditioning, and tweaking sounds</strong>. You don't need to understand DSP parameters — just browse presets and turn knobs.</p>
+        <p>The <strong>PRESETS</strong> tab is for <strong>browsing, loading, and saving sounds</strong> — no DSP knowledge required.</p>
         <ol>
-          <li><strong>Select a Track</strong> — Click a track tab in the channel strip at the top. Each track corresponds to one voice in the TBD-16 (kick, snare, hi-hat, synth, FX…).</li>
-          <li><strong>Browse Sound Presets</strong> — The left sidebar shows presets grouped by category. Tap a preset to load it instantly. Use the search bar to filter.</li>
-          <li><strong>Tweak Knobs</strong> — The center panel shows the macro knobs (up to 6 pages × 4 knobs). Drag a knob to change its value. Each knob may control one <em>or several</em> DSP parameters behind the scenes.</li>
-          <li><strong>Save Your Sound</strong> — Happy with your tweaked values? Click <em>Save As…</em> in the right panel to create a personal preset you can recall later.</li>
-          <li><strong>Quick Actions</strong> — Use <em>Randomize</em> for inspiration, <em>Init Preset</em> to reset to factory defaults, <em>Mute / Solo</em> for mixing.</li>
+          <li><strong>Select a Track</strong> — Click a channel in the strip at the top (CH 01–19). Each channel drives one synth voice.</li>
+          <li><strong>Filter by Macro</strong> — Use the <em>MACRO</em> dropdown to show only presets for a specific macro definition, or choose <em>All Macros</em> to see everything. A filter chip appears in the sidebar when filtered — click <strong>×</strong> to clear it.</li>
+          <li><strong>Load a Preset</strong> — Click any preset in the sidebar to load it instantly. The knobs update to show the preset's values. The MACRO dropdown syncs to show which macro the preset uses.</li>
+          <li><strong>Tweak Knobs</strong> — Drag the knobs in the center panel. Knobs with an orange <em>MACRO</em> label control multiple DSP parameters at once.</li>
+          <li><strong>Save Your Sound</strong> — Click <em>Save As…</em> to save your tweaked values as a new preset. Give it a name and category.</li>
+          <li><strong>Quick Actions</strong> — <em>Randomize</em> generates random values for inspiration. <em>Init</em> resets all knobs to defaults. <em>Export/Import</em> lets you share presets as JSON files.</li>
         </ol>
       </div>
     </details>
 
-    <!-- Sound Designer Tab -->
     <details class="qs-section">
-      <summary><sl-icon name="wrench-adjustable"></sl-icon> Sound Designer View</summary>
+      <summary><sl-icon name="sliders"></sl-icon> Macros (Sound Designer Mode)</summary>
       <div class="qs-body">
-        <p>The Sound Designer view is where you <strong>create and edit macro definitions</strong> — the mapping layer that turns raw DSP CC parameters into intuitive performer knobs. Think of it as <em>building the instrument's front panel</em>.</p>
+        <p>The <strong>MACROS</strong> tab is for <strong>creating and editing macro definitions</strong> — the mapping layer that turns raw DSP CC parameters into intuitive performer knobs.</p>
 
-        <h4>Step-by-Step Workflow</h4>
+        <h4>Getting Started</h4>
         <ol>
-          <li><strong>Select a Track</strong> — Just like in Performer view, click a track tab. The Machine dropdown in the toolbar filters to machines available on that track.</li>
-          <li><strong>Pick or Create a Macro Definition</strong> — The left panel lists existing definitions for the selected machine. Click one to edit it, or click <em>"+ Create New Definition"</em>.</li>
-          <li><strong>Set NAME and ID</strong> — Give your definition a human-readable name. The ID is auto-generated from the name (for new definitions). The ID becomes the filename on the SD card.</li>
+          <li><strong>Select a Track</strong> — Click a channel tab. The MACHINE dropdown shows the synth engine on that track.</li>
+          <li><strong>Pick or Create</strong> — The sidebar lists existing macro definitions. Click one to edit, or click <em>"+ Create New Definition"</em>.</li>
+          <li><strong>Name &amp; ID</strong> — Set the definition name and ID in the header bar. The ID is auto-generated from the name for new definitions.</li>
+          <li><strong>Knob Preview</strong> — The default sub-tab shows a live preview of the knobs. Drag them to see how the mapped CC values change in real time.</li>
+          <li><strong>Macro Builder</strong> — Switch to this sub-tab to define parameter groups (pages of up to 4 knobs), set ranges, defaults, and output mappings.</li>
+          <li><strong>Save</strong> — Click <em>Save</em> in the header bar. Use <em>Export/Import</em> to share definitions as JSON.</li>
         </ol>
 
-        <h4>The Four Tabs</h4>
-
+        <h4>Key Concepts</h4>
         <div class="qs-tab-section">
-          <h5><sl-icon name="sliders"></sl-icon> Knob Preview</h5>
-          <p>Shows exactly how the Performer will see your definition — knob pages, values, and real-time mapping outputs. <strong>Drag the knobs</strong> to see how target CC values change. Knobs marked <em>MACRO</em> (blue) control multiple DSP parameters simultaneously — these are the most powerful creative controls you can design.</p>
-        </div>
-
-        <div class="qs-tab-section">
-          <h5><sl-icon name="table"></sl-icon> Parameter Groups</h5>
-          <p>Define up to <strong>6 pages of 4 knobs each</strong> (= 24 virtual parameters max). Each parameter has:</p>
+          <h5><sl-icon name="table"></sl-icon> Output Mappings</h5>
+          <p>Each output mapping row maps your virtual knob values to a DSP CC channel: <code>finalValue = start + Σ(paramValue × mul ÷ div)</code></p>
           <ul>
-            <li><strong>Name</strong> — What the Performer sees (e.g. "Punch", "Body", "Brightness")</li>
-            <li><strong>Default / Min / Max</strong> — Value range in the virtual 0–127 space</li>
-            <li><strong>Res</strong> — Resolution hint (step size for fine control)</li>
-            <li><strong>Curve</strong> — Response curve: <code>linear</code> (default), <code>log</code> (more resolution at low end — good for frequency), <code>exp</code> (more at high end — good for volume), <code>scurve</code> (gentle at extremes)</li>
-            <li><strong>UI</strong> — Presentation type: <code>bignum</code> (knob + large number), <code>slider</code> (horizontal fader), <code>toggle</code> (on/off switch), <code>selector</code> (dropdown)</li>
+            <li><strong>1:1 Passthrough</strong> — One knob controls one CC directly. Use <em>1:1 Map All</em> to auto-generate a full passthrough mapping as a starting point.</li>
+            <li><strong>MACRO Knob</strong> — Add multiple sources to one CC output. A single "Punch" knob can simultaneously drive attack time, FM depth, and accent.</li>
+            <li><strong>Constant Lock</strong> — Set only the <code>start</code> value (no sources). Locks a CC to a fixed value — great for parameters you don't want performers to change.</li>
           </ul>
         </div>
 
         <div class="qs-tab-section">
-          <h5><sl-icon name="arrow-left-right"></sl-icon> Output Mappings</h5>
-          <p>This is <strong>the heart of sound design</strong>. Each row maps your virtual knob values to a DSP CC channel using the formula:</p>
-          <p class="qs-formula"><code>finalValue = start + Σ(paramValue × mul ÷ div)</code></p>
-          <p>Key mapping patterns:</p>
-          <ul>
-            <li><strong>1:1 Passthrough</strong> — One knob → one CC. Use <code>mul=1, div=1</code>. The "1:1 Map" button auto-generates this for all CCs.</li>
-            <li><strong>Scaled</strong> — <code>mul=3, div=10</code> maps 30% of the knob range to a CC. Useful for subtle control.</li>
-            <li><strong>Constant Lock</strong> — Only set <code>start</code> (no sources). The CC is fixed regardless of knob positions. Perfect for locking a parameter to a "sweet spot".</li>
-            <li><strong>Many-to-One (MACRO knob)</strong> — Add <em>multiple sources</em> to one CC. Example: a "Punch" knob drives fm_env × 1/2 <em>and</em> fm_dcy × 1/4 <em>and</em> accent × 1/5 simultaneously.</li>
-            <li><strong>One-to-Many</strong> — Use the same source knob in multiple mapping rows. One knob value feeds into several CCs at different ratios.</li>
-          </ul>
-          <p><strong>Tip:</strong> Use the <code>start</code> field to offset a CC value. If you want CC 8 to range from 19–85 instead of 0–127, set <code>start=19</code> and scale accordingly.</p>
+          <h5><sl-icon name="music-note-beamed"></sl-icon> Sound Presets</h5>
+          <p>Each macro definition can have <strong>sound presets</strong> — saved sets of knob values. Find them in the <em>"Presets Using This Definition"</em> section below the Macro Builder. Create, edit, and delete presets from there.</p>
         </div>
-
-        <div class="qs-tab-section">
-          <h5><sl-icon name="collection"></sl-icon> Sound Presets</h5>
-          <p>Create preset snapshots for your macro definition. Each preset stores specific knob values that a Performer can recall instantly. Good practice:</p>
-          <ul>
-            <li>Create 4–8 presets covering different sonic characters</li>
-            <li>Group them logically (e.g. "808 Kicks", "Ambient Pads")</li>
-            <li>Make presets sound <em>different enough</em> to be worth switching between</li>
-          </ul>
-        </div>
-
-        <h4>The Right Panel — DSP Parameters</h4>
-        <p>Shows all raw CC parameters of the selected machine. A <sl-icon name="link" style="font-size:0.8rem;"></sl-icon> link icon indicates a parameter is already mapped. Use this as a reference when building your output mappings — it shows what each CC controls on the DSP level.</p>
       </div>
     </details>
 
-    <!-- Understanding the Signal Chain -->
     <details class="qs-section">
-      <summary><sl-icon name="diagram-3"></sl-icon> Understanding the Signal Chain</summary>
+      <summary><sl-icon name="table"></sl-icon> Signal Chain</summary>
       <div class="qs-body">
-        <p>When you set a knob to a value, here's what happens under the hood:</p>
+        <p>When you move a knob, here's what happens:</p>
         <ol>
-          <li><strong>Virtual Parameter</strong> (0–127) — the knob value you see in the UI</li>
-          <li><strong>Mapping Formula</strong> — computes <code>start + Σ(value × mul ÷ div)</code> → produces a CC value (0–127)</li>
-          <li><strong>MIDI CC</strong> → sent to the DSP engine, which scales 0–127 → 0–4095 internally</li>
-          <li><strong>DSP Float</strong> → the engine converts 0–4095 to physical units (Hz, dB, ratios) via hardcoded scaling in the firmware</li>
+          <li><strong>Knob Value</strong> (0–127) — the virtual parameter you control in the UI</li>
+          <li><strong>Mapping Formula</strong> — computes <code>start + Σ(value × mul ÷ div)</code>, producing a CC value</li>
+          <li><strong>MIDI CC</strong> — sent to the DSP engine (0–127, or 0–16383 for 14-bit CCs)</li>
+          <li><strong>DSP Float</strong> — converted by firmware to physical units (Hz, dB, ms, ratios)</li>
         </ol>
-        <p><strong>Key insight:</strong> You cannot change the physical range of a DSP parameter from a macro definition. The DSP scaling (e.g. "frequency maps to 0.0005–0.01") is fixed in firmware. What you <em>can</em> control is which <em>portion</em> of the 0–127 CC range your virtual knob covers, and how multiple knobs combine.</p>
-
-        <h4>Precision Considerations</h4>
-        <p>The current system uses <strong>7-bit MIDI CC</strong> (0–127), giving 128 discrete steps per parameter. After the mapping formula, the DSP engine scales this to 0–4095 (roughly 32 steps of internal resolution per CC step). For most parameters this is fine, but for critical parameters like filter cutoff sweeping a wide range, you may want to limit the CC range via <code>start</code> and scaling to concentrate precision where it matters.</p>
-        <p><strong>Future: 14-bit CC support</strong> — The firmware already declares <code>handleMidiControlChangePair()</code> for 14-bit MIDI CC resolution (0–16383). When implemented, this will provide 128× more precision — 16,384 steps instead of 128. The macro system could use MIDI CC pairs (CC 0–31 for MSB + CC 32–63 for LSB) to achieve this. This would be especially valuable for frequency sweeps, filter cutoffs, and any parameter requiring smooth, zipper-free control.</p>
+        <p><strong>Key insight:</strong> Macros control which <em>portion</em> of a CC range your knob covers, and how multiple knobs combine. The physical range of each DSP parameter is fixed in firmware.</p>
       </div>
     </details>
 
-    <!-- Tips for great macro definitions -->
     <details class="qs-section">
-      <summary><sl-icon name="lightbulb"></sl-icon> Tips for Creating Great Macro Definitions</summary>
+      <summary><sl-icon name="star"></sl-icon> Tips &amp; Best Practices</summary>
       <div class="qs-body">
         <ol>
-          <li><strong>Start from "1:1 Map"</strong> — Use the auto-generate button to create a baseline, then remove parameters the performer doesn't need and lock them to good values.</li>
-          <li><strong>Think in terms of musical concepts</strong> — Instead of "CC 12" and "CC 13", name knobs "Brightness" or "Character". A performer should never have to think about CC numbers.</li>
-          <li><strong>Use MACRO knobs for "meta-controls"</strong> — The most powerful feature is combining multiple CCs into one knob. A single "Punch" knob that drives attack time, FM depth, and accent at different ratios feels like magic to a performer.</li>
-          <li><strong>Lock the "boring" parameters</strong> — Every machine has parameters that have one good value. Use constant mappings (<code>start</code> with no sources) to lock them. Fewer knobs = faster workflow.</li>
-          <li><strong>Test with the Knob Preview</strong> — Drag knobs in the preview and watch the MACRO target bars. If a knob barely moves a target, increase its <code>mul</code>. If it slams from 0 to 127, decrease it or increase <code>div</code>.</li>
-          <li><strong>Create contrasting presets</strong> — Don't just save subtle variations. Make presets that sound dramatically different — this helps performers quickly audition your macro definition's range.</li>
-          <li><strong>Use the <code>start</code> value for sweet-spot offsets</strong> — If a DSP parameter sounds best between CC 20–80, set <code>start=20</code> and scale the source to add 0–60.</li>
+          <li><strong>Start from 1:1 Map</strong> — Auto-generate a full passthrough, then remove parameters you don't need and lock them to good values.</li>
+          <li><strong>Name knobs musically</strong> — Use "Brightness" instead of "CC 12". Performers should never think about CC numbers.</li>
+          <li><strong>Use MACRO knobs</strong> — Combining multiple CCs into one knob is the most powerful feature. One "Punch" knob beats three separate knobs.</li>
+          <li><strong>Lock the boring parameters</strong> — Use constant mappings for parameters that should stay fixed. Fewer knobs = faster workflow for performers.</li>
+          <li><strong>Create contrasting presets</strong> — Make presets sound dramatically different to showcase the full range of your macro definition.</li>
+          <li><strong>Use categories</strong> — Group presets by style ("Analog", "Digital", "FX") so performers can find sounds quickly.</li>
         </ol>
       </div>
     </details>
@@ -337,10 +253,10 @@
 
 <!-- ─── Scripts ─────────────────────────────────────────── -->
 <script src="js/Sortable.min.js"></script>
-<script src="js/shared.js?v=7"></script>
+<script src="js/shared.js?v=8"></script>
 <script src="js/display-hints.js?v=6"></script>
-<script src="js/performer.js?v=7"></script>
-<script src="js/designer.js?v=7"></script>
-<script src="js/app-persona.js?v=6"></script>
+<script src="js/performer.js?v=8"></script>
+<script src="js/designer.js?v=8"></script>
+<script src="js/app.js?v=1"></script>
 </body>
 </html>

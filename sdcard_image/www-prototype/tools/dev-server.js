@@ -381,6 +381,7 @@ const server = http.createServer((req, res) => {
   }
 
   // ── API Routes ──
+  if (p === '/api/v1/health' && req.method === 'GET')    return sendJson(res, 200, { status: 'ok' });
   if (p === '/api/v1/samples' && req.method === 'GET')  return handleSamplesGet(req, res);
   if (p === '/api/v1/samples' && req.method === 'POST') return handleSamplesPost(req, res);
   if (p === '/api/v1/macroapi' && req.method === 'GET')  return handleMacroApiGet(req, res);

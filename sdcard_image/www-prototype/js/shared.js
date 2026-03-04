@@ -735,6 +735,8 @@ function renderTrackOverview() {
   var html = '';
   sharedData.tracks.forEach(function(track) {
     var classes = 'track-strip';
+    if (track.index >= 16 && track.index <= 17) classes += ' track-fx';
+    if (track.index === 18) classes += ' track-master';
     if (track.index === sharedData.activeTrack) classes += ' active';
 
     var avail = getTrackMachines(track);
@@ -743,7 +745,6 @@ function renderTrackOverview() {
     html += '<div class="' + classes + '" data-track="' + track.index + '">';
     html += '<span class="track-num">' + String(track.index + 1).padStart(2, '0') + '</span>';
     html += '<span class="track-name">' + esc(track.name) + '</span>';
-    html += '<span class="track-machine">' + esc(defaultMachine) + '</span>';
     html += '</div>';
   });
 
@@ -764,6 +765,149 @@ function setupTrackOverviewEvents() {
     selectSharedTrack(trackIdx);
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Shared Knob Group Renderer
+// Renders macro definition knob groups identically for both
+// the Presets view (interactive) and the Macros view (preview).
+//
+// Parameters:
+//   def         — macro definition object (groups, mapping, machine)
+//   paramValues — array of current knob values (by param.idx)
+//                 if null, uses param.def defaults
+//   options     — { knobSize: 64 }
+//
+// Returns an HTML string (no container div — caller wraps).
+// ═══════════════════════════════════════════════════════════════
+function renderKnobGroups(def, paramValues, options) {
+  if (!def || !def.groups) return '';
+  var opts = options || {};
+  var knobSize = opts.knobSize || 64;
+  var mappingInfo = analyzeMappings(def);
+  var html = '';
+  var hasParams = false;
+
+  def.groups.forEach(function(group, gi) {
+    if (!group.parameters || group.parameters.length === 0) return;
+    hasParams = true;
+
+    html += '<div class="macro-group" data-group="' + gi + '">';
+
+    // Group header — Page N / Name
+    html += '<div class="macro-group-header">';
+    html += '<sl-icon name="chevron-down" class="macro-group-chevron"></sl-icon>';
+    html += '<span class="macro-group-page-label">Page ' + (gi + 1) + '</span>';
+    html += '<span class="macro-group-name">' + esc(group.name || '') + '</span>';
+    html += '</div>';
+
+    // Grid of knobs (4 columns)
+    html += '<div class="macro-group-body">';
+    group.parameters.forEach(function(param) {
+      var value = paramValues && paramValues[param.idx] !== undefined
+        ? paramValues[param.idx]
+        : (param.def || 0);
+      var min = param.min || 0;
+      var max = param.max || 127;
+      var isMacro = isMacroKnob(mappingInfo, param.idx);
+      var knobColor = isMacro ? 'macro' : 'normal';
+      var cellClass = 'macro-knob-cell' + (isMacro ? ' is-macro' : '');
+
+      // Name ABOVE → Knob → Value BELOW
+      html += '<div class="' + cellClass + '" data-param-idx="' + param.idx + '">';
+      html += '<span class="macro-knob-label">' + esc(param.name || ('P' + param.idx)) + '</span>';
+      html += '<div class="macro-knob" ';
+      html += 'data-value="' + value + '" data-min="' + min + '" data-max="' + max + '" data-idx="' + param.idx + '" data-color="' + knobColor + '">';
+      html += renderKnobSVG({ value: value, min: min, max: max, color: knobColor, size: knobSize });
+      html += '</div>';
+      html += '<span class="macro-knob-value' + (isMacro ? ' is-macro' : '') + '">' + value + '</span>';
+
+      // Target panel with range bars, value dots, display hints, badges
+      var targets = mappingInfo[param.idx] || [];
+      if (targets.length > 0) {
+        var outputs = computeMappingOutputs(def, param.idx, value);
+        html += '<div class="knob-target-panel' + (isMacro ? ' is-macro' : '') + '" data-knob-idx="' + param.idx + '">';
+        if (isMacro) {
+          html += '<div class="knob-target-badge">MACRO</div>';
+        }
+        outputs.forEach(function(o) {
+          var mapping = def.mapping.find(function(mm) { return mm.ctrl === o.ctrl; });
+          var rangeLow = 0, rangeHigh = 127;
+          var sourceCurve = '';
+          if (mapping && mapping.add) {
+            if (mapping.add.length === 1) {
+              rangeLow = mapping.start || 0;
+              var a = mapping.add[0];
+              rangeHigh = rangeLow + Math.round(127 * (a.mul || 1) / (a.div || 1));
+              rangeHigh = Math.min(127, rangeHigh);
+              sourceCurve = a.curve || '';
+            } else {
+              rangeLow = mapping.start || 0;
+              rangeHigh = rangeLow;
+              mapping.add.forEach(function(a) {
+                rangeHigh += Math.round(127 * (a.mul || 1) / (a.div || 1));
+                if (a.src === param.idx) sourceCurve = a.curve || '';
+              });
+              rangeHigh = Math.min(127, rangeHigh);
+            }
+          }
+          var rangeLowPct = rangeLow / 127 * 100;
+          var rangeWidthPct = (rangeHigh - rangeLow) / 127 * 100;
+          var valuePct = o.value / 127 * 100;
+
+          html += '<div class="knob-target-row" data-ctrl="' + o.ctrl + '">';
+          html += '<span class="knob-target-name">' + esc(o.name) + '</span>';
+          html += '<span class="knob-target-bar">';
+          html += '<span class="knob-target-range" style="left:' + rangeLowPct + '%;width:' + rangeWidthPct + '%"></span>';
+          html += '<span class="knob-target-dot" style="left:' + valuePct + '%"></span>';
+          html += '</span>';
+
+          // Display hint formatting
+          var targetDH = window.TBD && window.TBD.displayHints;
+          var targetFmt = String(o.value);
+          if (targetDH && def.machine) {
+            var targetParamId = def.machine + '_' + esc(o.name).replace(/[- ]/g, '_');
+            var targetHint = targetDH.resolveHint(targetParamId, o.name);
+            if (targetHint) {
+              var physVal = targetDH.rawToDisplay(o.value, 0, 127, targetHint);
+              targetFmt = targetDH.formatDisplayValue(physVal, targetHint);
+            }
+          }
+          html += '<span class="knob-target-val">' + targetFmt + '</span>';
+          // 14-bit badge
+          if (mapping && mapping.bits === 14) {
+            html += '<span class="knob-target-14bit">14-bit</span>';
+          }
+          html += '</div>';
+
+          // Curve badge
+          if (sourceCurve && sourceCurve !== 'linear') {
+            html += '<span class="curve-badge">' + esc(sourceCurve) + '</span>';
+          }
+        });
+        html += '</div>';
+      }
+
+      html += '</div>'; // .macro-knob-cell
+    });
+    html += '</div>'; // .macro-group-body
+    html += '</div>'; // .macro-group
+  });
+
+  if (!hasParams) {
+    html += '<div class="empty-state" style="padding:2rem;">';
+    html += '<sl-icon name="sliders" style="font-size:2rem;"></sl-icon>';
+    html += '<h3>No Parameters Defined</h3>';
+    html += '<p>Add parameters in the Macro Builder to see knobs here.</p>';
+    html += '</div>';
+  }
+
+  return html;
+}
+
+// ─── Active Tab State ────────────────────────────────────────
+var _activeTab = 'presets';
+function setActiveTab(tab) { _activeTab = tab; }
+function getActiveTab() { return _activeTab; }
 
 window.TBD = window.TBD || {};
 window.TBD.shared = {
@@ -801,6 +945,7 @@ window.TBD.shared = {
   isMacroKnob: isMacroKnob,
   resolveCCName: resolveCCName,
   computeMappingOutputs: computeMappingOutputs,
+  renderKnobGroups: renderKnobGroups,
   // Shared data & track management
   data: sharedData,
   loadSharedData: loadSharedData,
@@ -811,4 +956,6 @@ window.TBD.shared = {
   getTrackMachines: getTrackMachines,
   renderTrackOverview: renderTrackOverview,
   setupTrackOverviewEvents: setupTrackOverviewEvents,
+  setActiveTab: setActiveTab,
+  getActiveTab: getActiveTab,
 };

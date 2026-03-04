@@ -1,6 +1,6 @@
 {
-  "id": "db-allparams",
-  "name": "Synth Kick All param",
+  "id": "db-golem-music",
+  "name": "Golem Music",
   "machine": "db",
   "groups": [
     {
@@ -13,6 +13,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
+          "curve": "linear",
           "ui": "bignum"
         },
         {
@@ -22,6 +23,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
+          "curve": "linear",
           "ui": "bignum"
         },
         {
@@ -31,6 +33,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
+          "curve": "linear",
           "ui": "bignum"
         },
         {
@@ -40,6 +43,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
+          "curve": "linear",
           "ui": "bignum"
         }
       ]
@@ -54,6 +58,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
+          "curve": "linear",
           "ui": "bignum"
         },
         {
@@ -63,6 +68,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
+          "curve": "linear",
           "ui": "bignum"
         },
         {
@@ -72,25 +78,10 @@
           "min": 0,
           "max": 127,
           "res": 64,
+          "curve": "linear",
           "ui": "bignum"
         }
       ]
-    },
-    {
-      "name": "Page 3",
-      "parameters": []
-    },
-    {
-      "name": "Page 4",
-      "parameters": []
-    },
-    {
-      "name": "Page 5",
-      "parameters": []
-    },
-    {
-      "name": "Page 6",
-      "parameters": []
     }
   ],
   "mapping": [
@@ -168,6 +159,17 @@
           "src": 6,
           "mul": 1,
           "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 11,
+      "start": 35,
+      "add": [
+        {
+          "src": 1,
+          "mul": 74,
+          "div": 127
         }
       ]
     }

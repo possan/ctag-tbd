@@ -1,15 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
-// TBD-16 WebUI — Performer View
-// Persona: Performer / Artist
+// TBD-16 WebUI — Unified View Controller
 //
-// Uses shared data from shared.js (synthdefs, macrodefs, soundpresets).
-// Shared track tabs handle track selection — this view handles:
-//   - Macro knob display for the active track
-//   - Sound preset browser (left sidebar)
-//   - Quick actions (right panel)
+// Manages the center panel knob controls and the left sidebar
+// preset browser. Uses shared renderKnobGroups() for consistent
+// knob rendering across all modes.
 //
 // Data flow:
-//   Track Selection → Machine selection → Macro Def → Knobs
+//   Track Selection → Machine → Macro Def → Knobs
 //   Sound Presets → Load knob values
 //
 // (c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
@@ -22,49 +19,30 @@
 
   // ─── State ───────────────────────────────────────────────
   var state = {
-    activeTrack: -1,         // Currently selected track index
-    activeMachine: '',       // Active machine id for selected track
-    activeMacroDef: null,    // Active macro definition object
-    activePreset: null,      // Active sound preset object
-    paramValues: [],         // Current parameter values for active macro/preset
+    activeTrack: -1,
+    activeMachine: '',
+    activeMacroDef: null,
+    activePreset: null,
+    paramValues: [],
     presetSearchTerm: '',
+    macroFilter: null,   // null = show all macros, string = filter by def id
     initialized: false,
   };
-
-  // ─── API Helpers ──────────────────────────────────────────
-
-  function apiGet(url) {
-    return fetch(url).then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    });
-  }
-
-  function apiPost(url, data) {
-    return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    });
-  }
 
   // ─── Track Selection (driven by shared track tabs) ────────
 
   function onTrackSelected(idx, track) {
     state.activeTrack = idx;
     state.activePreset = null;
+    state.macroFilter = null; // reset filter on track change
 
-    // Get available machines for this track
     var availMachines = S.getTrackMachines(track);
 
     // Default to first available machine
     var machineId = availMachines.length > 0 ? availMachines[0] : '';
     state.activeMachine = machineId;
 
-    // Find matching macro definitions for this machine
+    // Find matching macro definitions
     var matchingDefs = S.data.macroDefs.filter(function(d) {
       return d.machine === machineId;
     });
@@ -76,7 +54,7 @@
     var def = allParamsDef || matchingDefs[0] || null;
     state.activeMacroDef = def;
 
-    // Initialize param values from macro def defaults
+    // Initialize param values from defaults
     state.paramValues = [];
     if (def && def.groups) {
       def.groups.forEach(function(group) {
@@ -86,19 +64,234 @@
       });
     }
 
-    renderMacroControls(track, def, availMachines);
+    renderMachineSelect(availMachines);
+    renderKnobControls(track, def);
     renderPresetBrowser();
+
+    // Notify designer of machine change
+    if (window.TBD.designer && window.TBD.designer.onMachineChanged) {
+      window.TBD.designer.onMachineChanged(state.activeMachine);
+    }
   }
 
-  // ─── Macro Controls Rendering ────────────────────────────
+  // ─── Machine Select (rendered in track-info-bar) ─────────
 
-  function renderMacroControls(track, macroDef, availMachines) {
-    var container = document.getElementById('macro-controls');
+  function renderMachineSelect(availMachines) {
+    // Machine select is now rendered inside renderTrackInfoBar
+    // Keep state updated for external access
+    state._availMachines = availMachines;
+  }
+
+  // ─── Knob Controls Rendering ─────────────────────────────
+
+  function renderTrackInfoBar(track, macroDef) {
+    var trackBar = document.getElementById('track-info-bar');
+    if (!trackBar || !track) return;
+
+    var html = '<div class="track-info-header">';
+
+    // Left: Badge + Name
+    html += '<div class="track-info-left">';
+    html += '<span class="track-badge">CH ' + String(track.index + 1).padStart(2, '0') + '</span>';
+    html += '<span class="track-title">' + S.esc(track.name) + '</span>';
+    html += '</div>';
+
+    html += '<span class="track-info-separator"></span>';
+
+    // Right: stacked rows
+    html += '<div class="track-info-right">';
+
+    // Row 1: MACHINE
+    html += '<div class="track-info-row">';
+    html += '<span class="track-info-label">MACHINE:</span>';
+    var availMachines = state._availMachines || S.getTrackMachines(track);
+    if (availMachines.length > 1) {
+      html += '<sl-select id="machine-select" size="small" value="' + S.esc(state.activeMachine || '') + '" style="min-width:160px;flex:1;max-width:240px;" hoist>';
+      availMachines.forEach(function(machId) {
+        var info = S.getMachineInfo(machId);
+        var label = info ? info.name : machId;
+        html += '<sl-option value="' + S.esc(machId) + '">' + S.esc(label) + '</sl-option>';
+      });
+      html += '</sl-select>';
+    } else {
+      var machInfo = S.getMachineInfo(state.activeMachine);
+      var machName = machInfo ? machInfo.name : state.activeMachine;
+      if (machName) {
+        html += '<span class="track-machine-label">' + S.esc(machName) + '</span>';
+      }
+    }
+    html += '</div>'; // .track-info-row
+
+    // Divider between rows
+    var activeTab = (S.getActiveTab && S.getActiveTab()) || 'presets';
+    var matchingDefs = S.data.macroDefs.filter(function(d) {
+      return d.machine === state.activeMachine;
+    });
+    var hasRow2 = (activeTab === 'macros' && macroDef) || matchingDefs.length > 0;
+    if (hasRow2) {
+      html += '<hr class="track-info-divider" />';
+    }
+
+    // Row 2: Context-dependent
+    if (activeTab === 'macros') {
+      var def = macroDef;
+      if (def) {
+        var D = window.TBD.designer;
+        var isNew = D && D.state && !D.state.selectedDefId;
+        html += '<div class="track-info-row">';
+        html += '<span class="track-info-label">MACRO NAME:</span>';
+        html += '<input class="track-inline-input def-name-input" value="' + S.esc(def.name) + '" placeholder="Definition name" />';
+        html += '<span class="track-info-label">ID:</span>';
+        html += '<input class="track-inline-input def-id-input" value="' + S.esc(def.id) + '" placeholder="auto-id" ' + (isNew ? '' : 'readonly') + ' />';
+        html += '<div class="track-def-actions">';
+        html += '<button class="mapping-btn btn-save-def" title="Save this definition"><sl-icon name="floppy" style="font-size:0.7rem;"></sl-icon> Save</button>';
+        html += '<button class="mapping-btn btn-export-def" title="Export as JSON"><sl-icon name="download" style="font-size:0.7rem;"></sl-icon> Export</button>';
+        html += '<button class="mapping-btn btn-import-def" title="Import from JSON"><sl-icon name="upload" style="font-size:0.7rem;"></sl-icon> Import</button>';
+        html += '</div>';
+        html += '</div>';
+      }
+    } else {
+      if (matchingDefs.length > 1) {
+        var filterVal = state.macroFilter || '__all__';
+        html += '<div class="track-info-row">';
+        html += '<span class="track-info-label">MACRO:</span>';
+        html += '<sl-select id="knobset-select" size="small" value="' + S.esc(filterVal) + '" style="min-width:160px;flex:1;max-width:240px;" hoist>';
+        html += '<sl-option value="__all__">All Macros</sl-option>';
+        matchingDefs.forEach(function(d) {
+          html += '<sl-option value="' + S.esc(d.id) + '">' + S.esc(d.name || d.id) + '</sl-option>';
+        });
+        html += '</sl-select>';
+        html += '</div>';
+      } else if (macroDef) {
+        html += '<div class="track-info-row">';
+        html += '<span class="track-info-label">MACRO:</span>';
+        html += '<span class="track-knobset-label">' + S.esc(macroDef.name) + '</span>';
+        html += '</div>';
+      }
+    }
+
+    html += '</div>'; // .track-info-right
+    html += '</div>'; // .track-info-header
+    trackBar.innerHTML = html;
+    setupMachineSelectEvents();
+  }
+
+  function setupMachineSelectEvents() {
+    var machineSelect = document.getElementById('machine-select');
+    if (machineSelect) {
+      machineSelect.addEventListener('sl-change', function() {
+        onMachineChange(machineSelect.value);
+        if (window.TBD.designer && window.TBD.designer.onMachineChanged) {
+          window.TBD.designer.onMachineChanged(machineSelect.value);
+        }
+      });
+    }
+
+    // Knob set dropdown (Presets mode — acts as macro filter)
+    var knobsetSelect = document.getElementById('knobset-select');
+    if (knobsetSelect) {
+      knobsetSelect.addEventListener('sl-change', function() {
+        var defId = knobsetSelect.value;
+        if (defId === '__all__') {
+          // "All Macros" — clear filter, keep current activeMacroDef
+          state.macroFilter = null;
+          state.activePreset = null;
+        } else {
+          var def = S.data.macroDefs.find(function(d) { return d.id === defId; });
+          if (def) {
+            state.macroFilter = defId;
+            state.activeMacroDef = def;
+            state.activePreset = null;
+            state.paramValues = [];
+            if (def.groups) {
+              def.groups.forEach(function(group) {
+                group.parameters.forEach(function(param) {
+                  state.paramValues[param.idx] = param.def || 0;
+                });
+              });
+            }
+            var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+            if (track) {
+              renderKnobControls(track, def);
+            }
+          }
+        }
+        renderPresetBrowser();
+      });
+    }
+
+    // Def header inputs (Macros mode — NAME/ID/Save/Export/Import in track bar)
+    setupDefHeaderInBarEvents();
+  }
+
+  function setupDefHeaderInBarEvents() {
+    var D = window.TBD.designer;
+    if (!D || !D.state) return;
+
+    var nameInput = document.querySelector('#track-info-bar .def-name-input');
+    var idInput = document.querySelector('#track-info-bar .def-id-input');
+
+    if (nameInput) {
+      nameInput.addEventListener('input', function() {
+        if (D.state.editDef) {
+          D.state.editDef.name = nameInput.value;
+          D.state.dirty = true;
+          // Auto-generate ID for new definitions
+          if (!D.state.selectedDefId && idInput) {
+            var machinePrefix = D.state.editDef.machine ? (D.state.editDef.machine.substring(0, 2) + '-') : '';
+            var slug = nameInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            D.state.editDef.id = machinePrefix + slug;
+            idInput.value = D.state.editDef.id;
+          }
+        }
+      });
+      nameInput.addEventListener('change', function() {
+        if (D.state.editDef) {
+          D.state.editDef.name = nameInput.value;
+          D.state.dirty = true;
+        }
+      });
+    }
+
+    if (idInput) {
+      idInput.addEventListener('change', function() {
+        if (D.state.editDef) {
+          D.state.editDef.id = idInput.value;
+          D.state.dirty = true;
+        }
+      });
+    }
+
+    var saveBtn = document.querySelector('#track-info-bar .btn-save-def');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function() {
+        if (D.saveDefinition) D.saveDefinition();
+      });
+    }
+    var exportBtn = document.querySelector('#track-info-bar .btn-export-def');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', function() {
+        if (D.exportDefinition) D.exportDefinition();
+      });
+    }
+    var importBtn = document.querySelector('#track-info-bar .btn-import-def');
+    if (importBtn) {
+      importBtn.addEventListener('click', function() {
+        if (D.importDefinitionFile) D.importDefinitionFile();
+      });
+    }
+  }
+
+  function renderKnobControls(track, macroDef) {
+    var container = document.getElementById('knob-controls');
     if (!container) return;
+
+    // Render the track info bar (separated from knob content)
+    renderTrackInfoBar(track, macroDef);
 
     if (!macroDef) {
       container.innerHTML =
-        '<div class="empty-state" id="macro-empty">' +
+        '<div class="empty-state" id="knob-empty">' +
         '<sl-icon name="sliders"></sl-icon>' +
         '<h3>No macro definition found</h3>' +
         '<p>No macro definition available for machine "' + S.esc(state.activeMachine) + '"</p>' +
@@ -106,221 +299,13 @@
       return;
     }
 
-    var html = '';
-
-    // Track info header with CLEAR labels
-    html += '<div class="track-info-header">';
-    html += '<span class="track-badge">CH ' + String(track.index + 1).padStart(2, '0') + '</span>';
-    html += '<span class="track-title">' + S.esc(track.name) + '</span>';
-
-    // Label: "Machine:" for the machine selector
-    html += '<span class="track-info-label">Machine:</span>';
-    html += '<sl-select id="performer-machine-select" size="small" value="' + S.esc(state.activeMachine) + '" style="min-width:140px;">';
-    availMachines.forEach(function(machId) {
-      var info = S.getMachineInfo(machId);
-      var label = info ? info.name : machId;
-      html += '<sl-option value="' + S.esc(machId) + '">' + S.esc(label) + '</sl-option>';
-    });
-    html += '</sl-select>';
-
-    // Label: "Knob Set:" for the macro definition selector (if multiple)
-    var matchingDefs = S.data.macroDefs.filter(function(d) {
-      return d.machine === state.activeMachine;
-    });
-    if (matchingDefs.length > 1) {
-      html += '<span class="track-info-label">Macro Def:</span>';
-      html += '<sl-select id="performer-macrodef-select" size="small" value="' + S.esc(macroDef.id) + '" style="min-width:160px;">';
-      matchingDefs.forEach(function(d) {
-        html += '<sl-option value="' + S.esc(d.id) + '">' + S.esc(d.name) + '</sl-option>';
-      });
-      html += '</sl-select>';
-    } else {
-      html += '<span class="track-subtitle">' + S.esc(macroDef.name) + '</span>';
-    }
-    html += '</div>';
-
-    // Render each macro group (knob pages)
-    var mappingInfo = S.analyzeMappings(macroDef);
-
-    if (macroDef.groups) {
-      macroDef.groups.forEach(function(group, gi) {
-        if (!group.parameters || group.parameters.length === 0) return;
-
-        html += '<div class="macro-group" data-group="' + gi + '">';
-
-        // Group header — matches Designer's "Page N / Name" pattern
-        html += '<div class="macro-group-header">';
-        html += '<sl-icon name="chevron-down" class="macro-group-chevron"></sl-icon>';
-        html += '<span class="macro-group-page-label">Page ' + (gi + 1) + '</span>';
-        html += '<span class="macro-group-name">' + S.esc(group.name || '') + '</span>';
-        html += '</div>';
-
-        // Group body with knob grid (4 columns)
-        html += '<div class="macro-group-body">';
-        group.parameters.forEach(function(param) {
-          var value = state.paramValues[param.idx] !== undefined ? state.paramValues[param.idx] : (param.def || 0);
-          var min = param.min || 0;
-          var max = param.max || 127;
-          var isMacro = S.isMacroKnob(mappingInfo, param.idx);
-          var knobColor = isMacro ? 'macro' : 'normal';
-          var cellClass = 'macro-knob-cell' + (isMacro ? ' is-macro' : '');
-
-          // Name ABOVE → Knob → Value BELOW (matches Designer's Knob Preview)
-          html += '<div class="' + cellClass + '" data-param-idx="' + param.idx + '">';
-          html += '<span class="macro-knob-label">' + S.esc(param.name) + '</span>';
-          html += '<div class="macro-knob" ';
-          html += 'data-value="' + value + '" data-min="' + min + '" data-max="' + max + '" data-idx="' + param.idx + '" data-color="' + knobColor + '">';
-          html += S.renderKnobSVG({ value: value, min: min, max: max, color: knobColor, size: 64 });
-          html += '</div>';
-          html += '<span class="macro-knob-value' + (isMacro ? ' is-macro' : '') + '">' + value + '</span>';
-
-          // Show mapping targets with range bars + value dots + display hints
-          var targets = mappingInfo[param.idx] || [];
-          if (targets.length > 0) {
-            var outputs = S.computeMappingOutputs(macroDef, param.idx, value);
-            html += '<div class="knob-target-panel' + (isMacro ? ' is-macro' : '') + '" data-knob-idx="' + param.idx + '">';
-            if (isMacro) {
-              html += '<div class="knob-target-badge">MACRO</div>';
-            }
-            outputs.forEach(function(o) {
-              // Compute the range for this target (matching Designer's Knob Preview)
-              var mapping = macroDef.mapping.find(function(mm) { return mm.ctrl === o.ctrl; });
-              var rangeLow = 0, rangeHigh = 127;
-              var sourceCurve = '';
-              if (mapping && mapping.add) {
-                var singleSrc = mapping.add.length === 1;
-                if (singleSrc) {
-                  rangeLow = mapping.start || 0;
-                  var a = mapping.add[0];
-                  rangeHigh = rangeLow + Math.round(127 * (a.mul || 1) / (a.div || 1));
-                  rangeHigh = Math.min(127, rangeHigh);
-                  sourceCurve = a.curve || '';
-                } else {
-                  rangeLow = mapping.start || 0;
-                  rangeHigh = rangeLow;
-                  mapping.add.forEach(function(a) {
-                    rangeHigh += Math.round(127 * (a.mul || 1) / (a.div || 1));
-                    if (a.src === param.idx) sourceCurve = a.curve || '';
-                  });
-                  rangeHigh = Math.min(127, rangeHigh);
-                }
-              }
-              var rangeLowPct = rangeLow / 127 * 100;
-              var rangeWidthPct = (rangeHigh - rangeLow) / 127 * 100;
-              var valuePct = o.value / 127 * 100;
-
-              html += '<div class="knob-target-row" data-ctrl="' + o.ctrl + '">';
-              html += '<span class="knob-target-name">' + S.esc(o.name) + '</span>';
-              html += '<span class="knob-target-bar">';
-              html += '<span class="knob-target-range" style="left:' + rangeLowPct + '%;width:' + rangeWidthPct + '%"></span>';
-              html += '<span class="knob-target-dot" style="left:' + valuePct + '%"></span>';
-              html += '</span>';
-
-              // Format value with display hints if available
-              var targetDH = window.TBD && window.TBD.displayHints;
-              var targetFmt = String(o.value);
-              if (targetDH && macroDef.machine) {
-                var targetParamId = macroDef.machine + '_' + S.esc(o.name).replace(/[- ]/g, '_');
-                var targetHint = targetDH.resolveHint(targetParamId, o.name);
-                if (targetHint) {
-                  var physVal = targetDH.rawToDisplay(o.value, 0, 127, targetHint);
-                  targetFmt = targetDH.formatDisplayValue(physVal, targetHint);
-                }
-              }
-              html += '<span class="knob-target-val">' + targetFmt + '</span>';
-              // Show 14-bit badge if applicable
-              if (mapping && mapping.bits === 14) {
-                html += '<span class="knob-target-14bit">14-bit</span>';
-              }
-              html += '</div>';
-
-              // Show curve badge if non-linear (from mapping source, not parameter)
-              if (sourceCurve && sourceCurve !== 'linear') {
-                html += '<span class="curve-badge">' + S.esc(sourceCurve) + '</span>';
-              }
-            });
-            html += '</div>';
-          }
-
-          html += '</div>';
-        });
-        html += '</div>';
-
-        html += '</div>';
-      });
-    }
-
-    container.innerHTML = html;
-    setupMacroKnobEvents(container);
-    setupMacroGroupEvents(container);
-    setupMachineChangeEvents();
+    // Render knob groups using the shared renderer
+    container.innerHTML = S.renderKnobGroups(macroDef, state.paramValues);
+    setupKnobEvents(container);
+    setupGroupCollapseEvents(container);
   }
 
-  function setupMachineChangeEvents() {
-    var machineSelect = document.getElementById('performer-machine-select');
-    if (machineSelect) {
-      machineSelect.addEventListener('sl-change', function() {
-        var newMachine = machineSelect.value;
-        if (newMachine === state.activeMachine) return;
-        state.activeMachine = newMachine;
-
-        // Find matching macro definitions for new machine
-        var matchingDefs = S.data.macroDefs.filter(function(d) {
-          return d.machine === newMachine;
-        });
-        var allParamsDef = matchingDefs.find(function(d) {
-          return d.id.indexOf('allparams') !== -1;
-        });
-        var def = allParamsDef || matchingDefs[0] || null;
-        state.activeMacroDef = def;
-
-        // Reset param values
-        state.paramValues = [];
-        if (def && def.groups) {
-          def.groups.forEach(function(group) {
-            group.parameters.forEach(function(param) {
-              state.paramValues[param.idx] = param.def || 0;
-            });
-          });
-        }
-
-        var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
-        var availMachines = S.getTrackMachines(track);
-        renderMacroControls(track, def, availMachines);
-        renderPresetBrowser();
-
-        sendTrackUpdate({ track: state.activeTrack, machine: newMachine });
-      });
-    }
-
-    var macroDefSelect = document.getElementById('performer-macrodef-select');
-    if (macroDefSelect) {
-      macroDefSelect.addEventListener('sl-change', function() {
-        var defId = macroDefSelect.value;
-        var def = S.data.macroDefs.find(function(d) { return d.id === defId; });
-        if (!def) return;
-        state.activeMacroDef = def;
-
-        state.paramValues = [];
-        if (def.groups) {
-          def.groups.forEach(function(group) {
-            group.parameters.forEach(function(param) {
-              state.paramValues[param.idx] = param.def || 0;
-            });
-          });
-        }
-
-        var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
-        var availMachines = S.getTrackMachines(track);
-        renderMacroControls(track, def, availMachines);
-        renderPresetBrowser();
-
-        sendTrackUpdate({ track: state.activeTrack, macro: def.id });
-      });
-    }
-  }
-
-  function setupMacroGroupEvents(container) {
+  function setupGroupCollapseEvents(container) {
     container.querySelectorAll('.macro-group-header').forEach(function(header) {
       header.addEventListener('click', function() {
         header.parentElement.classList.toggle('collapsed');
@@ -328,7 +313,9 @@
     });
   }
 
-  function setupMacroKnobEvents(container) {
+  // ─── Knob Drag Interaction ───────────────────────────────
+
+  function setupKnobEvents(container) {
     container.querySelectorAll('.macro-knob').forEach(function(knob) {
       var cell = knob.closest('.macro-knob-cell');
       var valueEl = cell.querySelector('.macro-knob-value');
@@ -358,11 +345,10 @@
         valueEl.textContent = newVal;
         state.paramValues[paramIdx] = newVal;
 
-        // Re-render the SVG knob with correct color
         var knobColor = knob.getAttribute('data-color') || 'normal';
         knob.innerHTML = S.renderKnobSVG({ value: newVal, min: min, max: max, color: knobColor, size: 64 });
 
-        // Update target panel real-time values with display hints
+        // Update target panel values in real-time
         if (state.activeMacroDef) {
           var panel = cell.querySelector('.knob-target-panel');
           if (panel) {
@@ -395,7 +381,6 @@
         knob.classList.remove('dragging');
         document.removeEventListener('pointermove', onPointerMove);
         document.removeEventListener('pointerup', onPointerUp);
-
         var value = parseInt(knob.getAttribute('data-value'), 10);
         state.paramValues[paramIdx] = value;
         sendParameterUpdate();
@@ -408,7 +393,7 @@
   // ─── API: Send Updates ────────────────────────────────────
 
   function sendTrackUpdate(body) {
-    apiPost('/api/v1/macroapi?action=update_track', body).then(function() {
+    S.apiPostJSON('/api/v1/macroapi?action=update_track', body).then(function() {
       console.log('[Performer] Track update sent:', body);
     }).catch(function(err) {
       console.error('[Performer] Track update failed:', err);
@@ -417,15 +402,13 @@
 
   function sendParameterUpdate() {
     if (state.activeTrack < 0 || !state.activeMacroDef) return;
-
     var body = {
       track: state.activeTrack,
       machine: state.activeMachine,
       macro: state.activeMacroDef.id,
       parameters: state.paramValues.slice(),
     };
-
-    apiPost('/api/v1/macroapi?action=update_track', body).then(function() {
+    S.apiPostJSON('/api/v1/macroapi?action=update_track', body).then(function() {
       console.log('[Performer] Parameters sent for track', state.activeTrack);
     }).catch(function(err) {
       console.error('[Performer] Parameter send failed:', err);
@@ -438,19 +421,28 @@
     var container = document.getElementById('preset-list');
     if (!container) return;
 
-    // Filter presets for the active machine
-    var matchingDefIds = {};
+    // Collect ALL presets for this machine (for total count)
+    var machineDefIds = {};
     S.data.macroDefs.forEach(function(d) {
       if (d.machine === state.activeMachine) {
-        matchingDefIds[d.id] = true;
+        machineDefIds[d.id] = true;
       }
     });
-
-    var presets = S.data.soundPresets.filter(function(p) {
-      return matchingDefIds[p.macro] || false;
+    var allMachinePresets = S.data.soundPresets.filter(function(p) {
+      return machineDefIds[p.macro] || false;
     });
+    var totalCount = allMachinePresets.length;
 
-    // Apply search filter
+    // Apply macro filter
+    var presets;
+    if (state.macroFilter) {
+      presets = allMachinePresets.filter(function(p) {
+        return p.macro === state.macroFilter;
+      });
+    } else {
+      presets = allMachinePresets;
+    }
+
     var term = state.presetSearchTerm.toLowerCase();
     if (term) {
       presets = presets.filter(function(p) {
@@ -459,7 +451,29 @@
       });
     }
 
-    // Group by `group` field
+    var filteredCount = presets.length;
+
+    // Build HTML — filter chip + count + list
+    var html = '';
+
+    // Active filter chip (dismissible)
+    if (state.macroFilter) {
+      var filterDef = S.data.macroDefs.find(function(d) { return d.id === state.macroFilter; });
+      var filterLabel = filterDef ? (filterDef.name || filterDef.id) : state.macroFilter;
+      html += '<div class="preset-filter-bar">';
+      html += '<button class="preset-filter-chip" id="clear-macro-filter" title="Show all macros">';
+      html += '<span class="preset-filter-chip-label">' + S.esc(filterLabel) + '</span>';
+      html += '<sl-icon name="x-lg" style="font-size:0.6rem;"></sl-icon>';
+      html += '</button>';
+      html += '<span class="preset-count">' + filteredCount + ' of ' + totalCount + '</span>';
+      html += '</div>';
+    } else if (totalCount > 0) {
+      html += '<div class="preset-filter-bar">';
+      html += '<span class="preset-count">' + totalCount + ' preset' + (totalCount !== 1 ? 's' : '') + '</span>';
+      html += '</div>';
+    }
+
+    // Group by category
     var groups = {};
     presets.forEach(function(p) {
       var g = p.group || 'Uncategorized';
@@ -467,7 +481,6 @@
       groups[g].push(p);
     });
 
-    var html = '';
     Object.keys(groups).sort().forEach(function(groupName) {
       html += '<div class="preset-category">' + S.esc(groupName) + '</div>';
       groups[groupName].forEach(function(p) {
@@ -479,13 +492,32 @@
       });
     });
 
-    if (!html) {
-      html = '<div class="empty-state" style="padding:1.5rem;">';
-      html += '<p style="font-size:0.78rem;">No presets for ' + S.esc(state.activeMachine || 'this track') + '</p>';
+    if (filteredCount === 0) {
+      html += '<div class="empty-state" style="padding:1.5rem;">';
+      if (state.macroFilter) {
+        html += '<p style="font-size:0.78rem;">No presets for this macro</p>';
+        html += '<p style="font-size:0.7rem;color:var(--sl-color-neutral-400);">Clear the filter to see all presets</p>';
+      } else {
+        html += '<p style="font-size:0.78rem;">No presets for ' + S.esc(state.activeMachine || 'this track') + '</p>';
+      }
       html += '</div>';
     }
 
     container.innerHTML = html;
+
+    // Wire up the filter chip dismiss button
+    var clearBtn = document.getElementById('clear-macro-filter');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function() {
+        state.macroFilter = null;
+        // Re-render track info bar to sync dropdown to "All Macros"
+        var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+        if (track) {
+          renderTrackInfoBar(track, state.activeMacroDef);
+        }
+        renderPresetBrowser();
+      });
+    }
   }
 
   function setupPresetBrowserEvents() {
@@ -524,19 +556,22 @@
       state.activeMachine = def.machine;
     }
 
+    // Sync macro filter to reflect the preset's macro
+    state.macroFilter = preset.macro;
+
     if (preset.values && preset.values.length > 0) {
       state.paramValues = preset.values.slice();
     }
 
-    document.querySelectorAll('.preset-item').forEach(function(p) {
-      p.classList.toggle('active', p.getAttribute('data-preset-id') === presetId);
-    });
-
     var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
     if (track) {
-      var availMachines = S.getTrackMachines(track);
-      renderMacroControls(track, state.activeMacroDef, availMachines);
+      // Re-render track info bar so MACRO dropdown reflects the preset's macro
+      renderTrackInfoBar(track, state.activeMacroDef);
+      renderKnobControls(track, state.activeMacroDef);
     }
+
+    // Re-render sidebar (filter chip + filtered list with active highlight)
+    renderPresetBrowser();
 
     sendTrackUpdate({
       track: state.activeTrack,
@@ -548,7 +583,7 @@
     S.toast('Loaded: ' + preset.name, 'success', 2000);
   }
 
-  // ─── Quick Actions ───────────────────────────────────────
+  // ─── Quick Actions (sidebar buttons) ─────────────────────
 
   function setupQuickActions() {
     var randomizeBtn = document.getElementById('qa-randomize');
@@ -568,8 +603,7 @@
           });
         }
         var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
-        var availMachines = S.getTrackMachines(track);
-        renderMacroControls(track, state.activeMacroDef, availMachines);
+        renderKnobControls(track, state.activeMacroDef);
         sendParameterUpdate();
         S.toast('Randomized ' + track.name, 'success', 1500);
       });
@@ -590,8 +624,7 @@
           });
         }
         var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
-        var availMachines = S.getTrackMachines(track);
-        renderMacroControls(track, state.activeMacroDef, availMachines);
+        renderKnobControls(track, state.activeMacroDef);
         sendParameterUpdate();
         S.toast('Initialized ' + track.name, 'success', 1500);
       });
@@ -607,73 +640,124 @@
         savePresetDialog();
       });
     }
-
-    var muteBtn = document.getElementById('qa-mute-track');
-    if (muteBtn) {
-      muteBtn.addEventListener('click', function() {
-        S.toast('Mute — requires device connection', 'primary', 2000);
-      });
-    }
-
-    var soloBtn = document.getElementById('qa-solo-track');
-    if (soloBtn) {
-      soloBtn.addEventListener('click', function() {
-        S.toast('Solo — requires device connection', 'primary', 2000);
-      });
-    }
-
-    var exportBtn = document.getElementById('qa-export');
-    if (exportBtn) {
-      exportBtn.addEventListener('click', function() {
-        exportAllPresets();
-      });
-    }
-
-    var importBtn = document.getElementById('qa-import');
-    if (importBtn) {
-      importBtn.addEventListener('click', function() {
-        importPresetFile();
-      });
-    }
   }
 
-  // ─── Save Preset Dialog ──────────────────────────────────
+  // ─── Save Preset Dialog (Shoelace) ────────────────────────
 
   function savePresetDialog() {
-    var name = prompt('Preset name:', state.activePreset ? state.activePreset.name : state.activeMacroDef.name);
-    if (!name) return;
+    // Remove any old dialog
+    var old = document.getElementById('save-preset-dialog');
+    if (old) old.remove();
 
-    var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    var group = prompt('Preset group:', state.activePreset ? state.activePreset.group : state.activeMachine);
-    if (group === null) return;
+    var defaultName = state.activePreset ? state.activePreset.name : (state.activeMacroDef ? state.activeMacroDef.name : '');
+    var defaultGroup = state.activePreset ? (state.activePreset.group || '') : (state.activeMachine || '');
+    var macroName = state.activeMacroDef ? (state.activeMacroDef.name || state.activeMacroDef.id) : '';
+    var machineName = '';
+    if (state.activeMachine) {
+      var mInfo = S.getMachineInfo(state.activeMachine);
+      machineName = mInfo ? mInfo.name : state.activeMachine;
+    }
+    var trackName = '';
+    var trackBadge = '';
+    var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+    if (track) {
+      trackName = track.name;
+      trackBadge = 'CH ' + String(track.index + 1).padStart(2, '0');
+    }
 
-    var preset = {
-      id: id,
-      name: name,
-      group: group || 'User',
-      macro: state.activeMacroDef.id,
-      values: state.paramValues.slice(),
-    };
+    var dialog = document.createElement('sl-dialog');
+    dialog.id = 'save-preset-dialog';
+    dialog.label = 'Save Sound Preset';
+    dialog.setAttribute('style', '--width:28rem;');
 
-    var jsonStr = JSON.stringify(preset, null, 2);
-    var filePath = 'macrosoundpresets/' + id + '.json';
+    var html = '';
+    html += '<div class="save-preset-context">';
+    html += '<span class="track-badge" style="font-size:0.72rem;">' + S.esc(trackBadge) + '</span> ';
+    html += '<strong>' + S.esc(trackName) + '</strong>';
+    html += ' \u2014 ' + S.esc(machineName);
+    html += ' \u00b7 <em>' + S.esc(macroName) + '</em>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:0.75rem;">';
+    html += '<sl-input id="save-preset-name" label="Preset Name" value="' + S.esc(defaultName) + '" placeholder="e.g. Fat Punch" required autofocus></sl-input>';
+    html += '<sl-input id="save-preset-group" label="Category / Group" value="' + S.esc(defaultGroup) + '" placeholder="e.g. User" help-text="Presets are grouped by this label in the sidebar"></sl-input>';
+    html += '</div>';
+    html += '<div style="margin-top:1rem;font-size:0.72rem;color:var(--sl-color-neutral-500);">';
+    html += '<sl-icon name="info-circle" style="font-size:0.7rem;"></sl-icon> ';
+    html += 'Saves the current knob values (' + state.paramValues.filter(function(v) { return v !== undefined; }).length + ' params) as a new sound preset for the <strong>' + S.esc(macroName) + '</strong> macro.';
+    html += '</div>';
 
-    fetch('/api/v1/samples?action=uploadconfig&path=' + encodeURIComponent(filePath), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: jsonStr,
-    }).then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      S.toast('Saved preset: ' + name, 'success', 2000);
-      return S.reloadMacroData();
-    }).then(function() {
-      renderPresetBrowser();
-    }).catch(function(err) {
-      S.toast('Save failed: ' + err.message, 'danger', 3000);
+    dialog.innerHTML = html;
+
+    // Footer buttons
+    var cancelBtn = document.createElement('sl-button');
+    cancelBtn.setAttribute('slot', 'footer');
+    cancelBtn.setAttribute('variant', 'default');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', function() { dialog.hide(); });
+
+    var saveBtn = document.createElement('sl-button');
+    saveBtn.setAttribute('slot', 'footer');
+    saveBtn.setAttribute('variant', 'primary');
+    saveBtn.innerHTML = '<sl-icon name="floppy" slot="prefix"></sl-icon> Save Preset';
+
+    saveBtn.addEventListener('click', function() {
+      var nameInput = dialog.querySelector('#save-preset-name');
+      var groupInput = dialog.querySelector('#save-preset-group');
+      var name = (nameInput.value || '').trim();
+      var group = (groupInput.value || '').trim() || 'User';
+
+      if (!name) {
+        nameInput.setAttribute('help-text', 'Please enter a name');
+        nameInput.focus();
+        return;
+      }
+
+      var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      var preset = {
+        id: id,
+        name: name,
+        group: group,
+        macro: state.activeMacroDef.id,
+        values: state.paramValues.slice(),
+      };
+
+      saveBtn.setAttribute('loading', '');
+      var jsonStr = JSON.stringify(preset, null, 2);
+      var filePath = 'macrosoundpresets/' + id + '.json';
+
+      fetch('/api/v1/samples?action=uploadconfig&path=' + encodeURIComponent(filePath), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStr,
+      }).then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        dialog.hide();
+        S.toast('Saved preset: ' + name, 'success', 2000);
+        return S.reloadMacroData();
+      }).then(function() {
+        renderPresetBrowser();
+      }).catch(function(err) {
+        saveBtn.removeAttribute('loading');
+        S.toast('Save failed: ' + err.message, 'danger', 3000);
+      });
+    });
+
+    dialog.appendChild(cancelBtn);
+    dialog.appendChild(saveBtn);
+    document.body.appendChild(dialog);
+
+    // Clean up on close
+    dialog.addEventListener('sl-after-hide', function() {
+      dialog.remove();
+    });
+
+    // Show the dialog
+    requestAnimationFrame(function() {
+      dialog.show();
     });
   }
 
-  // ─── Export / Import ──────────────────────────────────────
+  // ─── Export / Import (for presets mode) ───────────────────
 
   function exportAllPresets() {
     var data = {
@@ -734,10 +818,40 @@
     });
   }
 
+  // ─── Machine Change (toolbar) ────────────────────────────
+
+  function onMachineChange(newMachine) {
+    if (newMachine === state.activeMachine) return;
+    state.activeMachine = newMachine;
+    state.macroFilter = null; // reset filter on machine change
+
+    var matchingDefs = S.data.macroDefs.filter(function(d) {
+      return d.machine === newMachine;
+    });
+    var allParamsDef = matchingDefs.find(function(d) {
+      return d.id.indexOf('allparams') !== -1;
+    });
+    var def = allParamsDef || matchingDefs[0] || null;
+    state.activeMacroDef = def;
+
+    state.paramValues = [];
+    if (def && def.groups) {
+      def.groups.forEach(function(group) {
+        group.parameters.forEach(function(param) {
+          state.paramValues[param.idx] = param.def || 0;
+        });
+      });
+    }
+
+    var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+    renderKnobControls(track, def);
+    renderPresetBrowser();
+    sendTrackUpdate({ track: state.activeTrack, machine: newMachine });
+  }
+
   // ─── Initialization ─────────────────────────────────────
 
   function init() {
-    // Register for shared track selection events
     S.onTrackChange(function(idx, track) {
       onTrackSelected(idx, track);
     });
@@ -745,12 +859,38 @@
     setupPresetBrowserEvents();
     setupQuickActions();
 
-    // Auto-select first track if data is already loaded
     if (S.data.loaded && S.data.tracks.length > 0) {
       S.selectTrack(S.data.tracks[0].index);
     }
 
     state.initialized = true;
+  }
+
+  // ─── Set Macro Def (called by designer in Macros mode) ────
+
+  function setMacroDef(def) {
+    state.activeMacroDef = def;
+    if (def) {
+      state.activeMachine = def.machine;
+    }
+    state.paramValues = [];
+    if (def && def.groups) {
+      def.groups.forEach(function(group) {
+        group.parameters.forEach(function(param) {
+          state.paramValues[param.idx] = param.def || 0;
+        });
+      });
+    }
+    var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+    if (track) {
+      renderKnobControls(track, def);
+      renderTrackInfoBar(track, def);
+    }
+  }
+
+  function refreshTrackInfoBar() {
+    var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+    if (track) renderTrackInfoBar(track, state.activeMacroDef);
   }
 
   // ─── Exports ─────────────────────────────────────────────
@@ -759,6 +899,15 @@
   window.TBD.performer = {
     init: init,
     state: state,
+    setMacroDef: setMacroDef,
+    refreshTrackInfoBar: refreshTrackInfoBar,
+    renderKnobControls: function() {
+      var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
+      if (track) renderKnobControls(track, state.activeMacroDef);
+    },
+    exportAllPresets: exportAllPresets,
+    importPresetFile: importPresetFile,
+    savePresetDialog: savePresetDialog,
     reload: function() {
       if (state.activeTrack >= 0) {
         var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
