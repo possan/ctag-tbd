@@ -1,0 +1,93 @@
+{#
+  Override ABlog's page.html so that ALL pages use Furo's real layout
+  (with sidebars, navigation, ToC, etc.) while preserving ABlog features
+  like the Atom feed link and post navigation on blog post pages.
+#}
+{% extends "furo/page.html" %}
+
+{% block left_sidebar %}
+{{ super() }}
+<div class="sidebar-copyright">
+  Copyright &copy; 2014&#8211;2026,
+  <a href="https://lohbihler.com">Johannes Elias Lohbihler</a> for
+  <a href="https://dadamachines.com">dadamachines</a>
+</div>
+{% endblock left_sidebar %}
+
+{% block extrahead %}
+{{ super() }}
+{%- if ablog is defined and feed_path is defined and feed_path %}
+<link
+  rel="alternate"
+  type="application/atom+xml"
+  href="{{ pathto(feed_path, 1) }}/atom.xml"
+  title="{{ feed_title }}"
+/>
+{%- endif %}
+{%- if pagename == 'index' or pagename.endswith('/index') %}
+<style>.related-pages { display: none !important; }</style>
+{%- endif %}
+{% endblock extrahead %}
+
+{% block content %}
+{%- if ablog is defined and pagename in ablog %}
+{# Blog post detail page — show metadata and post nav #}
+{% set post = ablog[pagename] %}
+<div class="ablog-post">
+
+  {# Post header: category badge → title → date (before hero image) #}
+  <div class="ablog-post-header">
+    {%- if post.category %}
+    <div class="ablog-post-cats">
+      {%- for c in post.category -%}
+      <a href="{{ pathto(c.docname) }}" class="blog-card-category blog-card-category--link">{{ c }}</a>
+      {%- if not loop.last %} {% endif -%}
+      {%- endfor %}
+    </div>
+    {%- endif %}
+    <h1 class="ablog-post-h1">{{ title }}</h1>
+    {%- if post.published %}
+    <p class="ablog-post-dateline">
+      {{ post.date.strftime(ablog.post_date_format) }}
+      {%- if post.author %} &middot; {% for a in post.author %}{{ a }}{% if not loop.last %}, {% endif %}{% endfor %}{%- endif %}
+      {%- if post.tags %} &middot; {% for t in post.tags %}<a href="{{ pathto(t.docname) }}" class="blog-meta-link">{{ t }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{%- endif %}
+    </p>
+    {%- endif %}
+  </div>
+
+  {# Hero image — shown after the title header #}
+  {%- if meta and meta.cover %}
+  {%- set depth = pagename.count('/') %}
+  <div class="blog-post-hero">
+    {%- if meta.cover.startswith('http') %}
+    <img src="{{ meta.cover }}" alt="{{ title }}" loading="lazy">
+    {%- else %}
+    <img src="{{ '../' * depth }}_static/blog/{{ meta.cover }}" alt="{{ title }}" loading="lazy">
+    {%- endif %}
+  </div>
+  {%- endif %}
+
+  <article role="main" class="ablog-post-body">
+    {{ body }}
+  </article>
+
+  {# Prev / Next post navigation #}
+  {% if post.published and ablog.post_show_prev_next %}
+  <div class="ablog__prev-next">
+    <span class="ablog__prev">
+      {% if post.prev %}
+      <a href="{{ pathto(post.prev.docname) }}">{{ post.prev.title }}</a>
+      {% endif %}
+    </span>
+    <span class="ablog__next">
+      {% if post.next %}
+      <a href="{{ pathto(post.next.docname) }}">{{ post.next.title }}</a>
+      {% endif %}
+    </span>
+  </div>
+  {% endif %}
+</div>
+{%- else %}
+{{ super() }}
+{%- endif %}
+{% endblock content %}

@@ -1,0 +1,12 @@
+{
+    "name": "possan-dada-tbd",
+    "version": "latest",
+    "builds": [
+      {
+        "chipFamily": "ESP32-P4",
+        "parts": [
+          { "path": "../firmware/p4/possan-tbd-2026-02-14.bin", "offset": 0 }
+        ]
+      }
+    ]
+  }

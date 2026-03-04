@@ -62,21 +62,6 @@ namespace CTAG {
             static esp_err_t reboot_handler(httpd_req_t *req);
 
             static esp_err_t get_iocaps_handler(httpd_req_t *req);
-
-            // static esp_err_t get_synthdefinitionlist_handler(httpd_req_t *req);
-            // static esp_err_t get_synthdefinition_handler(httpd_req_t *req);
-            // static esp_err_t get_trackdefinition_handler(httpd_req_t *req);
-            // static esp_err_t put_synthdefinition_handler(httpd_req_t *req);
-
-            // static esp_err_t get_macrodefinitionlist_handler(httpd_req_t *req);
-            // static esp_err_t get_macrodefinition_handler(httpd_req_t *req);
-            // static esp_err_t put_macrodefinition_handler(httpd_req_t *req);
-            // static esp_err_t delete_macrodefinition_handler(httpd_req_t *req);
-
-            // static esp_err_t get_soundpresetlist_handler(httpd_req_t *req);
-            // static esp_err_t get_soundpreset_handler(httpd_req_t *req);
-            // static esp_err_t put_soundpreset_handler(httpd_req_t *req);
-            // static esp_err_t delete_soundpreset_handler(httpd_req_t *req);
         };
     }
 }

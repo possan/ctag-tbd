@@ -28,6 +28,9 @@ respective component folders / files if different from this license.
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
+
+#include "SampleAPI.hpp"
+#include "MacroAPI.hpp"
 #include "RestServer.hpp"
 #include <string.h>
 #include <fcntl.h>
@@ -37,8 +40,6 @@ respective component folders / files if different from this license.
 #include "esp_vfs.h"
 #include "SPManager.hpp"
 #include "Favorites.hpp"
-#include "SampleAPI.hpp"
-#include "MacroAPI.hpp"
 #include "sdkconfig.h"
 #include "esp_flash.h"
 
@@ -51,20 +52,44 @@ static const char *REST_TAG = "esp-rest";
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 128)
 #define SCRATCH_BUFSIZE (10240)
 
-typedef struct rest_server_context {
-    char base_path[ESP_VFS_PATH_MAX + 1];
-    char scratch[SCRATCH_BUFSIZE];
-} rest_server_context_t;
+/**
+ * Set common headers for API responses.
+ *
+ * IMPORTANT: No "Connection: close" here!  The upstream p4_main branch
+ * does NOT set it on API endpoints — only on static files (in
+ * set_content_type_from_file).  With HTTP/1.1 keep-alive, the browser
+ * reuses the same TCP connection for sequential API calls, using only
+ * 1 socket instead of opening a new socket per request.  Adding
+ * "Connection: close" here caused rapid socket churn that exhausted
+ * the ESP32's 7-socket limit and crashed the device.
+ */
+static void set_api_headers(httpd_req_t *req) {
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+}
 
-#define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
-
-/* Set CORS headers on a response */
+/* Set full CORS headers (used for OPTIONS preflight) */
 void RestServer::set_cors_headers(httpd_req_t *req) {
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type, Authorization");
     httpd_resp_set_hdr(req, "Access-Control-Max-Age", "86400");
 }
+
+/* Handle CORS preflight OPTIONS requests */
+static esp_err_t cors_options_handler(httpd_req_t *req) {
+    RestServer::set_cors_headers(req);
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+typedef struct rest_server_context {
+    char base_path[ESP_VFS_PATH_MAX + 1];
+    char scratch[SCRATCH_BUFSIZE];
+} rest_server_context_t;
+
+#define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
 
 /* Set HTTP response content type and cache headers according to file extension */
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath) {
@@ -105,14 +130,6 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
     return httpd_resp_set_type(req, type);
 }
 
-/* Handle CORS preflight OPTIONS requests */
-static esp_err_t cors_options_handler(httpd_req_t *req) {
-    RestServer::set_cors_headers(req);
-    httpd_resp_set_hdr(req, "Connection", "close");
-    httpd_resp_send(req, NULL, 0);
-    return ESP_OK;
-}
-
 /* Send HTTP response with the contents of the requested file */
 static esp_err_t rest_common_get_handler(httpd_req_t *req) {
     char filepath[FILE_PATH_MAX];
@@ -120,10 +137,19 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req) {
     httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
     rest_server_context_t *rest_context = (rest_server_context_t *) req->user_ctx;
     strlcpy(filepath, rest_context->base_path, sizeof(filepath));
-    if (req->uri[strlen(req->uri) - 1] == '/') {
+
+    /* Strip query string from URI before constructing file path.
+       req->uri may contain "?v=2" etc. for cache-busting — we must
+       not include that when looking up the file on the SD card. */
+    char uri_path[128];
+    strlcpy(uri_path, req->uri, sizeof(uri_path));
+    char *query = strchr(uri_path, '?');
+    if (query) *query = '\0';
+
+    if (uri_path[strlen(uri_path) - 1] == '/') {
         strlcat(filepath, "/index.html", sizeof(filepath));
     } else {
-        strlcat(filepath, req->uri, sizeof(filepath));
+        strlcat(filepath, uri_path, sizeof(filepath));
     }
     set_content_type_from_file(req, filepath);
     strlcat(filepath, ".gz", sizeof(filepath));
@@ -169,7 +195,7 @@ esp_err_t RestServer::get_plugins_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     httpd_resp_set_type(req, "application/json");
     const char* res = CTAG::AUDIO::SoundProcessorManager::GetCStrJSONSoundProcessors();
     if(nullptr != res) httpd_resp_sendstr(req, res);
@@ -182,7 +208,7 @@ esp_err_t RestServer::get_active_plugin_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     size_t qlen = httpd_req_get_url_query_len(req);
     size_t urilen = strlen(req->uri);
     char ch = req->uri[urilen - qlen - 1];
@@ -203,7 +229,7 @@ esp_err_t RestServer::get_params_plugin_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     size_t qlen = httpd_req_get_url_query_len(req);
     size_t urilen = strlen(req->uri);
     char ch = req->uri[urilen - qlen - 1];
@@ -225,7 +251,7 @@ esp_err_t RestServer::set_active_plugin_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     char s[128];
     char v[128];
     size_t qlen = httpd_req_get_url_query_len(req);
@@ -253,7 +279,7 @@ esp_err_t RestServer::set_plugin_param_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     char query[128];
     char id[128];
     char cstrvalue[128];
@@ -286,7 +312,7 @@ esp_err_t RestServer::set_plugin_param_get_handler(httpd_req_t *req) {
 }
 
 esp_err_t RestServer::get_presets_get_handler(httpd_req_t *req) {
-    set_cors_headers(req);
+    set_api_headers(req);
     char query[128];
     size_t qlen = httpd_req_get_url_query_len(req);
     size_t urilen = strlen(req->uri);
@@ -310,7 +336,7 @@ esp_err_t RestServer::save_preset_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     char query[128];
     char name[128];
     char number[16];
@@ -335,7 +361,7 @@ esp_err_t RestServer::load_preset_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     char query[128];
     char number[16];
     size_t qlen = httpd_req_get_url_query_len(req);
@@ -365,18 +391,18 @@ esp_err_t RestServer::StartRestServer() {
     config.core_id = 0;
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.task_priority = tskIDLE_PRIORITY + 4;
-    config.max_uri_handlers = 24;
+    config.max_uri_handlers = 20;
     config.stack_size = 8192;
-    config.recv_wait_timeout = 10;
-    config.send_wait_timeout = 10;
+    config.recv_wait_timeout = 10;   // Match p4_main stable branch (Feb 3 2026)
+    config.send_wait_timeout = 10;   // Plugin allocation can take >5s on loaded system
     config.lru_purge_enable = true;  // Auto-close least-recently-used connections when out of sockets
+    // Note: max_open_sockets stays at default 7 (per upstream p4_main testing).
+    // API responses use HTTP/1.1 keep-alive (no Connection:close) so the
+    // browser reuses sockets.  Only static files get Connection:close.
     /*
     config.max_open_sockets   = 10;
     config.max_resp_headers   = 10;
-
-    config.backlog_conn       = 10;
-    config.lru_purge_enable   = false;
-     */
+    */
 /*
 #define HTTPD_DEFAULT_CONFIG() {                        \
         .task_priority      = tskIDLE_PRIORITY+5,       \
@@ -558,6 +584,7 @@ esp_err_t RestServer::StartRestServer() {
     };
     httpd_register_uri_handler(server, &samples_post_uri);
 
+    /* Macro API — GET: list/read macro defs and sound presets */
     httpd_uri_t macroapi_get_uri = {
             .uri = "/api/v1/macroapi",
             .method = HTTP_GET,
@@ -566,6 +593,7 @@ esp_err_t RestServer::StartRestServer() {
     };
     httpd_register_uri_handler(server, &macroapi_get_uri);
 
+    /* Macro API — POST: save/delete macro defs and sound presets */
     httpd_uri_t macroapi_post_uri = {
             .uri = "/api/v1/macroapi",
             .method = HTTP_POST,
@@ -601,7 +629,7 @@ esp_err_t RestServer::set_configuration_post_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     /* Destination buffer for content of HTTP POST request.
      * httpd_req_recv() accepts char* only, but content could
      * as well be any binary data (needs type casting).
@@ -635,7 +663,7 @@ esp_err_t RestServer::get_configuration_get_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     httpd_resp_set_type(req, "application/json");
     const char *res = CTAG::AUDIO::SoundProcessorManager::GetCStrJSONConfiguration();
     if(nullptr != res) httpd_resp_sendstr(req, res);
@@ -648,7 +676,7 @@ esp_err_t RestServer::get_preset_json_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     char query[128];
     char pluginID[64];
     httpd_req_get_url_query_str(req, query, 128);
@@ -666,7 +694,7 @@ esp_err_t RestServer::get_preset_json_handler(httpd_req_t *req) {
 }
 
 esp_err_t RestServer::reboot_handler(httpd_req_t *req) {
-    set_cors_headers(req);
+    set_api_headers(req);
     char query[128];
     httpd_req_get_url_query_str(req, query, 128);
     ESP_LOGW(REST_TAG, "Reboot requested");
@@ -677,7 +705,7 @@ esp_err_t RestServer::reboot_handler(httpd_req_t *req) {
 }
 
 esp_err_t RestServer::set_preset_json_handler(httpd_req_t *req) {
-    set_cors_headers(req);
+    set_api_headers(req);
     char query[128];
     char pluginID[64];
     memset(query, 0, 128);
@@ -732,7 +760,7 @@ esp_err_t RestServer::set_preset_json_handler(httpd_req_t *req) {
 
 // transmit io capabilities
 esp_err_t RestServer::get_iocaps_handler(httpd_req_t *req) {
-    set_cors_headers(req);
+    set_api_headers(req);
     httpd_resp_set_type(req, "application/json");
 #include "IOCapabilities.hpp"
     httpd_resp_sendstr(req, s.c_str());
@@ -745,7 +773,7 @@ esp_err_t RestServer::favorite_post_handler(httpd_req_t *req) {
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    set_cors_headers(req);
+    set_api_headers(req);
     string cmd{req->uri};
 
     ESP_LOGD("REST", "Favorite handler cmd: %s", cmd.c_str());

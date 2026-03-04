@@ -1,0 +1,55 @@
+{#
+  Override ABlog's collection.html so tag/category/archive pages use the full
+  Furo layout with the same blog-grid card style as the blog index page.
+#}
+{% extends "page.html" %}
+
+{% set fa = ablog.fontawesome %}
+
+{% block extrahead %}
+{{ super() }}
+{%- if archive_feed and feed_path %}
+<link
+  rel="alternate"
+  type="application/atom+xml"
+  href="{{ pathto(collection.path, 1) }}/atom.xml"
+  title="{{ header }} {{ collection }}"
+/>
+{%- endif %}
+{% endblock extrahead %}
+
+{% block content %}
+<div class="ablog-collection-page">
+  <h1 class="ablog-collection-title">
+    {{ header }}
+    {% if collection.href %}<a href="{{ collection.href }}">{{ collection }}</a>
+    {% else %}{{ collection }}{% endif %}
+  </h1>
+
+  <div class="blog-grid">
+    {% for post in collection %}
+    {%- set href = post.external_link if post.external_link else pathto(post.docname) %}
+    {%- set cats = post.category | list %}
+    <a class="blog-card" href="{{ href }}">
+      <div class="blog-card-image">
+        <div class="blog-card-placeholder">
+          {%- if cats %}{{ cats[0] }}{%- else %}tbd{%- endif -%}
+        </div>
+      </div>
+      <div class="blog-card-body">
+        {% if cats %}
+        <span class="blog-card-category">{{ cats[0] }}</span>
+        {% endif %}
+        <h3>{{ post.title }}</h3>
+        <div class="blog-card-excerpt">{{ post.to_html(collection.docname) }}</div>
+        {% if post.published %}
+        <span class="blog-card-date">{{ post.date.strftime(ablog.post_date_format) }}</span>
+        {% else %}
+        <span class="blog-card-date">Draft</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock content %}

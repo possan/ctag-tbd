@@ -52,14 +52,17 @@ namespace CTAG {
             }
 
             static const char *GetCStrJSONActivePluginParams(const int chan) {
+                if (sp[chan] == nullptr) return "{}";
                 return sp[chan]->GetCStrJSONParamSpecs();
             }
 
             static const char *GetCStrJSONGetPresets(const int chan) { // names of all available presets
+                if (sp[chan] == nullptr) return "[]";
                 return sp[chan]->GetCStrJSONPresets();
             }
 
             static const char *GetCStrJSONAllPresetData(const int chan) { // current preset as JSON
+                if (sp[chan] == nullptr) return "{}";
                 return sp[chan]->GetCStrJSONAllPresetData();
             }
 

@@ -22,7 +22,7 @@
 - SD-card images and hash files
 
 **Decision needed:**
-- [ ] **Restore docs/ from branch B** — we should bring these back as they are maintained/useful  
+- [x] **Restore docs/ from branch B** — we should bring these back as they are maintained/useful  
 - [ ] Or: ignore docs/ divergence and handle separately
 
 ---
@@ -38,7 +38,7 @@
 - `tests/webui/run-tests.js` — WebUI automation test runner (1,304 lines)
 
 **Decision needed:**
-- [ ] **Keep both** — restore B's test files alongside our new test script  
+- [x] **Keep both** — restore B's test files alongside our new test script  
 - [ ] Our `test_dsp_json_alignment.py` remains, do not overwrite with B's tests
 
 ---
@@ -67,7 +67,7 @@ This is the most complex area. The two branches have **entirely different implem
 - `app.css` v8, `shared.js` v10, `performer.js` v9, `designer.js` v9, `app.js`
 
 **Decision needed:**
-- [ ] **Option 1 — Take B's `www/` Shoelace app, keep our `www-prototype/`**  
+- [x] **Option 1 — Take B's `www/` Shoelace app, keep our `www-prototype/`**  
   Discard the old jQuery multi-page UI from A, restore B's modern `www/` as baseline, keep `www-prototype/` alongside for the new persona prototype work
 - [ ] **Option 2 — Keep A's `www/` as-is (old multi-page)**  
   Not recommended — it's older than B's implementation
@@ -83,7 +83,7 @@ This is the most complex area. The two branches have **entirely different implem
 TypeScript + Vite preset editor tool with 9 source files: `main.ts`, `macropreset.ts`, `soundpreset.ts`, `outputmappinglist.ts`, `parameterlist.ts`, `preview.ts`, `basicprops.ts`, `device.ts`, `state.ts`
 
 **Decision:**
-- [ ] **KEEP** — This is our work, not in target. No conflict.
+- [x] **KEEP** — This is our work, not in target. No conflict.
 
 ---
 
@@ -102,8 +102,8 @@ TypeScript + Vite preset editor tool with 9 source files: `main.ts`, `macroprese
 - All other `mp-*.jsn` files — Minor changes, likely compatible
 
 **Decision:**
-- [ ] **KEEP all our data files** — macrodefinitions, macrosoundpresets, synthdefinitions.json — do not lose these
-- [ ] Review `.jsn` sp files for conflicts carefully during merge
+- [x] **KEEP all our data files** — macrodefinitions, macrosoundpresets, synthdefinitions.json — do not lose these
+- [x] Review `.jsn` sp files for conflicts carefully during merge
 
 ---
 
@@ -143,12 +143,13 @@ TypeScript + Vite preset editor tool with 9 source files: `main.ts`, `macroprese
 | `component.mk` | +17 lines | Build system entries for new files |
 
 **Decision:**
-- [ ] **All new files** → KEEP, no conflict  
-- [ ] `RestServer.cpp` → Manually merge: B's version as base, graft in our MacroAPI route registration  
+- [x] **All new files** → KEEP, no conflict  
+- [x] `RestServer.cpp` → Manually merge: B's version as base, graft in our MacroAPI route registration  
 - [ ] `SPManager.cpp` → Ours is the correct version (B's is the old baseline with no macro system)  
 - [ ] `SampleAPI.cpp` → Ours (we added delete/rename, B doesn't have it)  
 - [ ] `SpiAPI.cpp/.hpp` → Ours (SPI protocol additions)  
 - [ ] `Control.cpp/.hpp` → Careful diff, take union of changes
+Comment for the files with no checkbox. Check in detail what the differences are between B and A. For example the Sample Manager was working like it should in B - so we at least need to have all features that have been in B. If there are additions in A > we might need to check. The SpiAPI is probably the right one in A. Please check Control in detail but probably the Version in A is the correct one! 
 
 ---
 
@@ -172,8 +173,9 @@ Also new: `ctagSoundProcessorPicoSeqRack.cpp/.hpp` (1,508 lines — the main Pic
 | `ctagSampleRomModel.cpp/.hpp` | −21 lines — may have been refactored in B. **Diff carefully** |
 
 **Decision:**
-- [ ] All `rack/` files and PicoSeqRack → KEEP (not in B)  
+- [x] All `rack/` files and PicoSeqRack → KEEP (not in B)  
 - [ ] Modified files → diff and take the union; prioritize our additions
+Comment > usually for all DSP related stuff Branch A should be leading!
 
 ---
 
@@ -193,8 +195,8 @@ Also new: `ctagSoundProcessorPicoSeqRack.cpp/.hpp` (1,508 lines — the main Pic
 | `data/cfg_tbd_sim.jsn` | Minor |
 
 **Decision:**
-- [ ] **Take B's simulator as base** — it has the more complete WebServer/ui.html  
-- [ ] Ensure our `fake-idf/malloc.c` addition from B is included  
+- [x] **Take B's simulator as base** — it has the more complete WebServer/ui.html  
+- [x] Ensure our `fake-idf/malloc.c` addition from B is included  
 - [ ] Review if any of our simulator removals were intentional  
 
 ---
@@ -208,8 +210,8 @@ Also new: `ctagSoundProcessorPicoSeqRack.cpp/.hpp` (1,508 lines — the main Pic
 | `partitions_example.csv` | Both modified — partition sizes | **Diff and decide** |
 | `sdkconfig.defaults` | Both modified | **Diff carefully** |
 | `create_sd_archive.sh` | Both modified | **Diff and merge** |
-| `LICENSE` | Both modified | **Keep B's** (should be authoritative) |
-| `README.md` vs `readme.md` | B has `README.md` (deleted in A), A has lowercase `readme.md` | **Restore README.md from B, keep our readme.md** |
+| `LICENSE` | Both modified | **Keep B's** |
+| `README.md` | Restore README.md from B, don't need the readme.md from A. 
 
 ---
 
@@ -219,9 +221,9 @@ Also new: `ctagSoundProcessorPicoSeqRack.cpp/.hpp` (1,508 lines — the main Pic
 **Our branch:** Deleted all of them, added `MACRO-AND-PRESET-CONCEPT.md`, `MACRO-PRESET-ALIGNMENT.md`, `MEMORY-ANALYSIS.md`, `SMART-HELPER-PROPOSAL.md`, `TODO.txt` at root level
 
 **Decision:**
-- [ ] **Restore B's `prototyping/archived/` folder** — historical planning docs are useful  
-- [ ] Keep our root-level planning docs as-is  
-- [ ] Restore B's `prototyping/DEPLOYMENT-RULES.md` and `WEBUI-STATUS-AND-ROADMAP.md`
+- [x] **Restore B's `prototyping/archived/` folder** — historical planning docs are useful  
+- [x] Keep our root-level planning docs as-is  
+- [x] Restore B's `prototyping/DEPLOYMENT-RULES.md` and `WEBUI-STATUS-AND-ROADMAP.md`
 
 ---
 
@@ -233,6 +235,7 @@ Also new: `ctagSoundProcessorPicoSeqRack.cpp/.hpp` (1,508 lines — the main Pic
 
 **Decision:**
 - [ ] **Restore from B** — useful CI automation
+Comment we don't need these for now as we don't deploy docs from this branch. 
 
 ---
 

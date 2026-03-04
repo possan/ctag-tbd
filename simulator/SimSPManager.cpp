@@ -226,6 +226,7 @@ void SimSPManager::SetSoundProcessorChannel(const int chan, const string &id) {
 }
 
 void SimSPManager::SetChannelParamValue(const int chan, const string &id, const string &key, const int val) {
+    if (sp[chan] == nullptr) return;
     sp[chan]->SetParamValue(id, key, val);
 }
 
@@ -281,6 +282,10 @@ void SimSPManager::SetProcessParams(const string &params) {
         value[i] = simModel->GetArrayElement("value", i);
     }
     stimulus.UpdateStimulus(mode, value);
+}
+
+void SimSPManager::SetConfigurationFromJSON(const string &data) {
+    model->SetConfigurationFromJSON(data);
 }
 
 string SimSPManager::GetAllFavorites() {

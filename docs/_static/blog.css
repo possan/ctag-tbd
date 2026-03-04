@@ -1,0 +1,254 @@
+/* Blog styling for ABlog + Furo integration */
+
+/* --- Blog post list on index page --- */
+.ablog-post-list {
+  list-style: none;
+  padding: 0;
+}
+
+/* --- Post metadata bar (date, author, tags) on detail pages --- */
+.ablog-post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1.5em;
+  font-size: 0.9em;
+  color: var(--color-foreground-secondary);
+  border-bottom: 1px solid var(--color-background-border);
+  padding-bottom: 1em;
+  margin-bottom: 2em;
+}
+
+.ablog-post-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+/* --- Post navigation (prev / next) on detail pages --- */
+.ablog__prev-next {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 3em;
+  padding-top: 1.5em;
+  border-top: 1px solid var(--color-background-border);
+  font-size: 0.95em;
+}
+
+.ablog__prev-next a {
+  text-decoration: none;
+  color: var(--dada-accent);
+}
+
+.ablog__prev-next a:hover {
+  text-decoration: underline;
+}
+
+.ablog__prev {
+  text-align: left;
+}
+
+.ablog__prev::before {
+  content: "← ";
+}
+
+.ablog__next {
+  text-align: right;
+  margin-left: auto;
+}
+
+.ablog__next::after {
+  content: " →";
+}
+
+.ablog__spacer {
+  display: none;
+}
+
+/* --- Blog post card on index page --- */
+.postlist-entry {
+  margin-bottom: 2em;
+  padding-bottom: 2em;
+  border-bottom: 1px solid var(--color-background-border);
+}
+
+.postlist-entry:last-child {
+  border-bottom: none;
+}
+
+.postlist-entry .post-title {
+  font-size: 1.25em;
+  font-weight: 700;
+  margin-bottom: 0.3em;
+}
+
+.postlist-entry .post-title a {
+  text-decoration: none;
+  color: var(--color-foreground-primary);
+}
+
+.postlist-entry .post-title a:hover {
+  color: var(--dada-accent);
+}
+
+.postlist-entry .post-meta {
+  font-size: 0.85em;
+  color: var(--color-foreground-secondary);
+  margin-bottom: 0.5em;
+}
+
+.postlist-entry .post-excerpt {
+  color: var(--color-foreground-secondary);
+}
+
+/* --- Hero image on blog post detail pages --- */
+.blog-post-hero {
+  margin: 0 0 2.5em;
+  overflow: hidden;
+  aspect-ratio: 16 / 7;
+  border-radius: 0;
+}
+
+.blog-post-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* --- Post header: category + title + dateline shown above hero --- */
+.ablog-post-header {
+  padding-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+.ablog-post-cats {
+  margin-bottom: 0.7em;
+}
+
+.blog-card-category--link {
+  text-decoration: none;
+}
+
+.blog-card-category--link:hover {
+  opacity: 0.75;
+}
+
+.ablog-post-h1 {
+  margin: 0 0 0.35em !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  line-height: 1.2;
+}
+
+.ablog-post-dateline {
+  color: var(--color-foreground-secondary);
+  font-size: 0.9em;
+  margin: 0;
+}
+
+/* Hide the duplicate h1 that Sphinx renders inside {{ body }} —
+   we already show the title explicitly in .ablog-post-header */
+.ablog-post-body > section:first-child > h1:first-child,
+.ablog-post-body > h1:first-child {
+  display: none;
+}
+
+/* --- Tag/category archive page title --- */
+.ablog-collection-title {
+  margin-bottom: 1.2em;
+}
+
+.ablog-collection-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Excerpt rendered inside collection cards via post.to_html() */
+.blog-card-excerpt {
+  font-size: 0.88em;
+  color: var(--color-foreground-secondary);
+  line-height: 1.5;
+  margin: 0.3em 0 0.5em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Hide heading and images inside the excerpt render */
+.blog-card-excerpt h1,
+.blog-card-excerpt h2,
+.blog-card-excerpt h3,
+.blog-card-excerpt img,
+.blog-card-excerpt .docutils.container {
+  display: none;
+}
+
+.blog-card-excerpt p {
+  margin: 0;
+}
+
+/* --- Linked metadata items (tags/categories) in post meta bar --- */
+.blog-meta-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.blog-meta-link:hover {
+  color: var(--dada-accent);
+  text-decoration: underline;
+}
+
+/* --- Blog index subtitle and feed link --- */
+.blog-index-intro {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin: 0.2em 0 1.5em;
+}
+
+.blog-index-intro p {
+  margin: 0;
+  color: var(--color-foreground-secondary);
+  font-size: 1em;
+}
+
+.blog-feed-link {
+  white-space: nowrap;
+  font-size: 0.85em;
+  color: var(--dada-accent);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.blog-feed-link:hover {
+  text-decoration: underline;
+}
+
+/* --- Tag and category badges --- */
+.ablog__category a,
+.ablog__tags a {
+  display: inline-block;
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-radius: 0;
+  padding: 0.1em 0.5em;
+  font-size: 0.85em;
+  text-decoration: none;
+  color: var(--color-foreground-secondary);
+}
+
+.ablog__category a:hover,
+.ablog__tags a:hover {
+  border-color: var(--dada-accent);
+  color: var(--dada-accent);
+}
+
+/* Hide the Furo prev/next navigation on blog post pages
+   (we use ABlog's post navigation instead) */
+.ablog-post .prev-next-area {
+  display: none;
+}
