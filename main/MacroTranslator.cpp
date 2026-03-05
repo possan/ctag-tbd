@@ -320,12 +320,11 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
 
                 for(int t=0; t<16; t++) {
                     if (trackToMidiChannel[t] == inputchannel) {
-                        // First change machines if needed.
-                        // soundProcessor->setTrackMachine(t, trackMachineId[t]);
                         int macrocc = (int)control - trackBaseCC[t];
                         macrocc -= 8; // input parameter CC's start at 8 too and...
-                        // ESP_LOGI("MacroTranslator", "CC, track %d, control %d, value %d",
-                        //     track, control, value);
+                        if (macrocc >= 0 && macrocc < 32) {
+                            // ESP_LOGI("MacroTranslator", "  -> track %d param %d = %d (baseCC=%d)", t, macrocc, value, trackBaseCC[t]);
+                        }
                         this->SetTrackParameter(t, macrocc, value);
                     }
                 }
@@ -395,12 +394,7 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
             // TODO: copy mapping instead.
             MacroDeviceDefinition *def = definition[t];
 
-            // ESP_LOGI("MacroTranslator", "Track %d is dirty, def=0x%08X", t, (uintptr_t)def);
-
             if (def != nullptr) {
-                // ESP_LOGI("MacroTranslator", "Using definition: %s, %s",
-                //     def->id.c_str(), def->name.c_str());
-
                 int idx = 0;
                 for(auto om : def->outputMappings) {
                     int32_t finalvalue = om.startValue;
@@ -420,16 +414,10 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
                     if (finalvalue > 127) finalvalue = 127;
                     
                     int midichannel = trackToMidiChannel[t];
-                    // ESP_LOGI("MacroTranslator", "Track %d: (ch %d) setting synth parameter %d to %d (CC %d)",
-                    //     t, midichannel, idx, finalvalue, cc);
                     if (om.ctrl  != -1) {
-                        // if (finalvalue != outputValues[t][idx]) {
                         outputValues[t][idx] = finalvalue;
-                        // ESP_LOGD("MacroTranslator", "Track %d: (ch %d) setting synth parameter %d to %d (CC %d)",
-                        //     t, midichannel, idx, finalvalue, cc);
                         int finalcc = om.ctrl + trackBaseCC[t];
                         soundProcessor->handleMidiControlChange(midichannel, finalcc, finalvalue);
-                        // }
                     }
                     idx ++;
                 }
