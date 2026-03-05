@@ -9,18 +9,19 @@
         {
           "idx": 0,
           "name": "Time",
-          "def": 16,
+          "def": 4,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "log"
         },
         {
           "idx": 1,
           "name": "Sync",
           "def": 0,
           "min": 0,
-          "max": 127,
+          "max": 1,
           "res": 64,
           "ui": "bignum"
         },
@@ -29,7 +30,7 @@
           "name": "Freeze",
           "def": 0,
           "min": 0,
-          "max": 127,
+          "max": 1,
           "res": 64,
           "ui": "bignum"
         },
@@ -38,7 +39,7 @@
           "name": "Tapedig",
           "def": 0,
           "min": 0,
-          "max": 127,
+          "max": 1,
           "res": 64,
           "ui": "bignum"
         }
@@ -68,11 +69,12 @@
         {
           "idx": 6,
           "name": "Feedback",
-          "def": 32,
+          "def": 13,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 7,
@@ -110,15 +112,117 @@
     }
   ],
   "mapping": [
-    { "ctrl": 8, "start": 0, "add": [{ "src": 0, "mul": 1, "div": 1 }] },
-    { "ctrl": 9, "start": 0, "add": [{ "src": 1, "mul": 1, "div": 1 }] },
-    { "ctrl": 10, "start": 0, "add": [{ "src": 2, "mul": 1, "div": 1 }] },
-    { "ctrl": 11, "start": 0, "add": [{ "src": 3, "mul": 1, "div": 1 }] },
-    { "ctrl": 12, "start": 0, "add": [{ "src": 4, "mul": 1, "div": 1 }] },
-    { "ctrl": 13, "start": 0, "add": [{ "src": 5, "mul": 1, "div": 1 }] },
-    { "ctrl": 14, "start": 0, "add": [{ "src": 6, "mul": 1, "div": 1 }] },
-    { "ctrl": 15, "start": 0, "add": [{ "src": 7, "mul": 1, "div": 1 }] },
-    { "ctrl": 16, "start": 0, "add": [{ "src": 8, "mul": 1, "div": 1 }] },
-    { "ctrl": 17, "start": 0, "add": [{ "src": 9, "mul": 1, "div": 1 }] }
+    {
+      "ctrl": 8,
+      "start": 0,
+      "add": [
+        {
+          "src": 0,
+          "mul": 1,
+          "div": 1,
+          "curve": "log"
+        }
+      ]
+    },
+    {
+      "ctrl": 9,
+      "start": 0,
+      "add": [
+        {
+          "src": 1,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 10,
+      "start": 0,
+      "add": [
+        {
+          "src": 2,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 11,
+      "start": 0,
+      "add": [
+        {
+          "src": 3,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 12,
+      "start": 0,
+      "add": [
+        {
+          "src": 4,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 13,
+      "start": 0,
+      "add": [
+        {
+          "src": 5,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 14,
+      "start": 0,
+      "add": [
+        {
+          "src": 6,
+          "mul": 1,
+          "div": 1,
+          "curve": "scurve"
+        }
+      ]
+    },
+    {
+      "ctrl": 15,
+      "start": 0,
+      "add": [
+        {
+          "src": 7,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 16,
+      "start": 0,
+      "add": [
+        {
+          "src": 8,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 17,
+      "start": 0,
+      "add": [
+        {
+          "src": 9,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    }
   ]
 }

@@ -2605,6 +2605,36 @@ function isMacroKnob(mappingAnalysis, paramIdx) {
 }
 
 /**
+/**
+ * Apply a response curve to a 0-127 value.
+ * Must match the C++ applyCurve() in MacroTranslator.cpp exactly.
+ */
+function applyCurve(val, curveType) {
+  if (!curveType || curveType === 'linear') return val;
+  if (val <= 0) return 0;
+  if (val >= 127) return 127;
+
+  switch (curveType) {
+    case 'log':
+      if (val <= 16) return val * 4;
+      if (val <= 64) return 64 + Math.round((val - 16) * 36 / 48);
+      return 100 + Math.round((val - 64) * 27 / 63);
+
+    case 'exp':
+      return Math.round(val * val / 127);
+
+    case 'scurve':
+      var centered = val - 64;
+      var cubed = Math.round(centered * centered * centered / (64 * 64));
+      var result = 64 + cubed;
+      return Math.max(0, Math.min(127, result));
+
+    default:
+      return val;
+  }
+}
+
+/**
  * Compute the real CC output values for a given knob value.
  * Returns an array of { ctrl, name, value, pct } for each mapping target.
  *   ctrl  — CC number
@@ -2619,7 +2649,8 @@ function computeMappingOutputs(def, paramIdx, knobValue) {
     if (!m.add) return;
     m.add.forEach(function(a) {
       if (a.src !== paramIdx) return;
-      var val = (m.start || 0) + Math.round(knobValue * a.mul / a.div);
+      var curved = applyCurve(knobValue, a.curve);
+      var val = (m.start || 0) + Math.round(curved * a.mul / a.div);
       val = Math.max(0, Math.min(127, val));
       results.push({
         ctrl: m.ctrl,

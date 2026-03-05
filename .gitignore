@@ -61,3 +61,4 @@ sdcard_image/www/shoelace/themes/*
 # npm dependencies
 node_modules/
 package-lock.json
+tests/__pycache__/

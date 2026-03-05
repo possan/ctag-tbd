@@ -9,34 +9,37 @@
         {
           "idx": 0,
           "name": "Freq",
-          "def": 32,
+          "def": 14,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "log"
         },
         {
           "idx": 1,
           "name": "Tone",
-          "def": 16,
+          "def": 24,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "log"
         },
         {
           "idx": 2,
           "name": "Decay",
-          "def": 16,
+          "def": 32,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         },
         {
           "idx": 3,
           "name": "Noise",
-          "def": 32,
+          "def": 77,
           "min": 0,
           "max": 127,
           "res": 64,
@@ -50,7 +53,7 @@
         {
           "idx": 4,
           "name": "Accent",
-          "def": 32,
+          "def": 10,
           "min": 0,
           "max": 127,
           "res": 64,
@@ -67,7 +70,8 @@
         {
           "src": 0,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "log"
         }
       ]
     },
@@ -78,7 +82,8 @@
         {
           "src": 1,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "log"
         }
       ]
     },
@@ -89,7 +94,8 @@
         {
           "src": 2,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },

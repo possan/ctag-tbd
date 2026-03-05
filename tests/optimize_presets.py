@@ -42,8 +42,58 @@ SYNTHDEF_FILE = os.path.join(BASE, "sdcard_image", "data", "synthdefinitions.jso
 #                for params that should use restricted encoder range
 #
 # Values are computed from the C++ DSP code parameter ranges.
-# The formula chain: CC value → cv = CC*32 → DSP formula(cv)
+# The formula chain: knob_value → applyCurve() → CC → cv = CC*32 → DSP
 # ──────────────────────────────────────────────────────────────────────
+
+import math
+
+# ── Inverse curve: given the CC value the DSP should receive,
+#    compute what knob position to store in the preset ──
+
+def inverse_log(cc):
+    """Inverse of piecewise log curve: 0-64→0-16, 64-100→16-64, 100-127→64-127"""
+    if cc <= 0: return 0
+    if cc >= 127: return 127
+    if cc <= 64:
+        return int(round(cc / 4.0))               # 0-64 → 0-16
+    elif cc <= 100:
+        return int(round((cc - 64) * 48.0 / 36.0 + 16))  # 64-100 → 16-64
+    else:
+        return int(round((cc - 100) * 63.0 / 27.0 + 64))  # 100-127 → 64-127
+
+def inverse_exp(cc):
+    """Inverse of exp curve: val²/127 = cc → val = sqrt(cc * 127)"""
+    if cc <= 0: return 0
+    if cc >= 127: return 127
+    return int(round(math.sqrt(cc * 127.0)))
+
+def inverse_scurve(cc):
+    """Inverse of S-curve: 64 + (v-64)³/4096 = cc → v = 64 + cbrt((cc-64)*4096)"""
+    if cc <= 0: return 0
+    if cc >= 127: return 127
+    delta = cc - 64
+    cubed = delta * 4096.0
+    if cubed >= 0:
+        v = 64 + cubed ** (1.0/3.0)
+    else:
+        v = 64 - (-cubed) ** (1.0/3.0)
+    return max(0, min(127, int(round(v))))
+
+def inverse_curve(cc, curve_type):
+    """Given desired DSP CC output, return knob position accounting for curve."""
+    if curve_type == 'log':
+        return inverse_log(cc)
+    elif curve_type == 'exp':
+        return inverse_exp(cc)
+    elif curve_type == 'scurve':
+        return inverse_scurve(cc)
+    else:
+        return cc  # linear — no change
+
+
+# ── Curve assignments per machine (must match add_curves_to_allparams.py) ──
+from add_curves_to_allparams import CURVE_MAP
+
 
 # ── Helper: compute CC for a target DSP value ──
 def cc_for_linear(target, scale):
@@ -445,6 +495,32 @@ def save_json_compact(path, data):
         f.write("\n")
 
 
+def get_curved_preset_values(machine):
+    """
+    Get preset values adjusted for response curves.
+
+    MACHINE_PRESETS stores the target DSP CC values (what the synth engine
+    should receive). But with curves active, the preset stores KNOB positions
+    that get curved before reaching the DSP. So we invert the curve.
+
+    Example: DSP needs CC=64 for Freq, curve is "log"
+      → log(16)=64, so we store knob=16 in the preset
+    """
+    if machine not in MACHINE_PRESETS:
+        return []
+
+    raw_values = MACHINE_PRESETS[machine]["values"]
+    curves = CURVE_MAP.get(machine, {})
+
+    adjusted = []
+    for idx, val in enumerate(raw_values):
+        curve_type = curves.get(idx, 'linear')
+        knob_val = inverse_curve(val, curve_type)
+        adjusted.append(knob_val)
+
+    return adjusted
+
+
 # ──────────────────────────────────────────────────────────────────────
 # ANALYSIS & FIX LOGIC
 # ──────────────────────────────────────────────────────────────────────
@@ -472,7 +548,7 @@ def analyze_and_fix():
         if machine not in MACHINE_PRESETS:
             continue
 
-        new_values = MACHINE_PRESETS[machine]["values"]
+        new_values = get_curved_preset_values(machine)
         old_values = preset.get("values", [])
 
         if len(new_values) != len(old_values):
@@ -521,7 +597,7 @@ def analyze_and_fix():
             continue
 
         preset_info = MACHINE_PRESETS[machine]
-        new_values = preset_info["values"]
+        new_values = get_curved_preset_values(machine)
         discrete_fixes = preset_info.get("discrete", {})
         modified = False
         param_changes = []

@@ -18,29 +18,32 @@
         {
           "idx": 1,
           "name": "P0",
-          "def": 0,
+          "def": 64,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 2,
           "name": "VCA D",
-          "def": 8,
+          "def": 63,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         },
         {
           "idx": 3,
           "name": "VCF D",
-          "def": 8,
+          "def": 57,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         }
       ]
     },
@@ -50,36 +53,39 @@
         {
           "idx": 4,
           "name": "Cutoff",
-          "def": 64,
+          "def": 37,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "log"
         },
         {
           "idx": 5,
           "name": "Reso",
-          "def": 0,
+          "def": 21,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 6,
           "name": "EnvDec",
-          "def": 16,
+          "def": 80,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         },
         {
           "idx": 7,
           "name": "Type",
-          "def": 0,
+          "def": 1,
           "min": 0,
-          "max": 127,
+          "max": 3,
           "res": 64,
           "ui": "bignum"
         }
@@ -95,23 +101,25 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         },
         {
           "idx": 9,
           "name": "Drive",
-          "def": 0,
+          "def": 37,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         },
         {
           "idx": 10,
           "name": "Slide",
           "def": 0,
           "min": 0,
-          "max": 127,
+          "max": 1,
           "res": 64,
           "ui": "bignum"
         },
@@ -120,7 +128,7 @@
           "name": "Accent",
           "def": 0,
           "min": 0,
-          "max": 127,
+          "max": 1,
           "res": 64,
           "ui": "bignum"
         }
@@ -132,11 +140,12 @@
         {
           "idx": 12,
           "name": "P1",
-          "def": 0,
+          "def": 13,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 13,
@@ -145,7 +154,8 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 14,
@@ -154,12 +164,13 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 15,
           "name": "Acc. Lev",
-          "def": 0,
+          "def": 26,
           "min": 0,
           "max": 127,
           "res": 64,
@@ -187,7 +198,8 @@
         {
           "src": 1,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     },
@@ -198,7 +210,8 @@
         {
           "src": 2,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -209,7 +222,8 @@
         {
           "src": 3,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -220,7 +234,8 @@
         {
           "src": 4,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "log"
         }
       ]
     },
@@ -231,7 +246,8 @@
         {
           "src": 5,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     },
@@ -242,7 +258,8 @@
         {
           "src": 6,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -252,7 +269,7 @@
       "add": [
         {
           "src": 7,
-          "mul": 1,
+          "mul": 32,
           "div": 1
         }
       ]
@@ -264,7 +281,8 @@
         {
           "src": 8,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -275,7 +293,8 @@
         {
           "src": 9,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -308,7 +327,8 @@
         {
           "src": 12,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     },
@@ -319,7 +339,8 @@
         {
           "src": 13,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     },
@@ -330,7 +351,8 @@
         {
           "src": 14,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     },

@@ -18,7 +18,7 @@
         {
           "idx": 1,
           "name": "Wave",
-          "def": 0,
+          "def": 64,
           "min": 0,
           "max": 127,
           "res": 64,
@@ -27,18 +27,19 @@
         {
           "idx": 2,
           "name": "Tune",
-          "def": 0,
+          "def": 64,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 3,
           "name": "Type",
           "def": 0,
           "min": 0,
-          "max": 127,
+          "max": 3,
           "res": 64,
           "ui": "bignum"
         }
@@ -54,7 +55,8 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "log"
         },
         {
           "idx": 5,
@@ -63,7 +65,8 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 6,
@@ -77,11 +80,12 @@
         {
           "idx": 7,
           "name": "Attack",
-          "def": 0,
+          "def": 16,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         }
       ]
     },
@@ -91,16 +95,17 @@
         {
           "idx": 8,
           "name": "Decay",
-          "def": 64,
+          "def": 69,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         },
         {
           "idx": 9,
           "name": "Sustain",
-          "def": 0,
+          "def": 90,
           "min": 0,
           "max": 127,
           "res": 64,
@@ -109,11 +114,12 @@
         {
           "idx": 10,
           "name": "Release",
-          "def": 16,
+          "def": 49,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         },
         {
           "idx": 11,
@@ -136,7 +142,8 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         },
         {
           "idx": 13,
@@ -145,23 +152,25 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "exp"
         },
         {
           "idx": 14,
           "name": "Speed",
-          "def": 10,
+          "def": 2,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "log"
         },
         {
           "idx": 15,
           "name": "Sync",
           "def": 0,
           "min": 0,
-          "max": 127,
+          "max": 1,
           "res": 64,
           "ui": "bignum"
         }
@@ -186,7 +195,8 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 18,
@@ -195,7 +205,8 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         },
         {
           "idx": 19,
@@ -204,7 +215,8 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "bignum",
+          "curve": "scurve"
         }
       ]
     }
@@ -239,7 +251,8 @@
         {
           "src": 2,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     },
@@ -249,7 +262,7 @@
       "add": [
         {
           "src": 3,
-          "mul": 1,
+          "mul": 32,
           "div": 1
         }
       ]
@@ -261,7 +274,8 @@
         {
           "src": 4,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "log"
         }
       ]
     },
@@ -272,7 +286,8 @@
         {
           "src": 5,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     },
@@ -294,7 +309,8 @@
         {
           "src": 7,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -305,7 +321,8 @@
         {
           "src": 8,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -327,7 +344,8 @@
         {
           "src": 10,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -349,7 +367,8 @@
         {
           "src": 12,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -360,7 +379,8 @@
         {
           "src": 13,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "exp"
         }
       ]
     },
@@ -371,7 +391,8 @@
         {
           "src": 14,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "log"
         }
       ]
     },
@@ -404,7 +425,8 @@
         {
           "src": 17,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     },
@@ -415,7 +437,8 @@
         {
           "src": 18,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     },
@@ -426,7 +449,8 @@
         {
           "src": 19,
           "mul": 1,
-          "div": 1
+          "div": 1,
+          "curve": "scurve"
         }
       ]
     }
