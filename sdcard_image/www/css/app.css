@@ -2135,7 +2135,7 @@ sl-dialog::part(footer) {
 
 .td-row {
   display: grid;
-  grid-template-columns: 2.5rem 6rem 3.5rem 1fr;
+  grid-template-columns: 2.5rem 5.5rem 3rem 9rem 1fr;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0.75rem;
@@ -2176,6 +2176,16 @@ sl-dialog::part(footer) {
 }
 .td-col-type {
   text-align: center;
+}
+
+.td-col-engine {
+  min-width: 0;
+}
+
+.td-select:disabled {
+  opacity: 0.45;
+  cursor: default;
+  background: var(--sl-color-neutral-100);
 }
 
 .td-type-badge {
@@ -2243,4 +2253,8 @@ sl-dialog::part(footer) {
   background: var(--sl-color-neutral-800);
   border-color: var(--sl-color-neutral-600);
   color: var(--sl-color-neutral-200);
+}
+.sl-theme-dark .td-select:disabled {
+  background: var(--sl-color-neutral-900);
+  opacity: 0.45;
 }
