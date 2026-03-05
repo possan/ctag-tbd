@@ -81,6 +81,7 @@ namespace CTAG::SPIAPI{
             GetMacroDefinition = 0xA2,
             ActivateTrackMachine = 0xA3,
             LoadTrackSoundPreset = 0xA4,
+            GetTrackDefaultPresets = 0xA5, // returns JSON with default preset IDs per track from /sdcard/data/trackdefaults.json
         };
 
         static TaskHandle_t hTask;

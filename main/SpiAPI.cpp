@@ -797,6 +797,36 @@ namespace CTAG::SPIAPI{
                     // result = transmitCString(requestType, cstring);
                 }
                 break;
+
+            case RequestType::GetTrackDefaultPresets:
+                {
+                    // Read /sdcard/data/trackdefaults.json and return its contents.
+                    // If the file does not exist, return empty object "{}".
+                    // The file maps track indices to preset IDs, e.g.:
+                    // { "tracks": [ {"index":0,"preset":"db-all-def"}, ... ] }
+                    std::string json = "{}";
+                    FILE *f = fopen("/sdcard/data/trackdefaults.json", "r");
+                    if (f) {
+                        fseek(f, 0, SEEK_END);
+                        long sz = ftell(f);
+                        fseek(f, 0, SEEK_SET);
+                        if (sz > 0 && sz < 8192) {
+                            char *buf = (char*)malloc(sz + 1);
+                            if (buf) {
+                                fread(buf, 1, sz, f);
+                                buf[sz] = '\0';
+                                json = buf;
+                                free(buf);
+                            }
+                        }
+                        fclose(f);
+                        ESP_LOGI("SpiAPI", "GetTrackDefaultPresets: loaded %ld bytes from trackdefaults.json", sz);
+                    } else {
+                        ESP_LOGW("SpiAPI", "GetTrackDefaultPresets: trackdefaults.json not found, returning {}");
+                    }
+                    result = transmitCString(requestType, json.c_str());
+                }
+                break;
             }
        }
     }
