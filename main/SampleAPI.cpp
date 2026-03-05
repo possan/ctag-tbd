@@ -66,12 +66,17 @@ static void url_decode(char *dst, const char *src, size_t dst_size) {
     dst[i] = 0;
 }
 
+static void set_api_headers(httpd_req_t *req) {
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+}
+
 /** Send a JSON string as HTTP response */
 static esp_err_t send_json(httpd_req_t *req, const char *json) {
+    set_api_headers(req);
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Connection", "close");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    httpd_resp_sendstr(req, json);
+    if (json) httpd_resp_sendstr(req, json);
+    else httpd_resp_send(req, NULL, 0);
     return ESP_OK;
 }
 
@@ -322,7 +327,7 @@ static uint32_t compute_used_bytes(Document &kitDoc) {
     return bytes;
 }
 
-// ─── GET /api/v1/samples/list ────────────────────────────────
+// ─── GET /api/v2/samples (list) ──────────────────────────────
 //
 // Query params:
 //   ?kit=N        — switch active kit index before listing
@@ -565,7 +570,7 @@ static esp_err_t handle_list(httpd_req_t *req) {
     return send_json(req, sb.GetString());
 }
 
-// ─── POST /api/v1/samples/upload ─────────────────────────────
+// ─── POST /api/v2/samples?action=upload ──────────────────────
 //
 // Query params: ?path=drums/user&filename=mysample
 // Body: raw WAV binary
@@ -745,7 +750,7 @@ static esp_err_t handle_uploadconfig(httpd_req_t *req) {
     return send_json(req, resp);
 }
 
-// ─── POST /api/v1/samples/manage ─────────────────────────────
+// ─── POST /api/v2/samples?action=manage ──────────────────────
 //
 // Body: JSON with { "action": "rename"|"delete"|"saveKit"|"createKit"|"createFolder", ... }
 //
@@ -1181,7 +1186,7 @@ static esp_err_t handle_manage(httpd_req_t *req) {
     return send_error(req, 400, "Unknown action");
 }
 
-// ─── POST /api/v1/samples/reload ─────────────────────────────
+// ─── POST /api/v2/samples?action=reload ──────────────────────
 //
 // Triggers PSRAM reload from SD card.
 // This is the "heavy" operation that mutes audio briefly.

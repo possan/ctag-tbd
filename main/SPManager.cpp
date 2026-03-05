@@ -85,10 +85,16 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
     SpiProtocolHelper protocol;
 
+    // Provide dummy cv/trig buffers so plugins that access pd.cv[x] or
+    // pd.trig[x] don't crash with a null-pointer dereference.
+    // The macropresets SPI protocol carries MIDI only — no CV/trig data.
+    static float  dummy_cv[N_CVS]    = {};   // zero-filled
+    static uint8_t dummy_trig[N_TRIGS] = {};  // zero-filled
+
     SP::ProcessData pd;
     pd.controlData = nullptr;
-    pd.cv = nullptr;
-    pd.trig = nullptr;
+    pd.cv = dummy_cv;
+    pd.trig = dummy_trig;
     pd.buf = fbuf;
     pd.sequencer_tempo = 12000;
     pd.midi_bytes_length = 0;
@@ -468,6 +474,11 @@ void SoundProcessorManager::SetSoundProcessorChannel(const int chan, const strin
     if(chan == 1) aType = ctagSPAllocator::AllocationType::CH1;
     if(model->IsStereo(id)) aType = ctagSPAllocator::AllocationType::STEREO;
     sp[chan] = ctagSoundProcessorFactory::Create(id, aType);
+    if (sp[chan] == nullptr) {
+        ESP_LOGE("SPManager", "Failed to create plugin %s — factory returned null!", id.c_str());
+        xSemaphoreGive(processMutex);
+        return;
+    }
     if (chan == 0) {
         macroTranslator->soundProcessor = sp[chan];
     }
@@ -591,13 +602,28 @@ void SoundProcessorManager::StartSoundProcessor() {
     xTaskCreatePinnedToCore(&debug_task, "debug_task", 2048, nullptr, tskIDLE_PRIORITY + 1, NULL, 0);
     ESP_LOGI("SPManager", "Init: task id %ld", audioTaskH);
 
-    // Do not load last processor at start up
-    SetSoundProcessorChannel(0, "Void");
-    SetSoundProcessorChannel(1, "Void");
-    SetSoundProcessorChannel(0, "PicoSeqRack");
-    // SetSoundProcessorChannel(1, "Void");
-    // SetSoundProcessorChannel(0, model->GetActiveProcessorID(0));
-    // SetSoundProcessorChannel(1, model->GetActiveProcessorID(1));
+    // Load last active processors from config, with fallback to Void/PicoSeqRack
+    {
+        string id0 = model->GetActiveProcessorID(0);
+        string id1 = model->GetActiveProcessorID(1);
+        ESP_LOGI("SPManager", "Loading ch0=%s, ch1=%s from config", id0.c_str(), id1.c_str());
+
+        SetSoundProcessorChannel(0, id0);
+        if (sp[0] == nullptr) {
+            ESP_LOGW("SPManager", "ch0 plugin '%s' failed, falling back to PicoSeqRack", id0.c_str());
+            SetSoundProcessorChannel(0, "PicoSeqRack");
+        }
+        if (sp[0] == nullptr) {
+            ESP_LOGW("SPManager", "ch0 PicoSeqRack also failed, falling back to Void");
+            SetSoundProcessorChannel(0, "Void");
+        }
+
+        SetSoundProcessorChannel(1, id1);
+        if (sp[1] == nullptr && id1 != "Void") {
+            ESP_LOGW("SPManager", "ch1 plugin '%s' failed, falling back to Void", id1.c_str());
+            SetSoundProcessorChannel(1, "Void");
+        }
+    }
 
     ESP_LOGI("SPManager", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),

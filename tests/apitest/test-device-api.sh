@@ -211,51 +211,51 @@ log ""
 log "--- Phase 1: Read-only GET endpoints ---"
 
 # 1.1 getPlugins
-send_get "${BASE_URL}/api/v1/getPlugins"
+send_get "${BASE_URL}/api/v2/plugins?action=list"
 assert_test "getPlugins" 200 true
 PLUGIN_LIST="$RESPONSE"
 PLUGIN_COUNT=$(echo "$PLUGIN_LIST" | jq 'length' 2>/dev/null || echo 0)
 log "       → $PLUGIN_COUNT plugins found"
 
 # 1.2 getIOCaps
-send_get "${BASE_URL}/api/v1/getIOCaps"
+send_get "${BASE_URL}/api/v2/device?action=getIOCaps"
 assert_test "getIOCaps" 200 true
 
 # 1.3 getConfiguration
-send_get "${BASE_URL}/api/v1/getConfiguration"
+send_get "${BASE_URL}/api/v2/device?action=getConfig"
 assert_test "getConfiguration" 200 true
 SAVED_CONFIG="$RESPONSE"
 
 # 1.4 getActivePlugin ch0
-send_get "${BASE_URL}/api/v1/getActivePlugin/0"
+send_get "${BASE_URL}/api/v2/plugins?action=getActive&ch=0"
 assert_test "getActivePlugin/0" 200 true
 INITIAL_PLUGIN_CH0=$(echo "$RESPONSE" | jq -r '.id' 2>/dev/null || echo "unknown")
 log "       → ch0 active: $INITIAL_PLUGIN_CH0"
 
 # 1.5 getActivePlugin ch1
-send_get "${BASE_URL}/api/v1/getActivePlugin/1"
+send_get "${BASE_URL}/api/v2/plugins?action=getActive&ch=1"
 assert_test "getActivePlugin/1" 200 true
 INITIAL_PLUGIN_CH1=$(echo "$RESPONSE" | jq -r '.id' 2>/dev/null || echo "unknown")
 log "       → ch1 active: $INITIAL_PLUGIN_CH1"
 
 # 1.6 getPluginParams ch0
-send_get "${BASE_URL}/api/v1/getPluginParams/0" "$LONG_TIMEOUT"
+send_get "${BASE_URL}/api/v2/plugins?action=getParams&ch=0" "$LONG_TIMEOUT"
 assert_test "getPluginParams/0" 200 true
 
 # 1.7 getPluginParams ch1
-send_get "${BASE_URL}/api/v1/getPluginParams/1" "$LONG_TIMEOUT"
+send_get "${BASE_URL}/api/v2/plugins?action=getParams&ch=1" "$LONG_TIMEOUT"
 assert_test "getPluginParams/1" 200 true
 
 # 1.8 getPresets ch0
-send_get "${BASE_URL}/api/v1/getPresets/0"
+send_get "${BASE_URL}/api/v2/plugins?action=getPresets&ch=0"
 assert_test "getPresets/0" 200 true
 
 # 1.9 getPresets ch1
-send_get "${BASE_URL}/api/v1/getPresets/1"
+send_get "${BASE_URL}/api/v2/plugins?action=getPresets&ch=1"
 assert_test "getPresets/1" 200 true
 
 # 1.10 samples listing
-send_get "${BASE_URL}/api/v1/samples"
+send_get "${BASE_URL}/api/v2/samples"
 assert_test "samples list" 200 true
 SAMPLE_INFO="$RESPONSE"
 SAMPLE_FILE_COUNT=$(echo "$SAMPLE_INFO" | jq '.files | length' 2>/dev/null || echo "?")
@@ -270,21 +270,21 @@ log ""
 log "--- Phase 2: Favorites ---"
 
 # 2.1 Get all favorites
-send_post "${BASE_URL}/api/v1/favorites/getAll" ""
+send_get "${BASE_URL}/api/v2/device?action=getFavorites"
 assert_test "favorites/getAll" 200 true
 
 # 2.2 Store a test favorite at slot 9
 FAV_BODY='{"name":"APITest","plug_0":"TBD03","pre_0":0,"plug_1":"TBD03","pre_1":0,"ustring":"api-test-fav"}'
-send_post "${BASE_URL}/api/v1/favorites/store/9" "$FAV_BODY"
+send_post "${BASE_URL}/api/v2/device?action=storeFavorite&id=9" "$FAV_BODY"
 assert_test "favorites/store/9" 200
 
 # 2.3 Recall favorite 9
-send_post "${BASE_URL}/api/v1/favorites/recall/9" ""
+send_post "${BASE_URL}/api/v2/device?action=recallFavorite&id=9" ""
 assert_test "favorites/recall/9" 200
 sleep 3
 
 # 2.4 Verify ch0 is now TBD03 after recall
-send_get "${BASE_URL}/api/v1/getActivePlugin/0"
+send_get "${BASE_URL}/api/v2/plugins?action=getActive&ch=0"
 assert_test "favorites/recall verify ch0" 200 true
 RECALLED_CH0=$(echo "$RESPONSE" | jq -r '.id' 2>/dev/null || echo "")
 if [[ "$RECALLED_CH0" != "TBD03" ]]; then
@@ -328,7 +328,7 @@ SWITCH_PASS=0
 SWITCH_FAIL=0
 for pid in "${STEREO_PLUGINS[@]}"; do
     timeout=$(get_timeout "$pid")
-    send_get "${BASE_URL}/api/v1/setActivePlugin/0?id=${pid}" "$timeout"
+    send_post "${BASE_URL}/api/v2/plugins?action=setActive&ch=0&id=${pid}" "" "$timeout"
     if assert_test "setActivePlugin/0 $pid" 200; then
         SWITCH_PASS=$((SWITCH_PASS + 1))
     else
@@ -337,7 +337,7 @@ for pid in "${STEREO_PLUGINS[@]}"; do
     sleep 2
 
     # Quick sanity: read back active plugin
-    send_get "${BASE_URL}/api/v1/getActivePlugin/0"
+    send_get "${BASE_URL}/api/v2/plugins?action=getActive&ch=0"
     READBACK=$(echo "$RESPONSE" | jq -r '.id' 2>/dev/null || echo "")
     if [[ "$READBACK" != "$pid" ]]; then
         TOTAL=$((TOTAL + 1)); FAIL=$((FAIL + 1))
@@ -352,7 +352,7 @@ done
 # 3.2 Switch every mono plugin onto ch0
 for pid in "${MONO_PLUGINS[@]}"; do
     timeout=$(get_timeout "$pid")
-    send_get "${BASE_URL}/api/v1/setActivePlugin/0?id=${pid}" "$timeout"
+    send_post "${BASE_URL}/api/v2/plugins?action=setActive&ch=0&id=${pid}" "" "$timeout"
     if assert_test "setActivePlugin/0 $pid" 200; then
         SWITCH_PASS=$((SWITCH_PASS + 1))
     else
@@ -375,14 +375,14 @@ COMBO_COUNT=0
 
 for pid0 in "${COMBO_PLUGINS[@]}"; do
     timeout0=$(get_timeout "$pid0")
-    send_get "${BASE_URL}/api/v1/setActivePlugin/0?id=${pid0}" "$timeout0"
+    send_post "${BASE_URL}/api/v2/plugins?action=setActive&ch=0&id=${pid0}" "" "$timeout0"
     assert_test "combo ch0=$pid0" 200
     sleep 1
 
     for pid1 in "${COMBO_PLUGINS[@]}"; do
         [[ "$pid0" == "$pid1" ]] && continue
         timeout1=$(get_timeout "$pid1")
-        send_get "${BASE_URL}/api/v1/setActivePlugin/1?id=${pid1}" "$timeout1"
+        send_post "${BASE_URL}/api/v2/plugins?action=setActive&ch=1&id=${pid1}" "" "$timeout1"
         assert_test "combo ch0=$pid0 ch1=$pid1" 200
         COMBO_COUNT=$((COMBO_COUNT + 1))
         sleep 1
@@ -398,12 +398,12 @@ log ""
 log "--- Phase 5: Plugin parameters ---"
 
 # Set ch0 to TBD03 (safe baseline)
-send_get "${BASE_URL}/api/v1/setActivePlugin/0?id=TBD03"
+send_post "${BASE_URL}/api/v2/plugins?action=setActive&ch=0&id=TBD03" ""
 assert_test "setActivePlugin/0 TBD03 (param test)" 200
 sleep 2
 
 # 5.1 Get full params
-send_get "${BASE_URL}/api/v1/getPluginParams/0" "$LONG_TIMEOUT"
+send_get "${BASE_URL}/api/v2/plugins?action=getParams&ch=0" "$LONG_TIMEOUT"
 assert_test "getPluginParams/0 (TBD03)" 200 true
 PARAMS_JSON="$RESPONSE"
 
@@ -416,11 +416,11 @@ fi
 
 if [[ -n "$FIRST_PARAM" ]]; then
     # Set current value
-    send_get "${BASE_URL}/api/v1/setPluginParam/0?id=${FIRST_PARAM}&current=2048"
+    send_post "${BASE_URL}/api/v2/plugins?action=setParam&ch=0&id=${FIRST_PARAM}&key=current&val=2048" ""
     assert_test "setPluginParam/0 ${FIRST_PARAM}=2048" 200
 
     # Read back
-    send_get "${BASE_URL}/api/v1/getPluginParams/0" "$LONG_TIMEOUT"
+    send_get "${BASE_URL}/api/v2/plugins?action=getParams&ch=0" "$LONG_TIMEOUT"
     assert_test "getPluginParams/0 readback" 200 true
 else
     log "SKIP  [setPluginParam] could not find a writable param"
@@ -436,25 +436,25 @@ log "--- Phase 6: Presets ---"
 
 # Still on TBD03 ch0 from Phase 5
 # 6.1 Save preset at slot 9
-send_get "${BASE_URL}/api/v1/savePreset/0?number=9&name=APITest"
+send_post "${BASE_URL}/api/v2/plugins?action=savePreset&ch=0&number=9&name=APITest" ""
 assert_test "savePreset/0 slot9" 200
 
 # 6.2 Load preset 0
-send_get "${BASE_URL}/api/v1/loadPreset/0?number=0"
+send_post "${BASE_URL}/api/v2/plugins?action=loadPreset&ch=0&number=0" ""
 assert_test "loadPreset/0 slot0" 200
 sleep 1
 
 # 6.3 Load preset 9 (our saved one)
-send_get "${BASE_URL}/api/v1/loadPreset/0?number=9"
+send_post "${BASE_URL}/api/v2/plugins?action=loadPreset&ch=0&number=9" ""
 assert_test "loadPreset/0 slot9 (APITest)" 200
 sleep 1
 
 # 6.4 Get preset data for TBD03
-send_get "${BASE_URL}/api/v1/getPresetData/TBD03" "$LONG_TIMEOUT"
+send_get "${BASE_URL}/api/v2/plugins?action=getPresetData&id=TBD03" "$LONG_TIMEOUT"
 assert_test "getPresetData/TBD03" 200 true
 
 # 6.5 Get presets list
-send_get "${BASE_URL}/api/v1/getPresets/0"
+send_get "${BASE_URL}/api/v2/plugins?action=getPresets&ch=0"
 assert_test "getPresets/0 (final)" 200 true
 
 log ""
@@ -465,16 +465,16 @@ log ""
 log "--- Phase 7: Configuration ---"
 
 # 7.1 Read config (already done in Phase 1, but re-read for freshness)
-send_get "${BASE_URL}/api/v1/getConfiguration"
+send_get "${BASE_URL}/api/v2/device?action=getConfig"
 assert_test "getConfiguration (phase7)" 200 true
 CURRENT_CONFIG="$RESPONSE"
 
 # 7.2 Write back the same config (idempotent — should not break anything)
-send_post "${BASE_URL}/api/v1/setConfiguration" "$CURRENT_CONFIG"
+send_post "${BASE_URL}/api/v2/device?action=setConfig" "$CURRENT_CONFIG"
 assert_test "setConfiguration (idempotent write)" 200
 
 # 7.3 Read again and verify it's unchanged
-send_get "${BASE_URL}/api/v1/getConfiguration"
+send_get "${BASE_URL}/api/v2/device?action=getConfig"
 assert_test "getConfiguration (after write)" 200 true
 
 log ""
@@ -485,13 +485,13 @@ log ""
 log "--- Phase 8: Samples API ---"
 
 # 8.1 List samples
-send_get "${BASE_URL}/api/v1/samples"
+send_get "${BASE_URL}/api/v2/samples"
 assert_test "samples list (phase8)" 200 true
 
 # 8.2 Switch to kit 0 (if kits exist)
 KIT_COUNT=$(echo "$RESPONSE" | jq '.kits | length' 2>/dev/null || echo 0)
 if [[ "$KIT_COUNT" -gt 0 ]]; then
-    send_get "${BASE_URL}/api/v1/samples?kit=0"
+    send_get "${BASE_URL}/api/v2/samples?kit=0"
     assert_test "samples kit=0" 200 true
 else
     log "SKIP  [samples kit=0] no kits on device"
@@ -499,7 +499,7 @@ else
 fi
 
 # 8.3 Reload samples into PSRAM
-send_post "${BASE_URL}/api/v1/samples?action=reload" ""
+send_post "${BASE_URL}/api/v2/samples?action=reload" ""
 assert_test "samples reload" 200
 
 log ""
@@ -515,7 +515,7 @@ STRESS_FAIL=0
 
 for pid in "${STRESS_PLUGINS[@]}"; do
     timeout=$(get_timeout "$pid")
-    send_get "${BASE_URL}/api/v1/setActivePlugin/0?id=${pid}" "$timeout"
+    send_post "${BASE_URL}/api/v2/plugins?action=setActive&ch=0&id=${pid}" "" "$timeout"
     if assert_test "stress ch0→$pid" 200; then
         STRESS_PASS=$((STRESS_PASS + 1))
     else
@@ -539,16 +539,16 @@ for pid in "${ENDURANCE_PLUGINS[@]}"; do
         continue
     fi
     log "       Testing $pid (heavy)..."
-    send_get "${BASE_URL}/api/v1/setActivePlugin/0?id=${pid}" "$PLUGIN_SWITCH_TIMEOUT"
+    send_post "${BASE_URL}/api/v2/plugins?action=setActive&ch=0&id=${pid}" "" "$PLUGIN_SWITCH_TIMEOUT"
     assert_test "endurance switch→$pid" 200
     sleep 3
 
     # Read params while heavy plugin is active
-    send_get "${BASE_URL}/api/v1/getPluginParams/0" "$LONG_TIMEOUT"
+    send_get "${BASE_URL}/api/v2/plugins?action=getParams&ch=0" "$LONG_TIMEOUT"
     assert_test "endurance params $pid" 200 true
 
     # Get presets
-    send_get "${BASE_URL}/api/v1/getPresets/0"
+    send_get "${BASE_URL}/api/v2/plugins?action=getPresets&ch=0"
     assert_test "endurance presets $pid" 200 true
     sleep 2
 done
@@ -562,14 +562,14 @@ log "--- Phase 11: Restore initial state ---"
 
 # Restore ch0
 timeout_ch0=$(get_timeout "$INITIAL_PLUGIN_CH0")
-send_get "${BASE_URL}/api/v1/setActivePlugin/0?id=${INITIAL_PLUGIN_CH0}" "$timeout_ch0"
+send_post "${BASE_URL}/api/v2/plugins?action=setActive&ch=0&id=${INITIAL_PLUGIN_CH0}" "" "$timeout_ch0"
 assert_test "restore ch0→$INITIAL_PLUGIN_CH0" 200
 sleep 2
 
 # Restore ch1 (only if it was set)
 if [[ -n "$INITIAL_PLUGIN_CH1" && "$INITIAL_PLUGIN_CH1" != "unknown" && "$INITIAL_PLUGIN_CH1" != "null" ]]; then
     timeout_ch1=$(get_timeout "$INITIAL_PLUGIN_CH1")
-    send_get "${BASE_URL}/api/v1/setActivePlugin/1?id=${INITIAL_PLUGIN_CH1}" "$timeout_ch1"
+    send_post "${BASE_URL}/api/v2/plugins?action=setActive&ch=1&id=${INITIAL_PLUGIN_CH1}" "" "$timeout_ch1"
     assert_test "restore ch1→$INITIAL_PLUGIN_CH1" 200
 fi
 

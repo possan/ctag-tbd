@@ -254,9 +254,9 @@
       // is busy loading sample ROM from SD card, NOT that it is offline.
       var switchTimeout = heavy ? S.API_PLUGIN_SWITCH_TIMEOUT_MS : S.API_MUTATION_TIMEOUT_MS;
       try {
-        await S.queuedFetch(
-          '/setActivePlugin/' + ch + '?id=' + encodeURIComponent(pluginId),
-          switchTimeout,
+        await S.queuedPost(
+          '/plugins?action=setActive&ch=' + ch + '&id=' + encodeURIComponent(pluginId),
+          null, switchTimeout,
           true  /* skipCircuitBreaker */
         );
       } catch (firstErr) {
@@ -266,9 +266,9 @@
           console.warn('Plugin switch timed out (' + (switchTimeout/1000) + 's) — retrying once…');
           S.showLoading('Still loading wavetable data — retrying…');
           await new Promise(function(r) { setTimeout(r, 3000); });
-          await S.queuedFetch(
-            '/setActivePlugin/' + ch + '?id=' + encodeURIComponent(pluginId),
-            switchTimeout,
+          await S.queuedPost(
+            '/plugins?action=setActive&ch=' + ch + '&id=' + encodeURIComponent(pluginId),
+            null, switchTimeout,
             true  /* skipCircuitBreaker */
           );
         } else {
@@ -281,7 +281,7 @@
 
       // If loading a stereo plugin into slot A, clear slot B
       if (ch === 0 && isStereo) {
-        await S.queuedFetch('/setActivePlugin/1?id=Void', S.API_MUTATION_TIMEOUT_MS);
+        await S.queuedPost('/plugins?action=setActive&ch=1&id=Void', null, S.API_MUTATION_TIMEOUT_MS);
         state.activePlugin[1] = null;
         state.params[1] = null;
         state.presets[1] = [];
@@ -305,7 +305,7 @@
   async function clearSlot(ch) {
     S.showLoading('Clearing slot…');
     try {
-      await S.queuedFetch('/setActivePlugin/' + ch + '?id=Void', S.API_MUTATION_TIMEOUT_MS);
+      await S.queuedPost('/plugins?action=setActive&ch=' + ch + '&id=Void', null, S.API_MUTATION_TIMEOUT_MS);
       state.activePlugin[ch] = null;
       state.params[ch] = null;
       state.presets[ch] = [];
@@ -347,11 +347,11 @@
       if (knownPluginId) {
         activeId = knownPluginId;
       } else {
-        var activeData = await S.queuedFetch('/getActivePlugin/' + ch);
+        var activeData = await S.queuedFetch('/plugins?action=getActive&ch=' + ch);
         activeId = activeData.id;
       }
-      var paramsData = await S.queuedFetch('/getPluginParams/' + ch);
-      var presetsData = await S.queuedFetch('/getPresets/' + ch);
+      var paramsData = await S.queuedFetch('/plugins?action=getParams&ch=' + ch);
+      var presetsData = await S.queuedFetch('/plugins?action=getPresets&ch=' + ch);
 
       // Find full plugin info
       var pluginInfo = state.plugins.find(function(p) { return p.id === activeId; });
@@ -1208,8 +1208,9 @@
       // Route directly through apiQueue — no need for double-serialization
       // through paramQueue→apiQueue.  Single queue is sufficient and
       // reduces overhead on the constrained ESP32 httpd.
-      S.queuedFetch('/setPluginParam/' + ch + '?id=' +
-        encodeURIComponent(paramId) + '&current=' + encodeURIComponent(value)
+      S.queuedPost('/plugins?action=setParam&ch=' + ch + '&id=' +
+        encodeURIComponent(paramId) + '&key=current&val=' + encodeURIComponent(value),
+        null
       ).catch(function(e) {
         console.error('Failed to set param:', paramId, e);
       });
@@ -1217,16 +1218,18 @@
   }
 
   function sendCVValue(ch, paramId, value) {
-    S.queuedFetch('/setPluginParamCV/' + ch + '?id=' +
-      encodeURIComponent(paramId) + '&cv=' + encodeURIComponent(value)
+    S.queuedPost('/plugins?action=setParam&ch=' + ch + '&id=' +
+      encodeURIComponent(paramId) + '&key=cv&val=' + encodeURIComponent(value),
+      null
     ).catch(function(e) {
       console.error('Failed to set CV:', paramId, e);
     });
   }
 
   function sendTrigValue(ch, paramId, value) {
-    S.queuedFetch('/setPluginParamTRIG/' + ch + '?id=' +
-      encodeURIComponent(paramId) + '&trig=' + encodeURIComponent(value)
+    S.queuedPost('/plugins?action=setParam&ch=' + ch + '&id=' +
+      encodeURIComponent(paramId) + '&key=trig&val=' + encodeURIComponent(value),
+      null
     ).catch(function(e) {
       console.error('Failed to set TRIG:', paramId, e);
     });
@@ -1280,10 +1283,10 @@
   async function loadPreset(ch, number) {
     S.showLoading('Loading preset…');
     try {
-      await S.queuedFetch('/loadPreset/' + ch + '?number=' + number, S.API_MUTATION_TIMEOUT_MS);
+      await S.queuedPost('/plugins?action=loadPreset&ch=' + ch + '&number=' + number, null, S.API_MUTATION_TIMEOUT_MS);
       state.activePreset[ch] = number;
       // Reload params to reflect preset values
-      var paramsData = await S.queuedFetch('/getPluginParams/' + ch);
+      var paramsData = await S.queuedFetch('/plugins?action=getParams&ch=' + ch);
       state.params[ch] = paramsData;
       renderParams(ch);
       renderPresets(ch);
@@ -1346,11 +1349,11 @@
           return;
         }
         try {
-          await S.queuedFetch('/savePreset/' + savePresetCh +
-            '?number=' + slot + '&name=' + encodeURIComponent(name));
+          await S.queuedPost('/plugins?action=savePreset&ch=' + savePresetCh +
+            '&number=' + slot + '&name=' + encodeURIComponent(name), null);
           document.getElementById('save-preset-dialog').hide();
           // Reload presets
-          var presetsData = await S.queuedFetch('/getPresets/' + savePresetCh);
+          var presetsData = await S.queuedFetch('/plugins?action=getPresets&ch=' + savePresetCh);
           state.presets[savePresetCh] = presetsData.presets || [];
           state.activePreset[savePresetCh] = slot;
           renderPresets(savePresetCh);
@@ -1460,7 +1463,7 @@
 
   async function loadFavoritesCache() {
     try {
-      favoritesCache = await S.queuedPost('/favorites/getAll', {});
+      favoritesCache = await S.queuedFetch('/device?action=getFavorites');
       updateFavoritesBarTooltips();
     } catch (e) {
       favoritesCache = null;
@@ -1486,7 +1489,7 @@
   async function recallFavorite(idx) {
     S.showLoading('Recalling favorite…');
     try {
-      await S.queuedPost('/favorites/recall/' + idx, {}, S.API_MUTATION_TIMEOUT_MS);
+      await S.queuedPost('/device?action=recallFavorite&id=' + idx, null, S.API_MUTATION_TIMEOUT_MS);
       // Sequential — never use Promise.all against ESP32
       await loadSlotData(0);
       await loadSlotData(1);
@@ -1509,7 +1512,7 @@
       ustring: '',
     };
     try {
-      await S.queuedPost('/favorites/store/' + idx, favData);
+      await S.queuedPost('/device?action=storeFavorite&id=' + idx, favData);
       S.toast('Stored favorite ' + (idx + 1), 'success', 2000);
       await loadFavoritesCache();
     } catch (e) {
@@ -1552,7 +1555,7 @@
         S.showLoading('Importing favorites…');
         for (var i = 0; i < data.length; i++) {
           if (data[i] && data[i].plug_0) {
-            await S.queuedPost('/favorites/store/' + i, data[i]);
+            await S.queuedPost('/device?action=storeFavorite&id=' + i, data[i]);
           }
         }
         await loadFavoritesCache();
@@ -1589,8 +1592,8 @@
       try {
         S.showLoading('Swapping slots…');
         // Set A to B's plugin and B to A's plugin
-        await S.queuedFetch('/setActivePlugin/0?id=' + encodeURIComponent(plugB), S.API_MUTATION_TIMEOUT_MS);
-        await S.queuedFetch('/setActivePlugin/1?id=' + encodeURIComponent(plugA), S.API_MUTATION_TIMEOUT_MS);
+        await S.queuedPost('/plugins?action=setActive&ch=0&id=' + encodeURIComponent(plugB), null, S.API_MUTATION_TIMEOUT_MS);
+        await S.queuedPost('/plugins?action=setActive&ch=1&id=' + encodeURIComponent(plugA), null, S.API_MUTATION_TIMEOUT_MS);
         // Sequential — never use Promise.all against ESP32
         await loadSlotData(0, plugB);
         await loadSlotData(1, plugA);
@@ -1654,11 +1657,11 @@
 
     // getPlugins is critical — let it throw so app.js can detect failure
     // and trigger the reconnection monitor.
-    state.plugins = await S.queuedFetch('/getPlugins') || [];
+    state.plugins = await S.queuedFetch('/plugins?action=list') || [];
 
     // Fetch IO capabilities (CV/TRIG sources) — non-critical, tolerate failure
     try {
-      state.ioCaps = await S.queuedFetch('/getIOCaps');
+      state.ioCaps = await S.queuedFetch('/device?action=getIOCaps');
     } catch (e) {
       console.warn('Failed to load IO capabilities:', e);
       state.ioCaps = null;

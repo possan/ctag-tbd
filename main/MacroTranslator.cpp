@@ -13,6 +13,7 @@ using namespace rapidjson;
 
 
 MacroTranslator::MacroTranslator() {
+    soundProcessor = nullptr;
     synthDefinitionModel = nullptr;
     macroSoundDefinitionModel = nullptr;
     macroDeviceDefinitionModel = nullptr;
@@ -374,6 +375,8 @@ void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_
 
 void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
     if (pd == nullptr)
+        return;
+    if (soundProcessor == nullptr)
         return;
 
     for(int t=0; t<16; t++) {

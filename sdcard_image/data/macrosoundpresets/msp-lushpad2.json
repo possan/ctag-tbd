@@ -1,1 +1,1 @@
-{"id":"msp-lushpad2","name":"Shimmer Pad","definitionId":"pp-lushpad","machine":"pp","values":[40,110,60,80]}
+{"id":"msp-lushpad2","name":"Shimmer Pad","values":[40,110,60,80],"group":"Polypad","macro":"pp-lushpad"}

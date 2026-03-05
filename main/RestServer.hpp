@@ -26,42 +26,22 @@ respective component folders / files if different from this license.
 
 namespace CTAG {
     namespace REST {
-        class RestServer final{
+        /**
+         * HTTP REST Server — v2 API
+         *
+         * All domain logic lives in dedicated modules:
+         *   PluginAPI  (GET/POST /api/v2/plugins)
+         *   DeviceAPI  (GET/POST /api/v2/device)
+         *   SampleAPI  (GET/POST /api/v2/samples)
+         *   MacroAPI   (GET/POST /api/v2/macros)
+         *
+         * RestServer only handles static file serving and
+         * registers the 9 URI handlers (4 domains × GET/POST + static).
+         */
+        class RestServer final {
         public:
             RestServer() = delete;
             static esp_err_t StartRestServer();
-            static void set_cors_headers(httpd_req_t *req);
-
-        private:
-            static esp_err_t get_plugins_get_handler(httpd_req_t *req);
-
-            static esp_err_t get_active_plugin_get_handler(httpd_req_t *req);
-
-            static esp_err_t get_params_plugin_get_handler(httpd_req_t *req);
-
-            static esp_err_t set_active_plugin_get_handler(httpd_req_t *req);
-
-            static esp_err_t set_plugin_param_get_handler(httpd_req_t *req);
-
-            static esp_err_t get_presets_get_handler(httpd_req_t *req);
-
-            static esp_err_t save_preset_get_handler(httpd_req_t *req);
-
-            static esp_err_t load_preset_get_handler(httpd_req_t *req);
-
-            static esp_err_t set_configuration_post_handler(httpd_req_t *req);
-
-            static esp_err_t get_configuration_get_handler(httpd_req_t *req);
-
-            static esp_err_t get_preset_json_handler(httpd_req_t *req);
-
-            static esp_err_t favorite_post_handler(httpd_req_t *req);
-
-            static esp_err_t set_preset_json_handler(httpd_req_t *req);
-
-            static esp_err_t reboot_handler(httpd_req_t *req);
-
-            static esp_err_t get_iocaps_handler(httpd_req_t *req);
         };
     }
 }

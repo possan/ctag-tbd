@@ -1,1 +1,1 @@
-{"id":"msp-deepfm2","name":"FM Wobble","definitionId":"fmb-deepfm","machine":"fmb","values":[30,40,40,20]}
+{"id":"msp-deepfm2","name":"FM Wobble","values":[30,40,40,20],"group":"FM Kick","macro":"fmb-deepfm"}

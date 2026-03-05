@@ -57,3 +57,7 @@ sdcard_image/www/shoelace/themes/*
 # …except the dark theme CSS needed for SD card deployment
 !sdcard_image/www/shoelace/themes/dark.css
 !sdcard_image/www/shoelace/themes/dark.css.gz
+
+# npm dependencies
+node_modules/
+package-lock.json

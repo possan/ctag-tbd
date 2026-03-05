@@ -1,12 +1,13 @@
 #!/bin/bash
-# Build script for WebUI — creates JS bundle + .gz versions for ESP32 deployment.
+# Build script for WebUI — creates JS bundles + .gz versions for ESP32 deployment.
 # The ESP32 RestServer serves .gz files exclusively (Content-Encoding: gzip).
 #
 # Usage:  cd sdcard_image/www && ./build-webui.sh
 #
 # This script:
-#   1. Concatenates 6 JS source files into js/app-bundle.js (reduces 6 HTTP
-#      requests to 1 — critical for ESP32 httpd's 7-socket limit)
+#   1. Concatenates JS source files into two bundles:
+#      - js/app-bundle.js   (index.html — Plugin & Sample Manager)
+#      - js/macro-bundle.js (preset-macro-manager.html — Preset & Macro Manager)
 #   2. Gzips all assets for production deployment
 #
 # Note: The full build pipeline (create_sd_archive.sh) also gzips these files.
@@ -15,9 +16,9 @@
 set -e
 cd "$(dirname "$0")"
 
-# ── Step 1: Create JS bundle ──
-# Order matters — dependency chain: Sortable (vendor) → shared → display-hints
-# → plugin-manager → sample-manager → app (shell, boots last)
+# ── Step 1a: Create app-bundle.js (index.html) ──
+# Order matters — dependency chain: Sortable (vendor) → webaudio-controls →
+# shared → display-hints → plugin-manager → sample-manager → app (shell, boots last)
 BUNDLE_SOURCES=(
   js/Sortable.min.js
   js/webaudio-controls.js
@@ -29,7 +30,7 @@ BUNDLE_SOURCES=(
 )
 BUNDLE_OUT="js/app-bundle.js"
 
-echo "Building JS bundle..."
+echo "Building app-bundle.js (index.html)..."
 > "$BUNDLE_OUT"
 for src in "${BUNDLE_SOURCES[@]}"; do
   if [ -f "$src" ]; then
@@ -46,14 +47,48 @@ bundle_size=$(wc -c < "$BUNDLE_OUT" | tr -d ' ')
 echo "  → $BUNDLE_OUT ($bundle_size bytes)"
 echo ""
 
+# ── Step 1b: Create macro-bundle.js (preset-macro-manager.html) ──
+# Order: Sortable (vendor) → shared → display-hints → performer → designer
+# → preset-macro-app (shell, boots last)
+MACRO_BUNDLE_SOURCES=(
+  js/Sortable.min.js
+  js/shared.js
+  js/display-hints.js
+  js/performer.js
+  js/designer.js
+  js/preset-macro-app.js
+)
+MACRO_BUNDLE_OUT="js/macro-bundle.js"
+
+echo "Building macro-bundle.js (preset-macro-manager.html)..."
+> "$MACRO_BUNDLE_OUT"
+for src in "${MACRO_BUNDLE_SOURCES[@]}"; do
+  if [ -f "$src" ]; then
+    echo "// ── $(basename "$src") ───" >> "$MACRO_BUNDLE_OUT"
+    cat "$src" >> "$MACRO_BUNDLE_OUT"
+    echo "" >> "$MACRO_BUNDLE_OUT"
+    printf "  + %-30s\n" "$src"
+  else
+    echo "  WARN: $src not found, skipping"
+  fi
+done
+
+macro_bundle_size=$(wc -c < "$MACRO_BUNDLE_OUT" | tr -d ' ')
+echo "  → $MACRO_BUNDLE_OUT ($macro_bundle_size bytes)"
+echo ""
+
 # ── Step 2: Gzip all production assets ──
 # Only the files that the ESP32 actually serves need .gz versions.
 # Individual JS source files are NOT gzipped — only the bundle is served.
 GZIP_FILES=(
   index.html
+  preset-macro-manager.html
   js/app-bundle.js
+  js/macro-bundle.js
   js/shoelace-bundle.js
   shoelace/themes/dark.css
+  shoelace/themes/light.css
+  css/app.css
 )
 
 echo "Creating gzip assets..."
@@ -70,4 +105,4 @@ for f in "${GZIP_FILES[@]}"; do
 done
 
 echo ""
-echo "Done. Bundle + gzipped assets ready for ESP32 deployment."
+echo "Done. Bundles + gzipped assets ready for ESP32 deployment."

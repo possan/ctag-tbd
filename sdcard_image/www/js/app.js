@@ -20,7 +20,7 @@
 
   async function loadConfiguration() {
     try {
-      currentConfig = await S.queuedFetch('/getConfiguration');
+      currentConfig = await S.queuedFetch('/device?action=getConfig');
       populateConfigDialog(currentConfig);
     } catch (e) {
       console.error('Failed to load config:', e);
@@ -222,7 +222,7 @@
         if (statusEl) statusEl.textContent = 'Testing…';
         try {
           var apiUrl = document.getElementById('cfg-api-url');
-          var url = (apiUrl ? apiUrl.value : window.location.origin) + '/api/v1/getIOCaps';
+          var url = (apiUrl ? apiUrl.value : window.location.origin) + '/api/v2/device?action=getIOCaps';
           var resp = await S.apiQueue.enqueue(function() {
             return fetch(url, { method: 'GET', signal: AbortSignal.timeout(5000) });
           });
@@ -268,7 +268,7 @@
         config.wifi.pwd = pwd;
         config.wifi.mdns_name = mdns ? mdns.value : '';
         try {
-          await S.queuedPost('/setConfiguration', config);
+          await S.queuedPost('/device?action=setConfig', config);
           currentConfig = config;
           S.toast('WiFi settings saved. Reboot for changes to take effect.', 'warning', 5000);
         } catch (e) {
@@ -304,19 +304,19 @@
           var backup = {};
 
           // 1) Configuration
-          backup.configuration = await S.queuedFetch('/getConfiguration');
+          backup.configuration = await S.queuedFetch('/device?action=getConfig');
 
-          // 2) Favorites (POST — matches firmware endpoint registration)
-          backup.favorites = await S.queuedPost('/favorites/getAll', {});
+          // 2) Favorites
+          backup.favorites = await S.queuedFetch('/device?action=getFavorites');
 
           // 3) All plugin preset data
-          var plugins = await S.queuedFetch('/getPlugins');
+          var plugins = await S.queuedFetch('/plugins?action=list');
           backup.presets = {};
           for (var i = 0; i < plugins.length; i++) {
             var pid = plugins[i].id;
             if (pid === 'Void') continue;
             try {
-              backup.presets[pid] = await S.queuedFetch('/getPresetData/' + encodeURIComponent(pid));
+              backup.presets[pid] = await S.queuedFetch('/plugins?action=getPresetData&id=' + encodeURIComponent(pid));
             } catch (e) {
               // Plugin may not have preset data — skip silently
             }
@@ -359,14 +359,14 @@
 
             // 1) Restore configuration
             if (backup.configuration) {
-              await S.queuedPost('/setConfiguration', backup.configuration);
+              await S.queuedPost('/device?action=setConfig', backup.configuration);
             }
 
             // 2) Restore favorites
             if (Array.isArray(backup.favorites)) {
               for (var i = 0; i < backup.favorites.length; i++) {
                 if (backup.favorites[i] && backup.favorites[i].plug_0) {
-                  await S.queuedPost('/favorites/store/' + i, backup.favorites[i]);
+                  await S.queuedPost('/device?action=storeFavorite&id=' + i, backup.favorites[i]);
                 }
               }
             }
@@ -377,7 +377,7 @@
               for (var j = 0; j < pluginIds.length; j++) {
                 var pid = pluginIds[j];
                 try {
-                  await S.queuedPost('/setPresetData/' + encodeURIComponent(pid), backup.presets[pid]);
+                  await S.queuedPost('/plugins?action=setPresetData&id=' + encodeURIComponent(pid), backup.presets[pid]);
                 } catch (e) {
                   // Non-critical — plugin may not exist on this device
                 }
@@ -436,7 +436,7 @@
         var ch1s = document.getElementById('cfg-ch1-stereo');
         if (ch1s) config.ch1_toStereo = ch1s.value;
         try {
-          await S.queuedPost('/setConfiguration', config);
+          await S.queuedPost('/device?action=setConfig', config);
           currentConfig = config;
           S.toast('Audio settings saved', 'success');
         } catch (e) {
@@ -554,7 +554,7 @@
     if (compact) config.compactLayout = compact.checked;
 
     try {
-      await S.queuedPost('/setConfiguration', config);
+      await S.queuedPost('/device?action=setConfig', config);
       S.toast('Configuration saved', 'success');
       document.getElementById('config-dialog').hide();
     } catch (e) {
@@ -619,7 +619,7 @@
     var origFetch = S.apiFetch;
     S.apiFetch = async function(url) {
       debugApiCalls++;
-      var shortUrl = url.replace(/^\/api\/v1/, '');
+      var shortUrl = url.replace(/^\/api\/v2/, '');
       debugLastApi = shortUrl;
       var ts = new Date().toLocaleTimeString();
       debugApiLog.unshift(ts + ' ' + shortUrl);
@@ -801,7 +801,7 @@
       rebootOk.addEventListener('click', async function() {
         document.getElementById('reboot-dialog').hide();
         try {
-          await S.queuedFetch('/reboot');
+          await S.queuedPost('/device?action=reboot', null);
           S.toast('Rebooting…', 'warning', 6000);
           S.setDisconnected();
         } catch (e) {

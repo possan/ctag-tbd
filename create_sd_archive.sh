@@ -30,6 +30,8 @@ echo "Copying and gzipping www files..."
 mkdir -p "${TEMP_DIR}/www"
 cd "${SOURCE_DIR}/sdcard_image/www"
 find . -type f \
+    -not -path './node_modules/*' \
+    -not -path './tools/*' \
     -not -path './shoelace/components/*' \
     -not -path './shoelace/chunks/*' \
     -not -path './shoelace/assets/*' \
@@ -37,6 +39,10 @@ find . -type f \
     -not -name 'shoelace-autoloader.js' \
     -not -name '*.DS_Store' \
     -not -name '*.gz' \
+    -not -name 'package.json' \
+    -not -name 'package-lock.json' \
+    -not -name 'build-webui.sh' \
+    -not -name 'readme-api.md' \
     | while read file; do
     # Create directory structure in temp
     mkdir -p "${TEMP_DIR}/www/$(dirname "$file")"

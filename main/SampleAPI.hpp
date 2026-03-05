@@ -25,11 +25,11 @@ namespace CTAG {
          * Two URI handlers, consolidated per lead-dev guidance to stay within
          * max_uri_handlers = 20.  Actions are dispatched via query strings:
          *
-         *   GET  /api/v1/samples*           — list files / kits / capacity
+         *   GET  /api/v2/samples*           — list files / kits / capacity
          *        ?preview=path/name         — stream a WAV for audio preview
          *        ?kit=N                     — switch active kit before listing
          *
-         *   POST /api/v1/samples*
+         *   POST /api/v2/samples*
          *        ?action=upload&path=X&filename=Y  — binary WAV upload
          *        ?action=manage                    — JSON body: rename/delete/saveKit/createKit/createFolder
          *        ?action=reload                    — trigger PSRAM reload

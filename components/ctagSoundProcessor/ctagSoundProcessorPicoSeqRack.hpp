@@ -1,5 +1,6 @@
 #include <atomic>
 #include "ctagSoundProcessor.hpp"
+#include "esp_heap_caps.h"
 #include "plaits/dsp/drums/analog_bass_drum.h"
 #include "plaits/dsp/drums/analog_snare_drum.h"
 #include "plaits/dsp/drums/synthetic_bass_drum.h"
@@ -81,7 +82,40 @@
 
 #define CC_TO_MAP_KEY(ch, cc) (((ch) * 256) + (cc))
 
+// PSRAM-backed STL allocator: routes all allocations to SPIRAM
+// so PicoSeqRack's 378 CC map entries don't exhaust internal SRAM
+template <typename T>
+struct PsramAllocator {
+    using value_type = T;
+    PsramAllocator() noexcept = default;
+    template <typename U> PsramAllocator(const PsramAllocator<U>&) noexcept {}
+    T* allocate(std::size_t n) {
+        void* p = heap_caps_malloc(n * sizeof(T), MALLOC_CAP_SPIRAM);
+        if (!p) {
+            // fallback to default malloc if SPIRAM fails
+            p = malloc(n * sizeof(T));
+        }
+        return static_cast<T*>(p);
+    }
+    void deallocate(T* p, std::size_t) noexcept {
+        heap_caps_free(p);
+    }
+};
+template <class T, class U>
+bool operator==(const PsramAllocator<T>&, const PsramAllocator<U>&) { return true; }
+template <class T, class U>
+bool operator!=(const PsramAllocator<T>&, const PsramAllocator<U>&) { return false; }
 
+// Convenience types using PSRAM allocator
+template <typename T>
+using PsramVector = std::vector<T, PsramAllocator<T>>;
+
+using PsramCCMap = std::map<
+    const uint16_t,
+    PsramVector<std::function<void(const int)>>,
+    std::less<const uint16_t>,
+    PsramAllocator<std::pair<const uint16_t, PsramVector<std::function<void(const int)>>>>
+>;
 
 
 
@@ -122,7 +156,7 @@ namespace CTAG {
 
             // map<const uint8_t, string> pMapCC;
             // map<const uint8_t, string> pMapMacroCC;
-			map<const uint16_t, vector<function<void(const int)>>> pMapParCC;
+			PsramCCMap pMapParCC;
 			// map<const uint8_t, function<void(const int)>> pMapMacroParCC;
 
 			// rack components

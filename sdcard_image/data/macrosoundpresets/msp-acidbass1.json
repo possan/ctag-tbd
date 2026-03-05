@@ -1,1 +1,1 @@
-{"id":"msp-acidbass1","name":"Classic Acid","definitionId":"td3-acidbass","machine":"td3","values":[90,30,50,60]}
+{"id":"msp-acidbass1","name":"Classic Acid","values":[90,30,50,60],"group":"TBD03","macro":"td3-acidbass"}

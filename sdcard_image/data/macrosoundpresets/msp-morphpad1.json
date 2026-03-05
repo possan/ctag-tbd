@@ -1,1 +1,1 @@
-{"id":"msp-morphpad1","name":"Glass Evolve","definitionId":"wtosc-morphpad","machine":"wtosc","values":[40,100,64,30]}
+{"id":"msp-morphpad1","name":"Glass Evolve","values":[40,100,64,30],"group":"Wavetable","macro":"wtosc-morphpad"}

@@ -1,1 +1,1 @@
-{"id":"msp-morphpad2","name":"Gritty Sweep","definitionId":"wtosc-morphpad","machine":"wtosc","values":[80,60,90,80]}
+{"id":"msp-morphpad2","name":"Gritty Sweep","values":[80,60,90,80],"group":"Wavetable","macro":"wtosc-morphpad"}

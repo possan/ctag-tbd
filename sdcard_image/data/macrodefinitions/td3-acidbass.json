@@ -47,31 +47,6 @@
           "curve": "linear"
         }
       ]
-    },
-    {
-      "name": "Mix",
-      "parameters": [
-        {
-          "name": "Level",
-          "idx": 4,
-          "def": 64
-        },
-        {
-          "name": "Pan",
-          "idx": 5,
-          "def": 64
-        },
-        {
-          "name": "FX Send 1",
-          "idx": 6,
-          "def": 0
-        },
-        {
-          "name": "FX Send 2",
-          "idx": 7,
-          "def": 0
-        }
-      ]
     }
   ],
   "mapping": [
@@ -199,50 +174,6 @@
           "src": 3,
           "mul": 1,
           "div": 2
-        }
-      ]
-    },
-    {
-      "ctrl": 1,
-      "start": 0,
-      "add": [
-        {
-          "src": 4,
-          "mul": 1,
-          "div": 1
-        }
-      ]
-    },
-    {
-      "ctrl": 2,
-      "start": 0,
-      "add": [
-        {
-          "src": 5,
-          "mul": 1,
-          "div": 1
-        }
-      ]
-    },
-    {
-      "ctrl": 3,
-      "start": 0,
-      "add": [
-        {
-          "src": 6,
-          "mul": 1,
-          "div": 1
-        }
-      ]
-    },
-    {
-      "ctrl": 4,
-      "start": 0,
-      "add": [
-        {
-          "src": 7,
-          "mul": 1,
-          "div": 1
         }
       ]
     }
