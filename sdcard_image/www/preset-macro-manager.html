@@ -42,6 +42,7 @@
     <div class="header-spacer"></div>
 
     <div class="header-right">
+      <sl-icon-button name="hdd" label="Boot Defaults" id="trackdefaults-btn" style="font-size:1rem;"></sl-icon-button>
       <sl-icon-button name="info-circle" label="Quick Start Guide" id="quickstart-btn" style="font-size:1rem;"></sl-icon-button>
       <sl-icon-button name="gear" label="Settings" id="config-btn" style="font-size:1rem;"></sl-icon-button>
       <sl-icon-button name="moon-fill" label="Toggle theme" id="theme-toggle" style="font-size:1rem;"></sl-icon-button>
@@ -254,6 +255,15 @@
   </div>
 
   <sl-button slot="footer" variant="primary" id="qs-close-btn">Got it!</sl-button>
+</sl-dialog>
+
+<!-- ─── Track Default Presets Dialog ─────────────────────── -->
+<sl-dialog label="Boot Default Presets" id="trackdefaults-dialog" style="--width:52rem;">
+  <div id="trackdefaults-body">
+    <!-- Populated by track-defaults.js -->
+  </div>
+  <sl-button slot="footer" variant="default" id="td-close-btn">Close</sl-button>
+  <sl-button slot="footer" variant="primary" id="td-save-btn" disabled>Save to SD Card</sl-button>
 </sl-dialog>
 
 <!-- ─── Scripts ─────────────────────────────────────────── -->

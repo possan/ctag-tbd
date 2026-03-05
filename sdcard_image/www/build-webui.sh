@@ -56,6 +56,7 @@ MACRO_BUNDLE_SOURCES=(
   js/display-hints.js
   js/performer.js
   js/designer.js
+  js/track-defaults.js
   js/preset-macro-app.js
 )
 MACRO_BUNDLE_OUT="js/macro-bundle.js"

@@ -94,6 +94,10 @@ static void read_all_json_in_dir(const char *dirPath, Value &outArray,
 }
 
 
+// Forward declarations for handlers defined below
+static esp_err_t handle_get_trackdefaults(httpd_req_t *req);
+static esp_err_t handle_save_trackdefaults(httpd_req_t *req);
+
 /**
  * GET /api/v2/macros — dispatched by ?action= query parameter.
  *
@@ -140,6 +144,11 @@ esp_err_t MacroAPI::macroapi_get_handler(httpd_req_t *req) {
         return send_json(req, sb.GetString());
     }
 
+    /* ── action=get_trackdefaults ── read boot-default presets ── */
+    if (strcmp(action, "get_trackdefaults") == 0) {
+        return handle_get_trackdefaults(req);
+    }
+
     /* ── default: return current track state ── */
     httpd_resp_set_type(req, "application/json");
     Document resp(kObjectType);
@@ -182,6 +191,73 @@ static esp_err_t handle_set_track_macro(httpd_req_t *req) {
     return send_ok(req);
 }
 
+static const char *TRACKDEFAULTS_PATH = "/sdcard/data/trackdefaults.json";
+
+/**
+ * GET  ?action=get_trackdefaults
+ * Returns the contents of /sdcard/data/trackdefaults.json (or "{}" if missing).
+ */
+static esp_err_t handle_get_trackdefaults(httpd_req_t *req) {
+    FILE *f = fopen(TRACKDEFAULTS_PATH, "r");
+    if (!f) {
+        ESP_LOGW(MACRO_TAG, "trackdefaults.json not found, returning {}");
+        return send_json(req, "{}");
+    }
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (sz <= 0 || sz >= 8192) {
+        fclose(f);
+        return send_json(req, "{}");
+    }
+    char *buf = (char *)heap_caps_malloc(sz + 1, MALLOC_CAP_SPIRAM);
+    if (!buf) {
+        fclose(f);
+        return send_json(req, "{}");
+    }
+    fread(buf, 1, sz, f);
+    buf[sz] = '\0';
+    fclose(f);
+    esp_err_t ret2 = send_json(req, buf);
+    heap_caps_free(buf);
+    return ret2;
+}
+
+/**
+ * POST ?action=save_trackdefaults
+ * Writes the request body (JSON) to /sdcard/data/trackdefaults.json.
+ */
+static esp_err_t handle_save_trackdefaults(httpd_req_t *req) {
+    if (req->content_len == 0 || req->content_len > 8192) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid body size");
+        return ESP_FAIL;
+    }
+    char *content = (char *)heap_caps_malloc(req->content_len + 1, MALLOC_CAP_SPIRAM);
+    if (!content) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
+        return ESP_FAIL;
+    }
+    int ret = httpd_req_recv(req, content, req->content_len);
+    if (ret <= 0) {
+        heap_caps_free(content);
+        if (ret == HTTPD_SOCK_ERR_TIMEOUT) httpd_resp_send_408(req);
+        return ESP_FAIL;
+    }
+    content[req->content_len] = '\0';
+
+    FILE *f = fopen(TRACKDEFAULTS_PATH, "w");
+    if (!f) {
+        heap_caps_free(content);
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Cannot write file");
+        return ESP_FAIL;
+    }
+    fwrite(content, 1, req->content_len, f);
+    fclose(f);
+    ESP_LOGI(MACRO_TAG, "Saved trackdefaults.json (%d bytes)", req->content_len);
+    heap_caps_free(content);
+    return send_ok(req);
+}
+
 esp_err_t MacroAPI::macroapi_post_handler(httpd_req_t *req) {
     ESP_LOGI(MACRO_TAG, "POST Mem free int %d, SPIRAM %d",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
@@ -205,6 +281,9 @@ esp_err_t MacroAPI::macroapi_post_handler(httpd_req_t *req) {
     }
     else if (strcmp(action, "update_track") == 0) {
         return handle_set_track_macro(req);
+    }
+    else if (strcmp(action, "save_trackdefaults") == 0) {
+        return handle_save_trackdefaults(req);
     }
 
     httpd_resp_set_type(req, "text/html");

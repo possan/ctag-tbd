@@ -2103,3 +2103,144 @@ sl-dialog::part(footer) {
   letter-spacing: 0.02em;
   line-height: 1;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   TRACK DEFAULT PRESETS DIALOG
+   ═══════════════════════════════════════════════════════════ */
+#trackdefaults-dialog::part(body) {
+  padding: 0.75rem 1.25rem;
+  max-height: 72vh;
+  overflow-y: auto;
+}
+#trackdefaults-dialog::part(title) {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.td-intro {
+  font-size: 0.82rem;
+  color: var(--sl-color-neutral-600);
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.td-table {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: var(--sl-border-radius-medium);
+  overflow: hidden;
+}
+
+.td-row {
+  display: grid;
+  grid-template-columns: 2.5rem 6rem 3.5rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--sl-color-neutral-0);
+  transition: background 0.1s;
+}
+.td-row:hover:not(.td-header) {
+  background: color-mix(in srgb, var(--sl-color-primary-50) 40%, var(--sl-color-neutral-0));
+}
+.td-row:nth-child(even):not(.td-header) {
+  background: var(--sl-color-neutral-50);
+}
+.td-row:nth-child(even):not(.td-header):hover {
+  background: color-mix(in srgb, var(--sl-color-primary-50) 40%, var(--sl-color-neutral-50));
+}
+
+.td-header {
+  background: var(--sl-color-neutral-100);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sl-color-neutral-600);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--sl-color-neutral-200);
+}
+
+.td-col-idx {
+  font-family: monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--sl-color-neutral-500);
+}
+.td-col-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--sl-color-neutral-800);
+}
+.td-col-type {
+  text-align: center;
+}
+
+.td-type-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  line-height: 1.4;
+}
+.td-type-drum {
+  background: color-mix(in srgb, var(--sl-color-warning-200) 60%, transparent);
+  color: var(--sl-color-warning-800);
+}
+.td-type-synth {
+  background: color-mix(in srgb, var(--sl-color-primary-200) 60%, transparent);
+  color: var(--sl-color-primary-800);
+}
+.td-type-fx {
+  background: color-mix(in srgb, var(--sl-color-success-200) 60%, transparent);
+  color: var(--sl-color-success-800);
+}
+
+.td-select {
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.78rem;
+  border: 1px solid var(--sl-color-neutral-300);
+  border-radius: var(--sl-border-radius-small);
+  background: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-800);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.td-select:hover {
+  border-color: var(--sl-color-primary-400);
+}
+.td-select:focus {
+  border-color: var(--sl-color-primary-500);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sl-color-primary-400) 25%, transparent);
+}
+
+/* ── Dark theme overrides for track defaults ── */
+.sl-theme-dark .td-intro { color: var(--sl-color-neutral-400); }
+.sl-theme-dark .td-table { border-color: var(--sl-color-neutral-700); }
+.sl-theme-dark .td-row { background: var(--sl-color-neutral-900); }
+.sl-theme-dark .td-row:nth-child(even):not(.td-header) { background: var(--sl-color-neutral-800); }
+.sl-theme-dark .td-row:hover:not(.td-header) {
+  background: color-mix(in srgb, var(--sl-color-primary-900) 30%, var(--sl-color-neutral-900));
+}
+.sl-theme-dark .td-row:nth-child(even):not(.td-header):hover {
+  background: color-mix(in srgb, var(--sl-color-primary-900) 30%, var(--sl-color-neutral-800));
+}
+.sl-theme-dark .td-header {
+  background: var(--sl-color-neutral-800);
+  border-color: var(--sl-color-neutral-700);
+  color: var(--sl-color-neutral-400);
+}
+.sl-theme-dark .td-col-idx { color: var(--sl-color-neutral-500); }
+.sl-theme-dark .td-col-name { color: var(--sl-color-neutral-200); }
+.sl-theme-dark .td-select {
+  background: var(--sl-color-neutral-800);
+  border-color: var(--sl-color-neutral-600);
+  color: var(--sl-color-neutral-200);
+}

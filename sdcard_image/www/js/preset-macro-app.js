@@ -219,6 +219,9 @@
       if (window.TBD.designer && window.TBD.designer.init) {
         window.TBD.designer.init();
       }
+      if (window.TBD.trackDefaults && window.TBD.trackDefaults.init) {
+        window.TBD.trackDefaults.init();
+      }
 
       // Auto-select first track
       if (S.data.tracks.length > 0) {
