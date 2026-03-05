@@ -4161,8 +4161,13 @@ window.TBD.shared = {
 // TBD-16 WebUI — Track Default Presets Editor (Overlay)
 //
 // Opens as a Shoelace dialog from the header nav.
-// Faceted UI: Engine dropdown → Preset dropdown per track.
-// Hierarchy: Track → Machine (Engine) → MacroDef → Preset
+// Hierarchy mirrors the main Preset & Macro Manager UI:
+//   Track → Machine → Preset (grouped by Macro definition)
+//
+// Machine names come from S.getMachineInfo() (synthdefinitions.json).
+// Machine list uses S.getTrackMachines() which filters out noX empties.
+// Presets are grouped into <optgroup>s by their macro definition name,
+// so the user sees e.g. "Phat Punch" / "Synth Kick — All knobs" sections.
 //
 // Data source:  /sdcard/data/trackdefaults.json
 // API:          GET  /api/v2/macros?action=get_trackdefaults
@@ -4179,57 +4184,46 @@ window.TBD.shared = {
   // ─── State ─────────────────────────────────────────────────
   var trackDefaults = null;   // parsed trackdefaults.json
   var dirty = false;
-  var facetedData = null;     // per-track faceted machine→macrodef→preset tree
+  var facetedData = null;     // per-track: [ { machine, name, macros: [{id, name, presets}] } ]
 
   // ─── Helpers ───────────────────────────────────────────────
 
   /**
-   * Build human-readable engine names from the "*-allparams" macrodefinitions.
-   * e.g. machine "db" → "Synth Kick" (from "Synth Kick All param")
+   * Get display name for a machine ID using S.getMachineInfo()
+   * (same source as the main UI's MACHINE: dropdown).
    */
-  function buildMachineNames() {
-    var names = {};
-    var allDefs = S.data.macroDefs || [];
-    allDefs.forEach(function(d) {
-      if (!names[d.machine]) {
-        // Prefer the allparams def for the display name, but accept any
-        var raw = (d.name || d.machine);
-        var cleaned = raw
-          .replace(/\s*All\s*param(s)?\s*$/i, '')
-          .replace(/\s*All\s*default(s)?\s*$/i, '')
-          .trim();
-        names[d.machine] = cleaned || d.machine;
-      }
-    });
-    // Override the "no*" machines with clearer names
-    if (names['nodrum'])  names['nodrum']  = 'Empty';
-    if (names['nosynth']) names['nosynth'] = 'Empty';
-    if (names['nofx'])    names['nofx']    = 'Bypass';
-    return names;
+  function getMachineName(machineId) {
+    var info = S.getMachineInfo(machineId);
+    return info ? info.name : machineId;
   }
 
   /**
    * Build faceted data for every track.
-   * Returns { trackIndex: [ { machine, name, macros: [ { id, name, presets: [] } ] } ] }
+   * Uses S.getTrackMachines() to get the same machine list as the main UI
+   * (filters out nodrum/nosynth/nofx).
+   *
+   * Returns { trackIndex: [ { machine, name, macros: [ { id, name, presets } ] } ] }
    */
   function buildFacetedData() {
     var tracks = S.data.tracks || [];
     var allDefs = S.data.macroDefs || [];
     var allPresets = S.data.soundPresets || [];
-    var machineNames = buildMachineNames();
 
     var result = {};
 
     tracks.forEach(function(track) {
-      var machines = track.machines || [];
+      // Use S.getTrackMachines() — same filter as the main UI MACHINE: dropdown
+      var machines = S.getTrackMachines(track);
       var facets = [];
 
       machines.forEach(function(machineId) {
+        // Find all macro definitions for this machine
         var defs = allDefs.filter(function(d) { return d.machine === machineId; });
         if (defs.length === 0) return;
 
         var macros = [];
         defs.forEach(function(def) {
+          // Find all sound presets that use this macrodefinition
           var presets = allPresets.filter(function(p) { return p.macro === def.id; });
           if (presets.length === 0) return;
           presets.sort(function(a, b) {
@@ -4244,7 +4238,7 @@ window.TBD.shared = {
         if (macros.length > 0) {
           facets.push({
             machine: machineId,
-            name: machineNames[machineId] || machineId,
+            name: getMachineName(machineId),
             macros: macros
           });
         }
@@ -4317,7 +4311,8 @@ window.TBD.shared = {
 
   /**
    * Rebuild the preset <select> options for a given track row
-   * when the engine dropdown changes.
+   * when the machine dropdown changes.
+   * Presets are grouped by their macro definition name.
    */
   function rebuildPresetDropdown(trackIdx, machineId, currentPresetId) {
     var presetSel = document.querySelector('.td-preset-select[data-track="' + trackIdx + '"]');
@@ -4336,10 +4331,12 @@ window.TBD.shared = {
       var useSections = macros.length > 1;
 
       macros.forEach(function(macro) {
-        // Clean up macrodef name for the optgroup label
-        var label = (macro.name || macro.id)
-          .replace(/\s*All\s*param(s)?\s*$/i, ' — All knobs')
-          .trim();
+        // Clean up macro definition name for the optgroup label
+        var label = (macro.name || macro.id);
+        // If it ends with "All param(s)", make it clearer
+        if (/All\s*param/i.test(label)) {
+          label = label.replace(/\s*All\s*param(s)?\s*$/i, '') + ' — All knobs';
+        }
 
         if (useSections) {
           html += '<optgroup label="' + S.esc(label) + '">';
@@ -4360,9 +4357,8 @@ window.TBD.shared = {
     presetSel.innerHTML = html;
     presetSel.disabled = !machineId;
 
-    // If no current preset matches, auto-select first real option
+    // If the current saved preset wasn't found in the new machine, reset
     if (currentPresetId && presetSel.value !== currentPresetId) {
-      // Current preset not found in new engine — reset to auto
       presetSel.value = '';
     }
   }
@@ -4378,7 +4374,7 @@ window.TBD.shared = {
 
     var html = '';
     html += '<p class="td-intro">Configure which preset each track loads on boot. ';
-    html += 'Pick an <strong>engine</strong> first, then choose a <strong>preset</strong>. ';
+    html += 'Pick a <strong>machine</strong> first, then choose a <strong>preset</strong>. ';
     html += 'Changes take effect on next power-up.</p>';
 
     html += '<div class="td-table">';
@@ -4386,7 +4382,7 @@ window.TBD.shared = {
     html += '<span class="td-col-idx">#</span>';
     html += '<span class="td-col-name">Track</span>';
     html += '<span class="td-col-type">Type</span>';
-    html += '<span class="td-col-engine">Engine</span>';
+    html += '<span class="td-col-engine">Machine</span>';
     html += '<span class="td-col-preset">Preset</span>';
     html += '</div>';
 
@@ -4395,7 +4391,7 @@ window.TBD.shared = {
       var currentPreset = getDefaultPreset(idx);
       var facets = facetedData[idx] || [];
 
-      // Determine current engine from current preset
+      // Determine current machine from the saved preset
       var currentMachine = currentPreset ? findMachineForPreset(currentPreset, facets) : '';
 
       // Track type badge
@@ -4409,9 +4405,9 @@ window.TBD.shared = {
       html += '<span class="td-col-name">' + S.esc(track.name) + '</span>';
       html += '<span class="td-col-type"><span class="' + typeClass + '">' + S.esc(track.type) + '</span></span>';
 
-      // Engine dropdown
+      // Machine dropdown — same options as the main UI MACHINE: dropdown
       html += '<span class="td-col-engine">';
-      html += '<select class="td-select td-engine-select" data-track="' + idx + '">';
+      html += '<select class="td-select td-machine-select" data-track="' + idx + '">';
       html += '<option value="">(auto)</option>';
       facets.forEach(function(f) {
         var sel = f.machine === currentMachine ? ' selected' : '';
@@ -4420,7 +4416,7 @@ window.TBD.shared = {
       html += '</select>';
       html += '</span>';
 
-      // Preset dropdown (populated dynamically)
+      // Preset dropdown (populated dynamically based on machine selection)
       html += '<span class="td-col-preset">';
       html += '<select class="td-select td-preset-select" data-track="' + idx + '"';
       if (!currentMachine) html += ' disabled';
@@ -4436,7 +4432,7 @@ window.TBD.shared = {
 
     body.innerHTML = html;
 
-    // Populate preset dropdowns for tracks that have a saved engine
+    // Populate preset dropdowns for tracks that have a saved machine
     tracks.forEach(function(track) {
       var currentPreset = getDefaultPreset(track.index);
       var facets = facetedData[track.index] || [];
@@ -4446,8 +4442,8 @@ window.TBD.shared = {
       }
     });
 
-    // Attach engine change listeners
-    body.querySelectorAll('.td-engine-select').forEach(function(sel) {
+    // Attach machine change listeners
+    body.querySelectorAll('.td-machine-select').forEach(function(sel) {
       sel.addEventListener('change', function() {
         var idx = parseInt(sel.getAttribute('data-track'), 10);
         var machineId = sel.value;
@@ -4496,14 +4492,14 @@ window.TBD.shared = {
         var track = tracks.find(function(t) { return t.index === idx; });
         var trackName = track ? track.name : ('Track ' + idx);
 
-        // Also note the engine for the comment
-        var engineSel = document.querySelector('.td-engine-select[data-track="' + idx + '"]');
-        var engineName = engineSel ? engineSel.options[engineSel.selectedIndex].text : '';
+        // Include machine name in the comment for readability
+        var machineSel = document.querySelector('.td-machine-select[data-track="' + idx + '"]');
+        var machineName = machineSel ? machineSel.options[machineSel.selectedIndex].text : '';
 
         result.tracks.push({
           index: idx,
           preset: presetId,
-          _name: trackName + ' — ' + engineName + ' — ' + presetId
+          _name: trackName + ' — ' + machineName + ' — ' + presetId
         });
       }
     });
