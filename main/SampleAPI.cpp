@@ -69,6 +69,7 @@ static void url_decode(char *dst, const char *src, size_t dst_size) {
 static void set_api_headers(httpd_req_t *req) {
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_set_hdr(req, "Connection", "close");
 }
 
 /** Send a JSON string as HTTP response */

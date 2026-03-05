@@ -181,12 +181,12 @@ esp_err_t RestServer::StartRestServer() {
     config.task_priority      = tskIDLE_PRIORITY + 4;
     config.max_uri_handlers   = 20;   // upstream p4_main limit; using 9 of 20
     config.stack_size         = 8192;
-    config.recv_wait_timeout  = 10;
+    config.max_req_hdr_len    = 1024; // default 512 too small for modern browser headers (causes 431)
+    config.recv_wait_timeout  = 10;   // upstream p4_main value — lru_purge handles socket pressure
     config.send_wait_timeout  = 10;
     config.lru_purge_enable   = true;  // Auto-close least-recently-used connections when out of sockets
-    // Note: max_open_sockets stays at default 7 (per upstream p4_main testing).
-    // API responses use HTTP/1.1 keep-alive (no Connection:close) so the
-    // browser reuses sockets.  Only static files get Connection:close.
+    // All API responses now use Connection:close to free sockets immediately.
+    // Static files also use Connection:close.
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server (v2 API — 9 of 20 handler slots)");
     if (httpd_start(&server, &config) != ESP_OK)

@@ -926,3 +926,99 @@ void SoundProcessorManager::LoadTrackMacroAndPreset(const int trackIndex, const 
 
 }
 
+// ─── Audio health monitoring ─────────────────────────────────────
+
+string SoundProcessorManager::GetAudioHealthJSON() {
+    char buf[512];
+    snprintf(buf, sizeof(buf),
+        "{\"audioLockErrors\":%lu,"
+        "\"slowProcessCount\":%lu,"
+        "\"freeInternal\":%lu,"
+        "\"largestInternal\":%lu,"
+        "\"freeSPIRAM\":%lu,"
+        "\"largestSPIRAM\":%lu}",
+        (unsigned long)audioLockErrors,
+        (unsigned long)slowProcessCounter,
+        (unsigned long)heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        (unsigned long)heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        (unsigned long)heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+        (unsigned long)heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+    return string(buf);
+}
+
+void SoundProcessorManager::ResetAudioHealthCounters() {
+    audioLockErrors = 0;
+    slowProcessCounter = 0;
+}
+
+// ─── Thread-safe JSON copy helpers ───────────────────────────────
+// Take processMutex, call the underlying GetCStr* method which writes
+// to a shared StringBuffer, copy the result into a SPIRAM-allocated
+// buffer, release the mutex, and return the copy.
+// Caller MUST free() the returned pointer.
+
+static char *copyToSpiram(const char *src) {
+    if (!src) return nullptr;
+    size_t len = strlen(src);
+    char *copy = (char *)heap_caps_malloc(len + 1, MALLOC_CAP_SPIRAM);
+    if (copy) {
+        memcpy(copy, src, len + 1);
+    } else {
+        ESP_LOGE("SPManager", "SPIRAM alloc failed for %u byte JSON copy", (unsigned)len);
+    }
+    return copy;
+}
+
+char *SoundProcessorManager::GetSafeJSONActivePluginParams(const int chan) {
+    ledBlink = 1;
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    const char *raw = sp[chan] ? sp[chan]->GetCStrJSONParamSpecs() : nullptr;
+    char *copy = copyToSpiram(raw);
+    xSemaphoreGive(processMutex);
+    return copy;
+}
+
+char *SoundProcessorManager::GetSafeJSONGetPresets(const int chan) {
+    ledBlink = 1;
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    const char *raw = sp[chan] ? sp[chan]->GetCStrJSONPresets() : nullptr;
+    char *copy = copyToSpiram(raw);
+    xSemaphoreGive(processMutex);
+    return copy;
+}
+
+char *SoundProcessorManager::GetSafeJSONAllPresetData(const int chan) {
+    ledBlink = 1;
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    const char *raw = sp[chan] ? sp[chan]->GetCStrJSONAllPresetData() : nullptr;
+    char *copy = copyToSpiram(raw);
+    xSemaphoreGive(processMutex);
+    return copy;
+}
+
+char *SoundProcessorManager::GetSafeJSONConfiguration() {
+    ledBlink = 1;
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    const char *raw = model->GetCStrJSONConfiguration();
+    char *copy = copyToSpiram(raw);
+    xSemaphoreGive(processMutex);
+    return copy;
+}
+
+char *SoundProcessorManager::GetSafeJSONSoundProcessors() {
+    ledBlink = 1;
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    const char *raw = model->GetCStrJSONSoundProcessors();
+    char *copy = copyToSpiram(raw);
+    xSemaphoreGive(processMutex);
+    return copy;
+}
+
+char *SoundProcessorManager::GetSafeJSONSoundProcessorPresets(const string &id) {
+    ledBlink = 1;
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    const char *raw = model->GetCStrJSONSoundProcessorPresets(id);
+    char *copy = copyToSpiram(raw);
+    xSemaphoreGive(processMutex);
+    return copy;
+}

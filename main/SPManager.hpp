@@ -76,6 +76,19 @@ namespace CTAG {
                 return model->GetCStrJSONSoundProcessorPresets(id);
             }
 
+            // ── Thread-safe variants ──────────────────────────────
+            // These take the processMutex, copy the JSON string to a
+            // SPIRAM buffer, and return the copy. Caller MUST free()
+            // the returned pointer after use.
+            // This prevents the audio task from invalidating the
+            // internal StringBuffer while the HTTP handler sends.
+            static char *GetSafeJSONActivePluginParams(const int chan);
+            static char *GetSafeJSONGetPresets(const int chan);
+            static char *GetSafeJSONAllPresetData(const int chan);
+            static char *GetSafeJSONConfiguration();
+            static char *GetSafeJSONSoundProcessors();
+            static char *GetSafeJSONSoundProcessorPresets(const string &id);
+
             static void SetCStrJSONSoundProcessorPreset(const char* id, const char *data) {
                 ledBlink = 1;
                 model->SetCStrJSONSoundProcessorPreset(id, data);
@@ -128,6 +141,10 @@ namespace CTAG {
             // static bool GetSoundPresetJSON(const string &id, string *jsonoutput);
             // static bool GetMacroDefinitionJSON(const string &id, string *jsonoutput);
             static void RefreshMacros();
+
+            // Audio health monitoring — returns JSON with lock errors, slow process count, memory stats
+            static string GetAudioHealthJSON();
+            static void ResetAudioHealthCounters();
 
         private:
             static void audio_task(void *pvParams);

@@ -249,25 +249,115 @@ The ESP32-P4 httpd serves **only `.gz` files** from `/sdcard/www/`. The build sc
 
 ---
 
-## 9. Current System Status
+## 9. HTTP Stability & Thread Safety Fixes
+
+After deployment, the device exhibited intermittent crashes when navigating the WebUI — particularly when opening the Sample Manager or switching between pages. Investigation revealed three root causes:
+
+### 9.1 Thread-Unsafe JSON Serialization (Critical — Device Crash)
+
+**Problem:** HTTP handlers on core 0 called `GetCStrJSONParamSpecs()` / `GetCStrJSONPresets()` etc., which internally write to a shared `StringBuffer json` member in `ctagDataModelBase`. Meanwhile, the audio task on core 1 can call methods on the same sound processor object. The 58KB PicoSeqRack params response takes ~500ms to serialize + transmit, creating a large race window where the audio task could overwrite the buffer mid-transmission → memory corruption → hard crash.
+
+**Fix:** Added `GetSafeJSON*()` methods in `SPManager.cpp` that:
+1. Take `processMutex` (same mutex the audio task uses with non-blocking `xSemaphoreTake(processMutex, 0)`)
+2. Call the underlying `GetCStr*()` to serialize into the shared buffer
+3. Copy the result to a SPIRAM-allocated buffer via `copyToSpiram()`
+4. Release the mutex
+5. Return the copy (caller frees after sending)
+
+Six safe methods added: `GetSafeJSONActivePluginParams()`, `GetSafeJSONGetPresets()`, `GetSafeJSONAllPresetData()`, `GetSafeJSONConfiguration()`, `GetSafeJSONSoundProcessors()`, `GetSafeJSONSoundProcessorPresets()`.
+
+All HTTP handlers in `PluginAPI.cpp` and `DeviceAPI.cpp` updated to use the safe variants + a `send_safe_json()` helper that sends and frees.
+
+**Audio task impact:** The audio task uses a non-blocking mutex attempt (`xSemaphoreTake(processMutex, 0)`) — if the HTTP handler holds the mutex, the audio task mutes that buffer cycle and continues. Measured impact: ~668 lock errors (~485ms of silence) per single `getParams` request for PicoSeqRack. This only occurs during UI page loads, not during normal audio playback. The same mutex/mute pattern is already used by plugin switching, preset save/load, and config changes.
+
+**Note:** `SpiAPI.cpp` also calls `GetCStrJSON*()` but runs within the audio task context on core 1, so the race condition doesn't apply — left unchanged.
+
+### 9.2 HTTP Socket Exhaustion (High — Server Unresponsive)
+
+**Problem:** API responses lacked `Connection: close` headers. Browsers kept 6+ idle sockets open out of the 7 max ESP-IDF httpd sockets. When all sockets were held, no new connections could be accepted.
+
+**Fix:** Added `Connection: close` to the `set_api_headers()` function in all four API modules (`PluginAPI.cpp`, `DeviceAPI.cpp`, `SampleAPI.cpp`, `MacroAPI.cpp`). Static files already had this header in upstream.
+
+### 9.3 HTTP 431 "Header fields too long" (Medium — Page Load Failure)
+
+**Problem:** Default `max_req_hdr_len` of 512 bytes in `HTTPD_DEFAULT_CONFIG()` was too small for modern browser request headers (Chrome sends 600+ bytes with cookies/accept headers), causing HTTP 431 errors on `index.html`.
+
+**Fix:** Increased `config.max_req_hdr_len` to 1024 in `RestServer.cpp`. This is the only config change from upstream `p4_main`.
+
+### 9.4 RestServer.cpp Config — Upstream Alignment
+
+All httpd config values match the upstream `p4_main` branch except `max_req_hdr_len`:
+
+| Setting | Upstream `p4_main` | Ours | Notes |
+|---|---|---|---|
+| `recv_wait_timeout` | 10 | 10 | Matches |
+| `send_wait_timeout` | 10 | 10 | Matches |
+| `lru_purge_enable` | true | true | Matches |
+| `max_uri_handlers` | 20 | 20 | Matches |
+| `stack_size` | 8192 | 8192 | Matches |
+| `task_priority` | IDLE+4 | IDLE+4 | Matches |
+| `max_req_hdr_len` | 512 (default) | **1024** | Fix for HTTP 431 |
+
+### 9.5 Audio Health Monitoring API
+
+Added a new endpoint to measure the audio impact of HTTP operations:
+
+```bash
+# Check current counters + memory
+curl http://192.168.4.1/api/v2/device?action=getAudioHealth
+
+# Reset counters to zero
+curl -X POST http://192.168.4.1/api/v2/device?action=resetAudioHealth
+```
+
+Response:
+```json
+{
+  "audioLockErrors": 668,
+  "slowProcessCount": 0,
+  "freeInternal": 43132,
+  "largestInternal": 31744,
+  "freeSPIRAM": 2508896,
+  "largestSPIRAM": 4194304
+}
+```
+
+- `audioLockErrors` — number of audio buffer cycles where the mutex was held by HTTP, causing a muted buffer
+- `slowProcessCount` — number of audio frames exceeding the CPU cycle budget (300,000 cycles)
+- Memory stats from `heap_caps` for diagnosing resource pressure
+
+During idle operation (no active HTTP requests), both counters remain at **0**.
+
+### 9.6 Verification Results
+
+**Before fix:** Single `getParams&ch=0` returned 58KB/200 OK, but all subsequent requests failed (HTTP 000, timeout). `ping` showed 100% packet loss — device crashed completely.
+
+**After fix:** 10 consecutive rounds of `getParams ch0` (58KB) + `getParams ch1` + `samples manage` (53KB) — all returned HTTP 200, device stable, 0% packet loss.
+
+---
+
+## 10. Current System Status
 
 Verified on device at `192.168.4.1` (USB-NCM):
 
 | Component | Status |
 |-----------|--------|
 | Firmware (PicoSeqRack) | Running stable, no crashes |
-| Internal SRAM | ~24.5KB free (healthy) |
-| SPIRAM | 2.69MB free |
-| Audio pipeline | Stable, SPI communication active |
+| Internal SRAM | ~43KB free (healthy) |
+| SPIRAM | 2.51MB free |
+| Audio pipeline | Stable, 0 lock errors at idle |
+| HTTP server | Stable — thread-safe JSON, Connection:close |
 | Plugin manager (`index.html`) | Serving correctly (200 OK) |
 | Macro manager (`preset-macro-manager.html`) | Serving correctly (200 OK) |
+| Sample manager | Working reliably (was crashing before fix) |
 | Macro API (`/api/v2/macros?action=getall`) | 16 tracks, 33 defs, 44 presets |
+| Audio health API | Endpoint active at `/api/v2/device?action=getAudioHealth` |
 | CSS/JS assets | All serving with correct cache busters |
 | Header navigation | Fixed — nav tabs styled and functional |
 
 ---
 
-## 10. Repository Structure (Key Paths)
+## 11. Repository Structure (Key Paths)
 
 ```
 main/
@@ -319,20 +409,21 @@ prototyping/
 
 ---
 
-## 11. Contributors
+## 12. Contributors
 
 - **possan** — PicoSeqRack firmware, MacroTranslator, rack DSP machines, SPI protocol, macro system architecture, `sdkconfig.defaults.bba-possan`
 - **nevvkid** — Shoelace WebUI rework, merge integration, persona prototype, API v2 migration, crash fixes, deployment tooling
 
 ---
 
-## 12. What's Next
+## 13. What's Next
 
 1. **Preset & Macro Manager testing** — Verify full round-trip: browse presets → load → tweak knobs → save, all through the WebUI on the device
-2. **Designer view** — Continue developing the macro definition editor for creating custom parameter mappings
-3. **Sound preset creation** — Build workflow for creating and saving new sound presets from the WebUI
-4. **Plugin switching** — Test loading plugins other than PicoSeqRack (TBD03, GDVerb, etc.) now that the cv/trig fix is in place
-5. **Merge to target** — When stable, merge `feature/webui-merge-planning` → `feature/webui-general-ui-rework`
+2. **Reduce JSON serialization hold time** — The ~485ms mutex hold for PicoSeqRack's 58KB params is acceptable but could be improved by pre-caching serialized JSON or breaking it into smaller chunks
+3. **Designer view** — Continue developing the macro definition editor for creating custom parameter mappings
+4. **Sound preset creation** — Build workflow for creating and saving new sound presets from the WebUI
+5. **Plugin switching** — Test loading plugins other than PicoSeqRack (TBD03, GDVerb, etc.) now that the cv/trig fix is in place
+6. **Merge to target** — When stable, merge `feature/webui-merge-planning` → `feature/webui-general-ui-rework`
 
 ---
 

@@ -44,6 +44,7 @@ static const char *TAG = "DeviceAPI";
 static void set_api_headers(httpd_req_t *req) {
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_set_hdr(req, "Connection", "close");
 }
 
 static esp_err_t send_json(httpd_req_t *req, const char *json) {
@@ -54,6 +55,16 @@ static esp_err_t send_json(httpd_req_t *req, const char *json) {
     return ESP_OK;
 }
 
+/**
+ * send_safe_json — send a SPIRAM-allocated JSON string, then free it.
+ * Use with GetSafeJSON*() which returns heap_caps_malloc'd copies.
+ */
+static esp_err_t send_safe_json(httpd_req_t *req, char *json) {
+    esp_err_t r = send_json(req, json);
+    free(json);   // safe even if json==NULL
+    return r;
+}
+
 static esp_err_t send_ok(httpd_req_t *req) {
     return send_json(req, "{\"ok\":true}");
 }
@@ -62,8 +73,8 @@ static esp_err_t send_ok(httpd_req_t *req) {
 
 /** action=getConfig — device configuration */
 static esp_err_t handle_get_config(httpd_req_t *req) {
-    return send_json(req,
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONConfiguration());
+    return send_safe_json(req,
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONConfiguration());
 }
 
 /** action=getIOCaps — IO capabilities (triggers, CVs, versions) */
@@ -78,6 +89,18 @@ static esp_err_t handle_get_iocaps(httpd_req_t *req) {
 static esp_err_t handle_get_favorites(httpd_req_t *req) {
     string favs = CTAG::FAV::Favorites::GetAllFavorites();
     return send_json(req, favs.c_str());
+}
+
+/** action=getAudioHealth — lock errors, CPU overruns, memory stats */
+static esp_err_t handle_get_audio_health(httpd_req_t *req) {
+    string health = CTAG::AUDIO::SoundProcessorManager::GetAudioHealthJSON();
+    return send_json(req, health.c_str());
+}
+
+/** action=resetAudioHealth — zero the lock error & slow process counters */
+static esp_err_t handle_reset_audio_health(httpd_req_t *req) {
+    CTAG::AUDIO::SoundProcessorManager::ResetAudioHealthCounters();
+    return send_ok(req);
 }
 
 /**
@@ -98,9 +121,10 @@ static esp_err_t handle_get_all(httpd_req_t *req) {
     #define CHUNK(s) httpd_resp_send_chunk(req, (s), strlen(s))
 
     CHUNK("{\"config\":");
-    const char *config =
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONConfiguration();
+    char *config =
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONConfiguration();
     CHUNK(config ? config : "{}");
+    free(config);
 
     CHUNK(",\"ioCaps\":");
     CHUNK(s.c_str());
@@ -193,10 +217,11 @@ esp_err_t DeviceAPI::device_get_handler(httpd_req_t *req) {
     httpd_req_get_url_query_str(req, query, sizeof(query));
     httpd_query_key_value(query, "action", action, sizeof(action));
 
-    if (strcmp(action, "getConfig") == 0)    return handle_get_config(req);
-    if (strcmp(action, "getIOCaps") == 0)    return handle_get_iocaps(req);
-    if (strcmp(action, "getFavorites") == 0) return handle_get_favorites(req);
-    if (strcmp(action, "getAll") == 0)       return handle_get_all(req);
+    if (strcmp(action, "getConfig") == 0)      return handle_get_config(req);
+    if (strcmp(action, "getIOCaps") == 0)      return handle_get_iocaps(req);
+    if (strcmp(action, "getFavorites") == 0)   return handle_get_favorites(req);
+    if (strcmp(action, "getAll") == 0)         return handle_get_all(req);
+    if (strcmp(action, "getAudioHealth") == 0) return handle_get_audio_health(req);
 
     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "unknown action");
     return ESP_FAIL;
@@ -210,10 +235,11 @@ esp_err_t DeviceAPI::device_post_handler(httpd_req_t *req) {
     httpd_req_get_url_query_str(req, query, sizeof(query));
     httpd_query_key_value(query, "action", action, sizeof(action));
 
-    if (strcmp(action, "setConfig") == 0)       return handle_set_config(req);
-    if (strcmp(action, "reboot") == 0)          return handle_reboot(req);
-    if (strcmp(action, "storeFavorite") == 0)   return handle_store_favorite(req, query);
-    if (strcmp(action, "recallFavorite") == 0)  return handle_recall_favorite(req, query);
+    if (strcmp(action, "setConfig") == 0)        return handle_set_config(req);
+    if (strcmp(action, "reboot") == 0)            return handle_reboot(req);
+    if (strcmp(action, "storeFavorite") == 0)     return handle_store_favorite(req, query);
+    if (strcmp(action, "recallFavorite") == 0)    return handle_recall_favorite(req, query);
+    if (strcmp(action, "resetAudioHealth") == 0)  return handle_reset_audio_health(req);
 
     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "unknown action");
     return ESP_FAIL;

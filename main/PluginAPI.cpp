@@ -37,6 +37,7 @@ static const char *TAG = "PluginAPI";
 static void set_api_headers(httpd_req_t *req) {
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_set_hdr(req, "Connection", "close");
 }
 
 static esp_err_t send_json(httpd_req_t *req, const char *json) {
@@ -44,6 +45,19 @@ static esp_err_t send_json(httpd_req_t *req, const char *json) {
     httpd_resp_set_type(req, "application/json");
     if (json) httpd_resp_sendstr(req, json);
     else httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+/** Send a SPIRAM-allocated JSON string, then free it */
+static esp_err_t send_safe_json(httpd_req_t *req, char *json) {
+    set_api_headers(req);
+    httpd_resp_set_type(req, "application/json");
+    if (json) {
+        httpd_resp_sendstr(req, json);
+        free(json);
+    } else {
+        httpd_resp_send(req, NULL, 0);
+    }
     return ESP_OK;
 }
 
@@ -65,8 +79,8 @@ static int get_channel(const char *query) {
 
 /** action=list — all available sound processors */
 static esp_err_t handle_list(httpd_req_t *req) {
-    return send_json(req,
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONSoundProcessors());
+    return send_safe_json(req,
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONSoundProcessors());
 }
 
 /** action=getActive&ch=N — active plugin ID for channel */
@@ -88,8 +102,8 @@ static esp_err_t handle_get_params(httpd_req_t *req, const char *query) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "need ch=0|1");
         return ESP_FAIL;
     }
-    return send_json(req,
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONActivePluginParams(ch));
+    return send_safe_json(req,
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONActivePluginParams(ch));
 }
 
 /** action=getPresets&ch=N — preset names for channel */
@@ -99,8 +113,8 @@ static esp_err_t handle_get_presets(httpd_req_t *req, const char *query) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "need ch=0|1");
         return ESP_FAIL;
     }
-    return send_json(req,
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONGetPresets(ch));
+    return send_safe_json(req,
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONGetPresets(ch));
 }
 
 /** action=getPresetData&id=X — all preset JSON for a sound processor */
@@ -110,8 +124,8 @@ static esp_err_t handle_get_preset_data(httpd_req_t *req, const char *query) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "need id=");
         return ESP_FAIL;
     }
-    return send_json(req,
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONSoundProcessorPresets(
+    return send_safe_json(req,
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONSoundProcessorPresets(
             string(id)));
 }
 
@@ -134,9 +148,10 @@ static esp_err_t handle_get_all(httpd_req_t *req) {
     #define CHUNK(s) httpd_resp_send_chunk(req, (s), strlen(s))
 
     CHUNK("{\"plugins\":");
-    const char *plugins =
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONSoundProcessors();
+    char *plugins =
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONSoundProcessors();
     CHUNK(plugins ? plugins : "[]");
+    free(plugins);
 
     CHUNK(",\"active\":{\"0\":\"");
     string id0 = CTAG::AUDIO::SoundProcessorManager::GetStringID(0);
@@ -147,23 +162,27 @@ static esp_err_t handle_get_all(httpd_req_t *req) {
     CHUNK("\"}");
 
     CHUNK(",\"params\":{\"0\":");
-    const char *p0 =
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONActivePluginParams(0);
+    char *p0 =
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONActivePluginParams(0);
     CHUNK(p0 ? p0 : "null");
+    free(p0);
     CHUNK(",\"1\":");
-    const char *p1 =
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONActivePluginParams(1);
+    char *p1 =
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONActivePluginParams(1);
     CHUNK(p1 ? p1 : "null");
+    free(p1);
     CHUNK("}");
 
     CHUNK(",\"presets\":{\"0\":");
-    const char *pr0 =
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONGetPresets(0);
+    char *pr0 =
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONGetPresets(0);
     CHUNK(pr0 ? pr0 : "[]");
+    free(pr0);
     CHUNK(",\"1\":");
-    const char *pr1 =
-        CTAG::AUDIO::SoundProcessorManager::GetCStrJSONGetPresets(1);
+    char *pr1 =
+        CTAG::AUDIO::SoundProcessorManager::GetSafeJSONGetPresets(1);
     CHUNK(pr1 ? pr1 : "[]");
+    free(pr1);
     CHUNK("}}");
 
     httpd_resp_send_chunk(req, NULL, 0);  // terminate
