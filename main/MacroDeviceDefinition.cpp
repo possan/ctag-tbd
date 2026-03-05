@@ -1,6 +1,7 @@
 #include "MacroDeviceDefinition.hpp"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
+#include <cstring>
 
 
 using namespace CTAG::MACROPRESETS;
@@ -163,6 +164,7 @@ MacroDeviceOutputMappingSource::MacroDeviceOutputMappingSource() {
     parameterIndex = 0;
     multiplier = 1;
     divider = 1;
+    curve = MacroCurveType::Linear;
 }
 
 MacroDeviceOutputMappingSource::~MacroDeviceOutputMappingSource() {}
@@ -192,6 +194,20 @@ bool MacroDeviceOutputMappingSource:: DeserializeJSON(const rapidjson::Value &js
     } else {
         ESP_LOGE("MacroDeviceOutputMappingSource", "Missing or invalid 'div' field");
         return false;
+    }
+
+    // Parse optional curve type (defaults to Linear if missing)
+    curve = MacroCurveType::Linear;
+    if (jsonelement.HasMember("curve") && jsonelement["curve"].IsString()) {
+        const char *curveStr = jsonelement["curve"].GetString();
+        if (strcmp(curveStr, "log") == 0) {
+            curve = MacroCurveType::Log;
+        } else if (strcmp(curveStr, "exp") == 0) {
+            curve = MacroCurveType::Exp;
+        } else if (strcmp(curveStr, "scurve") == 0) {
+            curve = MacroCurveType::SCurve;
+        }
+        // "linear" or unknown → stays Linear
     }
 
     return true;

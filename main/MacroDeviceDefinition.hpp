@@ -6,38 +6,21 @@
 
 namespace CTAG {
     namespace MACROPRESETS {
-        // class MacroDeviceParameter {
-        //     public:
-        //         uint8_t index;
-        //         std::string name;
-        //         int32_t defaultValue;
-        //         int32_t minValue;
-        //         int32_t maxValue;
-        //         int32_t resolution;
-        //         std::string uiType;
-        //     public:
-        //         MacroDeviceParameter();
-        //         ~MacroDeviceParameter();
-        //         bool DeserializeJSON(const rapidjson::Value &jsonelement);
-        //         bool SerializeJSONInto(rapidjson::Document &doc);
-        // };
 
-        // class MacroDeviceParameterGroup {
-        //     public:
-        //         std::string name;
-        //         std::vector<MacroDeviceParameter> parameters;
-        //     public:
-        //         MacroDeviceParameterGroup();
-        //         ~MacroDeviceParameterGroup();
-        //         bool DeserializeJSON(const rapidjson::Value &jsonelement);
-        //         bool SerializeJSONInto(rapidjson::Document &doc);
-        // };
+        // Response curve types for parameter mapping
+        enum class MacroCurveType : uint8_t {
+            Linear = 0,   // Default: straight 1:1 mapping
+            Log    = 1,   // Logarithmic: slow start, fast end (freq/cutoff)
+            Exp    = 2,   // Exponential: fast start, slow end (envelope times)
+            SCurve = 3    // S-curve: gentle at extremes, steep in middle
+        };
 
         class MacroDeviceOutputMappingSource {
             public:
                 uint8_t parameterIndex;
                 int32_t multiplier;
                 int32_t divider;
+                MacroCurveType curve;
 
             public:
                 MacroDeviceOutputMappingSource();

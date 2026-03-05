@@ -11,6 +11,54 @@
 using namespace CTAG::MACROPRESETS;
 using namespace rapidjson;
 
+/**
+ * Apply a response curve to a 0-127 value.
+ * All math is integer-only (no float) for ESP32 real-time safety.
+ *
+ * Linear:  identity (no change)
+ * Log:     piecewise linear — slow start, fast end
+ *            0-16  → 0-64   (×4 expansion, good for low-end detail)
+ *           16-64  → 64-100 (×0.75)
+ *           64-127 → 100-127 (compressed top end)
+ * Exp:     value²/127 — fast start, slow end
+ * S-curve: cubic around center — gentle at extremes, steep in middle
+ */
+static inline int32_t applyCurve(int32_t val, MacroCurveType curve) {
+    if (val <= 0) return 0;
+    if (val >= 127) return 127;
+
+    switch (curve) {
+        case MacroCurveType::Log:
+            // Piecewise linear: emphasises low range (great for freq/cutoff)
+            if (val <= 16) {
+                return val * 4;                      // 0-16 → 0-64
+            } else if (val <= 64) {
+                return 64 + ((val - 16) * 36) / 48;  // 16-64 → 64-100
+            } else {
+                return 100 + ((val - 64) * 27) / 63; // 64-127 → 100-127
+            }
+
+        case MacroCurveType::Exp:
+            // Quadratic: emphasises high range (great for envelope times)
+            return (val * val) / 127;
+
+        case MacroCurveType::SCurve:
+            // Cubic S-curve: gentle at extremes, steep through middle
+            {
+                int32_t centered = val - 64;
+                int32_t cubed = (centered * centered * centered) / (64 * 64);
+                int32_t result = 64 + cubed;
+                if (result < 0) result = 0;
+                if (result > 127) result = 127;
+                return result;
+            }
+
+        case MacroCurveType::Linear:
+        default:
+            return val;
+    }
+}
+
 
 MacroTranslator::MacroTranslator() {
     soundProcessor = nullptr;
@@ -401,6 +449,7 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
 
                     for(auto src : om.sources) {
                         int val = trackParameterValues[t][src.parameterIndex];
+                        val = applyCurve(val, src.curve);
                         if (src.divider > 0) {
                             finalvalue += (val * src.multiplier) / src.divider;
                         } else {
