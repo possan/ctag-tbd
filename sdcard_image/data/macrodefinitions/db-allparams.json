@@ -1,1 +1,159 @@
-{"id":"db-allparams","name":"Synth Kick All param","machine":"db","groups":[{"name":"Page 1","parameters":[{"idx":0,"name":"Freq","def":16,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":1,"name":"Decay","def":32,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":2,"name":"Tone","def":64,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":3,"name":"Dirt","def":0,"min":0,"max":127,"res":64,"ui":"bignum"}]},{"name":"Page 2","parameters":[{"idx":4,"name":"Fm Env","def":16,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":5,"name":"Fm Decay","def":8,"min":0,"max":127,"res":64,"ui":"bignum"},{"idx":6,"name":"Fm Accent","def":8,"min":0,"max":127,"res":64,"ui":"bignum"}]}],"mapping":[{"ctrl":8,"start":0,"add":[{"src":0,"mul":1,"div":1}]},{"ctrl":9,"start":0,"add":[{"src":1,"mul":1,"div":1}]},{"ctrl":10,"start":0,"add":[{"src":2,"mul":1,"div":1}]},{"ctrl":11,"start":0,"add":[{"src":3,"mul":1,"div":1}]},{"ctrl":12,"start":0,"add":[{"src":4,"mul":1,"div":1}]},{"ctrl":13,"start":0,"add":[{"src":5,"mul":1,"div":1}]},{"ctrl":14,"start":0,"add":[{"src":6,"mul":1,"div":1}]}]}
+{
+  "id": "db-allparams",
+  "name": "Synth Kick All param",
+  "machine": "db",
+  "groups": [
+    {
+      "name": "Page 1",
+      "parameters": [
+        {
+          "idx": 0,
+          "name": "Freq",
+          "def": 16,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 1,
+          "name": "Tone",
+          "def": 64,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 2,
+          "name": "Decay",
+          "def": 32,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 3,
+          "name": "Dirt",
+          "def": 0,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        }
+      ]
+    },
+    {
+      "name": "Page 2",
+      "parameters": [
+        {
+          "idx": 4,
+          "name": "Fm Env",
+          "def": 16,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 5,
+          "name": "Fm Decay",
+          "def": 8,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        },
+        {
+          "idx": 6,
+          "name": "Fm Accent",
+          "def": 8,
+          "min": 0,
+          "max": 127,
+          "res": 64,
+          "ui": "bignum"
+        }
+      ]
+    }
+  ],
+  "mapping": [
+    {
+      "ctrl": 8,
+      "start": 0,
+      "add": [
+        {
+          "src": 0,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 9,
+      "start": 0,
+      "add": [
+        {
+          "src": 1,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 10,
+      "start": 0,
+      "add": [
+        {
+          "src": 2,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 11,
+      "start": 0,
+      "add": [
+        {
+          "src": 3,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 12,
+      "start": 0,
+      "add": [
+        {
+          "src": 4,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 13,
+      "start": 0,
+      "add": [
+        {
+          "src": 5,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    },
+    {
+      "ctrl": 14,
+      "start": 0,
+      "add": [
+        {
+          "src": 6,
+          "mul": 1,
+          "div": 1
+        }
+      ]
+    }
+  ]
+}

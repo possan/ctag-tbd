@@ -499,18 +499,18 @@
           "def": 16
         },
         {
-          "id": "decay",
-          "name": "Decay",
-          "type": "cc",
-          "ctrl": 9,
-          "def": 32
-        },
-        {
           "id": "tone",
           "name": "Tone",
           "type": "cc",
-          "ctrl": 10,
+          "ctrl": 9,
           "def": 64
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "ctrl": 10,
+          "def": 32
         },
         {
           "id": "dirt",
@@ -555,18 +555,18 @@
           "def": 16
         },
         {
-          "id": "decay",
-          "name": "Decay",
-          "type": "cc",
-          "ctrl": 9,
-          "def": 64
-        },
-        {
           "id": "tone",
           "name": "Tone",
           "type": "cc",
-          "ctrl": 10,
+          "ctrl": 9,
           "def": 32
+        },
+        {
+          "id": "decay",
+          "name": "Decay",
+          "type": "cc",
+          "ctrl": 10,
+          "def": 64
         },
         {
           "id": "a-fm",
@@ -651,6 +651,20 @@
           "type": "cc",
           "ctrl": 15,
           "def": 1
+        },
+        {
+          "id": "ratiomode",
+          "name": "Ratio Mode",
+          "type": "cc",
+          "ctrl": 16,
+          "def": 0
+        },
+        {
+          "id": "envsync",
+          "name": "Env Sync",
+          "type": "cc",
+          "ctrl": 17,
+          "def": 0
         }
       ]
     },
@@ -709,15 +723,15 @@
           "def": 32
         },
         {
-          "id": "decay",
-          "name": "Decay",
+          "id": "tone",
+          "name": "Tone",
           "type": "cc",
           "ctrl": 9,
           "def": 16
         },
         {
-          "id": "fm",
-          "name": "FM",
+          "id": "decay",
+          "name": "Decay",
           "type": "cc",
           "ctrl": 10,
           "def": 16
@@ -1090,14 +1104,14 @@
           "id": "envdec",
           "name": "EnvDec",
           "type": "cc",
-          "ctrl": 15,
+          "ctrl": 14,
           "def": 16
         },
         {
           "id": "type",
           "name": "Type",
           "type": "cc",
-          "ctrl": 14,
+          "ctrl": 15,
           "def": 0
         },
         {
@@ -1154,6 +1168,20 @@
           "name": "Acc. Lev",
           "type": "cc",
           "ctrl": 23,
+          "def": 0
+        },
+        {
+          "id": "slidelev",
+          "name": "Slide Lev",
+          "type": "cc",
+          "ctrl": 24,
+          "def": 0
+        },
+        {
+          "id": "synctrig",
+          "name": "Sync Trig",
+          "type": "cc",
+          "ctrl": 25,
           "def": 0
         }
       ]
@@ -1400,6 +1428,13 @@
           "type": "cc",
           "ctrl": 28,
           "def": 0
+        },
+        {
+          "id": "gain",
+          "name": "Gain",
+          "type": "cc",
+          "ctrl": 29,
+          "def": 64
         }
       ]
     },

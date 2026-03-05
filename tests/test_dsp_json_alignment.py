@@ -182,14 +182,21 @@ def normalize_name(name):
 
 
 def names_similar(a, b):
-    """Check if two names are similar enough to be the 'same' parameter."""
+    """Check if two names are similar enough to be the 'same' parameter.
+
+    Uses strict matching to avoid false positives from generic substrings
+    like 'wave' matching 'eg2wave', 'lfo2wave', etc.
+    """
     na = normalize_name(a)
     nb = normalize_name(b)
     if na == nb:
         return True
-    # Check if one contains the other
-    if na in nb or nb in na:
-        return True
+    # Only match if one is a substantial prefix/suffix of the other (>= 60% overlap)
+    # This avoids false positives where short generic words match compound names
+    if len(na) >= 3 and len(nb) >= 3:
+        shorter, longer = (na, nb) if len(na) <= len(nb) else (nb, na)
+        if shorter in longer and len(shorter) / len(longer) >= 0.6:
+            return True
     return False
 
 
@@ -354,82 +361,36 @@ def test_param_count(result, synth_machines):
                        f'Extra in JSON: {extra_str}')
 
 
-# ─── Test 4: Mix Page Completeness ───────────────────────────────────
+# ─── Test 4: Mix Page Sanity (Pico handles mixer natively) ───────────
 
 def test_mix_pages(result, synth_machines, macros):
     """
-    Verify:
-    - All sound machines have mix params in synthdefinitions.json
-    - All macro definitions for sound machines have a Mix page
-    - Mix page has correct ctrl mappings (1-4)
-    - Mix page has default values
+    Verify that Mix pages are NOT present in macro definitions, since the
+    Pico firmware's initsong.cpp handles mixer params (LEVEL, PAN, FX1, FX2)
+    natively. Having Mix pages in JSON would cause duplicate mixer controls.
+
+    Also verify synthdefinitions.json doesn't include mixer params (ctrl 1-4)
+    which would be redundant with the Pico's hardcoded mixer.
     """
-    print('\n── Test 4: Mix Page Completeness ──')
+    print('\n── Test 4: Mix Page Sanity (Pico handles mixer natively) ──')
 
-    # Check synthdefinitions.json
+    # Check synthdefinitions.json does NOT have mixer params
     for machine_id, machine_data in sorted(synth_machines.items()):
-        if machine_id in NO_MIX_MACHINES:
-            if machine_data['mixer']:
-                result.warn(f'{machine_id}: Has mixer params but should not '
-                           f'(machine is in NO_MIX list)')
-            continue
-
-        mixer = machine_data['mixer']
-        mixer_ctrls = {p['ctrl'] for p in mixer}
-        expected = {1, 2, 3, 4}
-
-        if mixer_ctrls == expected:
-            result.ok(f'{machine_id}: Has all 4 mixer params in synthdefinitions.json')
-        elif not mixer_ctrls:
-            result.fail(f'{machine_id}: Missing ALL mixer params in synthdefinitions.json')
+        if machine_data['mixer']:
+            result.warn(f'{machine_id}: Has mixer params in synthdefinitions.json '
+                       f'(redundant — Pico handles mixer natively)')
         else:
-            missing = expected - mixer_ctrls
-            result.fail(f'{machine_id}: Missing mixer params for ctrl {missing}')
+            result.ok(f'{machine_id}: No redundant mixer params in synthdefinitions.json')
 
-    # Check macro definitions
+    # Check macro definitions do NOT have Mix pages
     for filename, macro in sorted(macros.items()):
-        machine = macro.get('machine', '?')
-        if machine in NO_MIX_MACHINES:
-            # Should NOT have Mix page
-            groups = macro.get('groups', [])
-            has_mix = any(g['name'] == 'Mix' for g in groups if g.get('parameters'))
-            if has_mix:
-                result.warn(f'{filename}: Has Mix page but machine "{machine}" should not')
-            continue
-
-        if machine in SKIP_CPP_CHECK and machine not in MACHINE_TO_RACK:
-            continue
-
         groups = macro.get('groups', [])
-        has_mix = any(g['name'] == 'Mix' for g in groups if g.get('parameters'))
-
-        if not has_mix:
-            result.fail(f'{filename}: Missing Mix page (machine={machine})')
-            continue
-
-        # Verify Mix group has 4 params with correct defaults
-        mix_group = next(g for g in groups if g['name'] == 'Mix')
-        mix_params = mix_group.get('parameters', [])
-
-        if len(mix_params) != 4:
-            result.fail(f'{filename}: Mix page has {len(mix_params)} params, expected 4')
-            continue
-
-        # Check that mapping entries exist for ctrl 1-4
-        mapping = macro.get('mapping', [])
-        mapped_ctrls = {m['ctrl'] for m in mapping}
-        mix_mapped = {1, 2, 3, 4} & mapped_ctrls
-
-        if mix_mapped == {1, 2, 3, 4}:
-            result.ok(f'{filename}: Mix page complete with all 4 mappings')
+        has_mix = any(g.get('name') == 'Mix' for g in groups if g.get('parameters'))
+        if has_mix:
+            result.warn(f'{filename}: Has Mix page in JSON (redundant — '
+                       f'Pico handles mixer natively)')
         else:
-            missing = {1, 2, 3, 4} - mix_mapped
-            result.fail(f'{filename}: Mix page missing mappings for ctrl {missing}')
-
-        # Check defaults
-        for p in mix_params:
-            if 'def' not in p:
-                result.warn(f'{filename}: Mix param "{p["name"]}" has no default value')
+            result.ok(f'{filename}: No redundant Mix page')
 
 
 # ─── Test 5: Macro Mapping Validity ──────────────────────────────────
