@@ -5953,25 +5953,13 @@ async function saveKit() {
     await saveKitDescriptor(getKitForSave(), getBanksMeta());
     state.dirty = false;
     updateSaveButton();
-    toast('Kit saved to SD card. Reload PSRAM or reboot to apply.', 'success', 5000);
+    toast('Kit saved to SD card. Changes take effect on next power-up.', 'success', 5000);
   } catch (e) {
     toast(`Save failed: ${e.message}`, 'danger');
   }
 }
 
-async function doReloadPSRAM() {
-  try {
-    toast('Reloading PSRAM — brief audio pause…', 'primary', 3000);
-    await reloadPSRAM();
-    // Refresh state from device
-    await fetchSampleList();
-    renderKitEditor();
-    updateCapacityBar();
-    toast('PSRAM reloaded. Samples are active.', 'success');
-  } catch (e) {
-    toast(`PSRAM reload failed: ${e.message}`, 'danger');
-  }
-}
+
 
 function calculateUsedBytes() {
   let total = 0;
@@ -7987,9 +7975,6 @@ function setupToolbar() {
 
   // Save Kit
   document.getElementById('save-kit-btn').addEventListener('click', () => saveKit());
-
-  // Reload PSRAM
-  document.getElementById('reload-psram-btn').addEventListener('click', () => doReloadPSRAM());
 
   // Delete Kit
   document.getElementById('delete-kit-btn').addEventListener('click', () => {

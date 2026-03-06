@@ -41,7 +41,7 @@ respective component folders / files if different from this license.
 #define TOTAL_SIZE_PSRAM_BYTES 32*1024*1024
 #define MAX_ALLOC_BYTES_SAFETY_MARGIN 4*1024*1024
 #define MAX_ALLOC_BYTES_PSRAM (TOTAL_SIZE_PSRAM_BYTES - MAX_ALLOC_BYTES_SAFETY_MARGIN)
-#define MAX_SLICES_SAMPLES 128 // maximum number of samples to be available
+#define MAX_SLICES_SAMPLES 256 // maximum number of samples to be available (8 banks × 32 slots)
 
 namespace CTAG::SP::HELPERS {
     atomic<uint32_t> ctagSampleRom::nConsumers = 0;
