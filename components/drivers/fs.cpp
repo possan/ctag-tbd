@@ -511,9 +511,19 @@ bool FileSystem::SDMounted() {
 }
 
 void FileSystem::InitFS(){
-    // try to mount the SD card first
-    auto sd_mounted = MountSDCard();
-    assert(sd_mounted);
+    // try to mount the SD card with retries
+    const int maxRetries = 5;
+    bool sd_mounted = false;
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+        sd_mounted = MountSDCard();
+        if (sd_mounted) break;
+        ESP_LOGW("FS", "SD card mount attempt %d/%d failed, retrying...", attempt, maxRetries);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    if (!sd_mounted) {
+        ESP_LOGE("FS", "SD card mount failed after %d attempts", maxRetries);
+        assert(sd_mounted);
+    }
 
     // Check and update SD card content from zip if needed
     check_and_update_sd_content("/sdcard");

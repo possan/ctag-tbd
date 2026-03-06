@@ -5503,10 +5503,13 @@ async function convertToWAV(file) {
 
 var _apiTimeout = (_S && _S.API_TIMEOUT_MS) ? _S.API_TIMEOUT_MS : 5000;
 var _apiQueue   = (_S && _S.apiQueue)       ? _S.apiQueue       : null;
+// Longer timeout for sample list fetch — scanning hundreds of files on SD card
+// can take 15-30s on FAT32 with slow I/O.
+var _sampleListTimeout = 45000;
 
-async function _rawApiGet(queryString) {
+async function _rawApiGet(queryString, timeoutMs) {
   const r = await fetch(`${API_BASE}${queryString}`, {
-    signal: AbortSignal.timeout(_apiTimeout),
+    signal: AbortSignal.timeout(timeoutMs || _apiTimeout),
   });
   if (!r.ok) throw new Error(`API ${r.status}`);
   var text = await r.text();
@@ -5527,9 +5530,9 @@ async function _rawApiPost(queryString, body) {
   try { return JSON.parse(text); } catch(e) { return {}; }
 }
 
-function apiGet(queryString) {
-  if (_apiQueue) return _apiQueue.enqueue(function() { return _rawApiGet(queryString); });
-  return _rawApiGet(queryString);
+function apiGet(queryString, timeoutMs) {
+  if (_apiQueue) return _apiQueue.enqueue(function() { return _rawApiGet(queryString, timeoutMs); });
+  return _rawApiGet(queryString, timeoutMs);
 }
 
 function apiPost(queryString, body) {
@@ -5539,7 +5542,7 @@ function apiPost(queryString, body) {
 
 async function fetchSampleList() {
   const kitIdx = state.kits.active_smp_bank || 0;
-  const d = await apiGet(`?kit=${kitIdx}`);
+  const d = await apiGet(`?kit=${kitIdx}`, _sampleListTimeout);
   state.files    = d.files || [];
   state.kits     = d.kits  || state.kits;
   state.kitEntries = d.active_kit_entries || [];
@@ -6938,7 +6941,107 @@ function handleDroppedFiles(fileList) {
     toast('No valid audio files found. Supported: WAV, MP3, AIFF, OGG, FLAC', 'warning', 5000);
     return;
   }
-  addToUploadQueue(validFiles, targetPath, state.targetBank);
+
+  // Check if any files come from subfolders (webkitRelativePath has dir separators)
+  const hasSubfolders = validFiles.some(f => {
+    const rel = f.webkitRelativePath || '';
+    // e.g. "Samples/Bass Drums/kick.wav" → has at least 2 slashes (root + subfolder)
+    const parts = rel.split('/');
+    return parts.length > 2; // root-folder / subfolder / file
+  });
+
+  if (hasSubfolders) {
+    showFolderStructureDialog(validFiles, targetPath);
+  } else {
+    addToUploadQueue(validFiles, targetPath, state.targetBank);
+  }
+}
+
+/**
+ * Show a dialog asking the user whether to preserve subfolder structure
+ * when uploading a folder that contains subfolders.
+ */
+function showFolderStructureDialog(validFiles, targetPath) {
+  // Collect unique subfolder names (relative to the uploaded folder root)
+  const subfolders = new Set();
+  for (const f of validFiles) {
+    const rel = f.webkitRelativePath || '';
+    const parts = rel.split('/');
+    if (parts.length > 2) {
+      // Everything between root folder and filename is a subfolder path
+      subfolders.add(parts.slice(1, -1).join('/'));
+    }
+  }
+
+  const folderList = Array.from(subfolders).sort();
+  const folderPreview = folderList.slice(0, 8).map(f => '  • ' + f).join('\n')
+    + (folderList.length > 8 ? '\n  … and ' + (folderList.length - 8) + ' more' : '');
+
+  const msg = 'This folder contains ' + folderList.length + ' subfolder(s):\n\n'
+    + folderPreview + '\n\n'
+    + 'Keep the folder structure on the SD card?\n\n'
+    + '• OK = Create subfolders inside "' + targetPath + '"\n'
+    + '• Cancel = Put all files flat into "' + targetPath + '"';
+
+  if (confirm(msg)) {
+    // Preserve structure: create subfolders and upload to correct paths
+    uploadWithSubfolders(validFiles, targetPath);
+  } else {
+    // Flatten all into current folder
+    addToUploadQueue(validFiles, targetPath, state.targetBank);
+  }
+}
+
+/**
+ * Upload files preserving their subfolder structure.
+ * Creates necessary subfolders on the device first, then queues uploads.
+ */
+async function uploadWithSubfolders(validFiles, basePath) {
+  // Collect unique subfolder paths to create
+  const subfolderPaths = new Set();
+  for (const f of validFiles) {
+    const rel = f.webkitRelativePath || '';
+    const parts = rel.split('/');
+    if (parts.length > 2) {
+      // Build cumulative subfolder paths for recursive creation
+      for (let depth = 2; depth < parts.length; depth++) {
+        const sub = parts.slice(1, depth).join('/');
+        subfolderPaths.add(basePath + '/' + sub);
+      }
+    }
+  }
+
+  // Create subfolders on device (sorted so parents come before children)
+  const sortedPaths = Array.from(subfolderPaths).sort();
+  for (const folderPath of sortedPaths) {
+    try {
+      await createFolderOnDevice(folderPath);
+    } catch (e) {
+      // Folder may already exist — continue
+    }
+  }
+
+  // Queue each file to its correct subfolder path
+  for (const f of validFiles) {
+    const rel = f.webkitRelativePath || '';
+    const parts = rel.split('/');
+    let uploadPath;
+    if (parts.length > 2) {
+      uploadPath = basePath + '/' + parts.slice(1, -1).join('/');
+    } else {
+      uploadPath = basePath;
+    }
+    addToUploadQueue([f], uploadPath, state.targetBank);
+  }
+
+  // Refresh the file list to show new folders
+  try {
+    await fetchSampleList();
+    renderPoolContent();
+    updateDropZoneTarget();
+  } catch (e) {
+    console.error('Refresh after folder upload failed:', e);
+  }
 }
 
 /**

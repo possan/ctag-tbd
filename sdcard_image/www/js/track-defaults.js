@@ -26,7 +26,13 @@
   var trackDefaults = null;   // parsed trackdefaults.json
   var dirty = false;
   var facetedData = null;     // per-track: [ { machine, name, macros: [{id, name, presets}] } ]
-  var sampleBankNames = [];   // from sample_rom.jsn via samples API
+  var kitNames = [];          // kit names from sample_rom.jsn via samples API
+  var kitMeta = [];           // per-kit bank metadata [{banks: [{name, color}]}]
+
+  var DEFAULT_BANKS = [
+    'KICK', 'SNARE', 'HIHAT CL', 'HIHAT OP',
+    'CLAP', 'RIM', 'PERC', 'OTHER'
+  ];
 
   // ─── Helpers ───────────────────────────────────────────────
 
@@ -127,6 +133,46 @@
   }
 
   /**
+   * Get the saved romBank (group index) for a track (rompler tracks only).
+   */
+  function getDefaultBank(trackIndex) {
+    if (!trackDefaults || !trackDefaults.tracks) return 0;
+    var entry = trackDefaults.tracks.find(function(t) { return t.index === trackIndex; });
+    return entry && typeof entry.romBank === 'number' ? entry.romBank : 0;
+  }
+
+  /**
+   * Get bank/group names for the currently selected kit index.
+   * Uses smp_bank_meta from the samples API, with fallback to DEFAULT_BANKS.
+   */
+  function getBankNamesForKit(kitIndex) {
+    if (kitMeta && kitMeta[kitIndex] &&
+        kitMeta[kitIndex].banks && kitMeta[kitIndex].banks.length > 0) {
+      return kitMeta[kitIndex].banks.map(function(b) { return b.name; });
+    }
+    return DEFAULT_BANKS;
+  }
+
+  /**
+   * Rebuild all rompler Bank dropdowns when Kit changes.
+   */
+  function rebuildBankDropdowns() {
+    var kitSel = document.getElementById('td-global-kit');
+    var kitIdx = kitSel ? parseInt(kitSel.value, 10) : 0;
+    var bankNames = getBankNamesForKit(kitIdx);
+    var selects = document.querySelectorAll('.td-bank-select');
+    selects.forEach(function(sel) {
+      var current = parseInt(sel.value, 10) || 0;
+      var html = '';
+      bankNames.forEach(function(name, i) {
+        var selected = (i === current) ? ' selected' : '';
+        html += '<option value="' + i + '"' + selected + '>' + S.esc(name) + '</option>';
+      });
+      sel.innerHTML = html;
+    });
+  }
+
+  /**
    * Check if a track supports the rompler machine (has 'ro' in machines list).
    */
   function trackHasRompler(track) {
@@ -136,26 +182,32 @@
   // ─── API ───────────────────────────────────────────────────
 
   /**
-   * Fetch sample bank names from the samples API.
+   * Fetch kit names and per-kit bank metadata from the samples API.
    */
-  function loadSampleBankNames() {
+  function loadKitData() {
     return S.queuedFetch('/samples')
       .then(function(data) {
         if (data && data.kits && data.kits.smp_bank_names) {
-          sampleBankNames = data.kits.smp_bank_names;
+          kitNames = data.kits.smp_bank_names;
         } else {
-          sampleBankNames = [];
+          kitNames = [];
         }
-        return sampleBankNames;
+        if (data && data.kits && data.kits.smp_bank_meta) {
+          kitMeta = data.kits.smp_bank_meta;
+        } else {
+          kitMeta = [];
+        }
+        return kitNames;
       })
       .catch(function() {
-        sampleBankNames = [];
-        return sampleBankNames;
+        kitNames = [];
+        kitMeta = [];
+        return kitNames;
       });
   }
 
   function loadTrackDefaults() {
-    return loadSampleBankNames().then(function() {
+    return loadKitData().then(function() {
       return S.queuedFetch('/macros?action=get_trackdefaults');
     }).then(function(data) {
         trackDefaults = data && data.tracks ? data : { tracks: [] };
@@ -243,6 +295,43 @@
 
   // ─── Rendering ─────────────────────────────────────────────
 
+  /**
+   * Toggle Bank & Slice cells when machine changes to/from Rompler.
+   */
+  function updateRomplerCells(trackIdx, machineId) {
+    var bankCell = document.querySelector('.td-col-bank.td-rompler-cell[data-track="' + trackIdx + '"]');
+    var sliceCell = document.querySelector('.td-col-slice.td-rompler-cell[data-track="' + trackIdx + '"]');
+    if (!bankCell || !sliceCell) return;
+
+    if (machineId === 'ro') {
+      // Build bank dropdown
+      var kitSel = document.getElementById('td-global-kit');
+      var kitIdx = kitSel ? parseInt(kitSel.value, 10) : 0;
+      var bankNames = getBankNamesForKit(kitIdx);
+      var bankHtml = '<select class="td-select td-bank-select" data-track="' + trackIdx + '">';
+      bankNames.forEach(function(name, i) {
+        bankHtml += '<option value="' + i + '">' + S.esc(name) + '</option>';
+      });
+      bankHtml += '</select>';
+      bankCell.innerHTML = bankHtml;
+
+      // Build slice dropdown
+      var sliceHtml = '<select class="td-select td-slice-select" data-track="' + trackIdx + '">';
+      for (var sl = 0; sl < 32; sl++) {
+        sliceHtml += '<option value="' + sl + '">' + sl + '</option>';
+      }
+      sliceHtml += '</select>';
+      sliceCell.innerHTML = sliceHtml;
+
+      // Attach change listeners to new selects
+      bankCell.querySelector('.td-bank-select').addEventListener('change', function() { dirty = true; updateSaveButton(); });
+      sliceCell.querySelector('.td-slice-select').addEventListener('change', function() { dirty = true; updateSaveButton(); });
+    } else {
+      bankCell.innerHTML = '<span class="td-na">—</span>';
+      sliceCell.innerHTML = '<span class="td-na">—</span>';
+    }
+  }
+
   function renderOverlayContent() {
     var body = document.getElementById('trackdefaults-body');
     if (!body) return;
@@ -255,19 +344,19 @@
     html += 'Pick a <strong>machine</strong> first, then choose a <strong>preset</strong>. ';
     html += 'Changes take effect on next power-up.</p>';
 
-    // ─── Global sample bank selector ─────────────────────────
-    if (sampleBankNames.length > 0) {
-      var savedBank = (trackDefaults && typeof trackDefaults.sampleBank === 'number')
-        ? trackDefaults.sampleBank : 0;
+    // ─── Global kit selector ─────────────────────────────────
+    if (kitNames.length > 0) {
+      var savedKit = (trackDefaults && typeof trackDefaults.sampleKit === 'number')
+        ? trackDefaults.sampleKit : 0;
       html += '<div class="td-sample-bank-section">';
-      html += '<label><strong>Sample Bank (PSRAM)</strong> ';
-      html += '<select class="td-select" id="td-global-sample-bank">';
-      sampleBankNames.forEach(function(name, i) {
-        var sel = (i === savedBank) ? ' selected' : '';
+      html += '<label><strong>Kit (PSRAM)</strong> ';
+      html += '<select class="td-select" id="td-global-kit">';
+      kitNames.forEach(function(name, i) {
+        var sel = (i === savedKit) ? ' selected' : '';
         html += '<option value="' + i + '"' + sel + '>' + S.esc(name) + '</option>';
       });
       html += '</select></label>';
-      html += '<span class="td-hint"> All rompler tracks share this bank. ';
+      html += '<span class="td-hint"> All rompler tracks share this kit. ';
       html += 'Switching reloads PSRAM from SD card at boot.</span>';
       html += '</div>';
     }
@@ -279,6 +368,7 @@
     html += '<span class="td-col-type">Type</span>';
     html += '<span class="td-col-engine">Machine</span>';
     html += '<span class="td-col-preset">Preset</span>';
+    html += '<span class="td-col-bank">Bank</span>';
     html += '<span class="td-col-slice">Slice</span>';
     html += '</div>';
 
@@ -321,11 +411,29 @@
       html += '</select>';
       html += '</span>';
 
-      // Slice selector (rompler tracks only)
-      var isRompler = trackHasRompler(track);
+      // Bank + Slice selectors — only shown when selected machine is Rompler
+      var isSelectedRompler = (currentMachine === 'ro');
+      var savedBank = getDefaultBank(idx);
       var savedSlice = getDefaultSlice(idx);
-      html += '<span class="td-col-slice">';
-      if (isRompler) {
+      var kitIdx = (trackDefaults && typeof trackDefaults.sampleKit === 'number')
+        ? trackDefaults.sampleKit : 0;
+      var bankNames = getBankNamesForKit(kitIdx);
+
+      html += '<span class="td-col-bank td-rompler-cell" data-track="' + idx + '">';
+      if (isSelectedRompler) {
+        html += '<select class="td-select td-bank-select" data-track="' + idx + '">';
+        bankNames.forEach(function(name, bi) {
+          var bSel = (bi === savedBank) ? ' selected' : '';
+          html += '<option value="' + bi + '"' + bSel + '>' + S.esc(name) + '</option>';
+        });
+        html += '</select>';
+      } else {
+        html += '<span class="td-na">—</span>';
+      }
+      html += '</span>';
+
+      html += '<span class="td-col-slice td-rompler-cell" data-track="' + idx + '">';
+      if (isSelectedRompler) {
         html += '<select class="td-select td-slice-select" data-track="' + idx + '">';
         for (var sl = 0; sl < 32; sl++) {
           var slSel = (sl === savedSlice) ? ' selected' : '';
@@ -360,6 +468,16 @@
         var idx = parseInt(sel.getAttribute('data-track'), 10);
         var machineId = sel.value;
         rebuildPresetDropdown(idx, machineId, '');
+
+        // Auto-select first available preset when machine changes
+        var presetSel = document.querySelector('.td-preset-select[data-track="' + idx + '"]');
+        if (presetSel && presetSel.options.length > 1) {
+          presetSel.selectedIndex = 1; // first real preset (index 0 is "(auto)")
+        }
+
+        // Show/hide Bank & Slice cells based on whether machine is Rompler
+        updateRomplerCells(idx, machineId);
+
         dirty = true;
         updateSaveButton();
       });
@@ -381,10 +499,19 @@
       });
     });
 
-    // Attach global sample bank change listener
-    var bankSel = document.getElementById('td-global-sample-bank');
-    if (bankSel) {
-      bankSel.addEventListener('change', function() {
+    // Attach bank (group) change listeners
+    body.querySelectorAll('.td-bank-select').forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        dirty = true;
+        updateSaveButton();
+      });
+    });
+
+    // Attach global kit change listener — also refreshes bank dropdowns
+    var kitSel = document.getElementById('td-global-kit');
+    if (kitSel) {
+      kitSel.addEventListener('change', function() {
+        rebuildBankDropdowns();
         dirty = true;
         updateSaveButton();
       });
@@ -404,15 +531,15 @@
   // ─── Collect & Save ────────────────────────────────────────
 
   function collectFromUI() {
-    // Read global sample bank
-    var bankSel = document.getElementById('td-global-sample-bank');
-    var sampleBank = bankSel ? parseInt(bankSel.value, 10) : 0;
+    // Read global kit selection
+    var kitSel = document.getElementById('td-global-kit');
+    var sampleKit = kitSel ? parseInt(kitSel.value, 10) : 0;
 
     var result = {
       _comment: 'Default preset per track, loaded by the Pico via SPI command 0xA5.',
       _comment2: 'Preset IDs = filenames (without .json) from data/macrosoundpresets/.',
       _comment3: 'Omit a track entry to let the Pico use the first available preset.',
-      sampleBank: sampleBank,
+      sampleKit: sampleKit,
       tracks: []
     };
 
@@ -436,9 +563,12 @@
           _name: trackName + ' — ' + machineName + ' — ' + presetId
         };
 
-        // Add rompler-specific fields if this track supports rompler
-        if (track && trackHasRompler(track)) {
-          entry.sampleBank = sampleBank;
+        // Add rompler-specific fields only when machine is set to Rompler
+        var machineVal = machineSel ? machineSel.value : '';
+        if (machineVal === 'ro') {
+          entry.sampleKit = sampleKit;
+          var bankGroupSel = document.querySelector('.td-bank-select[data-track="' + idx + '"]');
+          entry.romBank = bankGroupSel ? parseInt(bankGroupSel.value, 10) : 0;
           var sliceSel = document.querySelector('.td-slice-select[data-track="' + idx + '"]');
           entry.sampleSlice = sliceSel ? parseInt(sliceSel.value, 10) : 0;
         }

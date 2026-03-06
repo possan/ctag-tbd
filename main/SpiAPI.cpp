@@ -791,10 +791,20 @@ namespace CTAG::SPIAPI{
                     std::string presetId = string_parameter; // receiveString(RequestType::SaveFavorite, string_parameter);
                     ESP_LOGI("SpiAPI", "Loading track %d macro \"%s\"", trackIndex, presetId.c_str());
                     CTAG::AUDIO::SoundProcessorManager::LoadTrackMacroAndPreset(trackIndex, presetId);
-                    // HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
-                    // HELPERS::ctagSampleRom::RefreshDataStructure();
-                    // CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
-                    // result = transmitCString(requestType, cstring);
+
+                    // Optional rompler Bank/Slice overrides:
+                    //   uint8_param_1 (byte 4) = romBank (0xFF = no override)
+                    //   int32_param_2 (bytes 5-8) = sampleSlice (-1 = no override)
+                    int romBank = uint8_param_1;
+                    int sampleSlice = int32_param_2;
+                    if (romBank != 0xFF) {
+                        ESP_LOGI("SpiAPI", "  Override track %d Bank=%d", trackIndex, romBank);
+                        CTAG::AUDIO::SoundProcessorManager::SetTrackParameter(trackIndex, 0, romBank);
+                    }
+                    if (sampleSlice >= 0) {
+                        ESP_LOGI("SpiAPI", "  Override track %d Slice=%d", trackIndex, sampleSlice);
+                        CTAG::AUDIO::SoundProcessorManager::SetTrackParameter(trackIndex, 1, sampleSlice);
+                    }
                 }
                 break;
 

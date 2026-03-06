@@ -56,7 +56,7 @@ body {
 .connection-pill.offline .conn-dot { background: var(--sl-color-danger-500); }
 
 /* ── Header Navigation Tabs ────────────────────────────── */
-.header-nav {
+.nav-tabs {
   display: flex; gap: 0;
 }
 .nav-tab {
@@ -2135,7 +2135,7 @@ sl-dialog::part(footer) {
 
 .td-row {
   display: grid;
-  grid-template-columns: 2.5rem 5.5rem 3rem 9rem 1fr 4rem;
+  grid-template-columns: 2.5rem 5.5rem 3rem 9rem 1fr 7rem 4rem;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0.75rem;
@@ -2179,6 +2179,10 @@ sl-dialog::part(footer) {
 }
 
 .td-col-engine {
+  min-width: 0;
+}
+
+.td-col-bank {
   min-width: 0;
 }
 

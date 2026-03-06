@@ -580,8 +580,9 @@ void SoundProcessorManager::StartSoundProcessor() {
         CTAG::DRIVERS::tusb::WaitForNCMReady(5000);
         NET::Network::SetIfType(NET::Network::IF_TYPE::IF_TYPE_USBNCM);
     }else{
-        ESP_LOGE("SPM", "Fatal: unknown network mode!");
-        assert(0);
+        ESP_LOGW("SPM", "Unknown network mode '%s', defaulting to usbncm", model->GetNetworkConfigurationData("mode").c_str());
+        CTAG::DRIVERS::tusb::WaitForNCMReady(5000);
+        NET::Network::SetIfType(NET::Network::IF_TYPE::IF_TYPE_USBNCM);
     }
     NET::Network::SetIP(model->GetNetworkConfigurationData("ip"));
     NET::Network::SetMDNSName(model->GetNetworkConfigurationData("mdns_name"));
@@ -808,6 +809,14 @@ void SoundProcessorManager::SetTrackParametersFromJSON(const string &parametersJ
     xSemaphoreTake(processMutex, portMAX_DELAY);
     macroTranslator->SetTrackParametersFromJSON(parametersJSON);
     xSemaphoreGive(processMutex);
+}
+
+void SoundProcessorManager::SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value) {
+    if (macroTranslator == nullptr) {
+        return;
+    }
+
+    macroTranslator->SetTrackParameter(trackIndex, parameterIndex, value);
 }
 
 void SoundProcessorManager::RefreshMacros() {
