@@ -1571,6 +1571,47 @@ function setupPoolDragEvents() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  DROP ZONE — Drag-and-Drop Folder Helpers
+// ═══════════════════════════════════════════════════════════════
+
+/** Read all entries from a FileSystemDirectoryReader (Chrome batches in 100s) */
+function readAllDirectoryEntries(dirReader) {
+  return new Promise((resolve, reject) => {
+    const all = [];
+    const readBatch = () => {
+      dirReader.readEntries(entries => {
+        if (entries.length === 0) resolve(all);
+        else { all.push(...entries); readBatch(); }
+      }, reject);
+    };
+    readBatch();
+  });
+}
+
+/** Get a File object from a FileSystemFileEntry */
+function fileFromEntry(entry) {
+  return new Promise((resolve, reject) => entry.file(resolve, reject));
+}
+
+/** Recursively collect files from FileSystemEntry objects, annotating each with _relativePath */
+async function collectFilesFromEntries(entries, relPath, results) {
+  for (const entry of entries) {
+    if (entry.isFile) {
+      try {
+        const file = await fileFromEntry(entry);
+        file._relativePath = relPath ? relPath + '/' + entry.name : entry.name;
+        results.push(file);
+      } catch (e) { /* skip unreadable files */ }
+    } else if (entry.isDirectory) {
+      const subPath = relPath ? relPath + '/' + entry.name : entry.name;
+      const reader = entry.createReader();
+      const subEntries = await readAllDirectoryEntries(reader);
+      await collectFilesFromEntries(subEntries, subPath, results);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  DROP ZONE — File Upload
 // ═══════════════════════════════════════════════════════════════
 
@@ -1610,12 +1651,33 @@ function setupDropZone() {
       e.dataTransfer.dropEffect = 'copy';
     }
   });
-  poolPanel.addEventListener('drop', e => {
+  poolPanel.addEventListener('drop', async e => {
     dragCounter = 0;
     overlay.classList.remove('visible');
-    if (e.dataTransfer.files.length > 0) {
-      e.preventDefault();
-      e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Check for dropped folders via File System Entry API
+    const items = e.dataTransfer.items ? Array.from(e.dataTransfer.items) : [];
+    const entries = items.map(i => i.webkitGetAsEntry ? i.webkitGetAsEntry() : null).filter(Boolean);
+    const hasDirs = entries.some(entry => entry && entry.isDirectory);
+
+    if (hasDirs) {
+      // Recursively collect files from dropped folders, preserving paths
+      const collected = [];
+      for (const entry of entries) {
+        if (entry.isDirectory) {
+          const reader = entry.createReader();
+          const children = await readAllDirectoryEntries(reader);
+          await collectFilesFromEntries(children, entry.name, collected);
+        } else if (entry.isFile) {
+          const file = await fileFromEntry(entry);
+          file._relativePath = entry.name;
+          collected.push(file);
+        }
+      }
+      if (collected.length > 0) handleDroppedFiles(collected);
+    } else if (e.dataTransfer.files.length > 0) {
       handleDroppedFiles(e.dataTransfer.files);
     }
   });
@@ -1679,52 +1741,24 @@ function handleDroppedFiles(fileList) {
     return;
   }
 
-  // Check if any files come from subfolders (webkitRelativePath has dir separators)
+  // Check if any files come from subfolders (webkitRelativePath or _relativePath from drag-drop)
   const hasSubfolders = validFiles.some(f => {
-    const rel = f.webkitRelativePath || '';
-    // e.g. "Samples/Bass Drums/kick.wav" → has at least 2 slashes (root + subfolder)
+    const rel = f.webkitRelativePath || f._relativePath || '';
     const parts = rel.split('/');
     return parts.length > 2; // root-folder / subfolder / file
   });
 
   if (hasSubfolders) {
-    showFolderStructureDialog(validFiles, targetPath);
-  } else {
-    addToUploadQueue(validFiles, targetPath, state.targetBank);
-  }
-}
-
-/**
- * Show a dialog asking the user whether to preserve subfolder structure
- * when uploading a folder that contains subfolders.
- */
-function showFolderStructureDialog(validFiles, targetPath) {
-  // Collect unique subfolder names (relative to the uploaded folder root)
-  const subfolders = new Set();
-  for (const f of validFiles) {
-    const rel = f.webkitRelativePath || '';
-    const parts = rel.split('/');
-    if (parts.length > 2) {
-      // Everything between root folder and filename is a subfolder path
-      subfolders.add(parts.slice(1, -1).join('/'));
+    // Auto-preserve folder structure — no confirmation needed
+    const subfolderSet = new Set();
+    for (const f of validFiles) {
+      const rel = f.webkitRelativePath || f._relativePath || '';
+      const parts = rel.split('/');
+      if (parts.length > 2) subfolderSet.add(parts.slice(1, -1).join('/'));
     }
-  }
-
-  const folderList = Array.from(subfolders).sort();
-  const folderPreview = folderList.slice(0, 8).map(f => '  • ' + f).join('\n')
-    + (folderList.length > 8 ? '\n  … and ' + (folderList.length - 8) + ' more' : '');
-
-  const msg = 'This folder contains ' + folderList.length + ' subfolder(s):\n\n'
-    + folderPreview + '\n\n'
-    + 'Keep the folder structure on the SD card?\n\n'
-    + '• OK = Create subfolders inside "' + targetPath + '"\n'
-    + '• Cancel = Put all files flat into "' + targetPath + '"';
-
-  if (confirm(msg)) {
-    // Preserve structure: create subfolders and upload to correct paths
+    toast(`Uploading ${validFiles.length} files — preserving ${subfolderSet.size} subfolder(s)`, 'primary', 4000);
     uploadWithSubfolders(validFiles, targetPath);
   } else {
-    // Flatten all into current folder
     addToUploadQueue(validFiles, targetPath, state.targetBank);
   }
 }
@@ -1737,7 +1771,7 @@ async function uploadWithSubfolders(validFiles, basePath) {
   // Collect unique subfolder paths to create
   const subfolderPaths = new Set();
   for (const f of validFiles) {
-    const rel = f.webkitRelativePath || '';
+    const rel = f.webkitRelativePath || f._relativePath || '';
     const parts = rel.split('/');
     if (parts.length > 2) {
       // Build cumulative subfolder paths for recursive creation
@@ -1760,7 +1794,7 @@ async function uploadWithSubfolders(validFiles, basePath) {
 
   // Queue each file to its correct subfolder path
   for (const f of validFiles) {
-    const rel = f.webkitRelativePath || '';
+    const rel = f.webkitRelativePath || f._relativePath || '';
     const parts = rel.split('/');
     let uploadPath;
     if (parts.length > 2) {
