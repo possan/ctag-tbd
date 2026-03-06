@@ -690,10 +690,23 @@ async function saveKit() {
     await saveKitDescriptor(getKitForSave(), getBanksMeta());
     state.dirty = false;
     updateSaveButton();
-    toast('Kit saved to SD card', 'success');
-    // PSRAM reload is managed by the RP2350 firmware, not from the WebUI.
+    toast('Kit saved to SD card. Reload PSRAM or reboot to apply.', 'success', 5000);
   } catch (e) {
     toast(`Save failed: ${e.message}`, 'danger');
+  }
+}
+
+async function doReloadPSRAM() {
+  try {
+    toast('Reloading PSRAM — brief audio pause…', 'primary', 3000);
+    await reloadPSRAM();
+    // Refresh state from device
+    await fetchSampleList();
+    renderKitEditor();
+    updateCapacityBar();
+    toast('PSRAM reloaded. Samples are active.', 'success');
+  } catch (e) {
+    toast(`PSRAM reload failed: ${e.message}`, 'danger');
   }
 }
 
@@ -1113,8 +1126,9 @@ function getPoolItems() {
   let folders = [];
   let files = [];
 
-  // Pre-compute folder sizes: sum of all file sizes recursively under each folder path
+  // Pre-compute folder sizes and file counts recursively under each folder path
   const folderSizeMap = {};
+  const folderCountMap = {};
   for (const f of state.files) {
     if (!f.path) continue;
     const parts = f.path.split('/').filter(Boolean);
@@ -1122,6 +1136,7 @@ function getPoolItems() {
     for (const seg of parts) {
       accum = accum ? accum + '/' + seg : seg;
       folderSizeMap[accum] = (folderSizeMap[accum] || 0) + (f.size || 0);
+      folderCountMap[accum] = (folderCountMap[accum] || 0) + 1;
     }
   }
 
@@ -1144,7 +1159,7 @@ function getPoolItems() {
       if (top) topFolders.add(top);
     }
     folders = [...topFolders].sort().map(name => ({
-      type: 'folder', name, path: name, size: folderSizeMap[name] || 0,
+      type: 'folder', name, path: name, size: folderSizeMap[name] || 0, fileCount: folderCountMap[name] || 0,
     }));
     files = rootFiles.map(f => ({ type: 'file', ...f }));
   } else {
@@ -1170,7 +1185,7 @@ function getPoolItems() {
       }
     }
     folders = [...subFolders].sort().map(name => ({
-      type: 'folder', name, path: prefix + '/' + name, size: folderSizeMap[prefix + '/' + name] || 0,
+      type: 'folder', name, path: prefix + '/' + name, size: folderSizeMap[prefix + '/' + name] || 0, fileCount: folderCountMap[prefix + '/' + name] || 0,
     }));
   }
 
@@ -1232,10 +1247,11 @@ function renderPoolContent() {
         ? `<sl-icon-button name="pencil" label="Rename folder" class="action-hover" data-act="rename-folder" data-folder-path="${esc(item.path)}" data-folder-name="${esc(item.name)}" onclick="event.stopPropagation();"></sl-icon-button>
            <sl-icon-button name="trash3" label="Delete folder" class="action-hover" data-act="delete-folder" data-folder-path="${esc(item.path)}" data-folder-name="${esc(item.name)}" onclick="event.stopPropagation();"></sl-icon-button>`
         : '';
-      return `<div class="sample-row folder-row" data-nav="${esc(item.path)}">
+      const countLabel = item.fileCount ? `${item.fileCount} sample${item.fileCount !== 1 ? 's' : ''}` : '';
+      return `<div class="sample-row folder-row" data-nav="${esc(item.path)}" data-folder-path="${esc(item.path)}" draggable="true">
         <sl-icon name="folder2-open" class="sample-row-icon"></sl-icon>
         <span class="sample-row-name">${esc(item.name)}</span>
-        <span class="sample-row-dur"></span>
+        <span class="sample-row-dur" style="opacity:0.5;font-size:0.72rem;">${countLabel}</span>
         <span class="sample-row-smp" style="opacity:0.6">${item.size ? formatBytes(item.size) : ''}</span>
         <div class="sample-row-actions">
           ${folderActions}
@@ -1322,6 +1338,7 @@ function setupColumnSort() {
 function renderKitSelector() {
   const sel = document.getElementById('kit-select');
   const names = state.kits.smp_bank_names || [];
+  const activeIdx = state.kits.active_smp_bank || 0;
   if (names.length === 0) {
     sel.innerHTML = '<sl-option value="0">Default</sl-option>';
     customElements.whenDefined('sl-select').then(() => {
@@ -1330,12 +1347,19 @@ function renderKitSelector() {
     return;
   }
   sel.innerHTML = names.map((n, i) =>
-    `<sl-option value="${i}">${esc(n)}</sl-option>`
+    `<sl-option value="${i}">${esc(n)}${i === activeIdx ? ' \u25CF' : ''}</sl-option>`
   ).join('');
-  const kitVal = String(state.kits.active_smp_bank || 0);
+  const kitVal = String(activeIdx);
   customElements.whenDefined('sl-select').then(() => {
     requestAnimationFrame(() => { sel.value = kitVal; });
   });
+  // Update PSRAM active label
+  const label = document.getElementById('psram-active-label');
+  if (label) {
+    const activeName = names[activeIdx] || 'Default';
+    label.textContent = `PSRAM: ${activeName}`;
+    label.title = `Kit "${activeName}" is loaded in PSRAM`;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1498,8 +1522,42 @@ function setupPoolDragEvents() {
   const poolPanel = document.getElementById('pool-panel');
 
   poolPanel.addEventListener('dragstart', e => {
+    // Handle folder drag
+    const folderRow = e.target.closest('.folder-row[data-folder-path]');
+    if (folderRow) {
+      const folderPath = folderRow.dataset.folderPath;
+      const filesInFolder = state.files.filter(f => f.path === folderPath || f.path.startsWith(folderPath + '/'));
+      if (filesInFolder.length === 0) return;
+      const samples = filesInFolder.map(f => ({
+        name: f.name.replace(/\.wav$/i, ''),
+        path: f.path,
+        size: f.size || 0,
+      }));
+      e.dataTransfer.setData('application/x-tbd-samples', JSON.stringify(samples));
+      e.dataTransfer.effectAllowed = 'copy';
+      return;
+    }
+
     const row = e.target.closest('.pool-file');
     if (!row) return;
+
+    // Multi-select drag: if in selection mode and dragged item is selected, drag all selected
+    const draggedKey = `${row.dataset.path}/${row.dataset.name}`;
+    if (state.selectionMode && state.selectedFiles.size > 0 && state.selectedFiles.has(draggedKey)) {
+      const samples = [];
+      for (const key of state.selectedFiles) {
+        const lastSlash = key.lastIndexOf('/');
+        const path = key.substring(0, lastSlash);
+        const name = key.substring(lastSlash + 1);
+        const file = state.files.find(f => f.path === path && f.name === name);
+        samples.push({ name, path, size: file ? file.size : 0 });
+      }
+      e.dataTransfer.setData('application/x-tbd-samples', JSON.stringify(samples));
+      e.dataTransfer.effectAllowed = 'copy';
+      return;
+    }
+
+    // Single file drag
     e.dataTransfer.setData('application/x-tbd-sample', JSON.stringify({
       name: row.dataset.name,
       path: row.dataset.path,
@@ -1516,7 +1574,9 @@ function setupPoolDragEvents() {
     if (!slot && !body) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
-    if (slot) {
+    // Only highlight slot for single-sample drops
+    const isMulti = e.dataTransfer.types.includes('application/x-tbd-samples');
+    if (slot && !isMulti) {
       slot.classList.add('drop-target-slot');
     } else if (body) {
       body.classList.add('drop-target');
@@ -1532,6 +1592,31 @@ function setupPoolDragEvents() {
     // Clear all highlights
     kitPanel.querySelectorAll('.drop-target-slot').forEach(el => el.classList.remove('drop-target-slot'));
     kitPanel.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+
+    // Handle multi-sample drop (selected files or folder)
+    const rawMulti = e.dataTransfer.getData('application/x-tbd-samples');
+    if (rawMulti) {
+      e.preventDefault();
+      try {
+        const samples = JSON.parse(rawMulti);
+        const body = e.target.closest('[data-drop="bank"]');
+        if (!body) return;
+        const bankIdx = parseInt(body.dataset.bank, 10);
+        let added = 0;
+        for (const data of samples) {
+          const nsamp = nsamples(data.size);
+          if (addEntryToBank(bankIdx, data.name, data.path, nsamp)) added++;
+        }
+        if (added > 0) {
+          markDirty();
+          renderKitEditor();
+          toast(`Added ${added} sample(s) to ${state.banks[bankIdx].name}`, 'success');
+        }
+      } catch (err) {
+        console.error('Multi-drop parse error:', err);
+      }
+      return;
+    }
 
     const raw = e.dataTransfer.getData('application/x-tbd-sample');
     if (!raw) return;
@@ -2640,6 +2725,9 @@ function setupToolbar() {
   // Save Kit
   document.getElementById('save-kit-btn').addEventListener('click', () => saveKit());
 
+  // Reload PSRAM
+  document.getElementById('reload-psram-btn').addEventListener('click', () => doReloadPSRAM());
+
   // Delete Kit
   document.getElementById('delete-kit-btn').addEventListener('click', () => {
     const names = state.kits.smp_bank_names || [];
@@ -2657,8 +2745,209 @@ function setupToolbar() {
     renderKitEditor();
   });
 
+  // Export / Import Kit
+  document.getElementById('export-kit-btn').addEventListener('click', () => exportKit());
+  const importBtn = document.getElementById('import-kit-btn');
+  const importInput = document.getElementById('import-kit-input');
+  importBtn.addEventListener('click', () => importInput.click());
+  importInput.addEventListener('change', () => {
+    if (importInput.files.length > 0) {
+      importKit(importInput.files[0]);
+      importInput.value = '';
+    }
+  });
+
   // Theme toggle — delegated to app shell (shared.js) when running in unified mode
   if (!_S) setupThemeToggle();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  KIT EXPORT / IMPORT (Backup & Restore)
+// ═══════════════════════════════════════════════════════════════
+
+function exportKit() {
+  const names = state.kits.smp_bank_names || [];
+  const kitName = names[state.kits.active_smp_bank] || 'Default';
+  const entries = getKitForSave();
+  const banksMeta = getBanksMeta();
+  const exportData = {
+    _format: 'tbd16-kit-backup',
+    _version: 1,
+    kitName,
+    kitIndex: state.kits.active_smp_bank,
+    exportDate: new Date().toISOString(),
+    banks: banksMeta,
+    entries: entries,
+  };
+  const json = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${kitName.replace(/[^A-Za-z0-9_-]/g, '_')}_kit_backup.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`Exported "${kitName}" kit backup`, 'success');
+}
+
+async function importKit(file) {
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (data._format !== 'tbd16-kit-backup' || !data.entries) {
+      toast('Invalid kit backup file', 'danger');
+      return;
+    }
+    openImportKitDialog(data);
+  } catch (e) {
+    toast(`Import failed: ${e.message}`, 'danger');
+  }
+}
+
+function openImportKitDialog(data) {
+  const dlg = document.getElementById('import-kit-dialog');
+  const body = document.getElementById('import-kit-body');
+
+  // Build a lookup of available files for auto-mapping
+  const available = new Map();
+  for (const f of state.files) {
+    const stem = f.name.replace(/\.wav$/i, '');
+    // Index by filename for fuzzy matching
+    if (!available.has(stem)) available.set(stem, []);
+    available.get(stem).push(f);
+  }
+
+  // Analyze entries
+  let totalSlots = 0, matched = 0, missing = 0;
+  const entryAnalysis = [];
+  for (let i = 0; i < data.entries.length; i++) {
+    const e = data.entries[i];
+    if (!e) continue;
+    totalSlots++;
+    const stem = (e.filename || '').replace(/\.wav$/i, '');
+    const candidates = available.get(stem) || [];
+    // Prefer exact path match, then any match
+    const exact = candidates.find(f => f.path === e.path);
+    const any = candidates.length > 0 ? candidates[0] : null;
+    const found = exact || any;
+    if (found) {
+      matched++;
+      entryAnalysis.push({ idx: i, entry: e, mapped: found, status: exact ? 'exact' : 'remapped' });
+    } else {
+      missing++;
+      entryAnalysis.push({ idx: i, entry: e, mapped: null, status: 'missing' });
+    }
+  }
+
+  // Build summary
+  const bankNames = (data.banks || []).map(b => b.name).join(', ') || 'Unknown';
+  const kitDate = data.exportDate ? new Date(data.exportDate).toLocaleDateString() : 'Unknown';
+
+  let html = `<div style="margin-bottom:0.8rem;">
+    <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.3rem;">${esc(data.kitName)}</div>
+    <div style="font-size:0.78rem;color:var(--sl-color-neutral-500);">Exported: ${esc(kitDate)} &middot; Banks: ${esc(bankNames)}</div>
+  </div>
+  <div style="display:flex;gap:1rem;margin-bottom:0.8rem;">
+    <div style="flex:1;text-align:center;padding:0.5rem;border-radius:6px;background:var(--sl-color-success-100);color:var(--sl-color-success-700);font-size:0.82rem;">
+      <strong>${matched}</strong> matched
+    </div>
+    <div style="flex:1;text-align:center;padding:0.5rem;border-radius:6px;background:${missing > 0 ? 'var(--sl-color-warning-100)' : 'var(--sl-color-neutral-100)'};color:${missing > 0 ? 'var(--sl-color-warning-700)' : 'var(--sl-color-neutral-500)'};font-size:0.82rem;">
+      <strong>${missing}</strong> missing
+    </div>
+    <div style="flex:1;text-align:center;padding:0.5rem;border-radius:6px;background:var(--sl-color-neutral-100);color:var(--sl-color-neutral-600);font-size:0.82rem;">
+      <strong>${totalSlots}</strong> total
+    </div>
+  </div>`;
+
+  if (missing > 0) {
+    html += `<div style="font-size:0.78rem;color:var(--sl-color-warning-600);margin-bottom:0.6rem;">
+      <sl-icon name="exclamation-triangle" style="vertical-align:-2px;"></sl-icon>
+      ${missing} sample(s) not found on SD card. Upload the missing files and re-import, or continue with partial restore.
+    </div>`;
+  }
+
+  html += `<div style="max-height:240px;overflow-y:auto;border:1px solid var(--sl-color-neutral-200);border-radius:6px;margin-bottom:0.5rem;">
+    <table style="width:100%;font-size:0.76rem;border-collapse:collapse;">
+      <thead><tr style="background:var(--sl-color-neutral-100);position:sticky;top:0;">
+        <th style="padding:0.3rem 0.5rem;text-align:left;">SAMPLE</th>
+        <th style="padding:0.3rem 0.5rem;text-align:left;">BANK</th>
+        <th style="padding:0.3rem 0.5rem;text-align:left;">STATUS</th>
+      </tr></thead><tbody>`;
+
+  for (const a of entryAnalysis) {
+    const bankIdx = Math.floor(a.idx / SLICES_PER_BANK);
+    const bankName = data.banks && data.banks[bankIdx] ? data.banks[bankIdx].name : `Bank ${bankIdx + 1}`;
+    const statusIcon = a.status === 'exact'
+      ? '<span style="color:var(--sl-color-success-600);">&#10003; Found</span>'
+      : a.status === 'remapped'
+      ? '<span style="color:var(--sl-color-primary-600);">&#8634; Remapped</span>'
+      : '<span style="color:var(--sl-color-warning-600);">&#10007; Missing</span>';
+    const rowBg = a.status === 'missing' ? 'background:color-mix(in srgb, var(--sl-color-warning-500) 8%, transparent);' : '';
+    html += `<tr style="${rowBg}">
+      <td style="padding:0.25rem 0.5rem;" title="${esc(a.entry.path + '/' + a.entry.filename)}">${esc(a.entry.filename)}</td>
+      <td style="padding:0.25rem 0.5rem;">${esc(bankName)}</td>
+      <td style="padding:0.25rem 0.5rem;">${statusIcon}</td>
+    </tr>`;
+  }
+
+  html += '</tbody></table></div>';
+
+  body.innerHTML = html;
+
+  // Store analysis for the OK handler
+  state._importData = { data, entryAnalysis };
+  dlg.show();
+}
+
+function setupImportKitDialog() {
+  const dlg = document.getElementById('import-kit-dialog');
+  const ok  = document.getElementById('import-kit-ok');
+  const can = document.getElementById('import-kit-cancel');
+
+  ok.addEventListener('click', async () => {
+    const { data, entryAnalysis } = state._importData || {};
+    if (!data) { dlg.hide(); return; }
+
+    // Apply banks metadata
+    if (data.banks && data.banks.length > 0) {
+      state.banks = data.banks.map((b, i) => ({
+        name: b.name || `BANK ${i + 1}`,
+        color: b.color || BANK_COLORS[i % BANK_COLORS.length],
+        collapsed: false,
+      }));
+    }
+
+    // Apply entries with auto-mapping
+    const maxSlots = state.banks.length * SLICES_PER_BANK;
+    state.kitEntries = [];
+    for (let i = 0; i < maxSlots; i++) state.kitEntries.push(null);
+
+    for (const a of entryAnalysis) {
+      if (a.idx >= maxSlots) continue;
+      if (a.mapped) {
+        const stem = a.mapped.name.replace(/\.wav$/i, '');
+        state.kitEntries[a.idx] = {
+          filename: stem,
+          path: a.mapped.path,
+          nsamples: nsamples(a.mapped.size),
+          sname: a.entry.sname || '',
+        };
+      } else {
+        // Keep original entry marked as missing
+        state.kitEntries[a.idx] = { ...a.entry };
+      }
+    }
+
+    markMissingKitEntries();
+    markDirty();
+    renderKitEditor();
+
+    const matchCount = entryAnalysis.filter(a => a.mapped).length;
+    const missCount = entryAnalysis.filter(a => !a.mapped).length;
+    toast(`Imported "${data.kitName}" — ${matchCount} mapped${missCount > 0 ? `, ${missCount} missing` : ''}`, 'success');
+    dlg.hide();
+  });
+  can.addEventListener('click', () => dlg.hide());
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2725,6 +3014,7 @@ async function init() {
   setupColumnSort();
   setupSelectionToolbar();
   setupBatchDeleteDialog();
+  setupImportKitDialog();
 
   // Select mode button
   const selectBtn = document.getElementById('select-mode-btn');

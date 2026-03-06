@@ -1535,6 +1535,7 @@
     /* Kit Controls */
     .kit-controls { display: flex; align-items: center; padding: 0.3rem 0.85rem; border-bottom: 1px solid var(--sl-color-neutral-200); flex-shrink: 0; gap: 0.4rem; }
     .kit-controls sl-select { flex: 1; min-width: 100px; }
+    .psram-active-label { font-size: 0.68rem; font-weight: 600; color: var(--sl-color-success-600); white-space: nowrap; padding: 0.15rem 0.45rem; background: color-mix(in srgb, var(--sl-color-success-500) 12%, transparent); border-radius: var(--sl-border-radius-medium); border: 1px solid color-mix(in srgb, var(--sl-color-success-500) 25%, transparent); }
 
     /* Kit Memory Bar */
     .kit-memory-bar { display: flex; align-items: center; padding: 0.3rem 0.85rem; border-bottom: 1px solid var(--sl-color-neutral-200); flex-shrink: 0; gap: 0.45rem; min-height: 34px; }
@@ -1869,6 +1870,10 @@
           <div class="panel-title-bar">
             <span class="panel-title">Kit Editor</span>
             <div class="panel-title-right">
+              <sl-icon-button name="arrow-clockwise" label="Reload PSRAM" id="reload-psram-btn" title="Reload samples into PSRAM (brief audio pause)" style="font-size:0.9rem;"></sl-icon-button>
+              <sl-icon-button name="download" label="Export Kit" id="export-kit-btn" title="Export Kit backup" style="font-size:0.9rem;"></sl-icon-button>
+              <sl-icon-button name="upload" label="Import Kit" id="import-kit-btn" title="Import Kit backup" style="font-size:0.9rem;"></sl-icon-button>
+              <input type="file" id="import-kit-input" accept=".json" hidden>
               <div class="view-toggle">
                 <sl-switch id="view-toggle" size="small" checked></sl-switch>
                 <label>Banks</label>
@@ -1890,6 +1895,7 @@
             </sl-button>
           </div>
           <div class="kit-memory-bar">
+            <span class="psram-active-label" id="psram-active-label" title="Currently loaded in PSRAM">PSRAM: Default</span>
             <span class="kit-memory-label">MEMORY USED</span>
             <div class="kit-memory-bar-track">
               <div class="kit-memory-bar-fill" id="capacity-fill" style="width:0%"></div>
@@ -2473,6 +2479,13 @@
     <p style="color:var(--sl-color-warning-600);font-size:0.85rem;">This cannot be undone.</p>
     <sl-button slot="footer" variant="danger" id="batch-delete-ok">Delete</sl-button>
     <sl-button slot="footer" variant="default" id="batch-delete-cancel">Cancel</sl-button>
+  </sl-dialog>
+
+  <!-- Import Kit Dialog -->
+  <sl-dialog label="Import Kit Backup" id="import-kit-dialog" style="--width:560px;">
+    <div id="import-kit-body"></div>
+    <sl-button slot="footer" variant="default" id="import-kit-cancel">Cancel</sl-button>
+    <sl-button slot="footer" variant="primary" id="import-kit-ok">Apply Kit</sl-button>
   </sl-dialog>
 
   <!-- Loading Overlay -->
