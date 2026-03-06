@@ -79,9 +79,10 @@ namespace CTAG::SP::HELPERS {
     }
 
     uint32_t ctagSampleRom::GetSliceGroupSize(const uint32_t startSlice, const uint32_t endSlice) {
-        if (endSlice <= startSlice) return 0;
+        if (endSlice <= startSlice || startSlice >= numberSlices) return 0;
         uint32_t totalSizeBytes = 0;
-        for (uint32_t i = startSlice; i <= endSlice; i++) {
+        uint32_t clampedEnd = endSlice < numberSlices ? endSlice : (numberSlices - 1);
+        for (uint32_t i = startSlice; i <= clampedEnd; i++) {
             totalSizeBytes += sliceSizes[i];
         }
         return totalSizeBytes;
@@ -98,11 +99,15 @@ namespace CTAG::SP::HELPERS {
     }
 
     bool ctagSampleRom::HasSliceGroup(const uint32_t startSlice, const uint32_t endSlice) {
-        if (startSlice > numberSlices || endSlice > numberSlices) return false;
+        if (startSlice >= numberSlices || endSlice >= numberSlices) return false;
         return true;
     }
 
     void ctagSampleRom::ReadSlice(int16_t *dst, const uint32_t slice, const uint32_t offset, const uint32_t n_samples) {
+        if (slice >= numberSlices) {
+            memset(dst, 0, n_samples * 2);
+            return;
+        }
         uint32_t start = sliceOffsets[slice] + offset;
         int32_t len = n_samples;
         if (offset + len >= sliceSizes[slice]) { // read beyond slice end ?
@@ -112,11 +117,15 @@ namespace CTAG::SP::HELPERS {
         if(slice >= nSlicesBuffered) // nSlicesBuffered > 0 if SPIRAM Buffer is used
             memset(dst, 0, len*2);
         else
-            memcpy(dst, &ptrSPIRAM[start], n_samples*2);
+            memcpy(dst, &ptrSPIRAM[start], len*2);
     }
 
     void ctagSampleRom::ReadSliceAsFloat(float *dst, const uint32_t slice, const uint32_t offset,
                                          const uint32_t n_samples) {
+        if (slice >= numberSlices) {
+            for (uint32_t i = 0; i < n_samples; i++) dst[i] = 0.f;
+            return;
+        }
         uint32_t start = sliceOffsets[slice] + offset;
         int32_t len = n_samples;
         if (offset + len >= sliceSizes[slice]) { // read beyond slice end ?
@@ -128,7 +137,7 @@ namespace CTAG::SP::HELPERS {
         if(slice >= nSlicesBuffered)
             memset(idst, 0, len*2);
         else
-            memcpy(idst, &ptrSPIRAM[start], n_samples*2);
+            memcpy(idst, &ptrSPIRAM[start], len*2);
         while (len--) {
             *dst++ = float(*dptr++) * 0.000030518509476f;
         }
@@ -225,6 +234,11 @@ namespace CTAG::SP::HELPERS {
         headerSize = 0;
 
         const uint32_t maxSlices = 32 * 64 + MAX_SLICES_SAMPLES; // wavetable max 32 slices
+        if (numberSlices > maxSlices) {
+            ESP_LOGW("SROM", "numberSlices %lu exceeds maxSlices %lu, clamping", numberSlices, maxSlices);
+            numberSlices = maxSlices;
+            if (slices_samples > MAX_SLICES_SAMPLES) slices_samples = MAX_SLICES_SAMPLES;
+        }
 
         ESP_LOGI("SROM", "Start loading files...");
         // timestamp for performance measurement, c++ api
@@ -237,8 +251,12 @@ namespace CTAG::SP::HELPERS {
         if (sliceSizes == nullptr) sliceSizes = (uint32_t *) heap_caps_malloc(maxSlices * sizeof(uint32_t), MALLOC_CAP_SPIRAM);
         assert(sliceSizes != nullptr);
 
-        // allocatate large block of PSRAM
-        assert(MAX_ALLOC_BYTES_PSRAM >= totalSize);
+        // allocate large block of PSRAM
+        if (totalSize > MAX_ALLOC_BYTES_PSRAM) {
+            ESP_LOGE("SROM", "Total sample size %lu exceeds PSRAM budget %d, loading aborted", totalSize, MAX_ALLOC_BYTES_PSRAM);
+            numberSlices = 0;
+            return;
+        }
         if (ptrSPIRAM == nullptr) {
             size_t maxSizeBytes = heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
             ESP_LOGI("SR", "Max Bytes free in PSRAM: %li", maxSizeBytes);

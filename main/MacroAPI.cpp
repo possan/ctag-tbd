@@ -15,6 +15,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/filewritestream.h"
+#include "helpers/ctagSampleRom.hpp"
 
 using namespace CTAG::REST;
 using namespace rapidjson;
@@ -226,6 +227,8 @@ static esp_err_t handle_get_trackdefaults(httpd_req_t *req) {
 /**
  * POST ?action=save_trackdefaults
  * Writes the request body (JSON) to /sdcard/data/trackdefaults.json.
+ * If the sampleKit field changed, also updates the active sample bank
+ * in sample_rom.jsn and reloads PSRAM so the device is immediately in sync.
  */
 static esp_err_t handle_save_trackdefaults(httpd_req_t *req) {
     if (req->content_len == 0 || req->content_len > 8192) {
@@ -245,6 +248,17 @@ static esp_err_t handle_save_trackdefaults(httpd_req_t *req) {
     }
     content[req->content_len] = '\0';
 
+    // Parse sampleKit from the incoming JSON before writing
+    int newSampleKit = -1;
+    {
+        Document doc;
+        doc.Parse(content);
+        if (!doc.HasParseError() && doc.IsObject() &&
+            doc.HasMember("sampleKit") && doc["sampleKit"].IsInt()) {
+            newSampleKit = doc["sampleKit"].GetInt();
+        }
+    }
+
     FILE *f = fopen(TRACKDEFAULTS_PATH, "w");
     if (!f) {
         heap_caps_free(content);
@@ -255,6 +269,16 @@ static esp_err_t handle_save_trackdefaults(httpd_req_t *req) {
     fclose(f);
     ESP_LOGI(MACRO_TAG, "Saved trackdefaults.json (%d bytes)", req->content_len);
     heap_caps_free(content);
+
+    // Sync PSRAM with the requested kit so the device is ready at next boot
+    if (newSampleKit >= 0) {
+        ESP_LOGI(MACRO_TAG, "Switching active sample bank to %d and reloading PSRAM", newSampleKit);
+        CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+        CTAG::SP::HELPERS::ctagSampleRom::SetActiveSampleBank(static_cast<uint8_t>(newSampleKit));
+        CTAG::SP::HELPERS::ctagSampleRom::RefreshDataStructure();
+        CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
+    }
+
     return send_ok(req);
 }
 

@@ -135,6 +135,9 @@ namespace CTAG::SYNTHESIS {
         // TODO: check if phase increment is within bounds for buffer max size --> partially done with asserts
         //  phaseIncrementMax*size*sizeof(datatype)+4), 32(5octaves up)*32(standard buffer size) --> > 1k words, we use 2k words
         readBufferLength = static_cast<uint32_t>(phaseIncrement * float(size) + readBufferPhase);
+        if (readBufferLength > static_cast<int32_t>(readBufferMaxSize - 2)) {
+            readBufferLength = readBufferMaxSize - 2;
+        }
 
 
         // calc marks and read assemble buffers depending on playback mode
