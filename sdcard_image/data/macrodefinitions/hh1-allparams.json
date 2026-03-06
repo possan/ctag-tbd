@@ -19,12 +19,11 @@
         {
           "idx": 1,
           "name": "Tone",
-          "def": 24,
+          "def": 70,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "log"
+          "ui": "bignum"
         },
         {
           "idx": 2,
@@ -82,8 +81,7 @@
         {
           "src": 1,
           "mul": 1,
-          "div": 1,
-          "curve": "log"
+          "div": 1
         }
       ]
     },

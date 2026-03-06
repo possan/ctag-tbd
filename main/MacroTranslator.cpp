@@ -20,8 +20,7 @@ using namespace rapidjson;
  *            0-16  → 0-64   (×4 expansion, good for low-end detail)
  *           16-64  → 64-100 (×0.75)
  *           64-127 → 100-127 (compressed top end)
- * Exp:     value²/127 — fast start, slow end
- * S-curve: cubic around center — gentle at extremes, steep in middle
+ * Exp:     value²/127 — more resolution for short times
  */
 static inline int32_t applyCurve(int32_t val, MacroCurveType curve) {
     if (val <= 0) return 0;
@@ -39,19 +38,8 @@ static inline int32_t applyCurve(int32_t val, MacroCurveType curve) {
             }
 
         case MacroCurveType::Exp:
-            // Quadratic: emphasises high range (great for envelope times)
+            // Quadratic: more resolution for short decay/envelope times
             return (val * val) / 127;
-
-        case MacroCurveType::SCurve:
-            // Cubic S-curve: gentle at extremes, steep through middle
-            {
-                int32_t centered = val - 64;
-                int32_t cubed = (centered * centered * centered) / (64 * 64);
-                int32_t result = 64 + cubed;
-                if (result < 0) result = 0;
-                if (result > 127) result = 127;
-                return result;
-            }
 
         case MacroCurveType::Linear:
         default:

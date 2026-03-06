@@ -29,12 +29,11 @@
         {
           "idx": 2,
           "name": "FM",
-          "def": 62,
+          "def": 30,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 3,
@@ -94,8 +93,7 @@
         {
           "src": 2,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },

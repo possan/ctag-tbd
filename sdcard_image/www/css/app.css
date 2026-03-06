@@ -2135,7 +2135,7 @@ sl-dialog::part(footer) {
 
 .td-row {
   display: grid;
-  grid-template-columns: 2.5rem 5.5rem 3rem 9rem 1fr;
+  grid-template-columns: 2.5rem 5.5rem 3rem 9rem 1fr 4rem;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0.75rem;
@@ -2180,6 +2180,41 @@ sl-dialog::part(footer) {
 
 .td-col-engine {
   min-width: 0;
+}
+
+.td-col-slice {
+  text-align: center;
+  min-width: 0;
+}
+
+.td-na {
+  color: var(--sl-color-neutral-400);
+  font-size: 0.75rem;
+}
+
+.td-sample-bank-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: color-mix(in srgb, var(--sl-color-primary-50) 40%, var(--sl-color-neutral-0));
+  border: 1px solid var(--sl-color-primary-200);
+  border-radius: var(--sl-border-radius-medium);
+  font-size: 0.82rem;
+}
+.td-sample-bank-section label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+.td-sample-bank-section select {
+  max-width: 12rem;
+}
+.td-hint {
+  font-size: 0.72rem;
+  color: var(--sl-color-neutral-500);
 }
 
 .td-select:disabled {
@@ -2257,4 +2292,14 @@ sl-dialog::part(footer) {
 .sl-theme-dark .td-select:disabled {
   background: var(--sl-color-neutral-900);
   opacity: 0.45;
+}
+.sl-theme-dark .td-sample-bank-section {
+  background: color-mix(in srgb, var(--sl-color-primary-900) 20%, var(--sl-color-neutral-900));
+  border-color: var(--sl-color-primary-800);
+}
+.sl-theme-dark .td-hint {
+  color: var(--sl-color-neutral-500);
+}
+.sl-theme-dark .td-na {
+  color: var(--sl-color-neutral-600);
 }

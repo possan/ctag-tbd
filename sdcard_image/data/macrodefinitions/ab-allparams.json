@@ -19,12 +19,11 @@
         {
           "idx": 1,
           "name": "Tone",
-          "def": 13,
+          "def": 51,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "log"
+          "ui": "bignum"
         },
         {
           "idx": 2,
@@ -39,12 +38,11 @@
         {
           "idx": 3,
           "name": "A FM",
-          "def": 49,
+          "def": 19,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         }
       ]
     },
@@ -54,12 +52,11 @@
         {
           "idx": 4,
           "name": "S FM",
-          "def": 41,
+          "def": 13,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 5,
@@ -93,8 +90,7 @@
         {
           "src": 1,
           "mul": 1,
-          "div": 1,
-          "curve": "log"
+          "div": 1
         }
       ]
     },
@@ -117,8 +113,7 @@
         {
           "src": 3,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -129,8 +124,7 @@
         {
           "src": 4,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },

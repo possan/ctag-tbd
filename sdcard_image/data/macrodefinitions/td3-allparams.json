@@ -22,8 +22,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 2,
@@ -63,12 +62,11 @@
         {
           "idx": 5,
           "name": "Reso",
-          "def": 21,
+          "def": 45,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 6,
@@ -101,18 +99,16 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 9,
           "name": "Drive",
-          "def": 37,
+          "def": 11,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 10,
@@ -140,12 +136,11 @@
         {
           "idx": 12,
           "name": "P1",
-          "def": 13,
+          "def": 32,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 13,
@@ -154,8 +149,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 14,
@@ -164,8 +158,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 15,
@@ -198,8 +191,7 @@
         {
           "src": 1,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -246,8 +238,7 @@
         {
           "src": 5,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -281,8 +272,7 @@
         {
           "src": 8,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -293,8 +283,7 @@
         {
           "src": 9,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -327,8 +316,7 @@
         {
           "src": 12,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -339,8 +327,7 @@
         {
           "src": 13,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -351,8 +338,7 @@
         {
           "src": 14,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },

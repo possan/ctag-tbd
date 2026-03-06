@@ -59,6 +59,9 @@ All paths converge on the same `BACKGROUNDUPDATE_TYPE_APPLYSOUNDPRESET` handler,
 | `src/SpiAPI.h` | Added `GetTrackDefaultPresets = 0xA5` to the `RequestType_t` enum and method declaration |
 | `src/SpiAPI.cpp` | Added `GetTrackDefaultPresets()` method — sends SPI `0xA5`, receives JSON response |
 | `examples/main.cpp` | Rewrote `initializeMacroPresets()` — queries P4 for defaults, falls back to first preset |
+| `lib/sequencerui/host.hpp` | Added `BACKGROUNDUPDATE_TYPE_SETSAMPLEROMBANK = 7` to enum; previously fixed `shortstring[16]` → `shortstring[32]` |
+| `examples/main.cpp` | Added `sampleBank` parsing from trackdefaults JSON; queues `SETSAMPLEROMBANK` event before track presets |
+| `examples/main.cpp` | Added `SETSAMPLEROMBANK` handler in `loop_tickandupdateleds()` — calls `SetActiveSampleRomBank()` |
 
 ### P4 side (repo: `ctag-tbd_hacking`)
 
@@ -68,7 +71,10 @@ All paths converge on the same `BACKGROUNDUPDATE_TYPE_APPLYSOUNDPRESET` handler,
 |------|--------|
 | `main/SpiAPI.hpp` | Added `GetTrackDefaultPresets = 0xA5` to the `RequestType` enum |
 | `main/SpiAPI.cpp` | Added handler: reads `/sdcard/data/trackdefaults.json`, returns contents via `transmitCString()` |
-| `sdcard_image/data/trackdefaults.json` | Default config file with all 19 tracks mapped |
+| `main/MacroAPI.cpp` | REST endpoints `get_trackdefaults` and `save_trackdefaults` for WebUI read/write |
+| `sdcard_image/data/trackdefaults.json` | Default config file with all 19 tracks mapped, incl. `sampleBank` and per-track `sampleSlice` |
+| `sdcard_image/www/js/track-defaults.js` | WebUI: global sample bank dropdown, per-track Slice selector for rompler tracks |
+| `sdcard_image/www/css/app.css` | CSS for sample bank section, Slice column, dark theme overrides |
 
 ---
 
@@ -114,25 +120,64 @@ Build a simple UI page that:
    - Track index and name (from `synthdefinitions.json`)
    - Current preset ID
    - A dropdown/selector populated from `data/macrosoundpresets/` (filtered to presets valid for that track)
-3. **Saves** the updated JSON back to `/sdcard/data/trackdefaults.json`
+   - For rompler tracks (those with `ro` in their machines list): show a **sample bank** dropdown (populated from `sample_rom.jsn` bank names) and a **slice** selector (0–31)
+3. **Global sample bank selector** — a top-level dropdown that sets the `sampleBank` value. Changing this shows a warning that it affects all rompler tracks.
+4. **Saves** the updated JSON back to `/sdcard/data/trackdefaults.json`
+
+**Rompler WebUI notes:**
+- Read available banks via `GET /api/v1/sampleRom/descriptor` (or parse `/tbdsamples/sample_rom.jsn` directly) to populate the bank dropdown
+- The bank names (e.g. "Default", "A4 Dub") should be displayed instead of raw indices
+- Per-track `sampleSlice` lets the user pick which slice a rompler starts on after boot
+- Warn users that switching the global bank at boot reloads PSRAM and takes a few seconds
 
 #### `trackdefaults.json` format
 
 ```json
 {
+  "sampleBank": 0,
   "tracks": [
     { "index": 0,  "preset": "db-all-def" },
     { "index": 1,  "preset": "fmb-all-def" },
-    { "index": 2,  "preset": "ds-all-def" },
+    { "index": 6,  "preset": "ro-all-def", "sampleBank": 0, "sampleSlice": 0 },
+    { "index": 7,  "preset": "ro-all-def", "sampleBank": 0, "sampleSlice": 5 },
     ...
   ]
 }
 ```
 
+**Top-level fields:**
+
+- `sampleBank` — the active sample bank index (0-based) to load into PSRAM at boot. All rompler tracks share this bank. Corresponds to the `smp_banks` array in `/tbdsamples/sample_rom.jsn`.
+
+**Per-track fields:**
+
 - `index` — track number (0–18)
 - `preset` — preset ID (filename without `.json` from `data/macrosoundpresets/`)
+- `sampleBank` — *(rompler tracks only)* preferred bank index for this track. Since all romplers share one PSRAM bank, this is informational for the WebUI; the top-level `sampleBank` determines what's actually loaded.
+- `sampleSlice` — *(rompler tracks only)* preferred starting slice index within the bank (0–31). Maps to the rompler's "Slice" parameter.
 - Optional `_name` and `_comment` fields are ignored by the firmware (for human readability)
 - Omit a track entry to let the Pico auto-select the first available preset
+
+#### Rompler sample architecture
+
+All rompler instances share a single sample buffer in PSRAM (~28 MiB). Only **one sample bank** can be active at a time — switching banks via `SetActiveSampleRomBank` (SPI `0x18`) reloads the entire PSRAM content from SD card.
+
+The rompler plugin selects sounds via two parameters:
+- **Bank** (0–31): selects a group of 32 slices within the loaded PSRAM data
+- **Slice** (0–31): selects an individual sample within that bank group
+
+Banks on SD card are defined in `/tbdsamples/sample_rom.jsn`:
+```json
+{
+  "smp_banks": ["def_smp.jsn", "a4_dub.jsn"],
+  "smp_bank_names": ["Default", "A4 Dub"],
+  "active_smp_bank": 0
+}
+```
+
+Each `.jsn` bank file lists the individual sample slices (WAV files) that get loaded into PSRAM.
+
+The `synthdefinitions.json` has a `defaultbank` field per track (e.g. `"percussion"`, `"chords"`, `"stabs"`) that is reserved for future per-track bank hinting but is not yet wired into the firmware.
 
 ### 3. Track definition reference
 
@@ -284,4 +329,44 @@ All infrastructure for runtime machine/preset switching is already in place. Fut
 - [ ] Modify `trackdefaults.json` on the SD card, reboot, verify different presets load
 - [ ] Delete `trackdefaults.json`, reboot, verify fallback to first available preset per track
 - [ ] Use OLED UI Sound Preset screen to change a preset at runtime — verify it overrides the boot default
+- [ ] Set `sampleBank` to a non-zero value, reboot, verify correct bank loads in PSRAM
+- [ ] Set per-track `sampleSlice` for rompler tracks, reboot, verify correct slice is selected
 - [ ] WebUI: build editor page, save changes, reboot, verify new defaults take effect
+- [ ] WebUI: verify bank dropdown shows names from `sample_rom.jsn`
+
+---
+
+## Change History
+
+### 2025-01-xx — Buffer Overflow Fix (Pico)
+
+**Problem:** Device entered infinite boot loop. Serial debug showed rapid spamming of preset-load messages.
+
+**Root Cause:** `backgroundupdateevent_t.shortstring[16]` was too small for preset IDs like `"fxreverb-all-def"` (16 chars + null terminator = 17 bytes). `strcpy()` overwrote adjacent memory, corrupting the event struct and causing repeated event re-processing.
+
+**Fix (4 files in `tbd-pico-seq3`):**
+- `lib/sequencerui/host.hpp` — Expanded `shortstring[16]` → `shortstring[32]`
+- `examples/main.cpp` — Replaced all `strcpy` → `strncpy` with explicit bounds (`sizeof(evt.shortstring) - 1`) + null terminator
+- `src/PicoHost.cpp` — Same `strcpy` → `strncpy` replacement (2 call sites)
+- `src/SpiAPI.cpp` — Added `WaitSpiAPIReadyForCmd()` after `LoadTrackSoundPreset` to prevent SPI command overlap
+
+### 2025-01-xx — Rompler Sample Bank/Slice Support
+
+**Goal:** Allow trackdefaults to specify which sample ROM bank loads at boot and which slice each rompler track uses.
+
+**Architecture Note:** Sample banks are *global* — one 28 MiB PSRAM bank is loaded at a time, shared by all rompler instances. Per-track bank selection is not possible; the top-level `sampleBank` field controls which bank is active.
+
+**Pico Firmware Changes (`tbd-pico-seq3`):**
+- `lib/sequencerui/host.hpp` — Added `BACKGROUNDUPDATE_TYPE_SETSAMPLEROMBANK = 7` enum value
+- `examples/main.cpp` — `initializeMacroPresets()`: Parse `sampleBank` from JSON, queue `SETSAMPLEROMBANK` event (zero-initialized struct, uses `param1` only — no string buffer risk) *before* any track preset events
+- `examples/main.cpp` — `loop_tickandupdateleds()`: New handler for `SETSAMPLEROMBANK` — calls `spi_api.SetActiveSampleRomBank(bankIndex)` then `sleep_ms(500)` to allow PSRAM reload
+
+**P4 / WebUI Changes (`ctag-tbd_hacking`):**
+- `sdcard_image/data/trackdefaults.json` — Added top-level `"sampleBank": 0` and per-rompler-track `"sampleBank"` + `"sampleSlice"` fields (tracks 6, 7, 12, 13)
+- `sdcard_image/www/js/track-defaults.js` — Added global sample bank dropdown (fetches bank names from `/api/v2/samples`), per-track Slice column (0–31 dropdown for rompler tracks, "—" for others), updated `collectFromUI()` to persist bank/slice
+- `sdcard_image/www/css/app.css` — Added `.td-row` 6-column grid for Slice column, `.td-sample-bank-section`, `.td-col-slice`, `.td-na`, `.td-hint` styles with dark theme overrides
+
+**Safety Verification:**
+- New `SETSAMPLEROMBANK` event only uses integer `param1` — never touches `shortstring` → no buffer overflow possible
+- `bankEvt` struct is zero-initialized (`= {}`) to prevent stale data
+- All string copies in `main.cpp` (8 sites) and `PicoHost.cpp` (2 sites) confirmed as bounded `strncpy`

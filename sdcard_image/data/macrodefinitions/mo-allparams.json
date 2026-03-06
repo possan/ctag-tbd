@@ -22,18 +22,16 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 2,
           "name": "P1",
-          "def": 18,
+          "def": 40,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 3,
@@ -42,8 +40,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         }
       ]
     },
@@ -53,22 +50,20 @@
         {
           "idx": 4,
           "name": "P0 A",
-          "def": 55,
+          "def": 24,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 5,
           "name": "P1 A",
-          "def": 45,
+          "def": 16,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 6,
@@ -77,8 +72,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 7,
@@ -130,8 +124,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         }
       ]
     },
@@ -145,8 +138,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         }
       ]
     }
@@ -170,8 +162,7 @@
         {
           "src": 1,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -182,8 +173,7 @@
         {
           "src": 2,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -194,8 +184,7 @@
         {
           "src": 3,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -206,8 +195,7 @@
         {
           "src": 4,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -218,8 +206,7 @@
         {
           "src": 5,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -230,8 +217,7 @@
         {
           "src": 6,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -288,8 +274,7 @@
         {
           "src": 11,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -300,8 +285,7 @@
         {
           "src": 12,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     }

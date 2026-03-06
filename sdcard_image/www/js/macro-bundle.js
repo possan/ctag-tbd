@@ -614,12 +614,6 @@ function applyCurve(val, curveType) {
     case 'exp':
       return Math.round(val * val / 127);
 
-    case 'scurve':
-      var centered = val - 64;
-      var cubed = Math.round(centered * centered * centered / (64 * 64));
-      var result = 64 + cubed;
-      return Math.max(0, Math.min(127, result));
-
     default:
       return val;
   }
@@ -4216,6 +4210,7 @@ window.TBD.shared = {
   var trackDefaults = null;   // parsed trackdefaults.json
   var dirty = false;
   var facetedData = null;     // per-track: [ { machine, name, macros: [{id, name, presets}] } ]
+  var sampleBankNames = [];   // from sample_rom.jsn via samples API
 
   // ─── Helpers ───────────────────────────────────────────────
 
@@ -4306,11 +4301,47 @@ window.TBD.shared = {
     return entry ? (entry.preset || '') : '';
   }
 
+  /**
+   * Get the saved sampleSlice for a track (rompler tracks only).
+   */
+  function getDefaultSlice(trackIndex) {
+    if (!trackDefaults || !trackDefaults.tracks) return 0;
+    var entry = trackDefaults.tracks.find(function(t) { return t.index === trackIndex; });
+    return entry && typeof entry.sampleSlice === 'number' ? entry.sampleSlice : 0;
+  }
+
+  /**
+   * Check if a track supports the rompler machine (has 'ro' in machines list).
+   */
+  function trackHasRompler(track) {
+    return (track.machines || []).indexOf('ro') !== -1;
+  }
+
   // ─── API ───────────────────────────────────────────────────
 
-  function loadTrackDefaults() {
-    return S.queuedFetch('/macros?action=get_trackdefaults')
+  /**
+   * Fetch sample bank names from the samples API.
+   */
+  function loadSampleBankNames() {
+    return S.queuedFetch('/samples')
       .then(function(data) {
+        if (data && data.kits && data.kits.smp_bank_names) {
+          sampleBankNames = data.kits.smp_bank_names;
+        } else {
+          sampleBankNames = [];
+        }
+        return sampleBankNames;
+      })
+      .catch(function() {
+        sampleBankNames = [];
+        return sampleBankNames;
+      });
+  }
+
+  function loadTrackDefaults() {
+    return loadSampleBankNames().then(function() {
+      return S.queuedFetch('/macros?action=get_trackdefaults');
+    }).then(function(data) {
         trackDefaults = data && data.tracks ? data : { tracks: [] };
         return trackDefaults;
       })
@@ -4408,6 +4439,23 @@ window.TBD.shared = {
     html += 'Pick a <strong>machine</strong> first, then choose a <strong>preset</strong>. ';
     html += 'Changes take effect on next power-up.</p>';
 
+    // ─── Global sample bank selector ─────────────────────────
+    if (sampleBankNames.length > 0) {
+      var savedBank = (trackDefaults && typeof trackDefaults.sampleBank === 'number')
+        ? trackDefaults.sampleBank : 0;
+      html += '<div class="td-sample-bank-section">';
+      html += '<label><strong>Sample Bank (PSRAM)</strong> ';
+      html += '<select class="td-select" id="td-global-sample-bank">';
+      sampleBankNames.forEach(function(name, i) {
+        var sel = (i === savedBank) ? ' selected' : '';
+        html += '<option value="' + i + '"' + sel + '>' + S.esc(name) + '</option>';
+      });
+      html += '</select></label>';
+      html += '<span class="td-hint"> All rompler tracks share this bank. ';
+      html += 'Switching reloads PSRAM from SD card at boot.</span>';
+      html += '</div>';
+    }
+
     html += '<div class="td-table">';
     html += '<div class="td-row td-header">';
     html += '<span class="td-col-idx">#</span>';
@@ -4415,6 +4463,7 @@ window.TBD.shared = {
     html += '<span class="td-col-type">Type</span>';
     html += '<span class="td-col-engine">Machine</span>';
     html += '<span class="td-col-preset">Preset</span>';
+    html += '<span class="td-col-slice">Slice</span>';
     html += '</div>';
 
     tracks.forEach(function(track) {
@@ -4456,6 +4505,22 @@ window.TBD.shared = {
       html += '</select>';
       html += '</span>';
 
+      // Slice selector (rompler tracks only)
+      var isRompler = trackHasRompler(track);
+      var savedSlice = getDefaultSlice(idx);
+      html += '<span class="td-col-slice">';
+      if (isRompler) {
+        html += '<select class="td-select td-slice-select" data-track="' + idx + '">';
+        for (var sl = 0; sl < 32; sl++) {
+          var slSel = (sl === savedSlice) ? ' selected' : '';
+          html += '<option value="' + sl + '"' + slSel + '>' + sl + '</option>';
+        }
+        html += '</select>';
+      } else {
+        html += '<span class="td-na">—</span>';
+      }
+      html += '</span>';
+
       html += '</div>';
     });
 
@@ -4492,6 +4557,23 @@ window.TBD.shared = {
       });
     });
 
+    // Attach slice change listeners
+    body.querySelectorAll('.td-slice-select').forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        dirty = true;
+        updateSaveButton();
+      });
+    });
+
+    // Attach global sample bank change listener
+    var bankSel = document.getElementById('td-global-sample-bank');
+    if (bankSel) {
+      bankSel.addEventListener('change', function() {
+        dirty = true;
+        updateSaveButton();
+      });
+    }
+
     dirty = false;
     updateSaveButton();
   }
@@ -4506,10 +4588,15 @@ window.TBD.shared = {
   // ─── Collect & Save ────────────────────────────────────────
 
   function collectFromUI() {
+    // Read global sample bank
+    var bankSel = document.getElementById('td-global-sample-bank');
+    var sampleBank = bankSel ? parseInt(bankSel.value, 10) : 0;
+
     var result = {
       _comment: 'Default preset per track, loaded by the Pico via SPI command 0xA5.',
       _comment2: 'Preset IDs = filenames (without .json) from data/macrosoundpresets/.',
       _comment3: 'Omit a track entry to let the Pico use the first available preset.',
+      sampleBank: sampleBank,
       tracks: []
     };
 
@@ -4527,11 +4614,20 @@ window.TBD.shared = {
         var machineSel = document.querySelector('.td-machine-select[data-track="' + idx + '"]');
         var machineName = machineSel ? machineSel.options[machineSel.selectedIndex].text : '';
 
-        result.tracks.push({
+        var entry = {
           index: idx,
           preset: presetId,
           _name: trackName + ' — ' + machineName + ' — ' + presetId
-        });
+        };
+
+        // Add rompler-specific fields if this track supports rompler
+        if (track && trackHasRompler(track)) {
+          entry.sampleBank = sampleBank;
+          var sliceSel = document.querySelector('.td-slice-select[data-track="' + idx + '"]');
+          entry.sampleSlice = sliceSel ? parseInt(sliceSel.value, 10) : 0;
+        }
+
+        result.tracks.push(entry);
       }
     });
 

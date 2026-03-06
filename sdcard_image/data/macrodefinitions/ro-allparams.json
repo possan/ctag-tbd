@@ -64,8 +64,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 6,
@@ -83,8 +82,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         }
       ]
     },
@@ -114,12 +112,11 @@
         {
           "idx": 10,
           "name": "Speed",
-          "def": 16,
+          "def": 64,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "log"
+          "ui": "bignum"
         },
         {
           "idx": 11,
@@ -128,8 +125,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         }
       ]
     },
@@ -170,8 +166,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         }
       ]
     },
@@ -194,8 +189,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         }
       ]
     }
@@ -264,8 +258,7 @@
         {
           "src": 5,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -287,8 +280,7 @@
         {
           "src": 7,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -323,8 +315,7 @@
         {
           "src": 10,
           "mul": 1,
-          "div": 1,
-          "curve": "log"
+          "div": 1
         }
       ]
     },
@@ -335,8 +326,7 @@
         {
           "src": 11,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -380,8 +370,7 @@
         {
           "src": 15,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -403,8 +392,7 @@
         {
           "src": 17,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     }

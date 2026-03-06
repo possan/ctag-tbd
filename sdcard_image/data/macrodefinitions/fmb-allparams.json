@@ -9,12 +9,11 @@
         {
           "idx": 0,
           "name": "FM",
-          "def": 60,
+          "def": 28,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 1,
@@ -29,12 +28,11 @@
         {
           "idx": 2,
           "name": "FM",
-          "def": 34,
+          "def": 9,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 3,
@@ -54,22 +52,20 @@
         {
           "idx": 4,
           "name": "BM",
-          "def": 78,
+          "def": 48,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 5,
           "name": "AF",
-          "def": 5,
+          "def": 19,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "log"
+          "ui": "bignum"
         },
         {
           "idx": 6,
@@ -101,8 +97,7 @@
         {
           "src": 0,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -125,8 +120,7 @@
         {
           "src": 2,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -149,8 +143,7 @@
         {
           "src": 4,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -161,8 +154,7 @@
         {
           "src": 5,
           "mul": 1,
-          "div": 1,
-          "curve": "log"
+          "div": 1
         }
       ]
     },

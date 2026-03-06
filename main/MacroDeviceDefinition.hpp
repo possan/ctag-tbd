@@ -10,9 +10,8 @@ namespace CTAG {
         // Response curve types for parameter mapping
         enum class MacroCurveType : uint8_t {
             Linear = 0,   // Default: straight 1:1 mapping
-            Log    = 1,   // Logarithmic: slow start, fast end (freq/cutoff)
-            Exp    = 2,   // Exponential: fast start, slow end (envelope times)
-            SCurve = 3    // S-curve: gentle at extremes, steep in middle
+            Log    = 1,   // Logarithmic: for frequency/cutoff (pitch is logarithmic)
+            Exp    = 2,   // Exponential: for decay/envelope times (resolution for short times)
         };
 
         class MacroDeviceOutputMappingSource {

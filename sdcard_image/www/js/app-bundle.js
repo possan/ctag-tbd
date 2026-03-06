@@ -2623,12 +2623,6 @@ function applyCurve(val, curveType) {
     case 'exp':
       return Math.round(val * val / 127);
 
-    case 'scurve':
-      var centered = val - 64;
-      var cubed = Math.round(centered * centered * centered / (64 * 64));
-      var result = 64 + cubed;
-      return Math.max(0, Math.min(127, result));
-
     default:
       return val;
   }

@@ -18,12 +18,11 @@
         {
           "idx": 1,
           "name": "Ratio",
-          "def": 8,
+          "def": 32,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "log"
+          "ui": "bignum"
         },
         {
           "idx": 2,
@@ -141,8 +140,7 @@
         {
           "src": 1,
           "mul": 1,
-          "div": 1,
-          "curve": "log"
+          "div": 1
         }
       ]
     },

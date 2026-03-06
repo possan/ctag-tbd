@@ -67,26 +67,12 @@ def inverse_exp(cc):
     if cc >= 127: return 127
     return int(round(math.sqrt(cc * 127.0)))
 
-def inverse_scurve(cc):
-    """Inverse of S-curve: 64 + (v-64)³/4096 = cc → v = 64 + cbrt((cc-64)*4096)"""
-    if cc <= 0: return 0
-    if cc >= 127: return 127
-    delta = cc - 64
-    cubed = delta * 4096.0
-    if cubed >= 0:
-        v = 64 + cubed ** (1.0/3.0)
-    else:
-        v = 64 - (-cubed) ** (1.0/3.0)
-    return max(0, min(127, int(round(v))))
-
 def inverse_curve(cc, curve_type):
     """Given desired DSP CC output, return knob position accounting for curve."""
     if curve_type == 'log':
         return inverse_log(cc)
     elif curve_type == 'exp':
         return inverse_exp(cc)
-    elif curve_type == 'scurve':
-        return inverse_scurve(cc)
     else:
         return cc  # linear — no change
 

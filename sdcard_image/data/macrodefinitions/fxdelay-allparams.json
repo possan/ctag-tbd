@@ -9,12 +9,11 @@
         {
           "idx": 0,
           "name": "Time",
-          "def": 4,
+          "def": 16,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "log"
+          "ui": "bignum"
         },
         {
           "idx": 1,
@@ -69,12 +68,11 @@
         {
           "idx": 6,
           "name": "Feedback",
-          "def": 13,
+          "def": 32,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 7,
@@ -119,8 +117,7 @@
         {
           "src": 0,
           "mul": 1,
-          "div": 1,
-          "curve": "log"
+          "div": 1
         }
       ]
     },
@@ -186,8 +183,7 @@
         {
           "src": 6,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },

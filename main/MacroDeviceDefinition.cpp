@@ -204,8 +204,6 @@ bool MacroDeviceOutputMappingSource:: DeserializeJSON(const rapidjson::Value &js
             curve = MacroCurveType::Log;
         } else if (strcmp(curveStr, "exp") == 0) {
             curve = MacroCurveType::Exp;
-        } else if (strcmp(curveStr, "scurve") == 0) {
-            curve = MacroCurveType::SCurve;
         }
         // "linear" or unknown → stays Linear
     }

@@ -27,12 +27,11 @@
         {
           "idx": 2,
           "name": "Detune",
-          "def": 32,
+          "def": 8,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "exp"
+          "ui": "bignum"
         },
         {
           "idx": 3,
@@ -52,12 +51,11 @@
         {
           "idx": 4,
           "name": "Reso",
-          "def": 5,
+          "def": 15,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 5,
@@ -124,12 +122,11 @@
         {
           "idx": 11,
           "name": "L1 Speed",
-          "def": 8,
+          "def": 31,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "log"
+          "ui": "bignum"
         }
       ]
     },
@@ -139,22 +136,20 @@
         {
           "idx": 12,
           "name": "L1 Amount",
-          "def": 3,
+          "def": 8,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 13,
           "name": "L2 Speed",
-          "def": 2,
+          "def": 10,
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "log"
+          "ui": "bignum"
         },
         {
           "idx": 14,
@@ -163,8 +158,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         },
         {
           "idx": 15,
@@ -173,8 +167,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
-          "curve": "scurve"
+          "ui": "bignum"
         }
       ]
     },
@@ -232,8 +225,7 @@
         {
           "src": 2,
           "mul": 1,
-          "div": 1,
-          "curve": "exp"
+          "div": 1
         }
       ]
     },
@@ -256,8 +248,7 @@
         {
           "src": 4,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -337,8 +328,7 @@
         {
           "src": 11,
           "mul": 1,
-          "div": 1,
-          "curve": "log"
+          "div": 1
         }
       ]
     },
@@ -349,8 +339,7 @@
         {
           "src": 12,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -361,8 +350,7 @@
         {
           "src": 13,
           "mul": 1,
-          "div": 1,
-          "curve": "log"
+          "div": 1
         }
       ]
     },
@@ -373,8 +361,7 @@
         {
           "src": 14,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
@@ -385,8 +372,7 @@
         {
           "src": 15,
           "mul": 1,
-          "div": 1,
-          "curve": "scurve"
+          "div": 1
         }
       ]
     },
