@@ -22,6 +22,7 @@ private:
 	float midi_freq {0.0f};
 	int midi_note {0};
 	bool midi_trig {false};
+	float userSpeed {1.0f};
 	atomic<int16_t> s1_speed;
 	atomic<int16_t> s1_pitch;
 	atomic<int16_t> s1_bank;

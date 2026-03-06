@@ -58,6 +58,7 @@ namespace CTAG::SYNTHESIS {
         //  set eg and lfo parameters
         ad.SetAttack(params.a);
         ad.SetDecay(params.d);
+        ad.SetLoop(params.loop); // envelope loops with the sample
 
         // calculate playback speed = dt = phase increment
         // check if time-stretch is active

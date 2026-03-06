@@ -68,19 +68,19 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     rompler.params.slice = iS1Slice;
 
     MK_FLT_PAR_ABS_NOCV(fS1Speed, s1_speed, 4095.f, 2.f)
-    // fS1Speed -= 2.0f;
     CONSTRAIN(fS1Speed, 0.f, 2.f)
+    userSpeed = fS1Speed; // store for use at note trigger
     if (!rompler.params.timeStretchEnable) {
         rompler.params.playbackSpeed = fS1Speed;
-        // base on loop length / track length
-        // rompler.params.playbackSpeed = 1.0;
     }
 
-    MK_FLT_PAR_ABS_NOCV(iS1Pitch, s1_pitch, 4096.0f, 128.f) // midi cc
+    MK_FLT_PAR_ABS_NOCV(fS1Pitch, s1_pitch, 4096.0f, 128.f) // midi cc
     if (rompler.params.timeStretchEnable) {
-        rompler.params.pitch = iS1Pitch / 10.0;
+        rompler.params.pitch = fS1Pitch / 10.0;
     } else {
-        rompler.params.pitch = midi_note;
+        // apply pitch offset relative to center (64 = no change)
+        float pitchOffset = fS1Pitch - 64.f;
+        rompler.params.pitch = pitchOffset;
     }
 
     MK_FLT_PAR_ABS_NOCV(fS1Start, s1_start, 4095.f, 1.f)
@@ -94,8 +94,10 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     MK_BOOL_PAR_NOCV(bS1LoopPipo, s1_lp_pp)
     rompler.params.loopPiPo = bS1LoopPipo;
     MK_FLT_PAR_ABS_NOCV(fS1Attack, s1_atk, 4095.f, 2.f)
+    if (fS1Attack < 0.001f) fS1Attack = 0.001f; // prevent div-by-zero in AD envelope
     rompler.params.a = fS1Attack;
     MK_FLT_PAR_ABS_NOCV(fS1Decay, s1_dcy, 4095.f, 50.f)
+    if (fS1Decay < 0.01f) fS1Decay = 0.01f; // prevent div-by-zero in AD envelope
     rompler.params.d = fS1Decay;
     MK_FLT_PAR_ABS_SFT_NOCV(fS1EGFM, s1_eg2fm, 4095.f, 12.f)
     rompler.params.egFM = fS1EGFM;
@@ -123,13 +125,17 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
         uint32_t stepsLengthMs = 0;
         uint32_t sliceLengthMs = 0;
 
-        rompler.params.playbackSpeed = 1.0;
+        float autoSpeed = 1.0f;
         if (data.sampleRom->HasSlice(rompler.params.slice)) {
             sliceLength = data.sampleRom->GetSliceSize(rompler.params.slice);
             stepsLengthMs = track_length * data.msPerBeat / 4;
             sliceLengthMs = (sliceLength * 1000) / 44100;
-            rompler.params.playbackSpeed = (float)sliceLengthMs / (float)stepsLengthMs;
+            if (stepsLengthMs > 0) {
+                autoSpeed = (float)sliceLengthMs / (float)stepsLengthMs;
+            }
         }
+        // Multiply auto-fit speed by user speed knob (1.0 = center/normal)
+        rompler.params.playbackSpeed = autoSpeed * userSpeed;
 
         // printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f, slicelen=%ld,msperbeat=%ld,slicelenms=%ld, tempo=%ld,tracklen=%d\n",
         //     rompler.params.slice,
