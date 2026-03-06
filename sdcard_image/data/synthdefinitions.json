@@ -1000,14 +1000,14 @@
           "name": "Speed",
           "type": "cc",
           "ctrl": 18,
-          "def": 16
+          "def": 64
         },
         {
           "id": "pitch",
           "name": "Pitch",
           "type": "cc",
           "ctrl": 19,
-          "def": 0
+          "def": 64
         },
         {
           "id": "loop",

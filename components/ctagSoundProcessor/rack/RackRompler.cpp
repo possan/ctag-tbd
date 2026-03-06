@@ -69,10 +69,8 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
 
     MK_FLT_PAR_ABS_NOCV(fS1Speed, s1_speed, 4095.f, 2.f)
     CONSTRAIN(fS1Speed, 0.f, 2.f)
-    userSpeed = fS1Speed; // store for use at note trigger
-    if (!rompler.params.timeStretchEnable) {
-        rompler.params.playbackSpeed = fS1Speed;
-    }
+    userSpeed = fS1Speed;
+    // playbackSpeed is only set at note trigger to preserve it between frames
 
     MK_FLT_PAR_ABS_NOCV(fS1Pitch, s1_pitch, 4096.0f, 128.f) // midi cc
     if (rompler.params.timeStretchEnable) {
@@ -121,21 +119,9 @@ void RackRompler::Process(const PicoSeqRackProcessData &data) {
     // MK_BOOL_PAR_NOCV(bGateS1, s1_gate)
     rompler.params.gate = midi_trig;
     if (midi_trig && !trig_prev) {
-        uint32_t sliceLength = 0;
-        uint32_t stepsLengthMs = 0;
-        uint32_t sliceLengthMs = 0;
-
-        float autoSpeed = 1.0f;
-        if (data.sampleRom->HasSlice(rompler.params.slice)) {
-            sliceLength = data.sampleRom->GetSliceSize(rompler.params.slice);
-            stepsLengthMs = track_length * data.msPerBeat / 4;
-            sliceLengthMs = (sliceLength * 1000) / 44100;
-            if (stepsLengthMs > 0) {
-                autoSpeed = (float)sliceLengthMs / (float)stepsLengthMs;
-            }
-        }
-        // Multiply auto-fit speed by user speed knob (1.0 = center/normal)
-        rompler.params.playbackSpeed = autoSpeed * userSpeed;
+        // Play at user-specified speed (default 1.0 = natural sample speed)
+        // No auto-fit: drums should play at natural pitch, not time-stretched
+        rompler.params.playbackSpeed = userSpeed;
 
         // printf("S1 sl=%ld ps=%1.3f pitch=%1.3f, ts=%d>%1.1f, slicelen=%ld,msperbeat=%ld,slicelenms=%ld, tempo=%ld,tracklen=%d\n",
         //     rompler.params.slice,
