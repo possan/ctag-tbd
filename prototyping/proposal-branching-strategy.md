@@ -595,6 +595,307 @@ Sphinx's `only` directive combined with a tag set in `conf.py` (`tags.add('tbd16
 
 ---
 
+## Universal Plugin MIDI & CV/Trigger Input
+
+### The Problem Today
+
+The ctag-tbd plugin architecture has a MIDI path and a CV/Trigger path, but **neither actually works for regular plugins**.
+
+**MIDI is broken for all plugins except PicoSeqRack:**
+
+| Step | What happens |
+|------|-------------|
+| RP2350 sends MIDI bytes over SPI | ✅ Works — `p4_spi_request2.synth_midi[256]` arrives every ~1ms |
+| SPManager copies into `ProcessData.midi_bytes[400]` | ✅ Works — `memcpy` in `audio_task` |
+| MacroTranslator parses MIDI, calls `handleMidiControlChange()` on the plugin | ✅ Works — but only meaningful if the plugin overrides the method |
+| **Plugin processes MIDI** | ❌ **Only PicoSeqRack overrides the virtual methods**. All other plugins inherit empty default implementations and ignore MIDI entirely. |
+
+**CV/Trigger is structurally present but always zero:**
+
+```
+// SPManager.cpp — audio_task
+static float   dummy_cv[N_CVS]     = {};   // zero-filled, never updated
+static uint8_t dummy_trig[N_TRIGS] = {};   // zero-filled, never updated
+pd.cv   = dummy_cv;
+pd.trig = dummy_trig;
+```
+
+Every plugin has `MK_FLT_PAR` / `MK_BOOL_PAR` macros that check `cv_param != -1` and read from `data.cv[cv_param]` — but the values are always zero because no hardware CV input is connected.
+
+**`N_CVS=1` and `N_TRIGS=1`** are hardcoded compile-time constants in the root `CMakeLists.txt`. The simulator uses `N_CVS=4, N_TRIGS=2`.
+
+**The macro/preset layer is too complex for plugin developers:**
+
+The MacroTranslator (560 lines) implements a 16-track × 32-parameter matrix with JSON macro definitions, curve application (log/exp/linear), and dynamic CC computation. This is purpose-built for the TBD-16 sequencer product — a plugin developer building a simple synth doesn't want to understand or depend on this system.
+
+### What "Simple TBD" Needs
+
+The upstream ctag-tbd (ESP32-P4 only, no RP2350) needs a universal input path that:
+
+1. **Makes MIDI work for any plugin** — without requiring each plugin to implement its own MIDI parser
+2. **Keeps CV/Trigger open for Eurorack builders** — hardware CV/Trigger inputs via ADC/GPIO
+3. **Is simple enough for a first-time plugin developer** — no macro definitions, no JSON mapping files, no indirection chains
+4. **Doesn't break the existing macro system** — dadamachines TBD-16 continues to use MacroTranslator for its sequencer workflow
+
+### Architecture: MIDI-to-Parameter Mapping at the SPManager Level
+
+The key insight is that the existing `MK_FLT_PAR` / `MK_BOOL_PAR` macros already support CV and Trigger modulation via `data.cv[]` and `data.trig[]`. **MIDI CC values can be injected into the same CV array** — no plugin code changes needed.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      INPUT SOURCES                              │
+│                                                                 │
+│  USB MIDI ──┐                                                   │
+│  DIN MIDI ──┤    ┌──────────────┐    ┌────────────────────┐     │
+│  SPI MIDI ──┴───►│ MIDI Parser  │───►│ MidiInputMapper    │     │
+│                  └──────────────┘    │ (SPManager level)  │     │
+│                                      │                    │     │
+│  ADC (CV) ──────────────────────────►│ Writes to:         │     │
+│  GPIO (Trig) ──────────────────────►│  pd.cv[0..N]       │     │
+│                                      │  pd.trig[0..N]     │     │
+│                                      └────────┬───────────┘     │
+│                                               │                 │
+│                              ┌────────────────▼──────────────┐  │
+│                              │       ProcessData             │  │
+│                              │  .cv[0..N_CVS-1]   (float)   │  │
+│                              │  .trig[0..N_TRIGS-1] (uint8) │  │
+│                              │  .midi_bytes[400]   (raw)    │  │
+│                              │  .buf[BUF_SZ*2]    (audio)   │  │
+│                              └────────────────┬──────────────┘  │
+│                                               │                 │
+│                              ┌────────────────▼──────────────┐  │
+│                              │    Plugin.Process(pd)         │  │
+│                              │                               │  │
+│                              │  MK_FLT_PAR(freq, pitch, ..) │  │
+│                              │  // if cv_pitch != -1:        │  │
+│                              │  //   freq = pd.cv[cv_pitch]  │  │
+│                              │  // Just Works™               │  │
+│                              └───────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### MidiInputMapper: The New Component
+
+A lightweight component in `main/` that sits between raw MIDI input and `ProcessData.cv[]` / `ProcessData.trig[]`. It replaces the MacroTranslator for simple TBD builds.
+
+```cpp
+// main/MidiInputMapper.hpp — concept
+class MidiInputMapper {
+public:
+    void Init();
+
+    // Called by SPManager before plugin.Process()
+    // Parses midi_bytes, writes CC values into pd.cv[] and note triggers into pd.trig[]
+    void MapInput(CTAG::SP::ProcessData &pd);
+
+    // MIDI Learn: assign CC N on channel CH to cv slot S
+    void AssignCC(uint8_t channel, uint8_t cc, uint8_t cvSlot);
+
+    // Note trigger: assign note-on on channel CH to trig slot S
+    void AssignNoteTrigger(uint8_t channel, uint8_t trigSlot);
+
+    // Pitch: assign note pitch (as 0.0-1.0) to cv slot S
+    void AssignNotePitch(uint8_t channel, uint8_t cvSlot);
+
+    // Velocity: assign note velocity to cv slot S
+    void AssignNoteVelocity(uint8_t channel, uint8_t cvSlot);
+
+    // Persistence
+    void SaveMappings();   // to JSON on flash/SD
+    void LoadMappings();   // from JSON on flash/SD
+};
+```
+
+**How it works:**
+
+1. SPManager calls `midiInputMapper.MapInput(pd)` before `sp[0]->Process(pd)` — same position where `macroTranslator->TranslateInput(&pd)` currently sits
+2. MidiInputMapper parses raw MIDI bytes from `pd.midi_bytes[]` (same parsing logic as MacroTranslator line 284-406, but without the macro indirection)
+3. For each CC message: look up the assignment table → write the normalized value (0.0–1.0) to `pd.cv[slot]`
+4. For each note-on: write `1` to `pd.trig[slot]`, write pitch to `pd.cv[pitchSlot]`, write velocity to `pd.cv[velSlot]`
+5. For each note-off: write `0` to `pd.trig[slot]`
+
+**The plugin doesn't know or care whether the cv/trig value came from MIDI, a hardware ADC, or the WebUI simulator.** The existing `MK_FLT_PAR` / `MK_BOOL_PAR` macros work unchanged.
+
+### How This Integrates with SPManager
+
+```cpp
+// SPManager.cpp — audio_task (modified)
+
+#ifdef CONFIG_TBD_USE_RP2350
+    macroTranslator->TranslateInput(&pd);     // TBD-16: full macro system
+#else
+    midiInputMapper.MapInput(pd);             // Simple TBD: direct MIDI→CV mapping
+#endif
+
+sp[0]->Process(pd);
+```
+
+Only one mapper runs per build configuration. The Kconfig flag `CONFIG_TBD_USE_RP2350` (from [proposal-simple-tbd-config.md](proposal-simple-tbd-config.md)) gates which system is compiled.
+
+### CV/Trigger Hardware Path for Eurorack Builders
+
+For a Eurorack or modular hardware build (Config C/D from the configurable build proposal), the ESP32-P4 has GPIOs that can serve as CV inputs (via ADC) and trigger inputs (via GPIO interrupt or polling).
+
+**Step 1: Increase N_CVS and N_TRIGS**
+
+```cmake
+# CMakeLists.txt — configurable per hardware
+if(CONFIG_TBD_USE_EURORACK_IO)
+    idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=8 APPEND)
+    idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=4 APPEND)
+else()
+    idf_build_set_property(COMPILE_DEFINITIONS -DN_CVS=4 APPEND)
+    idf_build_set_property(COMPILE_DEFINITIONS -DN_TRIGS=2 APPEND)
+endif()
+```
+
+The minimum for MIDI-only should be `N_CVS=4` (pitch, velocity, CC1, CC2) and `N_TRIGS=2` (gate, secondary trigger). This is what the simulator already uses.
+
+**Step 2: Hardware CV input driver**
+
+A new driver in `components/drivers/` that reads ADC channels and writes to the `pd.cv[]` array:
+
+```cpp
+// components/drivers/cv_input.hpp — concept
+class CvInput {
+public:
+    static void Init(const gpio_num_t *adc_pins, uint8_t num_channels);
+    static void Read(float *cv_buffer, uint8_t num_channels);  // normalized 0.0–1.0
+};
+```
+
+This is independent of the MIDI mapper — both write to the same `pd.cv[]` array, with hardware CV using lower slots and MIDI CC using higher slots (or configurable via the assignment table).
+
+**Step 3: Hardware trigger input**
+
+```cpp
+// components/drivers/trigger_input.hpp — concept
+class TriggerInput {
+public:
+    static void Init(const gpio_num_t *trigger_pins, uint8_t num_triggers);
+    static void Read(uint8_t *trig_buffer, uint8_t num_triggers);  // 0 or 1
+};
+```
+
+SPManager would call these before the MIDI mapper:
+
+```cpp
+#ifdef CONFIG_TBD_USE_EURORACK_IO
+    CvInput::Read(pd.cv, NUM_HW_CV_CHANNELS);          // fill hardware CV slots
+    TriggerInput::Read(pd.trig, NUM_HW_TRIG_CHANNELS);  // fill hardware trigger slots
+#endif
+
+#ifndef CONFIG_TBD_USE_RP2350
+    midiInputMapper.MapInput(pd);  // fill remaining slots from MIDI
+#endif
+```
+
+### MIDI Input Sources (ESP32-P4 Only, No RP2350)
+
+Without the RP2350 SPI bridge, MIDI needs to arrive via other paths:
+
+| Source | How it gets to `pd.midi_bytes[]` | Status |
+|--------|--------------------------------|--------|
+| **USB Device MIDI** | ESP32-P4 USB-OTG peripheral, TinyUSB stack, MIDI class driver | Not implemented — needs new driver in `components/drivers/` |
+| **USB Host MIDI** | ESP32-P4 USB Host, enumerate MIDI class device, read endpoints | Not implemented — more complex, lower priority |
+| **DIN MIDI** (5-pin) | UART RX on GPIO, standard 31250 baud serial | Not implemented — simple, well-understood protocol |
+| **WiFi/Network MIDI** | RTP-MIDI or UDP, parsed in network task, queued to audio task | Not implemented — Ableton Link already uses this path for tempo |
+| **WebUI virtual MIDI** | REST API sends CC/note commands, written to a ringbuffer | Not implemented — useful for testing without hardware |
+
+The SPI path (`p4_spi_request2.synth_midi[]`) continues to work when `CONFIG_TBD_USE_RP2350=y` — MidiInputMapper would read from `pd.midi_bytes[]` regardless of how the bytes got there.
+
+**Priority order:** USB Device MIDI (most accessible for users) → DIN MIDI (Eurorack standard) → WebUI virtual MIDI (development tool) → USB Host MIDI → Network MIDI.
+
+### MIDI Learn via WebUI
+
+The WebUI already has a plugin parameter editor with CV and Trigger assignment dropdowns. The same UI pattern extends to MIDI:
+
+```
+Current UI (per parameter):
+  [Slider: 0──────●──── 4095]  CV: [None ▼]  Trig: [None ▼]
+
+Extended UI:
+  [Slider: 0──────●──── 4095]  CV: [None ▼]  Trig: [None ▼]  MIDI: [Learn ▼]
+                                                                      CC 74 ch1
+                                                                      CC 1 ch1
+                                                                      Note Pitch
+                                                                      Note Vel
+                                                                      None
+```
+
+"Learn" mode: user clicks "Learn", moves a knob on their MIDI controller → the MidiInputMapper detects the CC/channel, assigns it to that parameter's cv slot, and updates the UI.
+
+Under the hood, "MIDI: CC 74 ch1" means:
+1. MidiInputMapper assigns CC 74 on channel 1 → `pd.cv[slot_N]`
+2. The plugin parameter's `cv` assignment is set to `slot_N`
+3. The `MK_FLT_PAR` macro reads `data.cv[slot_N]` — done
+
+### Plugin Developer Experience: Before and After
+
+**Before (current state) — Plugin developer who wants MIDI:**
+
+1. Override `handleMidiNoteOn()`, `handleMidiNoteOff()`, `handleMidiControlChange()` in your plugin
+2. Parse channel, CC number, note number, velocity yourself
+3. Map CC values to your internal parameters manually
+4. Understand the MacroTranslator indirection (or bypass it entirely)
+5. Reference: PicoSeqRack — 3,500 lines, 378 CC mappings
+
+**After (with MidiInputMapper) — Plugin developer who wants MIDI:**
+
+1. Register your parameters with `pMapPar` / `pMapCv` / `pMapTrig` as usual
+2. Use `MK_FLT_PAR(freq, pitch, 4095.f, 1.f)` as usual
+3. Done. The user assigns MIDI CCs to your parameters via the WebUI. Your plugin code is identical whether controlled by MIDI, CV, or the WebUI slider.
+
+No MIDI parsing code needed. No virtual method overrides. No CC mapping tables.
+
+### What This Means for PicoSeqRack and TBD-16
+
+PicoSeqRack is unaffected. It overrides the MIDI virtual methods and does its own CC dispatch internally — this is correct for a 16-track multi-machine that needs per-track CC routing.
+
+On TBD-16 builds (`CONFIG_TBD_USE_RP2350=y`):
+- MacroTranslator continues to handle MIDI for the macro/preset workflow
+- PicoSeqRack continues to use its internal CC dispatch
+- MidiInputMapper is **not compiled** — the `#ifdef` gates it out entirely
+
+On Simple TBD builds (`CONFIG_TBD_USE_RP2350=n`):
+- MidiInputMapper handles MIDI → `pd.cv[]` / `pd.trig[]` mapping
+- MacroTranslator is **not compiled** — no macro dependencies
+- All plugins benefit from MIDI automatically via their existing CV assignments
+
+### Raw MIDI Passthrough for Advanced Plugins
+
+The `ProcessData.midi_bytes[]` array remains available regardless of build configuration. A plugin that needs raw MIDI (e.g., a custom sequencer, a MIDI-to-CV converter, or a polyphonic synth with per-voice note tracking) can still access `data.midi_bytes` and `data.midi_bytes_length` directly. The MidiInputMapper doesn't consume or clear the raw bytes — it only reads them.
+
+This preserves the advanced path while making the common case trivial.
+
+### Implementation Phases
+
+| Phase | Scope | Effort |
+|-------|-------|--------|
+| **Phase 1** | MidiInputMapper core: CC parsing, cv[] writing, assignment table, JSON persistence | Small — ~300 lines, similar to the parsing already in MacroTranslator |
+| **Phase 2** | Increase `N_CVS=4, N_TRIGS=2` for all builds, wire MidiInputMapper into SPManager with `#ifdef` | Small — CMakeLists.txt + ~20 lines in SPManager |
+| **Phase 3** | USB Device MIDI driver for ESP32-P4 (TinyUSB MIDI class) | Medium — ESP-IDF has TinyUSB support, but MIDI class needs integration |
+| **Phase 4** | WebUI MIDI Learn UI (extend parameter editor with MIDI assignment dropdown) | Medium — Shoelace components, REST API endpoint for mappings |
+| **Phase 5** | DIN MIDI input driver (UART 31250 baud) | Small — standard serial protocol |
+| **Phase 6** | Hardware CV/Trigger drivers for Eurorack builds (ADC + GPIO) | Medium — hardware-dependent, needs reference schematic |
+
+Phases 1–2 are the foundation and can be done independently of any hardware MIDI input — the SPI path from RP2350 or the WebUI virtual MIDI can provide test data.
+
+### Summary Table
+
+| Component | Simple TBD | TBD-16 | Eurorack TBD |
+|-----------|-----------|--------|-------------|
+| **MIDI input** | USB Device / DIN / WebUI | SPI from RP2350 | DIN MIDI (5-pin) |
+| **MIDI → parameter** | MidiInputMapper → `pd.cv[]` | MacroTranslator → `handleMidiControlChange()` | MidiInputMapper → `pd.cv[]` |
+| **CV input** | N/A (no analog hardware) | N/A (digital via SPI) | ADC → `pd.cv[]` via CvInput driver |
+| **Trigger input** | N/A | Sequencer via SPI MIDI | GPIO → `pd.trig[]` via TriggerInput driver |
+| **Plugin code needed** | None — `MK_FLT_PAR` just works | None for macros / override MIDI methods for PicoSeqRack | None — `MK_FLT_PAR` just works |
+| **N_CVS** | 4 | 1 (MIDI bypasses cv[]) | 8 (4 HW + 4 MIDI) |
+| **N_TRIGS** | 2 | 1 (MIDI bypasses trig[]) | 4 (2 HW + 2 MIDI) |
+| **Kconfig** | `CONFIG_TBD_USE_RP2350=n` | `CONFIG_TBD_USE_RP2350=y` | `CONFIG_TBD_USE_RP2350=n, CONFIG_TBD_USE_EURORACK_IO=y` |
+
+---
+
 ## Simulator: v2 API Migration Needed
 
 ### Current State
