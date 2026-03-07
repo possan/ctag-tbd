@@ -94,8 +94,12 @@ The codebase naturally divides into two layers:
 ┌─────────────────────────────────────────────────────┐
 │  PRODUCT LAYER (dadamachines, LGPL)                 │
 │  RP2350 SPI bridge, sequencer, macros, presets,     │
-│  PicoSeqRack, rack/* DSP machines, TBD-16 WebUI,   │
+│  PicoSeqRack, rack/* DSP machines, macro WebUI,     │
 │  product config, deployment tooling                  │
+├─────────────────────────────────────────────────────┤
+│  SHARED LAYER (dadamachines → upstream, GPLv3)      │
+│  WebUI (Shoelace SPA, themeable),                    │
+│  core plugin manager UI, device config UI            │
 ├─────────────────────────────────────────────────────┤
 │  CORE PLATFORM (ctag-fh-kiel, GPLv3)               │
 │  ESP-IDF setup, audio codec, PSRAM management,      │
@@ -104,6 +108,59 @@ The codebase naturally divides into two layers:
 │  WiFi/network, filesystem abstraction                │
 └─────────────────────────────────────────────────────┘
 ```
+
+### What Goes Upstream vs. What Stays in dadamachines
+
+Not everything in the product layer is product-specific. The layering above has three tiers because some dadamachines work is designed to benefit the entire ctag-tbd ecosystem.
+
+#### Stays in dadamachines only (LGPL, not upstream)
+
+| Component | Why |
+|-----------|-----|
+| Macro/preset system (`main/Macro*.cpp`, `main/Synth*.cpp`, `main/Track*.cpp`) | LGPL, TBD-16 product concept — maps CC knobs to DSP params via JSON definitions |
+| PicoSeqRack sound processor (`ctagSoundProcessorPicoSeqRack.*`) | LGPL, requires RP2350 sequencer |
+| Rack DSP machines (`components/ctagSoundProcessor/rack/*`) | LGPL, designed for PicoSeqRack's multi-machine architecture |
+| Macro definitions + sound presets (`sdcard_image/data/macrodefinitions/`, `macrosoundpresets/`) | Tied to macro system |
+| Synth definitions (`sdcard_image/data/synthdefinitions.json`) | Tied to macro system |
+| RP2350 SPI bridge (`rp2350_spi_stream.*`, `SpiAPI.*`, `SpiProtocol.*`) | Hardware-specific to TBD-16 |
+| WebUI macro/preset pages (macro editor, preset browser, performer knob view) | UI for the macro system |
+
+#### Ships upstream to ctag-tbd (GPLv3)
+
+| Component | How it adapts for upstream |
+|-----------|--------------------------|
+| **WebUI (Shoelace SPA)** | Ships as the standard ctag-tbd web interface. Themeable — upstream uses a neutral/ctag theme, dadamachines uses a product theme. The macro/preset sections of the UI are hidden or removed when `CONFIG_TBD_USE_RP2350=n` (no macro system present). The core plugin manager, device config, and audio controls work identically on any TBD. |
+| **Sample manager UI** | Adapted for upstream's flash-only setup (no SD card). Upstream version shows the PSRAM buffer contents and the `.tbd` flash sample ROM. No SD card file browser, no kit switching, no WAV upload. The `sample_bank_manager.html` tool (already in `sample_rom/`) handles offline sample preparation. |
+| **REST API routes** | Core routes (plugin config, device API, sample ROM info) go upstream. MacroAPI route is excluded. |
+| **DSP engine improvements** | Any audio codec, PSRAM, or plugin architecture fixes discovered during TBD-16 work are PRed back to `p4_main`. |
+| **New GPLv3 plugins** | Individual sound processors that don't depend on the rack/macro architecture can be contributed upstream. |
+
+#### WebUI: Theming & Feature Gating
+
+The Shoelace-based WebUI is designed as a single-page app that can adapt to the build configuration. The plan:
+
+```
+WebUI (shared codebase, ships in all TBD builds)
+├── Plugin manager          → always present
+├── Device config           → always present
+├── Audio controls          → always present
+├── Sample manager          → adapted per config:
+│   ├── SD card mode        → full file browser, kit switching, WAV upload
+│   └── Flash-only mode     → PSRAM buffer view, flash ROM info, no upload
+├── Macro editor            → only when CONFIG_TBD_USE_RP2350=y (or macro system present)
+├── Preset browser          → only when macro system present
+└── Theme                   → CSS variables, logo, color scheme
+    ├── ctag-tbd theme      → neutral, research/platform branding
+    └── dadamachines theme  → TBD-16 product branding
+```
+
+Feature gating can work at two levels:
+
+1. **Build-time**: The REST API simply doesn't register MacroAPI routes when the macro system isn't compiled in. The WebUI's JS detects missing API endpoints and hides the corresponding UI sections.
+
+2. **Runtime**: A `/api/v1/capabilities` endpoint returns which features are available (`{ "macros": false, "sdcard": false, "sequencer": false }`). The WebUI reads this on load and shows/hides sections accordingly. This is more flexible and doesn't require separate WebUI builds.
+
+The runtime approach is preferred — one WebUI binary works everywhere, it just adapts to what the firmware supports.
 
 The Kconfig flags proposed in [proposal-simple-tbd-config.md](proposal-simple-tbd-config.md) (`CONFIG_TBD_USE_SD_CARD`, `CONFIG_TBD_USE_RP2350`, `CONFIG_TBD_USE_P4_SEQUENCER`) are the mechanism that makes this layering work at build time. Code guarded by `#ifdef CONFIG_TBD_USE_RP2350` is naturally product-layer code.
 
