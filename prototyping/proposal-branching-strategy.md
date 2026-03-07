@@ -59,7 +59,7 @@ upstream/p4_main ─────────────────────
 
 ### The Merge That Already Happened
 
-The `feature/webui-merge-planning` branch was created by merging two feature branches (documented in [MERGE-PLANNING.md](../prototyping/MERGE-PLANNING.md)):
+The `feature/webui-merge-planning` branch was created by merging two feature branches (documented in [MERGE-PLANNING.md](MERGE-PLANNING.md)):
 
 1. **`feature/webui-persona-prototype`** — Our WebUI and firmware work (macro system scaffold, persona prototype, sample manager)
 2. **`feature/webui-general-ui-rework`** — The base Shoelace SPA, simulator, documentation, test suites
@@ -477,7 +477,7 @@ The possan/macropresets branch integration is a template for how external contri
 
 1. Contributor forks `dadamachines/ctag-tbd`, branches from `dada-tbd-master`
 2. Develops feature (macro system, new DSP machines, etc.)
-3. dadamachines creates a merge planning document (like [MERGE-PLANNING.md](../prototyping/MERGE-PLANNING.md))
+3. dadamachines creates a merge planning document (like [MERGE-PLANNING.md](MERGE-PLANNING.md))
 4. Merge is executed on a feature branch, tested, then merged into `dada-tbd-master`
 
 For the possan merge specifically:
@@ -599,7 +599,7 @@ Sphinx's `only` directive combined with a tag set in `conf.py` (`tags.add('tbd16
 
 ### Current State
 
-The simulator (`simulator/`) is **stuck on API v1**. The firmware and WebUI were migrated to v2 (documented in [API-V1-TO-V2-MIGRATION.md](../prototyping/API-V1-TO-V2-MIGRATION.md)), but the simulator's `WebServer.cpp` was not updated.
+The simulator (`simulator/`) is **stuck on API v1**. The firmware and WebUI were migrated to v2 (documented in [API-V1-TO-V2-MIGRATION.md](API-V1-TO-V2-MIGRATION.md)), but the simulator's `WebServer.cpp` was not updated.
 
 **`simulator/WebServer.cpp`** — 570 lines, **22 route handlers all using `/api/v1/` paths**:
 
@@ -649,7 +649,7 @@ This is a **medium-priority task** — the simulator is a development tool, not 
 
 *Related documents:*
 - [proposal-simple-tbd-config.md](proposal-simple-tbd-config.md) — Kconfig-based hardware configuration
-- [MERGE-PLANNING.md](../prototyping/MERGE-PLANNING.md) — Detailed merge execution log for the possan integration
-- [API-V1-TO-V2-MIGRATION.md](../prototyping/API-V1-TO-V2-MIGRATION.md) — Complete v1→v2 API endpoint mapping and WebUI changes
+- [MERGE-PLANNING.md](MERGE-PLANNING.md) — Detailed merge execution log for the possan integration
+- [API-V1-TO-V2-MIGRATION.md](API-V1-TO-V2-MIGRATION.md) — Complete v1→v2 API endpoint mapping and WebUI changes
 
 *Generated: 2026-03-07*
