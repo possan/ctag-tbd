@@ -488,8 +488,168 @@ For the possan merge specifically:
 
 ---
 
+## Documentation Strategy
+
+### History
+
+The ctag-tbd documentation has a fragmented history:
+
+- **`ctag-fh-kiel/ctag-tbd` `p4_main`** — Has **zero documentation** in `docs/`. The `p4_main` branch never received any Sphinx docs.
+- **`ctag-fh-kiel/ctag-tbd` `dev`** — An older pre-P4 branch (now stale) contained the original Sphinx/Furo documentation setup with basic platform documentation.
+- **`dadamachines/ctag-tbd` `dada-tbd-master`** — dadamachines imported the Sphinx docs from `dev`, then invested weeks of work expanding them significantly. The result is a comprehensive documentation site with custom branding.
+
+### Current Documentation Contents
+
+The `docs/` directory contains ~159 files organized as a Sphinx site with the Furo theme:
+
+| Section | Content | Upstream relevance |
+|---------|---------|-------------------|
+| **`get_started/`** | Using TBD, WiFi & Link, storage, audio interface | **Core** — applicable to any TBD with minor adaptation |
+| **`plugins/`** | 48 plugin reference pages, architecture docs, building guide, simulator, web API reference | **Core** — all plugins ship with every TBD build |
+| **`flash/`** | Flashing DSP firmware, UI, device recovery | **Core** — process is similar, just different binaries |
+| **`hardware/`** | TBD-16, TBD-Core specs, custom integration guide | **dadamachines-specific** — needs rewrite for upstream (open hardware ESP32-P4 reference design) |
+| **`config/`** | Sphinx conf.py, Doxygen config, Dockerfile | **Shared** — theme/branding settings differ |
+| **`about/`** | Credits, community links | **Shared** — with different project attribution |
+| **`apps/`** | Application guides (groovebox, MCL, MIDI controller, multi-effect, RP2350, bootloader) | **Mixed** — some are TBD-16-specific (RP2350, MCL), others are universal |
+| **`interviews/`** | Artist interviews (Bill Youngman, Eric D. Clark, Jessica Kert, Robert Henke) | **dadamachines only** — product marketing content |
+| **`blog/`** | Blog posts | **dadamachines only** — product updates |
+| **`faq.rst`** | FAQ | **Shared** — with product-specific entries split out |
+| **`_static/brand.css`** | 1,110 lines of custom CSS: Lelo typeface, dadamachines colors, hero sections, feature cards | **dadamachines only** — upstream uses default Furo styles |
+| **`_static/assets/`** | dadamachines product photos, logos, fonts | **dadamachines only** |
+| **`_templates/`** | Custom Sphinx templates (layout, page, ablog) | **Mixed** — some tweaks are branding, some are structural |
+| **`_includes/`** | Footer links, newsletter signup | **dadamachines only** |
+| **`index.rst`** | Landing page with dadamachines hero, product marketing copy | **dadamachines only** — upstream needs a platform-focused landing page |
+
+### Plan: Split Documentation for Upstream
+
+The goal is to bring core platform documentation back to `ctag-fh-kiel/ctag-tbd` `p4_main`, while keeping dadamachines product documentation in its fork.
+
+#### Goes upstream (core platform docs)
+
+| Section | Adaptation needed |
+|---------|-------------------|
+| `plugins/` (all 48 plugin pages) | None — plugins are the same everywhere |
+| `plugins/architecture.rst` | None |
+| `plugins/building.rst` | Minor — adjust partition sizes for no-SD config |
+| `plugins/simulator.rst` | None (once simulator is updated, see below) |
+| `plugins/web-api.rst` | Exclude macro API section; keep plugin/device/sample endpoints |
+| `plugins/getting-started.rst`, `step-by-step.rst` | None |
+| `get_started/` (all pages) | Adapt storage section for flash-only setup; remove SD card references where `CONFIG_TBD_USE_SD_CARD=n` |
+| `flash/` | Adapt for single-firmware flash (no RP2350 step); simpler partition layout |
+| `about/credits.rst` | Update attribution for ctag-fh-kiel project |
+| `faq.rst` | Keep platform questions, remove TBD-16-specific entries |
+| `config/conf.py` | Strip dadamachines branding: `project = 'CTAG TBD'`, remove Lelo font, use default Furo theme without custom CSS |
+| `index.rst` | New platform-focused landing page (not product marketing) |
+
+#### Stays in dadamachines only
+
+| Section | Reason |
+|---------|--------|
+| `interviews/` | Product marketing — artist profiles for dadamachines brand |
+| `blog/` | Product update posts |
+| `hardware/` (current content) | TBD-16 and TBD-Core product specs |
+| `apps/rp2350.rst`, `apps/mcl.rst` | Require RP2350 hardware |
+| `_static/brand.css` | 1,110 lines of dadamachines branding (Lelo font, custom colors, hero sections) |
+| `_static/assets/` (product photos, logos, fonts) | dadamachines brand assets |
+| `_includes/newsletter.rst` | dadamachines newsletter signup |
+| Custom `index.rst` landing page | dadamachines product marketing hero |
+
+#### Needs new content for upstream
+
+| Section | What to write |
+|---------|---------------|
+| `hardware/` | Open-source / open-hardware ESP32-P4 reference design for a "simple TBD" — schematic, BOM, PCB layout, build guide. This aligns with Config A (Minimal TBD) from the configurable build proposal. |
+| `index.rst` | Platform-focused landing page: "CTAG TBD is an open-source audio DSP platform for ESP32-P4" — not product marketing but project introduction |
+| `apps/` | Adapt to show only apps that work without RP2350 (groovebox, multi-effect, MIDI controller, debugging, utilities) |
+
+#### Theme & Branding
+
+| Aspect | Upstream (ctag-tbd) | dadamachines |
+|--------|--------------------:|-------------:|
+| Sphinx theme | Furo (default styles) | Furo + `brand.css` (1,110 lines) |
+| Font | System default (Furo default) | Lelo (custom dadamachines typeface) |
+| Logo | ctag-tbd project logo or none | dadamachines logo (light/dark variants) |
+| Colors | Furo default purple/blue | dadamachines custom palette |
+| `conf.py` `project` | `'CTAG TBD'` | `'dadamachines tbd'` |
+| `conf.py` `author` | `'CTAG creative technologies AG'` | `'dadamachines'` |
+| Blog (ABlog) | Not included | Enabled with product posts |
+| Hero landing page | Simple RST intro | Custom HTML hero with product photos |
+
+The upstream docs should use **stock Furo** — the same theme, just without the custom `brand.css`, font files, and product imagery. This was the approach in the original `dev` branch before dadamachines added the branding layer.
+
+#### Shared Content Maintenance
+
+For sections that exist in both repos (plugins, getting started, flash guides), the content should be maintained in `dadamachines/ctag-tbd` and periodically synced upstream — or ideally kept identical with conditional RST directives:
+
+```rst
+.. only:: tbd16
+
+   The TBD-16 includes an SD card for sample storage.
+
+.. only:: not tbd16
+
+   Samples are stored in a flash partition using the .tbd format.
+```
+
+Sphinx's `only` directive combined with a tag set in `conf.py` (`tags.add('tbd16')` in dadamachines, absent in upstream) can gate product-specific paragraphs without forking the files.
+
+---
+
+## Simulator: v2 API Migration Needed
+
+### Current State
+
+The simulator (`simulator/`) is **stuck on API v1**. The firmware and WebUI were migrated to v2 (documented in [API-V1-TO-V2-MIGRATION.md](../prototyping/API-V1-TO-V2-MIGRATION.md)), but the simulator's `WebServer.cpp` was not updated.
+
+**`simulator/WebServer.cpp`** — 570 lines, **22 route handlers all using `/api/v1/` paths**:
+
+```
+/api/v1/getPlugins              → needs → /api/v2/plugins?action=list
+/api/v1/getActivePlugin/N       → needs → /api/v2/plugins?action=getActive&ch=N
+/api/v1/getPluginParams/N       → needs → /api/v2/plugins?action=getParams&ch=N
+/api/v1/setActivePlugin/N       → needs → /api/v2/plugins?action=setActive&ch=N
+/api/v1/setPluginParam/N        → needs → /api/v2/plugins?action=setParam&ch=N&...
+/api/v1/setPluginParamCV/N      → needs → (merged into setParam with key=cv)
+/api/v1/setPluginParamTRIG/N    → needs → (merged into setParam with key=trig)
+/api/v1/getPresets/N            → needs → /api/v2/plugins?action=getPresets&ch=N
+/api/v1/getPresetData/X         → needs → /api/v2/plugins?action=getPresetData&id=X
+/api/v1/setPresetData/X         → needs → /api/v2/plugins?action=setPresetData&id=X
+/api/v1/getConfiguration        → needs → /api/v2/device?action=getConfig
+/api/v1/setConfiguration        → needs → /api/v2/device?action=setConfig
+/api/v1/getIOCaps               → needs → /api/v2/device?action=getIOCaps
+/api/v1/reboot                  → needs → /api/v2/device?action=reboot
+/api/v1/favorites/*             → needs → /api/v2/device?action=getFavorites|storeFavorite|recallFavorite
+/api/v1/samples                 → needs → /api/v2/samples
+/api/v1/srom/getSize            → needs → (review if still needed)
+```
+
+**`simulator/www/ui.html`** — 446 lines. This is a standalone modulation control UI (sliders for CV/trig simulation). It only uses `/ctrl-set` and `/ctrl-get` endpoints (not the plugin API), so it doesn't need v2 migration. However, when the simulator serves the main WebUI from `sdcard_image/www/`, that WebUI speaks v2 — and the simulator's C++ server only understands v1.
+
+### What Needs to Happen
+
+The simulator's `WebServer.cpp` needs to be rewritten to match the v2 action-based dispatch pattern. The v1 approach used 22 separate regex-matched route handlers. The v2 approach consolidates these into ~5 handlers that parse `?action=` from query strings:
+
+```
+/api/v2/plugins   GET  → parse ?action= → dispatch to list|getActive|getParams|getPresets|getPresetData|getAll
+/api/v2/plugins   POST → parse ?action= → dispatch to setActive|setParam|savePreset|loadPreset|setPresetData
+/api/v2/device    GET  → parse ?action= → dispatch to getConfig|getIOCaps|getFavorites|getAll
+/api/v2/device    POST → parse ?action= → dispatch to setConfig|reboot|storeFavorite|recallFavorite
+/api/v2/samples   GET/POST → (same pattern as firmware)
+```
+
+Additionally, the new v2 bulk endpoints (`getAll` for plugins and device) should be implemented in the simulator to match the firmware behavior and reduce WebUI load time during development.
+
+The macro API endpoints (`/api/v2/macros`) don't need to be implemented in the simulator — macros are dadamachines-specific and the simulator is a core platform tool. The WebUI will detect missing macro endpoints and hide those sections (per the capabilities/feature-gating approach described earlier).
+
+### Priority
+
+This is a **medium-priority task** — the simulator is a development tool, not end-user-facing. But it's currently broken for anyone trying to develop or test the WebUI without hardware, which blocks frontend development work. It should be fixed as part of the stabilization phase before merging into `dada-tbd-master`.
+
+---
+
 *Related documents:*
 - [proposal-simple-tbd-config.md](proposal-simple-tbd-config.md) — Kconfig-based hardware configuration
 - [MERGE-PLANNING.md](../prototyping/MERGE-PLANNING.md) — Detailed merge execution log for the possan integration
+- [API-V1-TO-V2-MIGRATION.md](../prototyping/API-V1-TO-V2-MIGRATION.md) — Complete v1→v2 API endpoint mapping and WebUI changes
 
 *Generated: 2026-03-07*
