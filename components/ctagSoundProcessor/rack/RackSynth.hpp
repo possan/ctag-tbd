@@ -28,6 +28,7 @@ namespace CTAG {
         };
 
         struct PickSeqRackInitData {
+            int track_index;
             const char *prefix;
             int midi_channel;
             int cc_base;

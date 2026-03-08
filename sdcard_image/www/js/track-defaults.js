@@ -571,6 +571,8 @@
           entry.romBank = bankGroupSel ? parseInt(bankGroupSel.value, 10) : 0;
           var sliceSel = document.querySelector('.td-slice-select[data-track="' + idx + '"]');
           entry.sampleSlice = sliceSel ? parseInt(sliceSel.value, 10) : 0;
+
+          entry.bank = 'Default'
         }
 
         result.tracks.push(entry);

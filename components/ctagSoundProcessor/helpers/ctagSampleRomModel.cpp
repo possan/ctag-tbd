@@ -266,3 +266,85 @@ uint32_t CTAG::SP::ctagSampleRomModel::GetSampleSliceSize(uint32_t slice){
     }
     return size;
 }
+
+int16_t CTAG::SP::ctagSampleRomModel::GetBankIndexFromBankName(const std::string &bankName) {
+
+    if (!sample_rom.IsObject()) return -1;
+
+    if (!sample_rom.HasMember("smp_bank_names")) return -1;
+    if (!sample_rom["smp_bank_names"].IsArray()) return -1;
+
+    rapidjson::GenericArray<false, rapidjson::Value> arr = sample_rom["smp_bank_names"].GetArray();
+
+    for(int i = 0; i < arr.Size(); i++) {
+        if(arr[i].IsString()){
+            std::string name = arr[i].GetString();
+            if(name == bankName) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
+
+std::string CTAG::SP::ctagSampleRomModel::GetKitIndexJSON() {
+    if (!sample_rom.IsObject()) return "{}";
+    if (!sample_rom.HasMember("smp_banks")) return "{}";
+    if (!sample_rom.HasMember("smp_bank_names")) return "{}";
+    if (!sample_rom["smp_banks"].IsArray()) return "{}";
+    if (!sample_rom["smp_bank_names"].IsArray()) return "{}";
+
+    rapidjson::GenericArray<false, rapidjson::Value> ids = sample_rom["smp_banks"].GetArray();
+    rapidjson::GenericArray<false, rapidjson::Value> names = sample_rom["smp_bank_names"].GetArray();
+
+    rapidjson::Document doc;
+    doc.SetObject();
+
+    rapidjson::Value kits(kArrayType);
+    doc.AddMember("kits", kits, doc.GetAllocator());
+
+    for(int i = 0; i < ids.Size(); i++) {
+        if(ids[i].IsString() && names[i].IsString()) {
+            rapidjson::Value kitobj(kObjectType);
+            kitobj.AddMember("id", rapidjson::Value(ids[i].GetString(), doc.GetAllocator()), doc.GetAllocator());
+            kitobj.AddMember("name", rapidjson::Value(names[i].GetString(), doc.GetAllocator()), doc.GetAllocator());
+            doc["kits"].PushBack(kitobj, doc.GetAllocator());
+        }
+    }
+
+    StringBuffer sb;
+    Writer<StringBuffer> writer(sb);
+    doc.Accept(writer);
+    return sb.GetString();
+}
+
+std::string CTAG::SP::ctagSampleRomModel::GetActiveKitBankIndexJSON() {
+    rapidjson::Document doc;
+    doc.SetObject();
+
+    rapidjson::Value banks(kArrayType);
+    doc.AddMember("banks", banks, doc.GetAllocator());
+
+    if(desc_smp.IsArray()) {
+        for(auto& v : desc_smp.GetArray()){
+            // if(v.HasMember("nsamples") && v["nsamples"].IsUint()) {
+            rapidjson::Value bankobj(kObjectType);
+
+            // bankobj.AddMember("bank", rapidjson::Value(v.HasMember("bank") && v["bank"].IsString() ? v["bank"].GetString() : "", doc.GetAllocator()), doc.GetAllocator());
+
+            if(v.HasMember("filename") && v["filename"].IsString()){
+                bankobj.AddMember("filename", rapidjson::Value(v["filename"].GetString(), doc.GetAllocator()), doc.GetAllocator());
+            }
+
+            doc["banks"].PushBack(bankobj, doc.GetAllocator());
+            // }
+        }
+    }
+
+    StringBuffer sb;
+    Writer<StringBuffer> writer(sb);
+    doc.Accept(writer);
+    return sb.GetString();
+}
+

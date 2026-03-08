@@ -416,14 +416,14 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
         memcpy(fbuf2, fbuf, BUF_SZ * 2 * sizeof(float));
 
+        // write raw float data back to CODEC
+        DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
+
         if (framecounter % 3200 == 0) {
             //     printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors, %d lock errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors, (int)audioLockErrors);
             //     requestCounterErrors = 0;
             printf("Audio task CPU time %d uS\n", (int)diff2);
         }
-
-        // write raw float data back to CODCE
-        DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
         taskYIELD();
 
@@ -511,6 +511,10 @@ std::shared_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> SoundProcessorMana
 std::shared_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> SoundProcessorManager::macroSoundDefinitionModel = nullptr;
 std::shared_ptr<CTAG::MACROPRESETS::MacroDeviceDefinitionDataModel> SoundProcessorManager::macroDeviceDefinitionModel = nullptr;
 std::shared_ptr<CTAG::MACROPRESETS::MacroTranslator> SoundProcessorManager::macroTranslator = nullptr;
+atomic<uint32_t> SoundProcessorManager::parameterChangeCounter = 0;
+atomic<uint32_t> SoundProcessorManager::macroChangeCounter = 0;
+atomic<uint32_t> SoundProcessorManager::trackMachineChangeCounter = 0;
+atomic<uint32_t> SoundProcessorManager::definitionChangeCounter = 0;
 
 
 static char freertosstats[2000] = { 0, };
@@ -819,6 +823,18 @@ void SoundProcessorManager::SetTrackParameter(const int trackIndex, int paramete
     macroTranslator->SetTrackParameter(trackIndex, parameterIndex, value);
 }
 
+void SoundProcessorManager::SetTrackSampleBank(const int trackIndex, const string &sampleBankId) {
+     if (macroTranslator == nullptr) {
+        return;
+    }
+
+    if (macroTranslator == nullptr) {
+        return;
+    }
+
+    macroTranslator->SetTrackSampleBank(trackIndex, sampleBankId);
+}
+
 void SoundProcessorManager::RefreshMacros() {
     // this wil lglit ch
     xSemaphoreTake(processMutex, portMAX_DELAY);
@@ -852,7 +868,6 @@ std::string SoundProcessorManager::GetMacroDefinitionJSON(const std::string &sou
 }
 
 void SoundProcessorManager::ActivateTrackMachine(const int trackIndex, const std::string machineId) {
-
 }
 
 void SoundProcessorManager::LoadTrackMacro(const int trackIndex, const std::string macroId) {
@@ -1030,4 +1045,24 @@ char *SoundProcessorManager::GetSafeJSONSoundProcessorPresets(const string &id) 
     char *copy = copyToSpiram(raw);
     xSemaphoreGive(processMutex);
     return copy;
+}
+
+void SoundProcessorManager::MarkTracksChangedFromWebui(){
+    trackMachineChangeCounter ++;
+}
+
+void SoundProcessorManager::MarkMacrosChangedFromWebui(){
+    macroChangeCounter ++;
+}
+
+void SoundProcessorManager::MarkDefinitionsChangedFromWebui(){
+    definitionChangeCounter ++;
+}
+
+std::string SoundProcessorManager::GetKitIndexJSON(){
+    return ctagSampleRom::GetKitIndexJSON();
+}
+
+std::string SoundProcessorManager::GetActiveKitBankIndexJSON(){
+    return ctagSampleRom::GetActiveKitBankIndexJSON();
 }

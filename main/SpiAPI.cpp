@@ -589,7 +589,7 @@ namespace CTAG::SPIAPI{
                 HELPERS::ctagSampleRom::RefreshDataStructure();
                 CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
                 break;
-            case RequestType::SetActiveSampleRomBank:
+            case RequestType::SetActiveSampleKit:
                 ESP_LOGI("SpiAPI", "Setting active sample bank to %d", bank_number);
                 CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
                 HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
@@ -837,7 +837,45 @@ namespace CTAG::SPIAPI{
                     result = transmitCString(requestType, json.c_str());
                 }
                 break;
+
+
+            case RequestType::SetTrackSampleBank:
+                {
+                    int trackIndex = uint8_param_0;
+                    std::string bankName = string_parameter;
+                    ESP_LOGI("SpiAPI", "Setting track %d sample bank to \"%s\"", trackIndex, bankName.c_str());
+                    CTAG::AUDIO::SoundProcessorManager::SetTrackSampleBank(trackIndex, bankName);
+                }
+                break;
+
+            case RequestType::GetKitIndexJSON:
+                {
+                    std::string json = CTAG::AUDIO::SoundProcessorManager::GetKitIndexJSON();
+                    ESP_LOGI("SpiAPI", "Getting track sample bank list: %s", json.c_str());
+                    result = transmitCString(requestType, json.c_str());
+                }
+                break;
+
+            case RequestType::GetSampleBankIndexJSON:
+                {
+                    std::string json = CTAG::AUDIO::SoundProcessorManager::GetActiveKitBankIndexJSON();
+                    ESP_LOGI("SpiAPI", "Getting track sample bank list: %s", json.c_str());
+                    result = transmitCString(requestType, json.c_str());
+                }
+                break;
+
+            // case RequestType::GetSynthUpdates:
+            //     {
+            //         std::string info = "{"
+            //             "\"presetupdates\":0," // a preset was updated
+            //             "\"macroupdates\":0," // a macro was updated
+            //             "\"bankupdates\":0", // a samplebank was changed
+            //             "\"trackupdates\":0" // any track changed preset etc.
+            //         "}";
+            //         result = transmitCString(requestType, info.c_str());
+            //     }
+            //     break;
             }
-       }
+        }
     }
 }

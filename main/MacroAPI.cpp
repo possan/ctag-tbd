@@ -188,6 +188,7 @@ static esp_err_t handle_set_track_macro(httpd_req_t *req) {
     ESP_LOGI(MACRO_TAG, "set_track_macro data: %s", content);
     CTAG::AUDIO::SoundProcessorManager::SetTrackParametersFromJSON(content);
     free(content);
+    
 
     return send_ok(req);
 }

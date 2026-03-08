@@ -23,6 +23,7 @@ namespace CTAG{
             void AddSampleBank(const std::string &filename);
             void RemoveWTBank(const uint32_t index);
             void RemoveSampleBank(const uint32_t index);
+            int16_t GetBankIndexFromBankName(const std::string &bankName);
 
             // returns total amount of slices
             uint32_t GetTotalNumberWTSlices();
@@ -39,6 +40,9 @@ namespace CTAG{
             // returns number of samples contained in slice
             uint32_t GetWTSliceSize(uint32_t slice);
             uint32_t GetSampleSliceSize(uint32_t slice);
+
+            std::string GetKitIndexJSON();
+            std::string GetActiveKitBankIndexJSON();
 
         private:
             std::string sampleRomDescFileName_;

@@ -121,6 +121,7 @@ namespace CTAG {
             static void SetTrackMacro(const int trackIndex, const string &macroDefinitionID);
             static void SetTrackParametersFromJSON(const string &parametersJSON);
             static void SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value);
+            static void SetTrackSampleBank(const int trackIndex, const string &bankName);
 
             static std::shared_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> synthDefinitionModel;
             static std::shared_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> macroSoundDefinitionModel;
@@ -134,18 +135,18 @@ namespace CTAG {
             static void LoadTrackMacro(const int trackIndex, const std::string macroId);
             static void LoadTrackMacroAndPreset(const int trackIndex, const std::string soundPresetId);
 
-            // static bool UpdateSynthDefinitionJSON(const string &jsonstring);
-            // static bool UpdateSoundPresetJSON(const string &jsonstring);
-            // static bool UpdateMacroDefinitionJSON(const string &jsonstring);
-            // static bool DeleteSoundPreset(const string &id);
-            // static bool DeleteMacroDefinition(const string &id);
-            // static bool GetSoundPresetJSON(const string &id, string *jsonoutput);
-            // static bool GetMacroDefinitionJSON(const string &id, string *jsonoutput);
+            static void MarkTracksChangedFromWebui();
+            static void MarkMacrosChangedFromWebui();
+            static void MarkDefinitionsChangedFromWebui();
+
             static void RefreshMacros();
 
             // Audio health monitoring — returns JSON with lock errors, slow process count, memory stats
             static string GetAudioHealthJSON();
             static void ResetAudioHealthCounters();
+
+            static std::string GetKitIndexJSON();
+            static std::string GetActiveKitBankIndexJSON();
 
         private:
             static void audio_task(void *pvParams);
@@ -171,6 +172,11 @@ namespace CTAG {
             static volatile uint32_t sentSynthMidiBytes;
             static volatile uint32_t receivedUsbDeviceMidiBytes;
             static volatile uint32_t requestCounterErrors;
+
+            static atomic<uint32_t> parameterChangeCounter;
+            static atomic<uint32_t> macroChangeCounter;
+            static atomic<uint32_t> trackMachineChangeCounter;
+            static atomic<uint32_t> definitionChangeCounter;
         };
     }
 }

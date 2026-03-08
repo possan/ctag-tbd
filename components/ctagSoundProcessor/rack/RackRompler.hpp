@@ -11,6 +11,7 @@ public:
     void Process(const PicoSeqRackProcessData &data);
     void Init(const PickSeqRackInitData *initdata);
 	bool enabled;
+	atomic<int16_t> bank_index;
 	int track_length {16};
     float s1_out[BUF_SZ];
 	void noteOn(uint8_t note, uint8_t vel);

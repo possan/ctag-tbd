@@ -363,4 +363,33 @@ namespace CTAG::SP::HELPERS {
         // everything is buffered
         nSlicesBuffered = numberSlices;
     }
+
+    uint16_t ctagSampleRom::GetBankIndexFromBankName(const std::string &bankName) {
+        if (!ctagSampleRomModel::IsSampleRomSDValid()) return 0;
+        ctagSampleRomModel sample_rom_model;
+
+        int tot = sample_rom_model.GetTotalNumberSampleBanks();
+        int index = sample_rom_model.GetBankIndexFromBankName(bankName);
+
+        if (index < 0 || index >= tot) {
+            ESP_LOGW("SROM", "Bank name %s not found, returning index 0", bankName.c_str());
+            return 0;
+        }
+
+        return index;
+    }
+
+    std::string ctagSampleRom::GetKitIndexJSON() {
+        if (!CTAG::SP::ctagSampleRomModel::IsSampleRomSDValid()) return "{}";
+        ctagSampleRomModel sample_rom_model;
+        return sample_rom_model.GetKitIndexJSON();
+    }
+
+    std::string ctagSampleRom::GetActiveKitBankIndexJSON() {
+        if (!CTAG::SP::ctagSampleRomModel::IsSampleRomSDValid()) return "{}";
+        ctagSampleRomModel sample_rom_model;
+        return sample_rom_model.GetActiveKitBankIndexJSON();
+    }
+
 }
+

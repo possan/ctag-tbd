@@ -181,6 +181,10 @@ namespace CTAG {
                 // default implementation does nothing, override in derived class if needed
             }
 
+            virtual void setTrackBank(const uint8_t trackIndex, const uint16_t bankIndex) {
+                // default implementation does nothing, override in derived class if needed
+            }
+
             virtual void handleMidiNoteOn(const uint8_t channel, uint8_t note, uint8_t velocity) {
                 // default implementation does nothing, override in derived class if needed
             }

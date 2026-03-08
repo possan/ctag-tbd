@@ -45,6 +45,9 @@ namespace CTAG::SP::HELPERS{
         uint32_t GetSliceSize(const uint32_t slice);
         uint32_t GetSliceGroupSize(const uint32_t startSlice, const uint32_t endSlice);
         uint32_t GetSliceOffset(const uint32_t slice);
+        static std::string GetKitIndexJSON();
+        static std::string GetActiveKitBankIndexJSON();
+        uint16_t GetBankIndexFromBankName(const std::string &bankName);
         bool HasSlice(const uint32_t slice);
         bool HasSliceGroup(const uint32_t startSlice, const uint32_t endSlice);
         void ReadSlice(int16_t *dst, const uint32_t slice, const uint32_t offset, const uint32_t n_samples);

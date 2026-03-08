@@ -20,11 +20,13 @@ namespace CTAG {
                 uint16_t trackParameterValues[16][32];
                 uint16_t outputValues[16][32];
                 bool trackDirty[16];
+                bool bankDirty;
                 std::string trackMachineId[16];
-                // std::string trackMacroId[16];
+                std::string trackSampleBankName[16];
+                uint16_t trackSampleBankIndex[16];
                 MacroDeviceDefinition *definition[16];
 
-                void _parseIncomingMidiMessages(const uint8_t *buf, const size_t len);
+                void parseIncomingMidiMessages(const uint8_t *buf, const size_t len);
 
             public:
                 MacroTranslator();
@@ -35,6 +37,7 @@ namespace CTAG {
                 std::shared_ptr<MacroDeviceDefinitionDataModel> macroDeviceDefinitionModel;
                 CTAG::SP::ctagSoundProcessor *soundProcessor;
 
+                void SetTrackSampleBank(const int trackIndex, const std::string bankName);
                 void SetTrackMachine(const int trackIndex, const std::string synthID);
                 void SetTrackMacroDefinition(const int trackIndex, MacroDeviceDefinition *def);
                 void SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value);

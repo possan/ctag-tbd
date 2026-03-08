@@ -54,7 +54,7 @@ namespace CTAG::SPIAPI{
             RebootToOTA1 = 0x15, // reboots the device to OTA1
             GetSampleRomDescriptor = 0x16, // returns json cstring with sample rom descriptor
             SetActiveWaveTableBank = 0x17, // sets active wavetable bank, args [bank index (uint8_t)]
-            SetActiveSampleRomBank = 0x18, // sets active sample rom bank, args [bank index (uint8_t)]
+            SetActiveSampleKit = 0x18, // sets active sample rom bank/kit, args [bank index (uint8_t)]
             GetFirmwareInfo = 0x19, // returns json {"HWV": hardware version, "FWV": firmware version, "OTA": active ota partition}
             SetAbletonLinkTempo = 0x20, // sets Ableton Link tempo, args [tempo (float bpm)]
             SetAbletonLinkStartStop = 0x21, // sets Ableton Link start/stop, args [isPlaying (uint8_t, 0 = stop, 1 = start)]
@@ -82,6 +82,10 @@ namespace CTAG::SPIAPI{
             ActivateTrackMachine = 0xA3,
             LoadTrackSoundPreset = 0xA4,
             GetTrackDefaultPresets = 0xA5, // returns JSON with default preset IDs per track from /sdcard/data/trackdefaults.json
+            SetTrackSampleBank = 0xA6,
+            GetKitIndexJSON = 0xA7,
+            GetSampleBankIndexJSON = 0xA8,
+            // GetSynthUpdates = 0xA7,
         };
 
         static TaskHandle_t hTask;

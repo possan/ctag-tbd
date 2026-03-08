@@ -6,6 +6,7 @@
 #include "rapidjson/writer.h"
 #include "SynthDefinition.hpp"
 #include "TrackDefinition.hpp"
+#include "helpers/ctagSampleRom.hpp"
 
 
 using namespace CTAG::MACROPRESETS;
@@ -53,11 +54,14 @@ MacroTranslator::MacroTranslator() {
     synthDefinitionModel = nullptr;
     macroSoundDefinitionModel = nullptr;
     macroDeviceDefinitionModel = nullptr;
+    bankDirty = false;
 
     for (int i = 0; i < 16; i++) {
         trackToMidiChannel[i] = -1;
         trackBaseCC[i] = 0;
         trackMachineId[i] = "";
+        trackSampleBankName[i] = "";
+        trackSampleBankIndex[i] = 0;
         definition[i] = nullptr;
         trackDirty[i] = false;
 
@@ -281,7 +285,7 @@ void MacroTranslator::SetTrackParametersFromJSON(const std::string &parametersJS
 }
 
 
-void MacroTranslator::_parseIncomingMidiMessages(const uint8_t *buf, const size_t len) {
+void MacroTranslator::parseIncomingMidiMessages(const uint8_t *buf, const size_t len) {
     // if (len > 1) {
     //     ESP_LOGI("MacroTranslator",
     //         "parseIncomingMidiMessages: %02X %02X %02X %02X %02X %02X %02X %02X %02X (%d)",
@@ -421,7 +425,7 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
         }
     }
 
-    _parseIncomingMidiMessages(pd->midi_bytes, pd->midi_bytes_length);
+    parseIncomingMidiMessages(pd->midi_bytes, pd->midi_bytes_length);
 
     for(int t=0; t<16; t++) {
         if (trackDirty[t]) {
@@ -461,6 +465,16 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
             }
         }
     }
+
+    if (bankDirty) {
+        bankDirty = false;
+        for(int t=0; t<16; t++) {
+            // resolve bank id from bank names
+            if (!trackSampleBankName[t].empty()) {
+                soundProcessor->setTrackBank(t, trackSampleBankIndex[t]);
+            }
+        }
+    }
 }
 
 
@@ -496,3 +510,21 @@ bool MacroTranslator::SerializeStateInto(rapidjson::Document &doc) {
     }
     return false;
 }
+
+void MacroTranslator::SetTrackSampleBank(const int trackIndex, const std::string bankName) {
+    if (bankName == trackSampleBankName[trackIndex]) {
+        return;
+    }
+
+    CTAG::SP::HELPERS::ctagSampleRom srom;
+    int bankindex = srom.GetBankIndexFromBankName(bankName);
+
+    ESP_LOGI("MacroTranslator", "Track %d sample bank set to %s (index %d)",
+        trackIndex, bankName.c_str(), bankindex);
+
+    trackSampleBankName[trackIndex] = bankName;
+    trackSampleBankIndex[trackIndex] = bankindex;
+
+    bankDirty = true;
+}
+
