@@ -121,7 +121,7 @@ namespace CTAG {
             static void SetTrackMacro(const int trackIndex, const string &macroDefinitionID);
             static void SetTrackParametersFromJSON(const string &parametersJSON);
             static void SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value);
-            static void SetTrackSampleBank(const int trackIndex, const string &bankName);
+            // static void SetTrackSampleBank(const int trackIndex, const string &bankName);
 
             static std::shared_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> synthDefinitionModel;
             static std::shared_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> macroSoundDefinitionModel;

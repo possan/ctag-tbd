@@ -521,20 +521,20 @@ bool MacroTranslator::SerializeStateInto(rapidjson::Document &doc) {
     return false;
 }
 
-void MacroTranslator::SetTrackSampleBank(const int trackIndex, const std::string bankName) {
-    if (bankName == trackSampleBankName[trackIndex]) {
-        return;
-    }
+// void MacroTranslator::SetTrackSampleBank(const int trackIndex, const std::string bankName) {
+//     if (bankName == trackSampleBankName[trackIndex]) {
+//         return;
+//     }
 
-    CTAG::SP::HELPERS::ctagSampleRom srom;
-    int bankindex = srom.GetBankIndexFromBankName(bankName);
+//     CTAG::SP::HELPERS::ctagSampleRom srom;
+//     int bankindex = srom.GetBankIndexFromBankName(bankName);
 
-    ESP_LOGI("MacroTranslator", "Track %d sample bank set to %s (index %d)",
-        trackIndex, bankName.c_str(), bankindex);
+//     ESP_LOGI("MacroTranslator", "Track %d sample bank set to %s (index %d)",
+//         trackIndex, bankName.c_str(), bankindex);
 
-    trackSampleBankName[trackIndex] = bankName;
-    trackSampleBankIndex[trackIndex] = bankindex;
+//     trackSampleBankName[trackIndex] = bankName;
+//     trackSampleBankIndex[trackIndex] = bankindex;
 
-    bankDirty = true;
-}
+//     bankDirty = true;
+// }
 

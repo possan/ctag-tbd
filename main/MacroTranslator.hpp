@@ -37,7 +37,7 @@ namespace CTAG {
                 std::shared_ptr<MacroDeviceDefinitionDataModel> macroDeviceDefinitionModel;
                 CTAG::SP::ctagSoundProcessor *soundProcessor;
 
-                void SetTrackSampleBank(const int trackIndex, const std::string bankName);
+                // void SetTrackSampleBank(const int trackIndex, const std::string bankName);
                 void SetTrackMachine(const int trackIndex, const std::string synthID);
                 void SetTrackMacroDefinition(const int trackIndex, MacroDeviceDefinition *def);
                 void SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value);

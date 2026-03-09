@@ -13,7 +13,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "samplebank"
         },
         {
           "idx": 1,
@@ -22,7 +22,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "sampleslice"
         },
         {
           "idx": 2,
@@ -31,7 +31,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "sampleoffset"
         },
         {
           "idx": 3,
@@ -40,7 +40,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "sampleoffset"
         }
       ]
     },
@@ -73,7 +73,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
+          "ui": "freq",
           "curve": "log"
         },
         {

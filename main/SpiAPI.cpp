@@ -841,14 +841,14 @@ namespace CTAG::SPIAPI{
                 break;
 
 
-            case RequestType::SetTrackSampleBank:
-                {
-                    int trackIndex = uint8_param_0;
-                    std::string bankName = string_parameter;
-                    ESP_LOGI("SpiAPI", "Setting track %d sample bank to \"%s\"", trackIndex, bankName.c_str());
-                    CTAG::AUDIO::SoundProcessorManager::SetTrackSampleBank(trackIndex, bankName);
-                }
-                break;
+            // case RequestType::SetTrackSampleBank:
+            //     {
+            //         int trackIndex = uint8_param_0;
+            //         std::string bankName = string_parameter;
+            //         ESP_LOGI("SpiAPI", "Setting track %d sample bank to \"%s\"", trackIndex, bankName.c_str());
+            //         CTAG::AUDIO::SoundProcessorManager::SetTrackSampleBank(trackIndex, bankName);
+            //     }
+            //     break;
 
             case RequestType::GetKitIndexJSON:
                 {

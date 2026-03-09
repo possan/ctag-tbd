@@ -824,17 +824,17 @@ void SoundProcessorManager::SetTrackParameter(const int trackIndex, int paramete
     macroTranslator->SetTrackParameter(trackIndex, parameterIndex, value);
 }
 
-void SoundProcessorManager::SetTrackSampleBank(const int trackIndex, const string &sampleBankId) {
-     if (macroTranslator == nullptr) {
-        return;
-    }
+// void SoundProcessorManager::SetTrackSampleBank(const int trackIndex, const string &sampleBankId) {
+//      if (macroTranslator == nullptr) {
+//         return;
+//     }
 
-    if (macroTranslator == nullptr) {
-        return;
-    }
+//     if (macroTranslator == nullptr) {
+//         return;
+//     }
 
-    macroTranslator->SetTrackSampleBank(trackIndex, sampleBankId);
-}
+//     macroTranslator->SetTrackSampleBank(trackIndex, sampleBankId);
+// }
 
 void SoundProcessorManager::RefreshMacros() {
     // this wil lglit ch

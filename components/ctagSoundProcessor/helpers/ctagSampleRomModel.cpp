@@ -320,25 +320,34 @@ std::string CTAG::SP::ctagSampleRomModel::GetKitIndexJSON() {
 }
 
 std::string CTAG::SP::ctagSampleRomModel::GetActiveKitBankIndexJSON() {
+    if (!sample_rom.IsObject()) return "{}";
+    if (!sample_rom.HasMember("smp_bank_meta")) return "{}";
+    if (!sample_rom["smp_bank_meta"].IsArray()) return "{}";
+
     rapidjson::Document doc;
     doc.SetObject();
 
     rapidjson::Value banks(kArrayType);
     doc.AddMember("banks", banks, doc.GetAllocator());
 
+    int bankindex = GetActiveSampleBankIndex();
+    rapidjson::Value &bankmeta = sample_rom["smp_bank_meta"].GetArray()[bankindex];
+
+    if (!bankmeta.IsObject()) return "{}";
+
     if(desc_smp.IsArray()) {
-        for(auto& v : desc_smp.GetArray()){
-            // if(v.HasMember("nsamples") && v["nsamples"].IsUint()) {
+        int index = 0;
+        for(auto& v : bankmeta["banks"].GetArray()){
             rapidjson::Value bankobj(kObjectType);
 
-            // bankobj.AddMember("bank", rapidjson::Value(v.HasMember("bank") && v["bank"].IsString() ? v["bank"].GetString() : "", doc.GetAllocator()), doc.GetAllocator());
-
-            if(v.HasMember("filename") && v["filename"].IsString()){
-                bankobj.AddMember("filename", rapidjson::Value(v["filename"].GetString(), doc.GetAllocator()), doc.GetAllocator());
+            bankobj.AddMember("index", rapidjson::Value(index), doc.GetAllocator());
+            if(v.HasMember("name") && v["name"].IsString()){
+                bankobj.AddMember("name", rapidjson::Value(v["name"].GetString(), doc.GetAllocator()), doc.GetAllocator());
             }
 
             doc["banks"].PushBack(bankobj, doc.GetAllocator());
             // }
+            index ++;
         }
     }
 
