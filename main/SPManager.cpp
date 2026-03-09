@@ -298,6 +298,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
 
             if (canProcess) {
                 macroTranslator->TranslateInput(&pd);
+                memset(&pd.midi_bytes, 0, pd.midi_bytes_length); // clear buffer
 
                 // Process channel 0
                 if (sp[0] != nullptr) {

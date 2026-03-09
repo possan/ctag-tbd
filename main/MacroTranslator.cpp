@@ -358,16 +358,26 @@ void MacroTranslator::parseIncomingMidiMessages(const uint8_t *buf, const size_t
                 uint8_t value = buf[o++];
                 left -= 2;
 
+                // ESP_LOGI("MacroTranslator", "got cc %d = %d on channel %d", control, value, inputchannel);
+
+                uint8_t mapped = false;
                 for(int t=0; t<16; t++) {
                     if (trackToMidiChannel[t] == inputchannel) {
                         int macrocc = (int)control - trackBaseCC[t];
                         macrocc -= 8; // input parameter CC's start at 8 too and...
-                        if (macrocc >= 0 && macrocc < 32) {
+                        if (macrocc >= 0 && macrocc < 24) {
                             // ESP_LOGI("MacroTranslator", "  -> track %d param %d = %d (baseCC=%d)", t, macrocc, value, trackBaseCC[t]);
+                            this->SetTrackParameter(t, macrocc, value);
+                            mapped = true;
                         }
-                        this->SetTrackParameter(t, macrocc, value);
                     }
                 }
+
+                if (!mapped) {
+                    // ESP_LOGI("MacroTranslator", "  -> no track mapped to MIDI channel %d", inputchannel);
+                    this->soundProcessor->handleMidiControlChange(inputchannel, control, value);
+                }
+
                 break;
             }
             case 0xC0: // program change
