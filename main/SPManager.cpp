@@ -257,7 +257,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
             // check timeout...
             if (now > nextspireceivedeadline) {
                 printf("SPI receive timeout.\n");
-                protocol.markRequestSeen(0);
+                // protocol.markRequestSeen(0);
                 nextspireceivedeadline = now + SPI_TRANSACTION_TIMEOUT_US;
             }
         }

@@ -589,13 +589,15 @@ namespace CTAG::SPIAPI{
                 HELPERS::ctagSampleRom::RefreshDataStructure();
                 CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
                 break;
+
             case RequestType::SetActiveSampleKit:
-                ESP_LOGI("SpiAPI", "Setting active sample bank to %d", bank_number);
+                ESP_LOGI("SpiAPI", "Setting active sample bank to #%d", uint8_param_0);
                 CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
                 HELPERS::ctagSampleRom::SetActiveSampleBank(uint8_param_0);
                 HELPERS::ctagSampleRom::RefreshDataStructure();
                 CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
                 break;
+
             case RequestType::GetFirmwareInfo:
                 ESP_LOGI("SpiAPI", "GetFirmwareInfo");
                 {
