@@ -73,7 +73,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "freq",
+          "ui": "filtercutoff",
           "curve": "log"
         },
         {
@@ -83,7 +83,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "filterq"
         }
       ]
     }

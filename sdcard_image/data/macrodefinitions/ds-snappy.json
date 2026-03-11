@@ -13,7 +13,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "freq"
         },
         {
           "idx": 1,
@@ -22,7 +22,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "envdecay"
         },
         {
           "idx": 2,
@@ -31,7 +31,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "shape"
         }
       ]
     }

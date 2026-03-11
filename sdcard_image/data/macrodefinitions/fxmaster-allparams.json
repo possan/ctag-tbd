@@ -31,7 +31,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
+          "ui": "envattack",
           "curve": "exp"
         },
         {
@@ -41,7 +41,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
+          "ui": "envdecay",
           "curve": "exp"
         }
       ]
@@ -56,7 +56,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
+          "ui": "filtercutoff",
           "curve": "log"
         },
         {

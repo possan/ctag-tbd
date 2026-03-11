@@ -40,7 +40,7 @@
           "min": 0,
           "max": 3,
           "res": 64,
-          "ui": "bignum"
+          "ui": "filtertype"
         }
       ]
     },
@@ -54,7 +54,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
+          "ui": "filtercutoff",
           "curve": "log"
         },
         {
@@ -64,7 +64,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum"
+          "ui": "filterq"
         },
         {
           "idx": 6,
@@ -82,7 +82,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
+          "ui": "envattack",
           "curve": "exp"
         }
       ]
@@ -97,7 +97,7 @@
           "min": 0,
           "max": 127,
           "res": 64,
-          "ui": "bignum",
+          "ui": "envdecay",
           "curve": "exp"
         },
         {
