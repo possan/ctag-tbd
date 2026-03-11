@@ -30,6 +30,7 @@ namespace CTAG {
                 bool UpdatePreset(const std::string &jsonString);
                 void DeleteItem(const std::string &id);
                 bool SerializeListInto(int trackIndex, rapidjson::Document &doc);
+                bool PutSamplePresetJSON(const string &presetJSON);
         };
     }
 }

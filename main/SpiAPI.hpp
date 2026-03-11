@@ -86,6 +86,7 @@ namespace CTAG::SPIAPI{
             GetKitIndexJSON = 0xA7,
             GetSampleBankIndexJSON = 0xA8,
             // GetSynthUpdates = 0xA7,
+            PutSamplePresetJSON = 0xA9,
         };
 
         static TaskHandle_t hTask;

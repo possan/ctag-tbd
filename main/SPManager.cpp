@@ -841,9 +841,14 @@ void SoundProcessorManager::RefreshMacros() {
     xSemaphoreTake(processMutex, portMAX_DELAY);
     synthDefinitionModel->ReloadSynthDefinitions();
     macroDeviceDefinitionModel->ReloadMachineDefinitions();
-    macroSoundDefinitionModel->ReloadSoundPresets(macroDeviceDefinitionModel.get(), synthDefinitionModel.get());
     xSemaphoreGive(processMutex);
     // macroTranslator
+}
+
+void SoundProcessorManager::RefreshSoundPresets() {
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    macroSoundDefinitionModel->ReloadSoundPresets(macroDeviceDefinitionModel.get(), synthDefinitionModel.get());
+    xSemaphoreGive(processMutex);
 }
 
 std::string SoundProcessorManager::GetMacroSoundPresetListJSON(){
@@ -1066,4 +1071,9 @@ std::string SoundProcessorManager::GetKitIndexJSON(){
 
 std::string SoundProcessorManager::GetActiveKitBankIndexJSON(){
     return ctagSampleRom::GetActiveKitBankIndexJSON();
+}
+
+void SoundProcessorManager::PutSamplePresetJSON(const string &presetJSON) {
+    // ctagSampleRom::PutSamplePresetJSON(presetJSON);
+    macroSoundDefinitionModel->PutSamplePresetJSON(presetJSON);
 }

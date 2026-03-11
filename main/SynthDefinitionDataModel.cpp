@@ -77,8 +77,14 @@ bool SynthDefinitionDataModel::DeserializeJSON(const rapidjson::Value &jsoneleme
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
 
-    synths.clear();
+    for (TrackDefinition *t : tracks) {
+        delete t;
+    }
     tracks.clear();
+    for (SynthDefinition *s : synths) {
+        delete s;
+    }
+    synths.clear();
 
     if (jsonelement.HasMember("machines")) {
         for (auto &v : jsonelement["machines"].GetArray()) {

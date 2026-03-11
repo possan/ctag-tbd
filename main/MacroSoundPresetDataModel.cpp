@@ -39,7 +39,7 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
 ) {
     ESP_LOGI("MacroSoundPresetDataModel", "Trying to read macro sound preset file");
 
-    ESP_LOGI("MacroSoundPresetDataModel", "Init: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+    ESP_LOGI("MacroSoundPresetDataModel", "Before clear: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
         heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
         heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
         heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
@@ -47,8 +47,20 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
 
     Document d;
 
+    for(MacroSoundPreset *p : presets) {
+        delete p;
+    }
     presets.clear();
+    for(MacroSoundPresetGroup *g : groups) {
+        delete g;
+    }
     groups.clear();
+
+    ESP_LOGI("MacroSoundPresetDataModel", "After clear: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+        heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+        heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+        heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
 
     DIR *dir;
     struct dirent *ent;
@@ -57,6 +69,12 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
     if ((dir = opendir(path.c_str())) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
             std::string fn(ent->d_name);
+
+            ESP_LOGI("MacroSoundPresetDataModel", "In loop: Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!",
+                heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+                heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+                heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+                heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
 
             Document d;
             loadJSON(d, path + "/" + fn);
@@ -105,21 +123,18 @@ void MacroSoundPresetDataModel::ReloadSoundPresets(
                         }
                         delete macrodef;
                     }
-
                 } else {
                     ESP_LOGE("MacroSoundPresetDataModel", "Failed to deserialize macro sound preset from file %s", fn.c_str());
                     delete preset;
                 }
             } else {
                 ESP_LOGI("MacroSoundPresetDataModel", "Failed to parse preset file: %s", fn.c_str());
-
             }
         }
         closedir(dir);
 
         // TODO: Sort groups
         qsort(groups.data(), groups.size(), sizeof(MacroSoundPresetGroup*), compareGroups);
-
     } else {
         ESP_LOGE("MacroSoundPresetDataModel", "Could not open directory %s", path.c_str());
     }
@@ -321,4 +336,35 @@ bool MacroSoundPresetDataModel::SerializeListInto(int trackIndex, rapidjson::Doc
     }
 
     return false;
+}
+
+bool MacroSoundPresetDataModel::PutSamplePresetJSON(const string &presetJSON) {
+    Document d;
+    d.Parse(presetJSON.c_str());
+    if (d.HasParseError()) {
+        ESP_LOGE("MacroSoundPresetDataModel", "Failed to parse JSON string: %s", presetJSON.c_str());
+        return false;
+    }
+
+    MacroSoundPreset mp;
+    if (!mp.DeserializeJSON(d)) {
+        ESP_LOGE("MacroSoundPresetDataModel", "Failed to deserialize MacroSoundPreset from JSON string: %s", presetJSON.c_str());
+        return false;
+    }
+
+    std::string id = mp.id;
+    std::string path = std::string(CTAG::RESOURCES::sdcardRoot +
+        std::string("/data/macrosoundpresets/") + id + ".json");
+
+    FILE *f = fopen(path.c_str(), "w");
+    if (!f) {
+        ESP_LOGW("SpiAPI", "GetTrackDefaultPresets: trackdefaults.json not found, returning {}");
+        return false;
+    }
+
+    fwrite(presetJSON.c_str(), 1, presetJSON.size(), f);
+    fclose(f);
+    ESP_LOGI("SpiAPI", "GetTrackDefaultPresets: wrote %ld bytes to %s", presetJSON.size(), path.c_str());
+
+    return true;
 }

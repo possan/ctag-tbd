@@ -877,6 +877,15 @@ namespace CTAG::SPIAPI{
             //         result = transmitCString(requestType, info.c_str());
             //     }
             //     break;
+
+            case RequestType::PutSamplePresetJSON:
+                {
+                    std::string json = string_parameter;
+                    ESP_LOGI("SpiAPI", "Saving preset json: %s", json.c_str());
+                    CTAG::AUDIO::SoundProcessorManager::PutSamplePresetJSON(json);
+                    CTAG::AUDIO::SoundProcessorManager::RefreshSoundPresets();
+                }
+                break;
             }
         }
     }

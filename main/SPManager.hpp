@@ -122,6 +122,7 @@ namespace CTAG {
             static void SetTrackParametersFromJSON(const string &parametersJSON);
             static void SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value);
             // static void SetTrackSampleBank(const int trackIndex, const string &bankName);
+            static void PutSamplePresetJSON(const string &presetJSON);
 
             static std::shared_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> synthDefinitionModel;
             static std::shared_ptr<CTAG::MACROPRESETS::MacroSoundPresetDataModel> macroSoundDefinitionModel;
@@ -140,6 +141,7 @@ namespace CTAG {
             static void MarkDefinitionsChangedFromWebui();
 
             static void RefreshMacros();
+            static void RefreshSoundPresets();
 
             // Audio health monitoring — returns JSON with lock errors, slow process count, memory stats
             static string GetAudioHealthJSON();

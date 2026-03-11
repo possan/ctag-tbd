@@ -25,6 +25,9 @@ void MacroDeviceDefinitionDataModel::ReloadMachineDefinitions() {
     ESP_LOGI("MacroDeviceDefinitionDataModel", "Trying to read macro device definition file");
 
     Document d;
+    for(MacroDeviceDefinition *def : definitions) {
+        delete def;
+    }
     definitions.clear();
 
     DIR *dir;
