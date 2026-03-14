@@ -51,7 +51,6 @@ DMA_ATTR static uint8_t *sendBuf1;
 DMA_ATTR static uint8_t *sendBuf2;
 bool CTAG::DRIVERS::rp2350_spi_stream::receiving = false;
 uint32_t CTAG::DRIVERS::rp2350_spi_stream::transferErrorCount = 0;
-uint32_t CTAG::DRIVERS::rp2350_spi_stream::transferSuccessCount = 0;
 uint32_t CTAG::DRIVERS::rp2350_spi_stream::parseErrorCount = 0;
 uint32_t CTAG::DRIVERS::rp2350_spi_stream::queueErrorCount = 0;
 
@@ -78,7 +77,6 @@ IRAM_ATTR static void spi_post_trans_cb(spi_slave_transaction_t *trans){
 
 uint8_t* CTAG::DRIVERS::rp2350_spi_stream::Init(){
     transferErrorCount = 0;
-    transferSuccessCount = 0;
     queueErrorCount = 0;
     parseErrorCount = 0;
 

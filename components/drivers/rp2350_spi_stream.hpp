@@ -38,7 +38,6 @@ namespace CTAG {
             static uint32_t GetBufferSize() {return STREAM_BUFFER_SIZE_ - 2;}
             static uint32_t queueErrorCount;
             static uint32_t transferErrorCount;
-            static uint32_t transferSuccessCount;
             static uint32_t parseErrorCount;
             static bool receiving;
             static bool QueueBuffer(void *sendbuffer);

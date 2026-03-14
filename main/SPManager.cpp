@@ -134,10 +134,6 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                 // prepare next response
                 //
 
-                // pack ableton link data
-                LINK::link_session_data_t *link_data = (LINK::link_session_data_t*)&send_response->link_data;
-                LINK::link::GetLinkRtSessionData(link_data);
-
                 // pack midi data from USB device midi
                 uint8_t *midi_ptr = (uint8_t*) &send_response->usb_device_midi;
                 uint32_t *midi_len = (uint32_t*) &send_response->usb_device_midi_length;
@@ -149,7 +145,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                 receivedUsbDeviceMidiBytes += *midi_len;
 
                 // add some waveforms
-                for(int i=0; i<128; i++) {
+                for(int i=0; i<BUF_SZ * 2; i++) {
                     send_response->input_waveform[i] = 128;
                     send_response->output_waveform[i] = 128;
                 }
@@ -157,6 +153,10 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
                     send_response->input_waveform[i] = (int)(finput2[i] * 127.0f + 128.f);
                     send_response->output_waveform[i] = (int)(fbuf2[i] * 127.0f + 128.f);
                 }
+
+                // pack ableton link data (after waveforms to avoid any overflow risk)
+                LINK::link_session_data_t *link_data = (LINK::link_session_data_t*)&send_response->link_data;
+                LINK::link::GetLinkRtSessionData(link_data);
 
                 // and the led color
                 send_response->led_color = ledStatus;
@@ -527,15 +527,14 @@ static void debug_task(void *pvParameters) {
     // vTaskDelay(200 / portTICK_PERIOD_MS);
     // ESP_LOGI("SPManager", "FreeRTOS Stats:\n%s", freertosstats);
 
-    ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!, counters: tx-err=%ld queue-err=%ld parse-err=%ld success=%ld",
+    ESP_LOGI("SPManager", "Mem freesize internal %d, largest block %d, free SPIRAM %d, largest block SPIRAM %d!, counters: tx-err=%ld queue-err=%ld parse-err=%ld",
              heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
              heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
              heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM),
              DRIVERS::rp2350_spi_stream::transferErrorCount,
              DRIVERS::rp2350_spi_stream::queueErrorCount,
-             DRIVERS::rp2350_spi_stream::parseErrorCount,
-             DRIVERS::rp2350_spi_stream::transferSuccessCount);
+             DRIVERS::rp2350_spi_stream::parseErrorCount);
 
     // printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors);
     // requestCounterErrors = 0;
