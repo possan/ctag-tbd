@@ -50,7 +50,7 @@
         {
           "idx": 4,
           "name": "Pitch",
-          "def": 64,
+          "def": 16,
           "min": 0,
           "max": 127,
           "res": 64,
