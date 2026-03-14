@@ -87,6 +87,7 @@ namespace CTAG::SPIAPI{
             GetSampleBankIndexJSON = 0xA8,
             // GetSynthUpdates = 0xA7,
             PutSamplePresetJSON = 0xA9,
+            LoadTrackMacroDefinition = 0xAA,
         };
 
         static TaskHandle_t hTask;

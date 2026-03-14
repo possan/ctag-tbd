@@ -886,6 +886,15 @@ namespace CTAG::SPIAPI{
                     CTAG::AUDIO::SoundProcessorManager::RefreshSoundPresets();
                 }
                 break;
+
+            case RequestType::LoadTrackMacroDefinition:
+                {
+                    int trackIndex = uint8_param_0;
+                    std::string macroId = string_parameter; // receiveString(RequestType::SaveFavorite, string_parameter);
+                    ESP_LOGI("SpiAPI", "Activating track %d macro %s", trackIndex, macroId.c_str());
+                    CTAG::AUDIO::SoundProcessorManager::LoadTrackMacro(trackIndex, macroId);
+                }
+                break;
             }
         }
     }
