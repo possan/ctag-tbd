@@ -441,7 +441,7 @@ namespace CTAG::SPIAPI{
         bool result = true;
         while (1){
             if (result) spi_slave_transmit(RCV_HOST, &transaction, portMAX_DELAY); // recycle last transaction, if previous was not successful, sometimes data gets stuck
-            const uint8_t* rcv_data = (uint8_t*)transaction.rx_buffer;
+            uint8_t* rcv_data = (uint8_t*)transaction.rx_buffer;
 
             // check integrity of transaction
             if (transaction.trans_len != 2048 * 8){
@@ -449,11 +449,16 @@ namespace CTAG::SPIAPI{
                 result = true;
                 continue;
             }
-            if (rcv_data[0] != 0xCA || rcv_data[1] != 0xFE){
+
+            if (rcv_data[0] != 0xCA || rcv_data[1] != 0xFE) {
                 ESP_LOGE("spiapi", "Received data %x %x, expected 0xCA 0xFE", rcv_data[0], rcv_data[1]);
                 result = true;
                 continue;
             }
+
+            // reset watermark to prevent processing of stale data in case of errors
+            rcv_data[0] = 0;
+            rcv_data[1] = 0;
 
             // parse request
             const RequestType requestType = static_cast<RequestType>(rcv_data[2]);
