@@ -268,6 +268,20 @@
 </sl-dialog>
 
 <!-- ─── Scripts ─────────────────────────────────────────── -->
+<div style="display:flex;align-items:center;padding:0.25rem 0.75rem;background:var(--sl-color-neutral-100);border-top:1px solid var(--sl-color-neutral-200);">
+  <a href="/webui-update.html" id="webui-version-link"
+     style="font-size:0.65rem;color:var(--sl-color-neutral-400);text-decoration:none;white-space:nowrap;"
+     title="WebUI Updater"></a>
+  <div style="flex:1;"></div>
+</div>
 <script defer src="js/macro-bundle.js?v=2"></script>
+<script>
+  fetch('/api/v2/samples?getconfig=webui-version.json')
+    .then(r => r.ok ? r.json() : null)
+    .then(v => {
+      const el = document.getElementById('webui-version-link');
+      if (el && v && v.version) el.textContent = 'WebUI v' + v.version;
+    }).catch(() => {});
+</script>
 </body>
 </html>

@@ -1,3 +1,20 @@
+/***************
+TBD-16 — dadamachines WebUI & REST API
+
+(c) 2024-2026 Johannes Elias Lohbihler for dadamachines.
+
+Licensed under the GNU Lesser General Public License (LGPL 3.0).
+https://www.gnu.org/licenses/lgpl-3.0.txt
+
+Part of the dadamachines additions to the CTAG TBD platform.
+See LICENSE in the repository root for full terms.
+
+Provided "as is" without any express or implied warranties.
+
+License and copyright details for specific submodules are included in their
+respective component folders / files if different from this license.
+***************/
+
 #include "MacroAPI.hpp"
 #include "SPManager.hpp"
 #include <cstring>
@@ -249,14 +266,15 @@ static esp_err_t handle_save_trackdefaults(httpd_req_t *req) {
     }
     content[req->content_len] = '\0';
 
-    // Parse sampleKit from the incoming JSON before writing
-    int newSampleKit = -1;
+    // Resolve the kit filename to an index for PSRAM switching
+    int kitIndex = -1;
     {
         Document doc;
         doc.Parse(content);
         if (!doc.HasParseError() && doc.IsObject() &&
-            doc.HasMember("sampleKit") && doc["sampleKit"].IsInt()) {
-            newSampleKit = doc["sampleKit"].GetInt();
+            doc.HasMember("kit") && doc["kit"].IsString()) {
+            std::string kitFile = doc["kit"].GetString();
+            kitIndex = CTAG::SP::HELPERS::ctagSampleRom::GetBankIndexFromFileName(kitFile);
         }
     }
 
@@ -272,10 +290,10 @@ static esp_err_t handle_save_trackdefaults(httpd_req_t *req) {
     heap_caps_free(content);
 
     // Sync PSRAM with the requested kit so the device is ready at next boot
-    if (newSampleKit >= 0) {
-        ESP_LOGI(MACRO_TAG, "Switching active sample bank to %d and reloading PSRAM", newSampleKit);
+    if (kitIndex >= 0) {
+        ESP_LOGI(MACRO_TAG, "Switching active sample bank to %d and reloading PSRAM", kitIndex);
         CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
-        CTAG::SP::HELPERS::ctagSampleRom::SetActiveSampleBank(static_cast<uint8_t>(newSampleKit));
+        CTAG::SP::HELPERS::ctagSampleRom::SetActiveSampleBank(static_cast<uint8_t>(kitIndex));
         CTAG::SP::HELPERS::ctagSampleRom::RefreshDataStructure();
         CTAG::AUDIO::SoundProcessorManager::EnablePluginProcessing();
     }

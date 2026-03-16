@@ -4,7 +4,7 @@ CTAG TBD >>to be determined<< is an open source eurorack synthesizer module.
 A project conceived within the Creative Technologies Arbeitsgruppe of
 Kiel University of Applied Sciences: https://www.creative-technologies.de
 
-(c) 2020 by Robert Manzke. All rights reserved.
+(c) 2020-2026 by Robert Manzke. All rights reserved.
 
 The CTAG TBD software is licensed under the GNU General Public License
 (GPL 3.0), available here: https://www.gnu.org/licenses/gpl-3.0.txt
@@ -48,6 +48,7 @@ namespace CTAG::SP::HELPERS{
         uint32_t GetSliceGroupSize(const uint32_t startSlice, const uint32_t endSlice);
         uint32_t GetSliceOffset(const uint32_t slice);
         uint16_t GetBankIndexFromBankName(const std::string &bankName);
+        static int16_t GetBankIndexFromFileName(const std::string &fileName);
         bool HasSlice(const uint32_t slice);
         bool HasSliceGroup(const uint32_t startSlice, const uint32_t endSlice);
         void ReadSlice(int16_t *dst, const uint32_t slice, const uint32_t offset, const uint32_t n_samples);

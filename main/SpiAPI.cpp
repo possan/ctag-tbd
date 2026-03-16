@@ -26,6 +26,7 @@ respective component folders / files if different from this license.
 
 #include "soc/gpio_num.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "esp_ota_ops.h"
 #include "esp_partition.h"
 #include "esp_image_format.h"
@@ -441,7 +442,7 @@ namespace CTAG::SPIAPI{
         bool result = true;
         while (1){
             if (result) spi_slave_transmit(RCV_HOST, &transaction, portMAX_DELAY); // recycle last transaction, if previous was not successful, sometimes data gets stuck
-            uint8_t* rcv_data = (uint8_t*)transaction.rx_buffer;
+            const uint8_t* rcv_data = (uint8_t*)transaction.rx_buffer;
 
             // check integrity of transaction
             if (transaction.trans_len != 2048 * 8){
@@ -449,16 +450,11 @@ namespace CTAG::SPIAPI{
                 result = true;
                 continue;
             }
-
-            if (rcv_data[0] != 0xCA || rcv_data[1] != 0xFE) {
+            if (rcv_data[0] != 0xCA || rcv_data[1] != 0xFE){
                 ESP_LOGE("spiapi", "Received data %x %x, expected 0xCA 0xFE", rcv_data[0], rcv_data[1]);
                 result = true;
                 continue;
             }
-
-            // reset watermark to prevent processing of stale data in case of errors
-            rcv_data[0] = 0;
-            rcv_data[1] = 0;
 
             // parse request
             const RequestType requestType = static_cast<RequestType>(rcv_data[2]);
@@ -572,9 +568,21 @@ namespace CTAG::SPIAPI{
                 result = transmitCString(requestType, s.c_str());
                 break;
             case RequestType::Reboot:
+            {
+                // Ignore Reboot commands during the first 15s after boot.
+                // The RP2350 unconditionally sends spi_api.Reboot() in setup(),
+                // which hits us on cold boot when the SPI API initializes before
+                // the RP2350's 1s sleep_ms expires. Intentional user-triggered
+                // reboots arrive well after the system is stable (~28s boot).
+                int64_t uptime_ms = esp_timer_get_time() / 1000;
+                if (uptime_ms < 15000) {
+                    ESP_LOGW("SpiAPI", "Ignoring Reboot command during boot grace period (%lld ms uptime)", uptime_ms);
+                    break;
+                }
                 ESP_LOGI("SpiAPI", "Rebooting device!");
                 esp_restart();
                 break;
+            }
             case RequestType::RebootToOTA1:
                 ESP_LOGI("SpiAPI", "Rebooting device to OTA1!");
                 CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
@@ -629,9 +637,9 @@ namespace CTAG::SPIAPI{
                     ESP_LOGE("SpiAPI", "Requested OTA %d but only %d OTAs available!", uint8_param_0, num_ota);
                     break;
                 }
-                boot_into_slot(uint8_param_0);
                 ESP_LOGI("SpiAPI", "Rebooting device to OTA %d!", uint8_param_0);
                 CTAG::AUDIO::SoundProcessorManager::DisablePluginProcessing();
+                boot_into_slot(uint8_param_0); // calls esp_restart() — does not return
                 break;
                 }
             case RequestType::SendFile:

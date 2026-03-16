@@ -1926,6 +1926,9 @@
     <!-- ════ STATUS FOOTER ════ -->
     <div class="status-footer" id="status-footer">
       <div class="status-footer-inner">
+        <a href="/webui-update.html" id="webui-version-link"
+           style="font-size:0.65rem;color:var(--sl-color-neutral-400);text-decoration:none;white-space:nowrap;"
+           title="WebUI Updater"></a>
         <div class="status-footer-spacer"></div>
         <button class="debug-toggle-btn" id="debug-toggle" title="Toggle Debug Panel">
           <sl-icon name="terminal"></sl-icon> Debug
@@ -2505,5 +2508,13 @@
        plugin-manager.js, sample-manager.js, app.js
        Built by: build-webui.sh  |  Served dynamically by: dev-server.js -->
   <script defer src="js/app-bundle.js?v=4"></script>
+  <script>
+    fetch('/api/v2/samples?getconfig=webui-version.json')
+      .then(r => r.ok ? r.json() : null)
+      .then(v => {
+        const el = document.getElementById('webui-version-link');
+        if (el && v && v.version) el.textContent = 'WebUI v' + v.version;
+      }).catch(() => {});
+  </script>
 </body>
 </html>

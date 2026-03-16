@@ -24,6 +24,7 @@ namespace CTAG{
             void RemoveWTBank(const uint32_t index);
             void RemoveSampleBank(const uint32_t index);
             int16_t GetBankIndexFromBankName(const std::string &bankName);
+            int16_t GetBankIndexFromFileName(const std::string &fileName);
 
             // returns total amount of slices
             uint32_t GetTotalNumberWTSlices();

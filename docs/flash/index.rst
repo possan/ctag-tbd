@@ -10,31 +10,40 @@ or something went wrong. Firmware updates **never erase** your SD card.
    <div class="dada-ctas">
 
      <div class="dada-cta">
-       <h3>Flash DSP Firmware</h3>
-       <p>Re-flash the <strong>ESP32-P4</strong> audio engine directly from
-       your browser &mdash; WebSerial, no tools or drivers needed.
-       Requires Chrome, Edge or Opera and a JTAG USB-C cable to the front port.</p>
-       <a href="25_flash_dsp.html" class="dada-cta-link">Flash DSP &rarr;</a>
+       <h3>Beta Channel</h3>
+       <p>Flash the latest pre-release firmware bundle with all
+       features and fixes before stable release.</p>
+       <a href="65_beta_channel.html" class="dada-cta-link">Beta Channel &rarr;</a>
      </div>
 
      <div class="dada-cta">
-       <h3>Flash UI Firmware</h3>
-       <p>Re-flash the <strong>RP2350</strong> front-end from your browser
-       via WebUSB. Hold <strong>BOOTSEL</strong> while connecting USB to enter
-       flash mode. Requires Chrome, Edge or Opera.</p>
-       <a href="30_flash_ui.html" class="dada-cta-link">Flash UI &rarr;</a>
+       <h3>Beta Channel Archive</h3>
+       <p>Browse and flash any previous beta firmware build
+       from the full release history.</p>
+       <a href="66_beta_channel_archive.html" class="dada-cta-link">Browse Archive &rarr;</a>
+     </div>
+
+     <div class="dada-cta">
+       <h3>WebUI Versions</h3>
+       <p>Update the web interface independently &mdash;
+       no firmware flash or SD card erase needed.</p>
+       <a href="70_webui_versions.html" class="dada-cta-link">WebUI Versions &rarr;</a>
+     </div>
+
+     <div class="dada-cta">
+       <h3>Update WebUI Updater</h3>
+       <p>Push the latest WebUI Updater to your device &mdash;
+       no reflash or SD card erase needed.</p>
+       <a href="68_update_updater.html" class="dada-cta-link">Update Updater &rarr;</a>
      </div>
 
    </div>
 
-   <div class="dada-cta-wide">
-     <h3>Device Recovery</h3>
-     <p>Something went seriously wrong, or you want a completely clean slate?
-     This guide walks you through re-initializing your TBD-16 from scratch &mdash;
-     reflashing both the <strong>ESP32-P4</strong> and <strong>RP2350</strong>
-     processors and rebuilding both SD cards. You will need 2&times; USB-C cables,
-     2&times; SD cards, and about 15&ndash;20 minutes.</p>
-     <a href="50_device_recovery.html" class="dada-cta-link">Start Recovery &rarr;</a>
+   <div class="dada-secondary-links">
+     <a href="25_flash_dsp.html">Flash DSP Firmware</a>
+     <a href="30_flash_ui.html">Flash UI Firmware</a>
+     <a href="50_device_recovery.html">Device Recovery</a>
+     <a href="60_sd_card_recovery.html">SD Card Recovery</a>
    </div>
 
 .. include:: /_includes/newsletter.rst
@@ -43,6 +52,6 @@ or something went wrong. Firmware updates **never erase** your SD card.
 
 .. toctree::
    :hidden:
-   :glob:
 
-   [0-9]*
+   65_beta_channel
+   70_webui_versions

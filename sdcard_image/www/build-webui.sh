@@ -53,6 +53,7 @@ echo ""
 MACRO_BUNDLE_SOURCES=(
   js/Sortable.min.js
   js/shared.js
+  js/factory-manifest.js
   js/display-hints.js
   js/performer.js
   js/designer.js
@@ -84,6 +85,7 @@ echo ""
 GZIP_FILES=(
   index.html
   preset-macro-manager.html
+  webui-update.html
   js/app-bundle.js
   js/macro-bundle.js
   js/shoelace-bundle.js

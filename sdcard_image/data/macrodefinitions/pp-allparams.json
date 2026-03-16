@@ -78,7 +78,7 @@
         {
           "idx": 7,
           "name": "Attack",
-          "def": 25,
+          "def": 0,
           "min": 0,
           "max": 127,
           "res": 64,

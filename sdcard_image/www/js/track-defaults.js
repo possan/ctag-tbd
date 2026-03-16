@@ -27,8 +27,12 @@
   var dirty = false;
   var facetedData = null;     // per-track: [ { machine, name, macros: [{id, name, presets}] } ]
   var kitNames = [];          // kit names from sample_rom.jsn via samples API
+  var kitFiles = [];          // kit filenames from smp_banks (e.g. "def_smp.jsn")
   var kitMeta = [];           // per-kit bank metadata [{banks: [{name, color}]}]
+  var activeKitIndex = 0;     // index of the currently active kit in PSRAM
+  var activeKitEntries = [];  // sample entries for the active kit
 
+  var SLICES_PER_BANK = 32;
   var DEFAULT_BANKS = [
     'KICK', 'SNARE', 'HIHAT CL', 'HIHAT OP',
     'CLAP', 'RIM', 'PERC', 'OTHER'
@@ -133,24 +137,91 @@
   }
 
   /**
-   * Get the saved romBank (group index) for a track (rompler tracks only).
+   * Get the saved sampleBank (group index) for a track (rompler tracks only).
    */
   function getDefaultBank(trackIndex) {
     if (!trackDefaults || !trackDefaults.tracks) return 0;
     var entry = trackDefaults.tracks.find(function(t) { return t.index === trackIndex; });
-    return entry && typeof entry.romBank === 'number' ? entry.romBank : 0;
+    return entry && typeof entry.sampleBank === 'number' ? entry.sampleBank : 0;
+  }
+
+  /**
+   * Get the number of populated banks for a kit index.
+   * For the active kit, count from actual entries. Otherwise use metadata or default 8.
+   */
+  function getBankCountForKit(kitIndex) {
+    if (kitIndex === activeKitIndex && activeKitEntries.length > 0) {
+      return Math.ceil(activeKitEntries.length / SLICES_PER_BANK);
+    }
+    if (kitMeta && kitMeta[kitIndex] &&
+        kitMeta[kitIndex].banks && kitMeta[kitIndex].banks.length > 0) {
+      return kitMeta[kitIndex].banks.length;
+    }
+    return DEFAULT_BANKS.length;
+  }
+
+  /**
+   * Get the number of valid slices for a given bank in a kit.
+   * For the active kit, count actual entries. Otherwise return max 32.
+   */
+  function getSliceCountForBank(kitIndex, bankIndex) {
+    if (kitIndex === activeKitIndex && activeKitEntries.length > 0) {
+      var bankStart = bankIndex * SLICES_PER_BANK;
+      var bankEnd = Math.min(bankStart + SLICES_PER_BANK, activeKitEntries.length);
+      if (bankStart >= activeKitEntries.length) return 0;
+      return bankEnd - bankStart;
+    }
+    return SLICES_PER_BANK;
   }
 
   /**
    * Get bank/group names for the currently selected kit index.
    * Uses smp_bank_meta from the samples API, with fallback to DEFAULT_BANKS.
+   * Only returns names for banks that actually have entries.
    */
   function getBankNamesForKit(kitIndex) {
+    var bankCount = getBankCountForKit(kitIndex);
     if (kitMeta && kitMeta[kitIndex] &&
         kitMeta[kitIndex].banks && kitMeta[kitIndex].banks.length > 0) {
-      return kitMeta[kitIndex].banks.map(function(b) { return b.name; });
+      return kitMeta[kitIndex].banks.slice(0, bankCount).map(function(b) { return b.name; });
     }
-    return DEFAULT_BANKS;
+    return DEFAULT_BANKS.slice(0, bankCount);
+  }
+
+  /**
+   * Get display name for a slice: show sample filename if available, otherwise just the index.
+   */
+  function getSliceName(kitIndex, bankIndex, sliceIndex) {
+    if (kitIndex === activeKitIndex && activeKitEntries.length > 0) {
+      var entryIdx = bankIndex * SLICES_PER_BANK + sliceIndex;
+      if (entryIdx < activeKitEntries.length) {
+        var entry = activeKitEntries[entryIdx];
+        if (entry && entry.filename) {
+          return sliceIndex + ' — ' + entry.filename;
+        }
+      }
+    }
+    return String(sliceIndex);
+  }
+
+  /**
+   * Rebuild the slice dropdown for a specific rompler track based on selected bank.
+   */
+  function rebuildSliceDropdown(trackIdx, kitIndex, bankIndex, selectedSlice) {
+    var sliceCell = document.querySelector('.td-col-slice.td-rompler-cell[data-track="' + trackIdx + '"]');
+    if (!sliceCell) return;
+    var sliceCount = getSliceCountForBank(kitIndex, bankIndex);
+    var html = '<select class="td-select td-slice-select" data-track="' + trackIdx + '">';
+    for (var sl = 0; sl < sliceCount; sl++) {
+      var slSel = (sl === selectedSlice) ? ' selected' : '';
+      var sliceName = getSliceName(kitIndex, bankIndex, sl);
+      html += '<option value="' + sl + '"' + slSel + '>' + S.esc(sliceName) + '</option>';
+    }
+    html += '</select>';
+    sliceCell.innerHTML = html;
+    sliceCell.querySelector('.td-slice-select').addEventListener('change', function() {
+      dirty = true; updateSaveButton();
+    });
   }
 
   /**
@@ -160,15 +231,22 @@
     var kitSel = document.getElementById('td-global-kit');
     var kitIdx = kitSel ? parseInt(kitSel.value, 10) : 0;
     var bankNames = getBankNamesForKit(kitIdx);
+    var bankCount = bankNames.length;
     var selects = document.querySelectorAll('.td-bank-select');
     selects.forEach(function(sel) {
       var current = parseInt(sel.value, 10) || 0;
+      if (current >= bankCount) current = 0;
       var html = '';
       bankNames.forEach(function(name, i) {
         var selected = (i === current) ? ' selected' : '';
         html += '<option value="' + i + '"' + selected + '>' + S.esc(name) + '</option>';
       });
       sel.innerHTML = html;
+      // Also rebuild the slice dropdown for this track
+      var trackIdx = parseInt(sel.getAttribute('data-track'), 10);
+      var sliceSel = document.querySelector('.td-slice-select[data-track="' + trackIdx + '"]');
+      var currentSlice = sliceSel ? parseInt(sliceSel.value, 10) || 0 : 0;
+      rebuildSliceDropdown(trackIdx, kitIdx, current, currentSlice);
     });
   }
 
@@ -192,16 +270,33 @@
         } else {
           kitNames = [];
         }
+        if (data && data.kits && data.kits.smp_banks) {
+          kitFiles = data.kits.smp_banks;
+        } else {
+          kitFiles = [];
+        }
         if (data && data.kits && data.kits.smp_bank_meta) {
           kitMeta = data.kits.smp_bank_meta;
         } else {
           kitMeta = [];
         }
+        if (data && data.kits && typeof data.kits.active_smp_bank === 'number') {
+          activeKitIndex = data.kits.active_smp_bank;
+        } else {
+          activeKitIndex = 0;
+        }
+        if (data && data.active_kit_entries && Array.isArray(data.active_kit_entries)) {
+          activeKitEntries = data.active_kit_entries;
+        } else {
+          activeKitEntries = [];
+        }
         return kitNames;
       })
       .catch(function() {
         kitNames = [];
+        kitFiles = [];
         kitMeta = [];
+        activeKitEntries = [];
         return kitNames;
       });
   }
@@ -315,16 +410,15 @@
       bankHtml += '</select>';
       bankCell.innerHTML = bankHtml;
 
-      // Build slice dropdown
-      var sliceHtml = '<select class="td-select td-slice-select" data-track="' + trackIdx + '">';
-      for (var sl = 0; sl < 32; sl++) {
-        sliceHtml += '<option value="' + sl + '">' + sl + '</option>';
-      }
-      sliceHtml += '</select>';
-      sliceCell.innerHTML = sliceHtml;
+      // Build slice dropdown for bank 0
+      rebuildSliceDropdown(trackIdx, kitIdx, 0, 0);
 
       // Attach change listeners to new selects
-      bankCell.querySelector('.td-bank-select').addEventListener('change', function() { dirty = true; updateSaveButton(); });
+      bankCell.querySelector('.td-bank-select').addEventListener('change', function() {
+        var newBank = parseInt(this.value, 10);
+        rebuildSliceDropdown(trackIdx, kitIdx, newBank, 0);
+        dirty = true; updateSaveButton();
+      });
       sliceCell.querySelector('.td-slice-select').addEventListener('change', function() { dirty = true; updateSaveButton(); });
     } else {
       bankCell.innerHTML = '<span class="td-na">—</span>';
@@ -346,8 +440,10 @@
 
     // ─── Global kit selector ─────────────────────────────────
     if (kitNames.length > 0) {
-      var savedKit = (trackDefaults && typeof trackDefaults.sampleKit === 'number')
-        ? trackDefaults.sampleKit : 0;
+      var savedKitFile = (trackDefaults && typeof trackDefaults.kit === 'string')
+        ? trackDefaults.kit : (kitFiles.length > 0 ? kitFiles[0] : '');
+      var savedKit = kitFiles.indexOf(savedKitFile);
+      if (savedKit < 0) savedKit = 0;
       html += '<div class="td-sample-bank-section">';
       html += '<label><strong>Kit (PSRAM)</strong> ';
       html += '<select class="td-select" id="td-global-kit">';
@@ -415,8 +511,10 @@
       var isSelectedRompler = (currentMachine === 'ro');
       var savedBank = getDefaultBank(idx);
       var savedSlice = getDefaultSlice(idx);
-      var kitIdx = (trackDefaults && typeof trackDefaults.sampleKit === 'number')
-        ? trackDefaults.sampleKit : 0;
+      var savedKitFile2 = (trackDefaults && typeof trackDefaults.kit === 'string')
+        ? trackDefaults.kit : (kitFiles.length > 0 ? kitFiles[0] : '');
+      var kitIdx = kitFiles.indexOf(savedKitFile2);
+      if (kitIdx < 0) kitIdx = 0;
       var bankNames = getBankNamesForKit(kitIdx);
 
       html += '<span class="td-col-bank td-rompler-cell" data-track="' + idx + '">';
@@ -434,10 +532,12 @@
 
       html += '<span class="td-col-slice td-rompler-cell" data-track="' + idx + '">';
       if (isSelectedRompler) {
+        var sliceCount = getSliceCountForBank(kitIdx, savedBank);
         html += '<select class="td-select td-slice-select" data-track="' + idx + '">';
-        for (var sl = 0; sl < 32; sl++) {
+        for (var sl = 0; sl < sliceCount; sl++) {
           var slSel = (sl === savedSlice) ? ' selected' : '';
-          html += '<option value="' + sl + '"' + slSel + '>' + sl + '</option>';
+          var sliceName = getSliceName(kitIdx, savedBank, sl);
+          html += '<option value="' + sl + '"' + slSel + '>' + sliceName + '</option>';
         }
         html += '</select>';
       } else {
@@ -499,9 +599,14 @@
       });
     });
 
-    // Attach bank (group) change listeners
+    // Attach bank (group) change listeners — also rebuilds slice dropdown
     body.querySelectorAll('.td-bank-select').forEach(function(sel) {
       sel.addEventListener('change', function() {
+        var trackIdx = parseInt(sel.getAttribute('data-track'), 10);
+        var kitSel2 = document.getElementById('td-global-kit');
+        var kitIdx2 = kitSel2 ? parseInt(kitSel2.value, 10) : 0;
+        var newBank = parseInt(sel.value, 10);
+        rebuildSliceDropdown(trackIdx, kitIdx2, newBank, 0);
         dirty = true;
         updateSaveButton();
       });
@@ -533,13 +638,16 @@
   function collectFromUI() {
     // Read global kit selection
     var kitSel = document.getElementById('td-global-kit');
-    var sampleKit = kitSel ? parseInt(kitSel.value, 10) : 0;
+    var kitIdx = kitSel ? parseInt(kitSel.value, 10) : 0;
+    var kitFile = (kitFiles.length > kitIdx) ? kitFiles[kitIdx] : (kitFiles[0] || 'def_smp.jsn');
 
     var result = {
       _comment: 'Default preset per track, loaded by the Pico via SPI command 0xA5.',
       _comment2: 'Preset IDs = filenames (without .json) from data/macrosoundpresets/.',
       _comment3: 'Omit a track entry to let the Pico use the first available preset.',
-      sampleKit: sampleKit,
+      _comment4: 'The kit field sets which kit file to activate in PSRAM (matched by filename).',
+      _comment5: 'NOTE: all romplers share the same PSRAM kit — only one kit is active at a time.',
+      kit: kitFile,
       tracks: []
     };
 
@@ -566,13 +674,10 @@
         // Add rompler-specific fields only when machine is set to Rompler
         var machineVal = machineSel ? machineSel.value : '';
         if (machineVal === 'ro') {
-          entry.sampleKit = sampleKit;
           var bankGroupSel = document.querySelector('.td-bank-select[data-track="' + idx + '"]');
-          entry.romBank = bankGroupSel ? parseInt(bankGroupSel.value, 10) : 0;
+          entry.sampleBank = bankGroupSel ? parseInt(bankGroupSel.value, 10) : 0;
           var sliceSel = document.querySelector('.td-slice-select[data-track="' + idx + '"]');
           entry.sampleSlice = sliceSel ? parseInt(sliceSel.value, 10) : 0;
-
-          entry.bank = 'Default'
         }
 
         result.tracks.push(entry);

@@ -1048,6 +1048,117 @@ window.TBD.shared = {
   getActiveTab: getActiveTab,
 };
 
+// ── factory-manifest.js ───
+// ═══════════════════════════════════════════════════════════════
+// TBD-16 WebUI — Factory Manifest
+//
+// Read-only registry of factory macro definitions and sound presets
+// shipped with the device. Factory items cannot be overwritten or
+// deleted — users may only clone/save-as with a new name.
+//
+// (c) 2014-2026 Johannes Elias Lohbihler for dadamachines.
+// Licensed under LGPL 3.0.
+// ═══════════════════════════════════════════════════════════════
+'use strict';
+
+(function() {
+  var FACTORY_DEFINITIONS = [
+    'ab-allparams',
+    'as-allparams',
+    'cl-allparams',
+    'db-allparams',
+    'db-phatpunch',
+    'db-submorph',
+    'ds-allparams',
+    'ds-snappy',
+    'extdrum-allparams',
+    'extsynth-allparams',
+    'fmb-allparams',
+    'fmb-deepfm',
+    'fmb-metallic',
+    'fxdelay-allparams',
+    'fxmaster-allparams',
+    'fxreverb-allparams',
+    'hh1-allparams',
+    'hh2-allparams',
+    'inp-allparams',
+    'mo-allparams',
+    'nodrum-allparams',
+    'nofx-allparams',
+    'nosynth-allparams',
+    'pp-allparams',
+    'pp-darkchord',
+    'pp-lushpad',
+    'ro-allparams',
+    'ro-fullrompler',
+    'rs-allparams',
+    'td3-acidbass',
+    'td3-allparams',
+    'wtosc-allparams',
+    'wtosc-morphpad',
+  ];
+
+  var FACTORY_PRESETS = [
+    'ab-all-def',
+    'as-all-def',
+    'cl-all-def',
+    'db-all-def',
+    'ds-all-def',
+    'ds-snap1',
+    'extdrum-all-def',
+    'extsynth-all-def',
+    'fmb-all-def',
+    'fxdelay-all-def',
+    'fxmaster-all-def',
+    'fxreverb-all-def',
+    'golem',
+    'hh1-all-def',
+    'hh2-all-def',
+    'inp-all-def',
+    'mo-all-def',
+    'msp-acidbass1',
+    'msp-acidbass2',
+    'msp-darkchord1',
+    'msp-darkchord2',
+    'msp-deepfm1',
+    'msp-deepfm2',
+    'msp-lushpad1',
+    'msp-lushpad2',
+    'msp-metallic1',
+    'msp-morphpad1',
+    'msp-morphpad2',
+    'msp-phatpunch1',
+    'msp-phatpunch2',
+    'msp-submorph1',
+    'new-kick',
+    'nodrum-all-def',
+    'nofx-all-def',
+    'nosynth-all-def',
+    'pp-all-def',
+    'punch-testing',
+    'ro-all-def',
+    'ro-fullrompler-def',
+    'rs-all-def',
+    'sub-morphing-preset-',
+    'td3-all-def',
+    'wtosc-all-def',
+  ];
+
+  // Build lookup sets for O(1) checks
+  var defSet = {};
+  FACTORY_DEFINITIONS.forEach(function(id) { defSet[id] = true; });
+  var presetSet = {};
+  FACTORY_PRESETS.forEach(function(id) { presetSet[id] = true; });
+
+  window.TBD = window.TBD || {};
+  window.TBD.factory = {
+    isFactoryDefinition: function(id) { return defSet[id] === true; },
+    isFactoryPreset: function(id) { return presetSet[id] === true; },
+    FACTORY_DEFINITIONS: FACTORY_DEFINITIONS,
+    FACTORY_PRESETS: FACTORY_PRESETS,
+  };
+})();
+
 // ── display-hints.js ───
 // ═══════════════════════════════════════════════════════════════
 // TBD-16 WebUI — Display Hints & Value Conversion Layer
@@ -2015,16 +2126,24 @@ window.TBD.shared = {
       groups[g].push(p);
     });
 
+    var F = window.TBD.factory;
+
     Object.keys(groups).sort().forEach(function(groupName) {
       html += '<div class="preset-category">' + S.esc(groupName) + '</div>';
       groups[groupName].forEach(function(p) {
         var isActive = state.activePreset && state.activePreset.id === p.id;
+        var isFactory = F && F.isFactoryPreset(p.id);
         html += '<div class="preset-item' + (isActive ? ' active' : '') + '" data-preset-id="' + S.esc(p.id) + '">';
+        if (isFactory) {
+          html += '<sl-icon name="lock" style="font-size:0.6rem;opacity:0.4;flex-shrink:0;margin-right:0.2rem;" title="Factory preset — use Save As to create a copy"></sl-icon>';
+        }
         html += '<span class="preset-item-name">' + S.esc(p.name) + '</span>';
         html += '<span class="preset-item-machine">' + S.esc(p.macro) + '</span>';
-        html += '<button class="preset-item-delete" data-delete-preset-id="' + S.esc(p.id) + '" title="Delete preset">';
-        html += '<sl-icon name="trash3"></sl-icon>';
-        html += '</button>';
+        if (!isFactory) {
+          html += '<button class="preset-item-delete" data-delete-preset-id="' + S.esc(p.id) + '" title="Delete preset">';
+          html += '<sl-icon name="trash3"></sl-icon>';
+          html += '</button>';
+        }
         html += '</div>';
       });
     });
@@ -2106,6 +2225,23 @@ window.TBD.shared = {
 
     if (preset.values && preset.values.length > 0) {
       state.paramValues = preset.values.slice();
+      // Ensure all values are defined (no nulls/undefineds from sparse arrays)
+      for (var vi = 0; vi < state.paramValues.length; vi++) {
+        if (state.paramValues[vi] === undefined || state.paramValues[vi] === null) {
+          state.paramValues[vi] = 0;
+        }
+      }
+    }
+
+    // If definition has more params than the preset, fill missing values with defaults
+    if (def && def.groups) {
+      def.groups.forEach(function(g) {
+        (g.parameters || []).forEach(function(p) {
+          if (state.paramValues[p.idx] === undefined) {
+            state.paramValues[p.idx] = p.def || 0;
+          }
+        });
+      });
     }
 
     var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
@@ -2194,8 +2330,15 @@ window.TBD.shared = {
     var old = document.getElementById('save-preset-dialog');
     if (old) old.remove();
 
+    var F = window.TBD.factory;
+    var isFromFactory = state.activePreset && F && F.isFactoryPreset(state.activePreset.id);
+
     var defaultName = state.activePreset ? state.activePreset.name : (state.activeMacroDef ? state.activeMacroDef.name : '');
+    // If cloning a factory preset, append " (copy)" to encourage a new name
+    if (isFromFactory) defaultName = defaultName + ' (copy)';
     var defaultGroup = state.activePreset ? (state.activePreset.group || '') : (state.activeMachine || '');
+    // Factory presets go to "User" group by default when cloning
+    if (isFromFactory && defaultGroup) defaultGroup = 'User';
     var macroName = state.activeMacroDef ? (state.activeMacroDef.name || state.activeMacroDef.id) : '';
     var machineName = '';
     if (state.activeMachine) {
@@ -2258,12 +2401,35 @@ window.TBD.shared = {
       }
 
       var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      // Prevent overwriting factory presets
+      var Fcheck = window.TBD.factory;
+      if (Fcheck && Fcheck.isFactoryPreset(id)) {
+        nameInput.setAttribute('help-text', 'This name matches a factory preset — choose a different name');
+        nameInput.focus();
+        return;
+      }
+
+      // Produce a dense values array trimmed to the definition's parameter count
+      var paramCount = 0;
+      if (state.activeMacroDef && state.activeMacroDef.groups) {
+        state.activeMacroDef.groups.forEach(function(g) {
+          (g.parameters || []).forEach(function(p) {
+            if (p.idx >= paramCount) paramCount = p.idx + 1;
+          });
+        });
+      }
+      var values = [];
+      for (var vi = 0; vi < paramCount; vi++) {
+        var raw = state.paramValues[vi];
+        values[vi] = (raw !== undefined && raw !== null) ? Math.round(raw) : 0;
+      }
       var preset = {
         id: id,
         name: name,
         group: group,
         macro: state.activeMacroDef.id,
-        values: state.paramValues.slice(),
+        values: values,
       };
 
       saveBtn.setAttribute('loading', '');
@@ -2305,6 +2471,11 @@ window.TBD.shared = {
   // ─── Delete Preset ────────────────────────────────────────
 
   function deletePreset(presetId) {
+    var F = window.TBD.factory;
+    if (F && F.isFactoryPreset(presetId)) {
+      S.toast('Factory presets cannot be deleted', 'warning', 3000);
+      return;
+    }
     var preset = S.data.soundPresets.find(function(p) { return p.id === presetId; });
     var displayName = preset ? preset.name : presetId;
 
@@ -2403,6 +2574,22 @@ window.TBD.shared = {
   }
 
   function importSinglePreset(preset) {
+    if (!preset.id || !preset.macro || !Array.isArray(preset.values)) {
+      S.toast('Invalid preset: missing id, macro, or values', 'danger', 3000);
+      return;
+    }
+    // Verify the referenced macro definition exists
+    var macroDef = S.data.macroDefs.find(function(d) { return d.id === preset.macro; });
+    if (!macroDef) {
+      S.toast('Macro definition "' + preset.macro + '" not found on device. Import the macro first.', 'warning', 4000);
+      return;
+    }
+    // Count expected params and warn on mismatch
+    var expectedCount = 0;
+    (macroDef.groups || []).forEach(function(g) { expectedCount += (g.parameters || []).length; });
+    if (preset.values.length !== expectedCount) {
+      if (!confirm('Preset has ' + preset.values.length + ' values but macro "' + preset.macro + '" has ' + expectedCount + ' parameters. Import anyway?')) return;
+    }
     var filePath = 'macrosoundpresets/' + preset.id + '.json';
     var jsonStr = JSON.stringify(preset, null, 2);
 
@@ -2551,6 +2738,64 @@ window.TBD.shared = {
     initialized: false,
   };
 
+  // ─── UI Type Lookup ────────────────────────────────────────
+  // Machine-specific CC id → {ui, curve} overrides — shared by
+  // createOneToOneMapping() and the per-knob auto-select logic.
+  var machineUiMap = {
+    ro:  { bank: {ui:'samplebank'}, slice: {ui:'sampleslice'}, start: {ui:'sampleoffset'}, end: {ui:'sampleoffset'}, cutoff: {ui:'filtercutoff',curve:'log'}, reso: {ui:'filterq'}, type: {ui:'filtertype'}, bitcr: {ui:'bignum'}, attack: {ui:'envattack',curve:'exp'}, decay: {ui:'envdecay',curve:'exp'}, speed: {ui:'bignum'}, pitch: {ui:'bignum'}, loop: {ui:'bignum'}, pingpong: {ui:'bignum'}, ppstart: {ui:'sampleoffset'}, eg2fm: {ui:'envamount'}, tsmode: {ui:'bignum'}, tsamt: {ui:'envamount'} },
+    db:  { freq: {ui:'freq',curve:'log'}, tone: {ui:'shape'}, decay: {ui:'envdecay',curve:'exp'}, dirt: {ui:'noise'}, 'fm-env': {ui:'envamount'}, 'fm-decay': {ui:'envdecay',curve:'exp'}, 'fm-accent': {ui:'envamount'} },
+    ds:  { freq: {ui:'freq',curve:'log'}, decay: {ui:'envdecay',curve:'exp'}, fm: {ui:'shape'}, snap: {ui:'noise'}, accent: {ui:'envamount'} },
+    as:  { freq: {ui:'freq',curve:'log'}, tone: {ui:'shape'}, decay: {ui:'envdecay',curve:'exp'}, snap: {ui:'noise'}, accent: {ui:'envamount'} },
+    ab:  { freq: {ui:'freq',curve:'log'}, tone: {ui:'shape'}, decay: {ui:'envdecay',curve:'exp'}, 'a-fm': {ui:'shape3'}, 's-fm': {ui:'shape2'}, accent: {ui:'envamount'} },
+    hh1: { freq: {ui:'freq',curve:'log'}, tone: {ui:'shape'}, decay: {ui:'envdecay',curve:'exp'}, noise: {ui:'distortion'}, accent: {ui:'envamount'} },
+    hh2: { freq: {ui:'freq',curve:'log'}, tone: {ui:'shape'}, decay: {ui:'envdecay',curve:'exp'}, noise: {ui:'distortion'}, accent: {ui:'envamount'} },
+    rs:  { freq: {ui:'freq',curve:'log'}, tone: {ui:'shape'}, decay: {ui:'envdecay',curve:'exp'}, noise: {ui:'distortion'}, accent: {ui:'envamount'} },
+    cl:  { freq: {ui:'freq',curve:'log'}, tone: {ui:'shape'}, decay: {ui:'envdecay',curve:'exp'}, scale: {ui:'noise'} },
+    fmb: { 'f-b': {ui:'shape2'}, 'd-b': {ui:'shape2',curve:'exp'}, 'f-m': {ui:'shape3'}, 'd-m': {ui:'shape3',curve:'exp'}, 'b-m': {ui:'shape2'}, 'a-f': {ui:'shape3'}, 'd-f': {ui:'shape',curve:'exp'}, i: {ui:'noise'} },
+    mo:  { shape: {ui:'shape'}, p0: {ui:'shape3'}, p1: {ui:'shape2'}, waveshap: {ui:'distortion'}, attack: {ui:'envattack',curve:'exp'}, decay: {ui:'envdecay',curve:'exp'} },
+    td3: { shape: {ui:'shape'}, p0: {ui:'shape2'}, vca_d: {ui:'envdecay',curve:'exp'}, vcf_d: {ui:'envdecay',curve:'exp'}, cutoff: {ui:'filtercutoff',curve:'log'}, reso: {ui:'filterq'}, envdec: {ui:'envdecay',curve:'exp'}, type: {ui:'filtertype'} },
+    pp:  { detune: {ui:'distortion'}, cutoff: {ui:'filtercutoff',curve:'log'}, reso: {ui:'filterq'}, type: {ui:'filtertype'}, attack: {ui:'envattack',curve:'exp'}, decay: {ui:'envdecay',curve:'exp'}, release: {ui:'envdecay',curve:'exp'} },
+    wtosc: { type: {ui:'filtertype'}, cutoff: {ui:'filtercutoff',curve:'log'}, reso: {ui:'filterq'}, attack: {ui:'envattack',curve:'exp'}, decay: {ui:'envdecay',curve:'exp'}, release: {ui:'bignum',curve:'exp'} },
+    fxmaster: { compatk: {ui:'envattack',curve:'exp'}, comprel: {ui:'envdecay',curve:'exp'}, complpf: {ui:'filtercutoff',curve:'log'} },
+    fxreverb: { time: {ui:'bignum',curve:'log'}, lowpass: {ui:'bignum',curve:'log'} },
+    extdrum: { note: {ui:'midinote'} },
+  };
+
+  // Generic keyword fallback for machines/CCs not in the table above
+  var uiKeywordMap = [
+    { re: /bank/i,    ui: 'samplebank' },
+    { re: /slice/i,   ui: 'sampleslice' },
+    { re: /offset|start|end/i, ui: 'sampleoffset' },
+    { re: /cutoff|lpf|hpf/i,   ui: 'filtercutoff', curve: 'log' },
+    { re: /reso|res\b|q\b/i,   ui: 'filterq' },
+    { re: /ftype|filtertype|type/i, ui: 'filtertype' },
+    { re: /attack|atk/i,       ui: 'envattack', curve: 'exp' },
+    { re: /decay|dec\b/i,      ui: 'envdecay', curve: 'exp' },
+    { re: /release|rel\b/i,    ui: 'envdecay', curve: 'exp' },
+    { re: /amount|depth|amt/i,  ui: 'envamount' },
+    { re: /freq|frequency|pitch|tune/i, ui: 'freq', curve: 'log' },
+    { re: /note/i,              ui: 'midinote' },
+    { re: /noise/i,             ui: 'noise' },
+    { re: /shape|wave/i,        ui: 'shape' },
+    { re: /dist|drive|dirt/i,   ui: 'distortion' },
+  ];
+
+  // Lookup ui+curve for a given machine + cc id. Uses machineUiMap first,
+  // then falls back to generic keyword matching on the CC id string.
+  function lookupUiType(machineId, ccId) {
+    var mMap = machineUiMap[machineId];
+    if (mMap && mMap[ccId]) return mMap[ccId];
+    // Generic keyword fallback
+    for (var i = 0; i < uiKeywordMap.length; i++) {
+      if (uiKeywordMap[i].re.test(ccId)) {
+        var r = { ui: uiKeywordMap[i].ui };
+        if (uiKeywordMap[i].curve) r.curve = uiKeywordMap[i].curve;
+        return r;
+      }
+    }
+    return { ui: 'bignum' };
+  }
+
   // ─── API Helpers ──────────────────────────────────────────
 
   function apiGet(url) {
@@ -2647,18 +2892,26 @@ window.TBD.shared = {
       html += '<div style="padding:0.5rem 0.85rem;opacity:0.5;font-size:0.75rem;">No definitions yet</div>';
     }
 
+    var F = window.TBD.factory;
+
     filteredDefs.forEach(function(def) {
       var isActive = state.selectedDefId === def.id;
+      var isFactory = F && F.isFactoryDefinition(def.id);
       html += '<div class="preset-item' + (isActive ? ' active' : '') + '" data-def-id="' + S.esc(def.id) + '">';
+      if (isFactory) {
+        html += '<sl-icon name="lock" style="font-size:0.65rem;opacity:0.45;flex-shrink:0;margin-right:0.25rem;" title="Factory template — clone to edit"></sl-icon>';
+      }
       html += '<span class="preset-item-name">' + S.esc(def.name || def.id) + '</span>';
       var paramCount = 0;
       if (def.groups) {
         def.groups.forEach(function(g) { paramCount += (g.parameters || []).length; });
       }
       html += '<span class="preset-item-machine">' + paramCount + 'P / ' + (def.mapping || []).length + 'M</span>';
-      html += '<button class="preset-item-delete" data-delete-def-id="' + S.esc(def.id) + '" title="Delete definition">';
-      html += '<sl-icon name="trash3"></sl-icon>';
-      html += '</button>';
+      if (!isFactory) {
+        html += '<button class="preset-item-delete" data-delete-def-id="' + S.esc(def.id) + '" title="Delete definition">';
+        html += '<sl-icon name="trash3"></sl-icon>';
+        html += '</button>';
+      }
       html += '</div>';
     });
 
@@ -2750,6 +3003,55 @@ window.TBD.shared = {
       });
     });
     if (!def.mapping) def.mapping = [];
+  }
+
+  /**
+   * Re-index all parameters to contiguous 0..N-1 and update mapping src references.
+   * Call after removing knobs, on import, or before save to ensure clean idx values.
+   */
+  function reindexParameters(def) {
+    var oldToNew = {};
+    var newIdx = 0;
+    (def.groups || []).forEach(function(g) {
+      (g.parameters || []).forEach(function(p) {
+        oldToNew[p.idx] = newIdx;
+        p.idx = newIdx;
+        newIdx++;
+      });
+    });
+    // Update mapping src references
+    (def.mapping || []).forEach(function(m) {
+      (m.add || []).forEach(function(a) {
+        if (oldToNew[a.src] !== undefined) {
+          a.src = oldToNew[a.src];
+        }
+      });
+    });
+  }
+
+  /**
+   * Produce a clean copy of a definition for saving/export.
+   * - Re-indexes parameters to contiguous 0..N-1
+   * - Strips empty trailing groups (keeps only groups that have parameters)
+   * - Removes curve:'linear' from parameters (linear is the default)
+   */
+  function cleanDefinitionForSave(def) {
+    var clean = JSON.parse(JSON.stringify(def));
+    // Strip empty trailing groups
+    while (clean.groups.length > 0 &&
+           (!clean.groups[clean.groups.length - 1].parameters ||
+            clean.groups[clean.groups.length - 1].parameters.length === 0)) {
+      clean.groups.pop();
+    }
+    // Re-index to close any gaps from removed knobs
+    reindexParameters(clean);
+    // Remove default curve from parameters
+    clean.groups.forEach(function(g) {
+      (g.parameters || []).forEach(function(p) {
+        if (p.curve === 'linear') delete p.curve;
+      });
+    });
+    return clean;
   }
 
   // ─── Definition Header (above sub-tabs) ───────────────
@@ -3106,7 +3408,7 @@ window.TBD.shared = {
         html += '<label class="mb-prop"><span>max</span><input type="number" class="mapping-input mb-prop-max" value="' + (param.max || 127) + '" data-group="' + gi + '" data-param="' + pi + '" /></label>';
         html += '<label class="mb-prop"><span>res</span><input type="number" class="mapping-input mb-prop-res" value="' + (param.res || 64) + '" data-group="' + gi + '" data-param="' + pi + '" /></label>';
         html += '<label class="mb-prop"><span>ui</span><select class="mapping-select mb-prop-ui" data-group="' + gi + '" data-param="' + pi + '">';
-        ['bignum', 'slider', 'toggle', 'selector'].forEach(function(ui) {
+        ['bignum', 'slider', 'toggle', 'selector', 'knob', 'freq', 'midinote', 'shape', 'shape2', 'shape3', 'noise', 'distortion', 'envattack', 'envdecay', 'envamount', 'filtercutoff', 'filterq', 'filtertype', 'samplebank', 'sampleslice', 'sampleoffset'].forEach(function(ui) {
           html += '<option value="' + ui + '"' + (param.ui === ui ? ' selected' : '') + '>' + ui + '</option>';
         });
         html += '</select></label>';
@@ -3300,20 +3602,28 @@ window.TBD.shared = {
       }
     });
 
+    var FP = window.TBD.factory;
+
     matching.forEach(function(preset) {
+      var isFactory = FP && FP.isFactoryPreset(preset.id);
       html += '<div class="sp-card" data-preset-id="' + S.esc(preset.id) + '">';
 
       // Card header: labeled fields + action buttons
       html += '<div class="sp-card-header">';
       html += '<div class="sp-card-fields">';
+      if (isFactory) {
+        html += '<sl-icon name="lock" style="font-size:0.6rem;opacity:0.45;margin-right:0.25rem;" title="Factory preset — read-only"></sl-icon>';
+      }
       html += '<label class="sp-field-label">Preset Name</label>';
-      html += '<input class="mapping-input sp-name-input preset-name-input" value="' + S.esc(preset.name || preset.id) + '" data-preset-id="' + S.esc(preset.id) + '" placeholder="e.g. Fat Punch" />';
+      html += '<input class="mapping-input sp-name-input preset-name-input" value="' + S.esc(preset.name || preset.id) + '" data-preset-id="' + S.esc(preset.id) + '" placeholder="e.g. Fat Punch"' + (isFactory ? ' readonly' : '') + ' />';
       html += '<label class="sp-field-label" style="margin-left:0.5rem;">Group</label>';
-      html += '<input class="mapping-input sp-group-input preset-group-input" value="' + S.esc(preset.group || '') + '" data-preset-id="' + S.esc(preset.id) + '" placeholder="e.g. User" />';
+      html += '<input class="mapping-input sp-group-input preset-group-input" value="' + S.esc(preset.group || '') + '" data-preset-id="' + S.esc(preset.id) + '" placeholder="e.g. User"' + (isFactory ? ' readonly' : '') + ' />';
       html += '</div>';
       html += '<div class="sp-card-actions">';
-      html += '<button class="mapping-btn save-preset-btn" data-preset-id="' + S.esc(preset.id) + '" title="Save changes"><sl-icon name="floppy" style="font-size:0.7rem;"></sl-icon> Save</button>';
-      html += '<button class="mapping-btn delete-preset-btn" data-preset-id="' + S.esc(preset.id) + '" title="Delete preset"><sl-icon name="trash3" style="font-size:0.7rem;"></sl-icon> Delete</button>';
+      if (!isFactory) {
+        html += '<button class="mapping-btn save-preset-btn" data-preset-id="' + S.esc(preset.id) + '" title="Save changes"><sl-icon name="floppy" style="font-size:0.7rem;"></sl-icon> Save</button>';
+        html += '<button class="mapping-btn delete-preset-btn" data-preset-id="' + S.esc(preset.id) + '" title="Delete preset"><sl-icon name="trash3" style="font-size:0.7rem;"></sl-icon> Delete</button>';
+      }
       html += '</div>';
       html += '</div>';
 
@@ -3362,6 +3672,12 @@ window.TBD.shared = {
       input.addEventListener('change', function() {
         var gi = parseInt(input.getAttribute('data-group'), 10);
         if (state.editDef && state.editDef.groups[gi]) {
+          // Rompler macros: first page must always be called SAMPLE
+          if (gi === 0 && state.editDef.machine === 'ro' && input.value !== 'SAMPLE') {
+            S.toast('Rompler macros require the first page to be named SAMPLE', 'warning', 3000);
+            input.value = 'SAMPLE';
+            return;
+          }
           state.editDef.groups[gi].name = input.value;
           state.dirty = true;
         }
@@ -3419,7 +3735,7 @@ window.TBD.shared = {
         state.editDef.groups[gi].parameters.push({
           idx: maxIdx + 1,
           name: 'New Knob',
-          def: 0, min: 0, max: 127, res: 64, curve: 'linear', ui: 'bignum',
+          def: 0, min: 0, max: 127, res: 64, ui: 'bignum',
         });
         state.dirty = true;
         renderMacroBuilderSection();
@@ -3441,6 +3757,8 @@ window.TBD.shared = {
             return m.add.length > 0 || (m.start !== undefined);
           });
         }
+        // Re-index remaining parameters to close the gap
+        reindexParameters(state.editDef);
         state.dirty = true;
         renderMacroBuilderSection();
       });
@@ -3685,7 +4003,35 @@ window.TBD.shared = {
         var ctrl = parseInt(select.value, 10);
         var srcIdx = parseInt(select.getAttribute('data-src-idx'), 10);
         if (isNaN(ctrl) || isNaN(srcIdx)) return;
-        state.editDef.mapping.push({ ctrl: ctrl, start: 0, add: [{ src: srcIdx, mul: 1, div: 1 }] });
+        var addEntry = { src: srcIdx, mul: 1, div: 1 };
+
+        // Auto-fill name + ui type for this knob based on the CC being mapped
+        var machine = state.editDef.machine;
+        if (machine) {
+          var machineInfo = S.getMachineInfo(machine);
+          if (machineInfo && machineInfo.parameters) {
+            var ccParam = machineInfo.parameters.find(function(p) { return p.ctrl === ctrl; });
+            if (ccParam) {
+              var uiInfo = lookupUiType(machine, ccParam.id);
+              // Find the knob parameter and update its name, ui + curve
+              state.editDef.groups.forEach(function(g) {
+                (g.parameters || []).forEach(function(p) {
+                  if (p.idx === srcIdx) {
+                    // Auto-fill name if still generic (user can still rename later)
+                    if (!p.name || p.name === 'New Knob' || /^CC\d+$/.test(p.name)) {
+                      p.name = ccParam.name || ('CC' + ctrl);
+                    }
+                    p.ui = uiInfo.ui;
+                    if (uiInfo.curve) { p.curve = uiInfo.curve; addEntry.curve = uiInfo.curve; }
+                    else { delete p.curve; }
+                  }
+                });
+              });
+            }
+          }
+        }
+
+        state.editDef.mapping.push({ ctrl: ctrl, start: 0, add: [addEntry] });
         state.dirty = true;
         renderMacroBuilderSection();
       });
@@ -3761,21 +4107,28 @@ window.TBD.shared = {
     if (!state.editDef.id) { state.editDef.id = state.editDef.machine + '-allparams'; }
     if (!state.editDef.name) { state.editDef.name = (machineInfo.name || state.editDef.machine) + ' All params'; }
 
+    var machine = state.editDef.machine;
+
     state.editDef.groups = [];
     var paramIdx = 0;
+    var isRompler = machine === 'ro';
     for (var g = 0; g < 6 && paramIdx < params.length; g++) {
       var groupParams = [];
       for (var p = 0; p < 4 && paramIdx < params.length; p++) {
         var cc = params[paramIdx];
-        groupParams.push({
+        var uiInfo = lookupUiType(machine, cc.id);
+        var paramObj = {
           idx: paramIdx,
           name: cc.name || ('CC' + cc.ctrl),
           def: cc.def || 0,
-          min: 0, max: 127, res: 64, curve: 'linear', ui: 'bignum',
-        });
+          min: 0, max: 127, res: 64, ui: uiInfo.ui,
+        };
+        if (uiInfo.curve) paramObj.curve = uiInfo.curve;
+        groupParams.push(paramObj);
         paramIdx++;
       }
-      state.editDef.groups.push({ name: 'Page ' + (g + 1), parameters: groupParams });
+      var pageName = (isRompler && g === 0) ? 'SAMPLE' : 'Page ' + (g + 1);
+      state.editDef.groups.push({ name: pageName, parameters: groupParams });
     }
 
     state.editDef.mapping = [];
@@ -3785,7 +4138,18 @@ window.TBD.shared = {
     });
     params.forEach(function(cc, i) {
       if (i < allParams.length) {
-        state.editDef.mapping.push({ ctrl: cc.ctrl, start: 0, add: [{ src: allParams[i].idx, mul: 1, div: 1 }] });
+        var mapStart = 0;
+        var mapMul = 1;
+        var mapCurve = allParams[i].curve;
+        if (isRompler) {
+          // Attack/Decay need start:1 to avoid div-by-zero in envelope
+          if (cc.id === 'attack' || cc.id === 'decay') mapStart = 1;
+          // TSMode needs mul:64 for proper 0/1/2 integer mapping
+          if (cc.id === 'tsmode') mapMul = 64;
+        }
+        var addEntry = { src: allParams[i].idx, mul: mapMul, div: 1 };
+        if (mapCurve) addEntry.curve = mapCurve;
+        state.editDef.mapping.push({ ctrl: cc.ctrl, start: mapStart, add: [addEntry] });
       }
     });
 
@@ -3857,7 +4221,22 @@ window.TBD.shared = {
       }
 
       var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      // Prevent overwriting factory presets
+      var Fcheck = window.TBD.factory;
+      if (Fcheck && Fcheck.isFactoryPreset(id)) {
+        nameInput.setAttribute('help-text', 'This name matches a factory preset \u2014 choose a different name');
+        nameInput.focus();
+        return;
+      }
+
+      // Build a dense values array — fill any gaps with 0
+      var maxIdx = -1;
+      state.editDef.groups.forEach(function(g) {
+        (g.parameters || []).forEach(function(p) { if (p.idx > maxIdx) maxIdx = p.idx; });
+      });
       var values = [];
+      for (var vi = 0; vi <= maxIdx; vi++) values[vi] = 0;
       state.editDef.groups.forEach(function(g) {
         (g.parameters || []).forEach(function(p) { values[p.idx] = p.def || 0; });
       });
@@ -3892,6 +4271,11 @@ window.TBD.shared = {
   }
 
   function saveEditedPreset(presetId, container) {
+    var F = window.TBD.factory;
+    if (F && F.isFactoryPreset(presetId)) {
+      S.toast('Factory presets are read-only', 'warning', 3000);
+      return;
+    }
     var preset = S.data.soundPresets.find(function(p) { return p.id === presetId; });
     if (!preset) { S.toast('Preset not found', 'danger', 2000); return; }
 
@@ -3923,6 +4307,11 @@ window.TBD.shared = {
   }
 
   function deleteSoundPreset(presetId) {
+    var F = window.TBD.factory;
+    if (F && F.isFactoryPreset(presetId)) {
+      S.toast('Factory presets cannot be deleted', 'warning', 3000);
+      return;
+    }
     var preset = S.data.soundPresets.find(function(p) { return p.id === presetId; });
     var displayName = preset ? preset.name : presetId;
 
@@ -3973,6 +4362,11 @@ window.TBD.shared = {
   // ─── Delete Macro Definition ────────────────────────────────
 
   function deleteDefinition(defId) {
+    var F = window.TBD.factory;
+    if (F && F.isFactoryDefinition(defId)) {
+      S.toast('Factory definitions cannot be deleted — clone it instead', 'warning', 3000);
+      return;
+    }
     var def = S.data.macroDefs.find(function(d) { return d.id === defId; });
     var displayName = def ? (def.name || def.id) : defId;
 
@@ -4053,7 +4447,20 @@ window.TBD.shared = {
     if (!state.editDef.id) { S.toast('Definition ID is required', 'warning', 2000); return; }
     if (!state.editDef.machine) { S.toast('Select a machine for this definition', 'warning', 2000); return; }
 
-    var jsonStr = JSON.stringify(state.editDef, null, 2);
+    // Factory definitions cannot be overwritten — prompt for a new name
+    var F = window.TBD.factory;
+    if (F && F.isFactoryDefinition(state.editDef.id)) {
+      var newId = prompt('Factory definitions are read-only.\nEnter a new ID to save as a copy:', state.editDef.id + '-custom');
+      if (!newId) return;
+      newId = newId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/^-|-$/g, '');
+      if (!newId) { S.toast('Invalid ID', 'warning', 2000); return; }
+      if (F.isFactoryDefinition(newId)) { S.toast('That ID is also a factory definition', 'warning', 2000); return; }
+      state.editDef.id = newId;
+      state.selectedDefId = newId;
+    }
+
+    var cleanDef = cleanDefinitionForSave(state.editDef);
+    var jsonStr = JSON.stringify(cleanDef, null, 2);
     var filePath = 'macrodefinitions/' + state.editDef.id + '.json';
 
     S.showLoading('Saving definition\u2026');
@@ -4084,7 +4491,8 @@ window.TBD.shared = {
 
   function exportDefinition() {
     if (!state.editDef) { S.toast('Nothing to export', 'warning', 2000); return; }
-    var blob = new Blob([JSON.stringify(state.editDef, null, 2)], { type: 'application/json' });
+    var cleanDef = cleanDefinitionForSave(state.editDef);
+    var blob = new Blob([JSON.stringify(cleanDef, null, 2)], { type: 'application/json' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = (state.editDef.id || 'definition') + '.json';
@@ -4103,10 +4511,15 @@ window.TBD.shared = {
       reader.onload = function() {
         try {
           var data = JSON.parse(reader.result);
-          if (data.groups && data.mapping) {
+          if (data.groups && data.id) {
+            // Validate machine matches current track (if a track is selected)
+            if (state.editDef && state.editDef.machine && data.machine && data.machine !== state.editDef.machine) {
+              if (!confirm('This definition is for machine "' + data.machine + '" but the current track uses "' + state.editDef.machine + '". Import anyway?')) return;
+            }
             state.editDef = data;
             state.selectedDefId = data.id || null;
             ensureGroupStructure(state.editDef);
+            reindexParameters(state.editDef);
             state.dirty = true;
             renderMacroBuilderSection();
             // Sync performer with the imported definition
@@ -4211,8 +4624,12 @@ window.TBD.shared = {
   var dirty = false;
   var facetedData = null;     // per-track: [ { machine, name, macros: [{id, name, presets}] } ]
   var kitNames = [];          // kit names from sample_rom.jsn via samples API
+  var kitFiles = [];          // kit filenames from smp_banks (e.g. "def_smp.jsn")
   var kitMeta = [];           // per-kit bank metadata [{banks: [{name, color}]}]
+  var activeKitIndex = 0;     // index of the currently active kit in PSRAM
+  var activeKitEntries = [];  // sample entries for the active kit
 
+  var SLICES_PER_BANK = 32;
   var DEFAULT_BANKS = [
     'KICK', 'SNARE', 'HIHAT CL', 'HIHAT OP',
     'CLAP', 'RIM', 'PERC', 'OTHER'
@@ -4317,24 +4734,91 @@ window.TBD.shared = {
   }
 
   /**
-   * Get the saved romBank (group index) for a track (rompler tracks only).
+   * Get the saved sampleBank (group index) for a track (rompler tracks only).
    */
   function getDefaultBank(trackIndex) {
     if (!trackDefaults || !trackDefaults.tracks) return 0;
     var entry = trackDefaults.tracks.find(function(t) { return t.index === trackIndex; });
-    return entry && typeof entry.romBank === 'number' ? entry.romBank : 0;
+    return entry && typeof entry.sampleBank === 'number' ? entry.sampleBank : 0;
+  }
+
+  /**
+   * Get the number of populated banks for a kit index.
+   * For the active kit, count from actual entries. Otherwise use metadata or default 8.
+   */
+  function getBankCountForKit(kitIndex) {
+    if (kitIndex === activeKitIndex && activeKitEntries.length > 0) {
+      return Math.ceil(activeKitEntries.length / SLICES_PER_BANK);
+    }
+    if (kitMeta && kitMeta[kitIndex] &&
+        kitMeta[kitIndex].banks && kitMeta[kitIndex].banks.length > 0) {
+      return kitMeta[kitIndex].banks.length;
+    }
+    return DEFAULT_BANKS.length;
+  }
+
+  /**
+   * Get the number of valid slices for a given bank in a kit.
+   * For the active kit, count actual entries. Otherwise return max 32.
+   */
+  function getSliceCountForBank(kitIndex, bankIndex) {
+    if (kitIndex === activeKitIndex && activeKitEntries.length > 0) {
+      var bankStart = bankIndex * SLICES_PER_BANK;
+      var bankEnd = Math.min(bankStart + SLICES_PER_BANK, activeKitEntries.length);
+      if (bankStart >= activeKitEntries.length) return 0;
+      return bankEnd - bankStart;
+    }
+    return SLICES_PER_BANK;
   }
 
   /**
    * Get bank/group names for the currently selected kit index.
    * Uses smp_bank_meta from the samples API, with fallback to DEFAULT_BANKS.
+   * Only returns names for banks that actually have entries.
    */
   function getBankNamesForKit(kitIndex) {
+    var bankCount = getBankCountForKit(kitIndex);
     if (kitMeta && kitMeta[kitIndex] &&
         kitMeta[kitIndex].banks && kitMeta[kitIndex].banks.length > 0) {
-      return kitMeta[kitIndex].banks.map(function(b) { return b.name; });
+      return kitMeta[kitIndex].banks.slice(0, bankCount).map(function(b) { return b.name; });
     }
-    return DEFAULT_BANKS;
+    return DEFAULT_BANKS.slice(0, bankCount);
+  }
+
+  /**
+   * Get display name for a slice: show sample filename if available, otherwise just the index.
+   */
+  function getSliceName(kitIndex, bankIndex, sliceIndex) {
+    if (kitIndex === activeKitIndex && activeKitEntries.length > 0) {
+      var entryIdx = bankIndex * SLICES_PER_BANK + sliceIndex;
+      if (entryIdx < activeKitEntries.length) {
+        var entry = activeKitEntries[entryIdx];
+        if (entry && entry.filename) {
+          return sliceIndex + ' — ' + entry.filename;
+        }
+      }
+    }
+    return String(sliceIndex);
+  }
+
+  /**
+   * Rebuild the slice dropdown for a specific rompler track based on selected bank.
+   */
+  function rebuildSliceDropdown(trackIdx, kitIndex, bankIndex, selectedSlice) {
+    var sliceCell = document.querySelector('.td-col-slice.td-rompler-cell[data-track="' + trackIdx + '"]');
+    if (!sliceCell) return;
+    var sliceCount = getSliceCountForBank(kitIndex, bankIndex);
+    var html = '<select class="td-select td-slice-select" data-track="' + trackIdx + '">';
+    for (var sl = 0; sl < sliceCount; sl++) {
+      var slSel = (sl === selectedSlice) ? ' selected' : '';
+      var sliceName = getSliceName(kitIndex, bankIndex, sl);
+      html += '<option value="' + sl + '"' + slSel + '>' + S.esc(sliceName) + '</option>';
+    }
+    html += '</select>';
+    sliceCell.innerHTML = html;
+    sliceCell.querySelector('.td-slice-select').addEventListener('change', function() {
+      dirty = true; updateSaveButton();
+    });
   }
 
   /**
@@ -4344,15 +4828,22 @@ window.TBD.shared = {
     var kitSel = document.getElementById('td-global-kit');
     var kitIdx = kitSel ? parseInt(kitSel.value, 10) : 0;
     var bankNames = getBankNamesForKit(kitIdx);
+    var bankCount = bankNames.length;
     var selects = document.querySelectorAll('.td-bank-select');
     selects.forEach(function(sel) {
       var current = parseInt(sel.value, 10) || 0;
+      if (current >= bankCount) current = 0;
       var html = '';
       bankNames.forEach(function(name, i) {
         var selected = (i === current) ? ' selected' : '';
         html += '<option value="' + i + '"' + selected + '>' + S.esc(name) + '</option>';
       });
       sel.innerHTML = html;
+      // Also rebuild the slice dropdown for this track
+      var trackIdx = parseInt(sel.getAttribute('data-track'), 10);
+      var sliceSel = document.querySelector('.td-slice-select[data-track="' + trackIdx + '"]');
+      var currentSlice = sliceSel ? parseInt(sliceSel.value, 10) || 0 : 0;
+      rebuildSliceDropdown(trackIdx, kitIdx, current, currentSlice);
     });
   }
 
@@ -4376,16 +4867,33 @@ window.TBD.shared = {
         } else {
           kitNames = [];
         }
+        if (data && data.kits && data.kits.smp_banks) {
+          kitFiles = data.kits.smp_banks;
+        } else {
+          kitFiles = [];
+        }
         if (data && data.kits && data.kits.smp_bank_meta) {
           kitMeta = data.kits.smp_bank_meta;
         } else {
           kitMeta = [];
         }
+        if (data && data.kits && typeof data.kits.active_smp_bank === 'number') {
+          activeKitIndex = data.kits.active_smp_bank;
+        } else {
+          activeKitIndex = 0;
+        }
+        if (data && data.active_kit_entries && Array.isArray(data.active_kit_entries)) {
+          activeKitEntries = data.active_kit_entries;
+        } else {
+          activeKitEntries = [];
+        }
         return kitNames;
       })
       .catch(function() {
         kitNames = [];
+        kitFiles = [];
         kitMeta = [];
+        activeKitEntries = [];
         return kitNames;
       });
   }
@@ -4499,16 +5007,15 @@ window.TBD.shared = {
       bankHtml += '</select>';
       bankCell.innerHTML = bankHtml;
 
-      // Build slice dropdown
-      var sliceHtml = '<select class="td-select td-slice-select" data-track="' + trackIdx + '">';
-      for (var sl = 0; sl < 32; sl++) {
-        sliceHtml += '<option value="' + sl + '">' + sl + '</option>';
-      }
-      sliceHtml += '</select>';
-      sliceCell.innerHTML = sliceHtml;
+      // Build slice dropdown for bank 0
+      rebuildSliceDropdown(trackIdx, kitIdx, 0, 0);
 
       // Attach change listeners to new selects
-      bankCell.querySelector('.td-bank-select').addEventListener('change', function() { dirty = true; updateSaveButton(); });
+      bankCell.querySelector('.td-bank-select').addEventListener('change', function() {
+        var newBank = parseInt(this.value, 10);
+        rebuildSliceDropdown(trackIdx, kitIdx, newBank, 0);
+        dirty = true; updateSaveButton();
+      });
       sliceCell.querySelector('.td-slice-select').addEventListener('change', function() { dirty = true; updateSaveButton(); });
     } else {
       bankCell.innerHTML = '<span class="td-na">—</span>';
@@ -4530,8 +5037,10 @@ window.TBD.shared = {
 
     // ─── Global kit selector ─────────────────────────────────
     if (kitNames.length > 0) {
-      var savedKit = (trackDefaults && typeof trackDefaults.sampleKit === 'number')
-        ? trackDefaults.sampleKit : 0;
+      var savedKitFile = (trackDefaults && typeof trackDefaults.kit === 'string')
+        ? trackDefaults.kit : (kitFiles.length > 0 ? kitFiles[0] : '');
+      var savedKit = kitFiles.indexOf(savedKitFile);
+      if (savedKit < 0) savedKit = 0;
       html += '<div class="td-sample-bank-section">';
       html += '<label><strong>Kit (PSRAM)</strong> ';
       html += '<select class="td-select" id="td-global-kit">';
@@ -4599,8 +5108,10 @@ window.TBD.shared = {
       var isSelectedRompler = (currentMachine === 'ro');
       var savedBank = getDefaultBank(idx);
       var savedSlice = getDefaultSlice(idx);
-      var kitIdx = (trackDefaults && typeof trackDefaults.sampleKit === 'number')
-        ? trackDefaults.sampleKit : 0;
+      var savedKitFile2 = (trackDefaults && typeof trackDefaults.kit === 'string')
+        ? trackDefaults.kit : (kitFiles.length > 0 ? kitFiles[0] : '');
+      var kitIdx = kitFiles.indexOf(savedKitFile2);
+      if (kitIdx < 0) kitIdx = 0;
       var bankNames = getBankNamesForKit(kitIdx);
 
       html += '<span class="td-col-bank td-rompler-cell" data-track="' + idx + '">';
@@ -4618,10 +5129,12 @@ window.TBD.shared = {
 
       html += '<span class="td-col-slice td-rompler-cell" data-track="' + idx + '">';
       if (isSelectedRompler) {
+        var sliceCount = getSliceCountForBank(kitIdx, savedBank);
         html += '<select class="td-select td-slice-select" data-track="' + idx + '">';
-        for (var sl = 0; sl < 32; sl++) {
+        for (var sl = 0; sl < sliceCount; sl++) {
           var slSel = (sl === savedSlice) ? ' selected' : '';
-          html += '<option value="' + sl + '"' + slSel + '>' + sl + '</option>';
+          var sliceName = getSliceName(kitIdx, savedBank, sl);
+          html += '<option value="' + sl + '"' + slSel + '>' + sliceName + '</option>';
         }
         html += '</select>';
       } else {
@@ -4683,9 +5196,14 @@ window.TBD.shared = {
       });
     });
 
-    // Attach bank (group) change listeners
+    // Attach bank (group) change listeners — also rebuilds slice dropdown
     body.querySelectorAll('.td-bank-select').forEach(function(sel) {
       sel.addEventListener('change', function() {
+        var trackIdx = parseInt(sel.getAttribute('data-track'), 10);
+        var kitSel2 = document.getElementById('td-global-kit');
+        var kitIdx2 = kitSel2 ? parseInt(kitSel2.value, 10) : 0;
+        var newBank = parseInt(sel.value, 10);
+        rebuildSliceDropdown(trackIdx, kitIdx2, newBank, 0);
         dirty = true;
         updateSaveButton();
       });
@@ -4717,13 +5235,16 @@ window.TBD.shared = {
   function collectFromUI() {
     // Read global kit selection
     var kitSel = document.getElementById('td-global-kit');
-    var sampleKit = kitSel ? parseInt(kitSel.value, 10) : 0;
+    var kitIdx = kitSel ? parseInt(kitSel.value, 10) : 0;
+    var kitFile = (kitFiles.length > kitIdx) ? kitFiles[kitIdx] : (kitFiles[0] || 'def_smp.jsn');
 
     var result = {
       _comment: 'Default preset per track, loaded by the Pico via SPI command 0xA5.',
       _comment2: 'Preset IDs = filenames (without .json) from data/macrosoundpresets/.',
       _comment3: 'Omit a track entry to let the Pico use the first available preset.',
-      sampleKit: sampleKit,
+      _comment4: 'The kit field sets which kit file to activate in PSRAM (matched by filename).',
+      _comment5: 'NOTE: all romplers share the same PSRAM kit — only one kit is active at a time.',
+      kit: kitFile,
       tracks: []
     };
 
@@ -4750,9 +5271,8 @@ window.TBD.shared = {
         // Add rompler-specific fields only when machine is set to Rompler
         var machineVal = machineSel ? machineSel.value : '';
         if (machineVal === 'ro') {
-          entry.sampleKit = sampleKit;
           var bankGroupSel = document.querySelector('.td-bank-select[data-track="' + idx + '"]');
-          entry.romBank = bankGroupSel ? parseInt(bankGroupSel.value, 10) : 0;
+          entry.sampleBank = bankGroupSel ? parseInt(bankGroupSel.value, 10) : 0;
           var sliceSel = document.querySelector('.td-slice-select[data-track="' + idx + '"]');
           entry.sampleSlice = sliceSel ? parseInt(sliceSel.value, 10) : 0;
         }

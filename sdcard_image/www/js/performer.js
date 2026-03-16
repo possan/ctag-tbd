@@ -492,16 +492,24 @@
       groups[g].push(p);
     });
 
+    var F = window.TBD.factory;
+
     Object.keys(groups).sort().forEach(function(groupName) {
       html += '<div class="preset-category">' + S.esc(groupName) + '</div>';
       groups[groupName].forEach(function(p) {
         var isActive = state.activePreset && state.activePreset.id === p.id;
+        var isFactory = F && F.isFactoryPreset(p.id);
         html += '<div class="preset-item' + (isActive ? ' active' : '') + '" data-preset-id="' + S.esc(p.id) + '">';
+        if (isFactory) {
+          html += '<sl-icon name="lock" style="font-size:0.6rem;opacity:0.4;flex-shrink:0;margin-right:0.2rem;" title="Factory preset — use Save As to create a copy"></sl-icon>';
+        }
         html += '<span class="preset-item-name">' + S.esc(p.name) + '</span>';
         html += '<span class="preset-item-machine">' + S.esc(p.macro) + '</span>';
-        html += '<button class="preset-item-delete" data-delete-preset-id="' + S.esc(p.id) + '" title="Delete preset">';
-        html += '<sl-icon name="trash3"></sl-icon>';
-        html += '</button>';
+        if (!isFactory) {
+          html += '<button class="preset-item-delete" data-delete-preset-id="' + S.esc(p.id) + '" title="Delete preset">';
+          html += '<sl-icon name="trash3"></sl-icon>';
+          html += '</button>';
+        }
         html += '</div>';
       });
     });
@@ -583,6 +591,23 @@
 
     if (preset.values && preset.values.length > 0) {
       state.paramValues = preset.values.slice();
+      // Ensure all values are defined (no nulls/undefineds from sparse arrays)
+      for (var vi = 0; vi < state.paramValues.length; vi++) {
+        if (state.paramValues[vi] === undefined || state.paramValues[vi] === null) {
+          state.paramValues[vi] = 0;
+        }
+      }
+    }
+
+    // If definition has more params than the preset, fill missing values with defaults
+    if (def && def.groups) {
+      def.groups.forEach(function(g) {
+        (g.parameters || []).forEach(function(p) {
+          if (state.paramValues[p.idx] === undefined) {
+            state.paramValues[p.idx] = p.def || 0;
+          }
+        });
+      });
     }
 
     var track = S.data.tracks.find(function(t) { return t.index === state.activeTrack; });
@@ -671,8 +696,15 @@
     var old = document.getElementById('save-preset-dialog');
     if (old) old.remove();
 
+    var F = window.TBD.factory;
+    var isFromFactory = state.activePreset && F && F.isFactoryPreset(state.activePreset.id);
+
     var defaultName = state.activePreset ? state.activePreset.name : (state.activeMacroDef ? state.activeMacroDef.name : '');
+    // If cloning a factory preset, append " (copy)" to encourage a new name
+    if (isFromFactory) defaultName = defaultName + ' (copy)';
     var defaultGroup = state.activePreset ? (state.activePreset.group || '') : (state.activeMachine || '');
+    // Factory presets go to "User" group by default when cloning
+    if (isFromFactory && defaultGroup) defaultGroup = 'User';
     var macroName = state.activeMacroDef ? (state.activeMacroDef.name || state.activeMacroDef.id) : '';
     var machineName = '';
     if (state.activeMachine) {
@@ -735,12 +767,35 @@
       }
 
       var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      // Prevent overwriting factory presets
+      var Fcheck = window.TBD.factory;
+      if (Fcheck && Fcheck.isFactoryPreset(id)) {
+        nameInput.setAttribute('help-text', 'This name matches a factory preset — choose a different name');
+        nameInput.focus();
+        return;
+      }
+
+      // Produce a dense values array trimmed to the definition's parameter count
+      var paramCount = 0;
+      if (state.activeMacroDef && state.activeMacroDef.groups) {
+        state.activeMacroDef.groups.forEach(function(g) {
+          (g.parameters || []).forEach(function(p) {
+            if (p.idx >= paramCount) paramCount = p.idx + 1;
+          });
+        });
+      }
+      var values = [];
+      for (var vi = 0; vi < paramCount; vi++) {
+        var raw = state.paramValues[vi];
+        values[vi] = (raw !== undefined && raw !== null) ? Math.round(raw) : 0;
+      }
       var preset = {
         id: id,
         name: name,
         group: group,
         macro: state.activeMacroDef.id,
-        values: state.paramValues.slice(),
+        values: values,
       };
 
       saveBtn.setAttribute('loading', '');
@@ -782,6 +837,11 @@
   // ─── Delete Preset ────────────────────────────────────────
 
   function deletePreset(presetId) {
+    var F = window.TBD.factory;
+    if (F && F.isFactoryPreset(presetId)) {
+      S.toast('Factory presets cannot be deleted', 'warning', 3000);
+      return;
+    }
     var preset = S.data.soundPresets.find(function(p) { return p.id === presetId; });
     var displayName = preset ? preset.name : presetId;
 
@@ -880,6 +940,22 @@
   }
 
   function importSinglePreset(preset) {
+    if (!preset.id || !preset.macro || !Array.isArray(preset.values)) {
+      S.toast('Invalid preset: missing id, macro, or values', 'danger', 3000);
+      return;
+    }
+    // Verify the referenced macro definition exists
+    var macroDef = S.data.macroDefs.find(function(d) { return d.id === preset.macro; });
+    if (!macroDef) {
+      S.toast('Macro definition "' + preset.macro + '" not found on device. Import the macro first.', 'warning', 4000);
+      return;
+    }
+    // Count expected params and warn on mismatch
+    var expectedCount = 0;
+    (macroDef.groups || []).forEach(function(g) { expectedCount += (g.parameters || []).length; });
+    if (preset.values.length !== expectedCount) {
+      if (!confirm('Preset has ' + preset.values.length + ' values but macro "' + preset.macro + '" has ' + expectedCount + ' parameters. Import anyway?')) return;
+    }
     var filePath = 'macrosoundpresets/' + preset.id + '.json';
     var jsonStr = JSON.stringify(preset, null, 2);
 

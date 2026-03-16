@@ -288,6 +288,20 @@ int16_t CTAG::SP::ctagSampleRomModel::GetBankIndexFromBankName(const std::string
     return -1;
 }
 
+int16_t CTAG::SP::ctagSampleRomModel::GetBankIndexFromFileName(const std::string &fileName) {
+    if (!sample_rom.IsObject()) return -1;
+    if (!sample_rom.HasMember("smp_banks")) return -1;
+    if (!sample_rom["smp_banks"].IsArray()) return -1;
+
+    rapidjson::GenericArray<false, rapidjson::Value> arr = sample_rom["smp_banks"].GetArray();
+    for(int i = 0; i < (int)arr.Size(); i++) {
+        if(arr[i].IsString() && fileName == arr[i].GetString()) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 std::string CTAG::SP::ctagSampleRomModel::GetKitIndexJSON() {
     if (!sample_rom.IsObject()) return "{}";
     if (!sample_rom.HasMember("smp_banks")) return "{}";
