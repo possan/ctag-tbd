@@ -17,12 +17,12 @@ namespace CTAG {
             private:
                 int8_t trackToMidiChannel[16];
                 uint8_t trackBaseCC[16];
-                uint16_t trackParameterValues[16][32];
-                uint16_t outputValues[16][32];
+                uint16_t trackParameterValues[16][16];
+                uint16_t outputValues[16][16];
                 bool trackDirty[16];
                 bool bankDirty;
-                std::string trackMachineId[16];
-                std::string trackSampleBankName[16];
+                char trackMachineId[16][16];
+                char trackSampleBankName[16][16];
                 uint16_t trackSampleBankIndex[16];
                 MacroDeviceDefinition *definition[16];
 
