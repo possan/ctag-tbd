@@ -837,12 +837,20 @@ void SoundProcessorManager::SetTrackParameter(const int trackIndex, int paramete
 // }
 
 void SoundProcessorManager::RefreshMacros() {
-    // this wil lglit ch
+    ESP_LOGW("SPManager", ">>> RefreshMacros called");
     xSemaphoreTake(processMutex, portMAX_DELAY);
     synthDefinitionModel->ReloadSynthDefinitions();
     macroDeviceDefinitionModel->ReloadMachineDefinitions();
+    macroTranslator->RefreshActiveDefinitions();
     xSemaphoreGive(processMutex);
-    // macroTranslator
+}
+
+void SoundProcessorManager::RefreshSingleMacro(const string &defId) {
+    ESP_LOGI("SPManager", ">>> RefreshSingleMacro id=%s", defId.c_str());
+    xSemaphoreTake(processMutex, portMAX_DELAY);
+    macroDeviceDefinitionModel->ReloadSingleDefinition(defId);
+    macroTranslator->RefreshDefinitionById(defId);
+    xSemaphoreGive(processMutex);
 }
 
 void SoundProcessorManager::RefreshSoundPresets() {

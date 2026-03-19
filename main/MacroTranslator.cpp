@@ -215,6 +215,47 @@ void MacroTranslator::SetTrackMacroDefinition(const int trackIndex, MacroDeviceD
 
 }
 
+void MacroTranslator::RefreshActiveDefinitions() {
+    ESP_LOGW("MacroTranslator", ">>> RefreshActiveDefinitions called");
+    for (int t = 0; t < 16; t++) {
+        if (definition[t] == nullptr) {
+            ESP_LOGI("MacroTranslator", "  track %d: def=null, skip", t);
+            continue;
+        }
+        std::string macroId = definition[t]->id;
+        if (macroId.empty()) continue;
+
+        MacroDeviceDefinition *freshDef =
+            macroDeviceDefinitionModel->LoadMacroDeviceDefinition(macroId);
+        if (freshDef == nullptr) continue;
+
+        delete definition[t];
+        definition[t] = freshDef;
+        trackDirty[t] = true;
+
+        ESP_LOGI("MacroTranslator", "Refreshed track %d def '%s' (volMult=%.2f)",
+            t, macroId.c_str(), freshDef->volumeMultiplier);
+    }
+}
+
+void MacroTranslator::RefreshDefinitionById(const std::string &id) {
+    for (int t = 0; t < 16; t++) {
+        if (definition[t] == nullptr) continue;
+        if (definition[t]->id != id) continue;
+
+        MacroDeviceDefinition *freshDef =
+            macroDeviceDefinitionModel->LoadMacroDeviceDefinition(id);
+        if (freshDef == nullptr) continue;
+
+        delete definition[t];
+        definition[t] = freshDef;
+        trackDirty[t] = true;
+
+        ESP_LOGI("MacroTranslator", "Refreshed track %d def '%s' (volMult=%.2f)",
+            t, id.c_str(), freshDef->volumeMultiplier);
+    }
+}
+
 void MacroTranslator::SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value) {
     if (trackIndex < 0 || trackIndex >= 16) {
         // ESP_LOGE("MacroTranslator", "Track index out of range: %d", trackIndex);
@@ -449,7 +490,8 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
     for(int t=0; t<16; t++) {
         if (trackDirty[t]) {
             // First change machines if needed.
-            soundProcessor->setTrackMachine(t, trackMachineId[t]);
+            float volMult = (definition[t] != nullptr) ? definition[t]->volumeMultiplier : 1.0f;
+            soundProcessor->setTrackMachine(t, trackMachineId[t], volMult);
         }
     }
 

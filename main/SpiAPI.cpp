@@ -103,6 +103,9 @@ IRAM_ATTR static void spi_post_trans_cb(spi_slave_transaction_t *trans){
 }
 
 namespace CTAG::SPIAPI{
+    std::string SpiAPI::rp2350AppId;   // empty = unknown/legacy
+    bool SpiAPI::rp2350PluginLock = false;
+    bool SpiAPI::rp2350RedirectSamples = false;
     TaskHandle_t SpiAPI::hTask;
     spi_slave_transaction_t SpiAPI::transaction;
     uint8_t *SpiAPI::send_buffer, *SpiAPI::receive_buffer;
@@ -577,8 +580,15 @@ namespace CTAG::SPIAPI{
                 int64_t uptime_ms = esp_timer_get_time() / 1000;
                 if (uptime_ms < 15000) {
                     ESP_LOGW("SpiAPI", "Ignoring Reboot command during boot grace period (%lld ms uptime)", uptime_ms);
+                    // Still clear app state — RP2350 is (re)booting and will re-announce
+                    rp2350AppId.clear();
+                    rp2350PluginLock = false;
+                    rp2350RedirectSamples = false;
                     break;
                 }
+                rp2350AppId.clear();
+                rp2350PluginLock = false;
+                rp2350RedirectSamples = false;
                 ESP_LOGI("SpiAPI", "Rebooting device!");
                 esp_restart();
                 break;
@@ -906,6 +916,20 @@ namespace CTAG::SPIAPI{
                     std::string macroId = string_parameter; // receiveString(RequestType::SaveFavorite, string_parameter);
                     ESP_LOGI("SpiAPI", "Activating track %d macro %s", trackIndex, macroId.c_str());
                     CTAG::AUDIO::SoundProcessorManager::LoadTrackMacro(trackIndex, macroId);
+                }
+                break;
+
+            case RequestType::AnnounceApp:
+                {
+                    // Generic app announcement from RP2350.
+                    // uint8_param_0 bit 0 = plugin_lock (block HTTP plugin switching)
+                    // uint8_param_0 bit 1 = redirect_samples (WebUI defaults to Samples view)
+                    // string_parameter  = app display name (e.g. "Groovebox")
+                    rp2350AppId = string_parameter;
+                    rp2350PluginLock = (uint8_param_0 & 0x01) != 0;
+                    rp2350RedirectSamples = (uint8_param_0 & 0x02) != 0;
+                    ESP_LOGI("SpiAPI", "RP2350 announced app: \"%s\" (plugin_lock=%d, redirect_samples=%d)",
+                             rp2350AppId.c_str(), rp2350PluginLock ? 1 : 0, rp2350RedirectSamples ? 1 : 0);
                 }
                 break;
             }

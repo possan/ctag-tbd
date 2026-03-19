@@ -183,6 +183,7 @@ MacroDeviceDefinition *MacroDeviceDefinition::copy() {
     newCopy->id = this->id;
     newCopy->name = this->name;
     newCopy->synthId = this->synthId;
+    newCopy->volumeMultiplier = this->volumeMultiplier;
     newCopy->outputMappings = this->outputMappings;
     return newCopy;
 }
