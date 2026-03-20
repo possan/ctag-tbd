@@ -117,11 +117,10 @@ namespace CTAG {
             static void EnablePluginProcessing();
             static void RefreshSampleRom();
 
-            static void SetTrackMachine(const int trackIndex, const string &synthID);
+            static void SetTrackMachine(const int trackIndex, const string &synthID, float volumeMultiplier);
             static void SetTrackMacro(const int trackIndex, const string &macroDefinitionID);
             static void SetTrackParametersFromJSON(const string &parametersJSON);
             static void SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value);
-            // static void SetTrackSampleBank(const int trackIndex, const string &bankName);
             static void PutSamplePresetJSON(const string &presetJSON);
 
             static std::shared_ptr<CTAG::MACROPRESETS::SynthDefinitionDataModel> synthDefinitionModel;

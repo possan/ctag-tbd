@@ -418,7 +418,6 @@ MacroDeviceDefinition *MacroDeviceDefinition::copy() {
     newCopy->id = this->id;
     newCopy->name = this->name;
     newCopy->synthId = this->synthId;
-    // newCopy->parameterGroups = this->parameterGroups;
     newCopy->outputMappings = this->outputMappings;
     return newCopy;
 }

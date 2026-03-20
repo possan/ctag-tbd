@@ -778,10 +778,10 @@ void SoundProcessorManager::RefreshSampleRom() {
     ctagSampleRom::RefreshDataStructure();
 }
 
-void SoundProcessorManager::SetTrackMachine(const int trackIndex, const string &synthID) {
+void SoundProcessorManager::SetTrackMachine(const int trackIndex, const string &synthID, float volumeMultiplier) {
     if (sp[0] != nullptr) {
         // xSemaphoreTake(processMutex, portMAX_DELAY);
-        sp[0]->setTrackMachine(trackIndex, synthID);
+        sp[0]->setTrackMachine(trackIndex, synthID, volumeMultiplier);
         // xSemaphoreGive(processMutex);
     }
 }
@@ -883,7 +883,7 @@ void SoundProcessorManager::LoadTrackMacro(const int trackIndex, const std::stri
     xSemaphoreGive(processMutex);
     if (def != nullptr) {
         xSemaphoreTake(processMutex, portMAX_DELAY);
-        macroTranslator->SetTrackMachine(trackIndex, def->synthId);
+        macroTranslator->SetTrackMachine(trackIndex, def->synthId, def->volumeMultiplier);
         macroTranslator->SetTrackMacroDefinition(trackIndex, def);
         xSemaphoreGive(processMutex);
         delete def;
@@ -933,7 +933,7 @@ void SoundProcessorManager::LoadTrackMacroAndPreset(const int trackIndex, const 
 
     // LoadTrackMacro(trackIndex, def->synthId);
     xSemaphoreTake(processMutex, portMAX_DELAY);
-    macroTranslator->SetTrackMachine(trackIndex, def->synthId);
+    macroTranslator->SetTrackMachine(trackIndex, def->synthId, def->volumeMultiplier);
     macroTranslator->SetTrackMacroDefinition(trackIndex, def);
     xSemaphoreGive(processMutex);
 
