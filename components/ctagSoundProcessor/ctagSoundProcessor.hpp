@@ -195,7 +195,7 @@ namespace CTAG {
                 loadPresetInternal();
             }
 
-            virtual void setTrackMachine(const uint8_t trackIndex, const std::string machineId) {
+            virtual void setTrackMachine(const uint8_t trackIndex, const std::string machineId, float volumeMultiplier) {
                 // default implementation does nothing, override in derived class if needed
             }
 
