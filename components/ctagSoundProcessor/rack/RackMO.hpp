@@ -38,7 +38,6 @@ public:
 	void noteOff(uint8_t note, uint8_t vel);
 
 private:
-	braids::MacroOscillatorShape mo_last_shape;
 	braids::MacroOscillator mo_osc;
 	braids::SignatureWaveshaper mo_ws;
 	braids::Quantizer mo_quantizer;

@@ -54,7 +54,6 @@ private:
     ctagADEnv td3_adVCA, td3_adVCF;
     braids::MacroOscillator td3_osc;
     braids::SignatureWaveshaper td3_ws;
-	braids::MacroOscillatorShape td3_last_shape;
     uint8_t td3_sync[32] = {0};
     bool td3_pre_trig = false;
     bool td3_isAccent = false;

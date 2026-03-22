@@ -29,9 +29,8 @@ using namespace CTAG::SP;
 void RackMO::Init(const PickSeqRackInitData *initdata) {
     mo_osc.Init();
     mo_osc.set_pitch(100);
-    mo_last_shape = braids::MacroOscillatorShape::MACRO_OSC_SHAPE_CSAW;
-    mo_shape = static_cast<braids::MacroOscillatorShape>(mo_last_shape);
-    mo_osc.set_shape(mo_last_shape);
+    mo_shape = static_cast<braids::MacroOscillatorShape>(braids::MacroOscillatorShape::MACRO_OSC_SHAPE_CSAW);
+    mo_osc.set_shape(braids::MacroOscillatorShape::MACRO_OSC_SHAPE_CSAW);
     mo_ws.Init(0xcafe);
     //envelope.Init();
     mo_envelope.SetSampleRate(44100.f / 32.f);
@@ -98,11 +97,7 @@ void RackMO::Process(const PicoSeqRackProcessData &data) {
     braids::MacroOscillatorShape ms = static_cast<braids::MacroOscillatorShape>(s);
     if (ms >= braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META)
         ms = braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META;
-    if (ms != mo_last_shape) {
-        mo_last_shape = ms;
-        // printf("MO shape=%d\n", ms);
-        mo_osc.set_shape(ms);
-    }
+    mo_osc.set_shape(ms);
 
     bool trigger = false;
     if (midi_trig) {
