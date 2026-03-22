@@ -12,7 +12,7 @@
           "def": 0,
           "min": 0,
           "max": 127,
-          "res": 64,
+          "res": 8,
           "ui": "samplebank"
         },
         {
@@ -21,7 +21,7 @@
           "def": 0,
           "min": 0,
           "max": 127,
-          "res": 64,
+          "res": 16,
           "ui": "sampleslice"
         },
         {
@@ -30,7 +30,7 @@
           "def": 0,
           "min": 0,
           "max": 127,
-          "res": 64,
+          "res": 200,
           "ui": "sampleoffset"
         },
         {
@@ -39,7 +39,7 @@
           "def": 127,
           "min": 0,
           "max": 127,
-          "res": 64,
+          "res": 200,
           "ui": "sampleoffset"
         }
       ]
@@ -50,10 +50,10 @@
         {
           "idx": 4,
           "name": "Pitch",
-          "def": 16,
+          "def": 64,
           "min": 0,
           "max": 127,
-          "res": 64,
+          "res": 16,
           "ui": "bignum"
         },
         {
@@ -72,7 +72,7 @@
           "def": 127,
           "min": 0,
           "max": 127,
-          "res": 64,
+          "res": 130,
           "ui": "filtercutoff",
           "curve": "log"
         },

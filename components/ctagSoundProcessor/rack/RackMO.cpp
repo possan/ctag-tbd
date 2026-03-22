@@ -98,10 +98,9 @@ void RackMO::Process(const PicoSeqRackProcessData &data) {
     braids::MacroOscillatorShape ms = static_cast<braids::MacroOscillatorShape>(s);
     if (ms >= braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META)
         ms = braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META;
-
     if (ms != mo_last_shape) {
         mo_last_shape = ms;
-        printf("MO shape=%d\n", ms);
+        // printf("MO shape=%d\n", ms);
         mo_osc.set_shape(ms);
     }
 

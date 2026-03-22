@@ -27,6 +27,7 @@ using namespace CTAG::SP;
 
 void RackChannelMixer::Init(const PickSeqRackInitData *initdata) {
 	cc_base = initdata->cc_base;
+	track_index = initdata->track_index;
 
 	// TODO: "Device" was removed, this is off by one.
 	initdata->rack->registerParamAndCC(initdata, "lev", 1, [&](const int val){ mix_lev = val;});
@@ -50,7 +51,7 @@ void RackChannelMixer::PreProcess(const PicoSeqRackProcessData &data) {
 	fLev *= volumeMultiplier;
 
 	if (fLev != this->level) {
-		ESP_LOGI("RackChannelMixer", "Level changed from %f to %f", this->level, fLev);
+		ESP_LOGI("RackChannelMixer", "Ch %d Level changed from %f to %f", this->track_index, this->level, fLev);
 		this->level = fLev;
 	}
 

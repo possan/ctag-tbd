@@ -32,7 +32,9 @@ void RackTBD03::Init(const PickSeqRackInitData *initdata) {
     td3_zavalishin.Init();
     td3_osc.Init();
     td3_osc.set_pitch(100);
-    td3_osc.set_shape(braids::MacroOscillatorShape::MACRO_OSC_SHAPE_CSAW);
+    td3_last_shape = braids::MacroOscillatorShape::MACRO_OSC_SHAPE_CSAW;
+    td3_shape = static_cast<braids::MacroOscillatorShape>(td3_last_shape);
+    td3_osc.set_shape(td3_last_shape);
     td3_adVCA.SetSampleRate(44100.f / 32);
     td3_adVCA.SetModeExp();
     td3_adVCA.SetAttack(0.f);
@@ -133,14 +135,15 @@ void RackTBD03::Process(const PicoSeqRackProcessData &data) {
     float egvalVCF = td3_adVCF.Process();
 
     // shape
-    int s = td3_shape * 47 / 4096;
-    // if (cv_td3_shape != -1) {
-    //     s = fabsf(data.cv[cv_td3_shape]) * (braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META + 1);
-    // }
+    int s = td3_shape * 128 / 4096;
     braids::MacroOscillatorShape ms = static_cast<braids::MacroOscillatorShape>(s);
     if (ms >= braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META)
         ms = braids::MacroOscillatorShape::MACRO_OSC_SHAPE_LAST_ACCESSIBLE_FROM_META;
-    td3_osc.set_shape(ms);
+    if (ms != td3_last_shape) {
+        td3_last_shape = ms;
+        // printf("TD3 shape=%d\n", ms);
+        td3_osc.set_shape(ms);
+    }
 
     // Set timbre and color: CV + internal modulation.
     int16_t parameters[2];

@@ -32,6 +32,7 @@ public:
 	float send2;
 	int cc_base;
 	int track_length;
+	int track_index;
 	float volumeMultiplier;
 
 private:
