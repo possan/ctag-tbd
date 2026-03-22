@@ -1,8 +1,8 @@
 {
   "id": "db-allparams",
-  "name": "Synth Kick All param",
+  "name": "Synth Kick",
   "machine": "db",
-  "volmult": 1.5,
+  "volmult": 2.0,
   "groups": [
     {
       "name": "Page 1",

@@ -1,7 +1,8 @@
 {
   "id": "mo-allparams",
-  "name": "Macro osc All param",
+  "name": "Macro Osc",
   "machine": "mo",
+  "volmult": 1.6,
   "groups": [
     {
       "name": "Page 1",

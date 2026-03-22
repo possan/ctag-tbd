@@ -43,26 +43,6 @@
           "ui": "knob"
         }
       ]
-    },
-    {
-      "name": "Page 2",
-      "parameters": []
-    },
-    {
-      "name": "Page 3",
-      "parameters": []
-    },
-    {
-      "name": "Page 4",
-      "parameters": []
-    },
-    {
-      "name": "Page 5",
-      "parameters": []
-    },
-    {
-      "name": "Page 6",
-      "parameters": []
     }
   ],
   "mapping": [

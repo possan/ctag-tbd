@@ -1,7 +1,8 @@
 {
   "id": "rs-allparams",
-  "name": "Rimshot All param",
+  "name": "Rimshot",
   "machine": "rs",
+  "volmult": 0.75,
   "groups": [
     {
       "name": "Page 1",

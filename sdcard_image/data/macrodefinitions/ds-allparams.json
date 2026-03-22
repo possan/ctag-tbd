@@ -1,7 +1,8 @@
 {
   "id": "ds-allparams",
-  "name": "Digital Snare All param",
+  "name": "Digital Snare",
   "machine": "ds",
+  "volmult": 1.75,
   "groups": [
     {
       "name": "Page 1",

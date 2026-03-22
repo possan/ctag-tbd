@@ -2,7 +2,7 @@
   "id": "pp-allparams",
   "name": "Polypad All param",
   "machine": "pp",
-  "volmult": 1.6,
+  "volmult": 2.0,
   "groups": [
     {
       "name": "Page 1",
@@ -79,7 +79,7 @@
         {
           "idx": 7,
           "name": "Attack",
-          "def": 0,
+          "def": 25,
           "min": 0,
           "max": 127,
           "res": 64,

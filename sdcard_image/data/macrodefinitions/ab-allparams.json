@@ -1,6 +1,6 @@
 {
   "id": "ab-allparams",
-  "name": "Analog Kick All param",
+  "name": "Analog Kick",
   "machine": "ab",
   "volmult": 1.5,
   "groups": [
@@ -39,7 +39,7 @@
         {
           "idx": 3,
           "name": "A FM",
-          "def": 19,
+          "def": 10,
           "min": 0,
           "max": 127,
           "res": 64,
@@ -53,7 +53,7 @@
         {
           "idx": 4,
           "name": "S FM",
-          "def": 13,
+          "def": 5,
           "min": 0,
           "max": 127,
           "res": 64,
@@ -62,7 +62,7 @@
         {
           "idx": 5,
           "name": "Accent",
-          "def": 10,
+          "def": 20,
           "min": 0,
           "max": 127,
           "res": 64,
