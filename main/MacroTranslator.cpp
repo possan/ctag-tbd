@@ -193,7 +193,7 @@ void MacroTranslator::SetTrackMacroDefinition(const int trackIndex, MacroDeviceD
     //     heap_caps_get_largest_free_block(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
     //     heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
     //     heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
-    
+
     // if (defcopy == nullptr) {
     definition[trackIndex] = defcopy;
     // ESP_LOGI("MacroTranslator", "dummy 6");
@@ -210,6 +210,47 @@ void MacroTranslator::SetTrackMacroDefinition(const int trackIndex, MacroDeviceD
     SetTrackMachine(trackIndex, def->synthId, def->volumeMultiplier);
 
     // ESP_LOGI("MacroTranslator", "dummy 9");
+}
+
+void MacroTranslator::RefreshActiveDefinitions() {
+    ESP_LOGW("MacroTranslator", ">>> RefreshActiveDefinitions called");
+    for (int t = 0; t < 16; t++) {
+        if (definition[t] == nullptr) {
+            ESP_LOGI("MacroTranslator", "  track %d: def=null, skip", t);
+            continue;
+        }
+        std::string macroId = definition[t]->id;
+        if (macroId.empty()) continue;
+
+        MacroDeviceDefinition *freshDef =
+            macroDeviceDefinitionModel->LoadMacroDeviceDefinition(macroId);
+        if (freshDef == nullptr) continue;
+
+        delete definition[t];
+        definition[t] = freshDef;
+        trackDirty[t] = true;
+
+        ESP_LOGI("MacroTranslator", "Refreshed track %d def '%s' (volMult=%.2f)",
+            t, macroId.c_str(), freshDef->volumeMultiplier);
+    }
+}
+
+void MacroTranslator::RefreshDefinitionById(const std::string &id) {
+    for (int t = 0; t < 16; t++) {
+        if (definition[t] == nullptr) continue;
+        if (definition[t]->id != id) continue;
+
+        MacroDeviceDefinition *freshDef =
+            macroDeviceDefinitionModel->LoadMacroDeviceDefinition(id);
+        if (freshDef == nullptr) continue;
+
+        delete definition[t];
+        definition[t] = freshDef;
+        trackDirty[t] = true;
+
+        ESP_LOGI("MacroTranslator", "Refreshed track %d def '%s' (volMult=%.2f)",
+            t, id.c_str(), freshDef->volumeMultiplier);
+    }
 }
 
 void MacroTranslator::SetTrackParameter(const int trackIndex, int parameterIndex, int32_t value) {
@@ -446,12 +487,8 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
     for(int t=0; t<16; t++) {
         if (trackDirty[t]) {
             // First change machines if needed.
-            MacroDeviceDefinition *def = definition[t];
-            if (def != nullptr) {
-                soundProcessor->setTrackMachine(t, trackMachineId[t], def->volumeMultiplier);
-            } else {
-                soundProcessor->setTrackMachine(t, trackMachineId[t], 1.0f);
-            }
+            float volMult = (definition[t] != nullptr) ? definition[t]->volumeMultiplier : 1.0f;
+            soundProcessor->setTrackMachine(t, trackMachineId[t], volMult);
         }
     }
 
@@ -478,12 +515,12 @@ void MacroTranslator::TranslateInput(CTAG::SP::ProcessData *pd) {
                             finalvalue += val * src.multiplier;
                         }
                     }
-                    
+
                     // TODO: support NRPM
-                    
+
                     if (finalvalue < 0) finalvalue = 0;
                     if (finalvalue > 127) finalvalue = 127;
-                    
+
                     int midichannel = trackToMidiChannel[t];
                     if (om.ctrl  != -1) {
                         outputValues[t][idx] = finalvalue;
