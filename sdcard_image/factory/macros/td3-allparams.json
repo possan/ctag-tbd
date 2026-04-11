@@ -61,7 +61,7 @@
           "def": 3500,
           "min": 0,
           "max": 16383,
-          "res": 1024,
+          "res": 2048,
           "ui": "filtercutoff",
           "curve": "log"
         },
@@ -72,7 +72,7 @@
           "def": 5000,
           "min": 0,
           "max": 16383,
-          "res": 2048,
+          "res": 4096,
           "ui": "filterq"
         },
         {
@@ -82,7 +82,7 @@
           "def": 10000,
           "min": 0,
           "max": 16383,
-          "res": 2048,
+          "res": 4096,
           "ui": "envdecay",
           "curve": "exp"
         },
@@ -92,7 +92,7 @@
           "def": 1,
           "min": 0,
           "max": 3,
-          "res": 64,
+          "res": 4,
           "ui": "filtertype"
         }
       ]
@@ -148,7 +148,7 @@
           "def": 4000,
           "min": 0,
           "max": 16383,
-          "res": 2048,
+          "res": 4096,
           "ui": "bignum"
         },
         {
@@ -158,7 +158,7 @@
           "def": 0,
           "min": 0,
           "max": 16383,
-          "res": 2048,
+          "res": 4096,
           "ui": "bignum"
         },
         {
@@ -168,7 +168,7 @@
           "def": 0,
           "min": 0,
           "max": 16383,
-          "res": 2048,
+          "res": 4096,
           "ui": "bignum"
         },
         {
