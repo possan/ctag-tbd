@@ -1075,14 +1075,14 @@
         {
           "id": "vca_d",
           "name": "VCA D",
-          "type": "cc",
+          "type": "nrpm",
           "ctrl": 10,
           "def": 8
         },
         {
           "id": "vcf_d",
           "name": "VCF D",
-          "type": "cc",
+          "type": "nrpm",
           "ctrl": 11,
           "def": 8
         },
