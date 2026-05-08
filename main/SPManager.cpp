@@ -519,7 +519,7 @@ void IRAM_ATTR SoundProcessorManager::audio_task(void *pvParams) {
         DRIVERS::Codec::WriteBuffer(fbuf, BUF_SZ);
 
         if (framecounter % 3200 == 0) {
-            //     printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors, %d lock errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors, (int)audioLockErrors);
+            printf("Audio task cycles %d, micros %d, slow process() counter %d/%d, fbuf = [%1.3f, %1.3f...], tempo %ld, sentSynthMidi %d b, receivedUsbDeviceMidi %d b, %d new request counter errors, %d lock errors\n", (int)diff, (int)diff2, (int)slowProcessCounter, (int)framecounter, fbuf[0], fbuf[BUF_SZ], pd.sequencer_tempo, (int)sentSynthMidiBytes, (int)receivedUsbDeviceMidiBytes, (int)requestCounterErrors, (int)audioLockErrors);
             //     requestCounterErrors = 0;
             // AUDIO-THREAD: gated to every ~2.3 s, but still audio-thread.
             // printf corrupts the output buffer.

@@ -152,7 +152,7 @@ void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string sy
     trackToMidiChannel[trackIndex] = trackDef->midiChannel;
     // midiChannelToTrack[trackDef->midiChannel] = trackIndex;
     trackBaseCC[trackIndex] = trackDef->baseCC;
-    ESP_LOGI("MacroTranslator", "Track %d base cc is %d", trackIndex, trackBaseCC[trackIndex]);
+    ESP_LOGD("MacroTranslator", "Track %d base cc is %d", trackIndex, trackBaseCC[trackIndex]);
 
     idx = 0;
     for(struct SynthParameter &par : synthDef->parameters) {
@@ -160,7 +160,7 @@ void MacroTranslator::SetTrackMachine(const int trackIndex, const std::string sy
             continue;
         }
 
-        ESP_LOGI("MacroTranslator", "Processing parameter %s, type %d, cc %d",
+        ESP_LOGD("MacroTranslator", "Processing parameter %s, type %d, cc %d",
         par.id, par.type, par.cc);
 
         trackParameterValues[trackIndex][idx] = par.defaultValue;

@@ -146,6 +146,8 @@
       "machines": [
         "nosynth",
         "td3",
+        "tbd",
+        "tbdait",
         "ro",
         "extsynth"
       ],
@@ -161,6 +163,8 @@
       "machines": [
         "nosynth",
         "mo",
+        "tbd",
+        "tbdait",
         "ro",
         "extsynth"
       ],
@@ -223,6 +227,7 @@
         "nosynth",
         "pp",
         "tbd",
+        "tbdait",
         "ro",
         "extsynth"
       ],
