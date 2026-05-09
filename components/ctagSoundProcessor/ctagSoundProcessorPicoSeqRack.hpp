@@ -222,46 +222,45 @@ namespace CTAG {
 			RackChannelMixer ch8;
 			uint32_t ch8_render_time;
 
-			RackTBD03 ch9_td3;
 			RackChannelMixer ch9;
+			RackWTOsc ch9_wtosc;
+			RackTBD03 ch9_td3;
 			RackRompler ch9_smp;
 			uint32_t ch9_render_time;
 
-			RackTBD03 ch10_td3;
-			RackTBDings ch10_tbd;
-			RackTBDaits ch10_aits;
-			RackRompler ch10_smp;
 			RackChannelMixer ch10;
+			RackWTOsc ch10_wtosc;
+			RackTBD03 ch10_td3;
+			RackRompler ch10_smp;
 			uint32_t ch10_render_time;
 
-			RackMO ch11_mo;
-			RackTBDings ch11_tbd;
+			RackChannelMixer ch11;
+			RackTBD03 ch11_td3;
 			RackTBDaits ch11_aits;
 			RackRompler ch11_smp;
-			RackChannelMixer ch11;
 			uint32_t ch11_render_time;
 
-			RackWTOsc ch12_wtosc;
-			RackMO ch12_mo;
+			RackChannelMixer ch12;
 			RackTBDings ch12_tbd;
 			RackTBDaits ch12_aits;
 			RackRompler ch12_smp;
-			RackChannelMixer ch12;
 			uint32_t ch12_render_time;
 
 			RackChannelMixer ch13;
+			RackMO ch13_mo;
+			RackTBDings ch13_tbd;
 			RackRompler ch13_smp;
 			uint32_t ch13_render_time;
 
 			RackChannelMixer ch14;
+			RackMO ch14_mo;
+			RackTBDings ch14_tbd;
 			RackRompler ch14_smp;
 			uint32_t ch14_render_time;
 
 			RackChannelMixer ch15;
-			RackPolyPad ch15_pp;
-			RackTBDings ch15_tbd;
-			RackTBDaits ch15_aits;
 			RackRompler ch15_smp;
+			RackPolyPad ch15_pp;
 			uint32_t ch15_render_time;
 
 			RackInput ch16_in;

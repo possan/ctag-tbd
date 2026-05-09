@@ -131,7 +131,10 @@
       "machines": [
         "nosynth",
         "td3",
+        "tbdait",
         "ro",
+        "mo",
+        "wtosc",
         "extsynth"
       ],
       "defaultbank": ""
@@ -146,9 +149,10 @@
       "machines": [
         "nosynth",
         "td3",
-        "tbd",
         "tbdait",
         "ro",
+        "mo",
+        "wtosc",
         "extsynth"
       ],
       "defaultbank": ""
@@ -162,10 +166,11 @@
       "basecc": 0,
       "machines": [
         "nosynth",
-        "mo",
-        "tbd",
+        "td3",
         "tbdait",
         "ro",
+        "mo",
+        "wtosc",
         "extsynth"
       ],
       "defaultbank": ""
@@ -179,11 +184,11 @@
       "basecc": 0,
       "machines": [
         "nosynth",
-        "wtosc",
-        "mo",
-        "tbd",
+        "td3",
         "tbdait",
         "ro",
+        "mo",
+        "wtosc",
         "extsynth"
       ],
       "defaultbank": ""
@@ -197,7 +202,12 @@
       "basecc": 0,
       "machines": [
         "nosynth",
+        "wtosc",
         "ro",
+        "mo",
+        "td3",
+        "tbd",
+        "tbdait",
         "extsynth"
       ],
       "defaultbank": "stabs"
@@ -212,6 +222,10 @@
       "machines": [
         "nosynth",
         "ro",
+        "mo",
+        "td3",
+        "tbd",
+        "tbdait",
         "extsynth"
       ],
       "defaultbank": "synths"
@@ -225,7 +239,9 @@
       "basecc": 0,
       "machines": [
         "nosynth",
+        "mo",
         "pp",
+        "td3",
         "tbd",
         "tbdait",
         "ro",
